@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGL 2D Sprite Example</title>
+</head>
+<body>
+                          <!-- width="400" height="300" style="width:400px;height:300px;" -->
+    <canvas id="myCanvas" width="1500" height="1000"></canvas>
+    <script>
+
+        // very global vars
+        var _redraw = 1;
+        var _fulldraw = 1;
+        var sqrt2 = Math.sqrt(2)
+
+        const _unit_type_textures = new Map();
+        _unit_type_textures.set(0, 256);  // settler
+        _unit_type_textures.set(1, 257);  // explorer
+        _unit_type_textures.set(2, 258);  // warrior
+        class Unit
+        {
+            constructor(type, i, j)
+            {
+                this.type = type;
+                this.texture = _unit_type_textures.get(type);
+                this.i = i;
+                this.j = j;
+            }
+
+        }
+
+        const _units = Array();
+        _units[0] = new Unit(0, 16, 53);
+        _units[1] = new Unit(0, 25, 55);
+        _units[2] = new Unit(1, 13, 50);
+        _units[3] = new Unit(2, 10, 51);
+        _units[4] = new Unit(1, 6, 53);
+        _units[5] = new Unit(2, 5, 55);
+        _units[6] = new Unit(1, 3, 50);
+        _units[7] = new Unit(1, 8, 51);
+
+        var Point = class
+        {
+            constructor(i,j)
+            {
+                this.i = i;
+                this.j = j;
+            }
+        }
+        
+        var _selection = 0;
+        const _game = new class
+        {
+            click(x, y)
+            {
+                for (k=0; k < _units.length; k++) {
+                    if (x > ijtox1(_units[k].i,_units[k].j)-10 && x < ijtox1(_units[k].i,_units[k].j) + 200
+                     && y > ijtoy1(_units[k].i,_units[k].j)-10 && y < ijtoy1(_units[k].i,_units[k].j) + 150) {
+                        _selection = k;
+                        _redraw = 1;
+                        break;
+                    }
+                }                
+            }
+            
+        }
+
+        // we dont use class members to do not always write "this." since we use only one object of any type
+        const _map_size = 100;
+        const _cell_width = 200;  // by X, already multiplied by sqrt2/2
+        const _cell_height = 200;  // by Y, already multiplied by sqrt2/2
+        const _map_view = [_map_size/2*_cell_width,-_map_size/2*_cell_height,
+                           _map_size/2*3*_cell_width,_map_size/2*_cell_height];
+        const _map_terrain = new Array(_map_size);
+        // no zoom, 2x values
+        function xytoi(x,y) { return (x+y)/2/*sqrt2^2*//_cell_height; }
+        function xytoj(x,y) { return (x-y)/2/*sqrt2^2*//_cell_width; }  //_map_size*sqrt2/2-
+        function ijtox(i,j) { return i*_cell_height+j*_cell_width; }
+        function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
+        const _map = new class
+        {
+            init()
+            {
+                for (var i=0; i < _map_size; i++) {
+                    _map_terrain[i] = new Array(_map_size);
+                }
+
+                for (var i=0; i < _map_size; i++) {
+                    for (var j=0; j<_map_size; j++) {
+                        _map_terrain[i][j] = 0;
+                    }
+                }
+            }
+
+            genMap(num, msteps, mwidth, mbranch, min_x, min_y, max_x, max_y, type, op)
+            {
+                for (var pass=0; pass<num; pass++) {
+                    var steps = Math.round(Math.random()*msteps)+msteps
+                    var rnd1 = Math.random();
+                    var rnd2 = Math.random();
+                    var bj = Math.round(xytoj(min_x + rnd1*(max_x-min_x), min_y + rnd2*(max_y-min_y)))
+                    var bi = Math.round(xytoi(min_x + rnd1*(max_x-min_x), min_y + rnd2*(max_y-min_y)))
+                    for (var branch=0; branch < mbranch; branch++) {
+                        var width = Math.round(Math.random()*mwidth)+mwidth
+                        var dir_j = (Math.random()-0.5)/3;
+                        var dir_i = (Math.random()-0.5)/3;
+                        var j1 = bj;
+                        var i1 = bi;
+                        for (var step=0; step < steps; step++) {
+                            j1 += dir_j;
+                            i1 += dir_i;
+                            dir_j += (Math.random()-0.5)/3;
+                            dir_i += (Math.random()-0.5)/3;
+                            var j = j1;
+                            var i = i1;
+                            width = mwidth + Math.round(Math.random()*5);
+                            if (width < 0) width = mwidth;
+                            for (var r=0; r < width; r++) {
+                                j += dir_i;
+                                i += dir_j;
+                                var x = ijtox(i,j)
+                                var y = ijtoy(i,j)
+                                if (Math.round(j) >= 0 && Math.round(j) < _map_size && Math.round(i) >= 0 && Math.round(i) < _map_size
+                                   && x >= min_x && y >= min_y && x < max_x && y < max_y) {
+                                    if (op == 0) {  // just set
+                                        _map_terrain[Math.round(i)][Math.round(j)] = type;
+                                    }
+                                    else
+                                    if (op == 1 && (_map_terrain[Math.round(i)][Math.round(j)]&0x0F)) {  // no water
+                                        _map_terrain[Math.round(i)][Math.round(j)] = type;
+                                    }
+                                    else
+                                    if (op == 2 && (_map_terrain[Math.round(i)][Math.round(j)]>>4) < 3) {  // mod terrain heights
+                                        _map_terrain[Math.round(i)][Math.round(j)] += type;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            fixMap() {
+                for (var i=1; i < _map_size-1; i++) {
+                    for (var j=1; j < _map_size-1; j++) {
+                        // sand near to water
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i+1][j] == 2 && j > _map_size/3 && j < _map_size-_map_size/3) _map_terrain[i+1][j] = 1;
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i][j+1] == 2 && j > _map_size/3 && j < _map_size-_map_size/3) _map_terrain[i][j+1] = 1;
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i-1][j] == 2 && j > _map_size/3 && j < _map_size-_map_size/3) _map_terrain[i-1][j] = 1;
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i][j-1] == 2 && j > _map_size/3 && j < _map_size-_map_size/3) _map_terrain[i][j-1] = 1;
+                        // shallow water near to land
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i+1][j] != 0) _map_terrain[i+1][j] = 0+(1<<4);
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i][j+1] != 0) _map_terrain[i][j+1] = 0+(1<<4);
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i-1][j] != 0) _map_terrain[i-1][j] = 0+(1<<4);
+                        if (_map_terrain[i][j] == 0 && _map_terrain[i][j-1] != 0) _map_terrain[i][j-1] = 0+(1<<4);
+                    }
+                }
+            }
+
+            enhMap() {
+                for (var i=1; i < _map_size-1; i++) {
+                    for (var j=1; j < _map_size-1; j++) {
+                        if ((_map_terrain[i][j]&0x1F) == 4+(1<<4) && (_map_terrain[i+1][j]&0x1F) == 4+(1<<4)
+                         && (_map_terrain[i][j+1]&0x1F) == 4+(1<<4) && (_map_terrain[i+1][j+1]&0x1F) == 4+(1<<4)
+                         && (_map_terrain[i][j]&0x30)+(_map_terrain[i+1][j]&0x30)+(_map_terrain[i][j+1]&0x30)+(_map_terrain[i+1][j+1]&0x30) < 0xC0) {
+                             _map_terrain[i][j] = 4+(1<<4);
+                             _map_terrain[i+1][j] = 4+(1<<4);
+                             _map_terrain[i][j+1] = 4+(1<<4);
+                             _map_terrain[i+1][j+1] = 4+(4<<4);
+                        }
+                        if ((_map_terrain[i][j]&0x1F) == 4+(1<<4) && (_map_terrain[i+1][j]&0x1F) == 4+(1<<4)
+                         && (_map_terrain[i][j+1]&0x1F) == 4+(1<<4) && (_map_terrain[i+1][j+1]&0x1F) == 4+(1<<4)
+                         && (_map_terrain[i][j]&0x30)+(_map_terrain[i+1][j]&0x30)+(_map_terrain[i][j+1]&0x30)+(_map_terrain[i+1][j+1]&0x30) == 0xC0) {
+                             _map_terrain[i][j] = 4+(3<<4);
+                             _map_terrain[i+1][j] = 4+(3<<4);
+                             _map_terrain[i][j+1] = 4+(3<<4);
+                             _map_terrain[i+1][j+1] = 4+(5<<4);
+                        }
+                        if ((_map_terrain[i][j]&0x2F) == 4+(0<<4) && (_map_terrain[i+1][j]&0x2F) == 4+(0<<4)
+                         && (_map_terrain[i][j+1]&0x2F) == 4+(0<<4) && (_map_terrain[i+1][j+1]&0x2F) == 4+(0<<4)
+                         && (_map_terrain[i][j]&0x30)+(_map_terrain[i+1][j]&0x30)+(_map_terrain[i][j+1]&0x30)+(_map_terrain[i+1][j+1]&0x30) == 0x00) {
+                             _map_terrain[i][j] = 4+(2<<4);
+                             _map_terrain[i+1][j] = 4+(2<<4);
+                             _map_terrain[i][j+1] = 4+(2<<4);
+                             _map_terrain[i+1][j+1] = 4+(6<<4);
+                        }
+                        if ((_map_terrain[i][j]&0x2F) == 1+(2<<4) && (_map_terrain[i+1][j]&0x2F) == 1+(2<<4)
+                         && (_map_terrain[i][j+1]&0x2F) == 1+(2<<4) && (_map_terrain[i+1][j+1]&0x2F) == 1+(2<<4)
+                         && (_map_terrain[i][j]&0x30)+(_map_terrain[i+1][j]&0x30)+(_map_terrain[i][j+1]&0x30)+(_map_terrain[i+1][j+1]&0x30) <= 0xA0) {
+                             _map_terrain[i][j] = 1+(2<<4);
+                             _map_terrain[i+1][j] = 1+(2<<4);
+                             _map_terrain[i][j+1] = 1+(2<<4);
+                             _map_terrain[i+1][j+1] = 1+(4<<4);
+                        }
+                        if ((_map_terrain[i][j]&0x3F) == 1+(1<<4) && (_map_terrain[i+1][j]&0x3F) == 1+(1<<4)
+                         && (_map_terrain[i][j+1]&0x3F) == 1+(1<<4) && (_map_terrain[i+1][j+1]&0x3F) == 1+(1<<4)) {
+                             _map_terrain[i][j] = 1+(1<<4);
+                             _map_terrain[i+1][j] = 1+(1<<4);
+                             _map_terrain[i][j+1] = 1+(1<<4);
+                             _map_terrain[i+1][j+1] = 1+(5<<4);
+                        }
+                    }
+                }
+            }
+
+            gen()
+            {
+                this.genMap(10, 20, 20, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 2, 0);  // grass
+                this.genMap(14, 10, 5, 5, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 1, 1);  // sand
+                this.genMap(20, 2, 5, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks
+                this.genMap(10, 10, 5, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
+                this.genMap(10, 10, 10, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[1]+(_map_view[3]-_map_view[1])/10, 3, 1);  // snow
+                this.genMap(10, 10, 10, 5, _map_view[0], _map_view[3]-(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3], 3, 1);  // snow
+                this.fixMap();  // before mod tiles
+                this.genMap(50, 10, 25, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 1<<4, 2);  // mods
+                this.genMap(10, 20, 1, 1, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 0+(1<<4), 0);  // wide rivers
+                this.genMap(15, 10, 1, 1, 0, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 6, 1);  // narrow rivers
+                this.enhMap();
+            }
+        }
+
+        const _textures = new Array(1024);  // first 256 are map tiles
+
+        var _canvas = document.getElementById("myCanvas");
+        var _gl = _canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "low-power", preserveDrawingBuffer: true });;
+        const _ratio = window.devicePixelRatio;
+        var _screenOffsetX = 0;
+        var _screenOffsetY = 0;
+        var _screenZoom = 4;
+        function xy1toi(x,y) { return (x*_screenZoom+_screenOffsetX*2*_ratio+y*_screenZoom+_screenOffsetY*2*_ratio)/2/_cell_height; }
+        function xy1toj(x,y) { return (x*_screenZoom+_screenOffsetX*2*_ratio-y*_screenZoom-_screenOffsetY*2*_ratio)/2/_cell_width; }  //_map_size*sqrt2/2-
+        function ijtox1(i,j) { return (i*_cell_height + j*_cell_width - _screenOffsetX*2*_ratio)/_screenZoom; }
+        function ijtoy1(i,j) { return (i*_cell_height - j*_cell_width - _screenOffsetY*2*_ratio)/_screenZoom; }
+        const _screen = new class
+        {
+//var desiredCSSWidth = 400;
+//var desiredCSSHeight = 300;
+//var devicePixelRatio = window.devicePixelRatio || 1;
+
+//canvas.width  = (desiredCSSWidth  * devicePixelRatio)/1.05;
+//canvas.height = (desiredCSSHeight * devicePixelRatio)/1.05;
+//Math.floor
+//canvas.style.width  = desiredCSSWidth  + "px";
+//canvas.style.height = desiredCSSHeight + "px";
+
+//        const ratio = window.devicePixelRatio;
+//        canvas.width = canvas.getBoundingClientRect().width * ratio;
+//        canvas.height = canvas.getBoundingClientRect().height * ratio;
+
+            init()
+            {
+                if (!_gl) {
+                    console.error("WebGL not supported, falling back on experimental-webgl");
+                    _gl = _canvas.getContext("experimental-webgl");
+                }
+
+                if (!_gl) {
+                    alert("Your browser does not support WebGL");
+                }
+
+                this.shaderProgram = this.initShaderProgram();
+                this.programInfo = {
+                    program: this.shaderProgram,
+                    attribLocations: {
+                        vertexPosition: _gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+                        textureCoord: _gl.getAttribLocation(this.shaderProgram, 'aTextureCoord'),
+                    },
+                    uniformLocations: {
+                        sampler: _gl.getUniformLocation(this.shaderProgram, 'uSampler'),
+                    },
+                };
+            }
+
+            constructor()
+            {
+                // we need to put this persistent vars somewhere
+
+                // Vertex shader program
+                this.vsSource = `
+                    attribute vec2 aVertexPosition;
+                    attribute vec2 aTextureCoord;
+                    varying highp vec2 vTextureCoord;
+                    uniform mat4 uProjectionMatrix;
+                    void main(void) {
+                        gl_Position = vec4(aVertexPosition, 0.0, 1);
+                        vTextureCoord = aTextureCoord;
+                    }
+                `;
+
+                // Fragment shader program
+                this.fsSource = `
+                    varying highp vec2 vTextureCoord;
+                    uniform sampler2D uSampler;
+                    void main(void) {
+                        gl_FragColor = texture2D(uSampler, vTextureCoord);
+                    }
+                `;
+            }
+
+            loadShader(type, source)
+            {
+                const shader = _gl.createShader(type);
+                _gl.shaderSource(shader, source);
+                _gl.compileShader(shader);
+                if (!_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)) {
+                    console.error('An error occurred compiling the shaders: ' + _gl.getShaderInfoLog(shader));
+                    _gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            initShaderProgram()
+            {
+                const vertexShader = this.loadShader(_gl.VERTEX_SHADER, this.vsSource);
+                const fragmentShader = this.loadShader(_gl.FRAGMENT_SHADER, this.fsSource);
+
+                const shaderProgram = _gl.createProgram();
+                _gl.attachShader(shaderProgram, vertexShader);
+                _gl.attachShader(shaderProgram, fragmentShader);
+                _gl.linkProgram(shaderProgram);
+
+                if (!_gl.getProgramParameter(shaderProgram, _gl.LINK_STATUS)) {
+                    console.error('Unable to initialize the shader program: ' + _gl.getProgramInfoLog(shaderProgram));
+                    return null;
+                }
+
+                return shaderProgram;
+            }
+
+            loadTexture(url, id)
+            {
+                function onLoadImage(image, texture) {
+                    const internalFormat = _gl.RGBA;
+                    const srcFormat = _gl.RGBA;
+                    const srcType = _gl.UNSIGNED_BYTE;
+                    _gl.bindTexture(_gl.TEXTURE_2D, texture);
+                    _gl.texImage2D(_gl.TEXTURE_2D, 0, internalFormat, srcFormat, srcType, image);
+//                    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+//                        _gl.generateMipmap(_gl.TEXTURE_2D);
+//                    } else {
+                        _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_WRAP_S, _gl.CLAMP_TO_EDGE);
+                        _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_WRAP_T, _gl.CLAMP_TO_EDGE);
+                        _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR);
+//                    }
+                    _gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE_MINUS_SRC_ALPHA);
+                    _gl.enable(_gl.BLEND);
+                }
+
+                _textures[id] = _gl.createTexture();
+                const image = new Image();
+                image.onload = function() { onLoadImage(image, _textures[id]); }
+                image.src = url;
+            }
+
+//            isPowerOf2(value) {
+//                return (value & (value - 1)) == 0;
+//            }
+
+            drawSprite(x, y, i, j, type, zoom)
+            {
+                var positionBuffer = _gl.createBuffer();
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                var positions = [
+                    1/_canvas.width*(-220/zoom+x),  1/_canvas.height*(160/zoom-y),
+                    1/_canvas.width*(-220/zoom+x), 1/_canvas.height*(-160/zoom-y),
+                    1/_canvas.width*(220/zoom+x),  1/_canvas.height*(160/zoom-y),
+                    1/_canvas.width*(220/zoom+x), 1/_canvas.height*(-160/zoom-y),
+                ];
+                _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
+
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+                _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+
+                _gl.activeTexture(_gl.TEXTURE0);
+                //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
+                _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
+                _gl.uniform1i(this.programInfo.uniformLocations.sampler, 0);
+
+                _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
+            }
+
+            drawSprite1(x, y, i, j, type, zoom)
+            {
+                var positionBuffer = _gl.createBuffer();
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                var positions = [
+                    1/_canvas.width*(-420/zoom+x),  1/_canvas.height*(310/zoom-y),
+                    1/_canvas.width*(-420/zoom+x), 1/_canvas.height*(-310/zoom-y),
+                    1/_canvas.width*(420/zoom+x),  1/_canvas.height*(310/zoom-y),
+                    1/_canvas.width*(420/zoom+x), 1/_canvas.height*(-310/zoom-y),
+                ];
+                _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
+
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                _gl.vertexAttribPointer(_screen.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+                _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.vertexPosition);
+
+                _gl.activeTexture(_gl.TEXTURE0);
+                //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
+                _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
+                _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
+
+                _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
+            }
+        }
+
+        _screen.init();
+
+        _screen.loadTexture('waterdeep.png', 0);
+         _screen.loadTexture('water.png', 0+(1<<4));  // deep
+         _screen.loadTexture('water.png', 0+(2<<4));  // deep
+         _screen.loadTexture('waterdeep1.png', 0+(3<<4));  // deep
+         _screen.loadTexture('water-1.png', 0+(8<<4));  // deep
+        _screen.loadTexture('sand.png', 1);
+         _screen.loadTexture('sanddune2.png', 1+(1<<4));
+         _screen.loadTexture('sanddune1.png', 1+(2<<4));
+         _screen.loadTexture('sanddune3.png', 1+(3<<4));
+         _screen.loadTexture('sandbig.png', 1+(4<<4));
+         _screen.loadTexture('sandoasis.png', 1+(5<<4));
+        _screen.loadTexture('grass.png', 2);
+         _screen.loadTexture('grassforest2.png', 2+(1<<4));
+         _screen.loadTexture('grassforest3.png', 2+(2<<4));
+         _screen.loadTexture('grassforest1.png', 2+(3<<4));
+        _screen.loadTexture('snow.png', 3);
+          _screen.loadTexture('snowhill.png', 3+(1<<4));
+          _screen.loadTexture('snowhill1.png', 3+(2<<4));
+          _screen.loadTexture('snowhill2.png', 3+(3<<4));
+        _screen.loadTexture('hills.png', 4);
+          _screen.loadTexture('hills3.png', 4+(1<<4));
+          _screen.loadTexture('hills2.png', 4+(2<<4));
+          _screen.loadTexture('hills1.png', 4+(3<<4));
+          _screen.loadTexture('hills4.png', 4+(4<<4));
+          _screen.loadTexture('hills5.png', 4+(5<<4));
+          _screen.loadTexture('hills6.png', 4+(6<<4));
+        _screen.loadTexture('rocks.png', 5);
+          _screen.loadTexture('rocks1.png', 5+(1<<4));
+          _screen.loadTexture('rocks2.png', 5+(2<<4));
+          _screen.loadTexture('rocks.png', 5+(3<<4));
+        _screen.loadTexture('grasswater.png', 6);
+
+        _screen.loadTexture('settler.png', 256);
+        _screen.loadTexture('explorer.png', 257);
+        _screen.loadTexture('warrior.png', 258);
+        _screen.loadTexture('select.png', 512);
+        _screen.loadTexture('select1.png', 513);
+        _screen.loadTexture('arrow1.png', 514);
+        _screen.loadTexture('arrow2.png', 515);
+        _screen.loadTexture('arrow3.png', 516);
+        _screen.loadTexture('arrow4.png', 517);
+        _screen.loadTexture('arrow5.png', 518);
+        _screen.loadTexture('arrow6.png', 519);
+
+        _map.init();
+        _map.gen();
+
+        var _shift_pressed = 0;
+        var _ctrl_pressed = 0;
+        var _mousedown = 0;
+        var _step = 0;
+        var _in_drawing = 0;
+
+        function drawScene(loop)
+        {
+            _in_drawing = 1;
+//            _gl.viewport(0, 0, _canvas.width*ratio, _canvas.height*ratio);
+            if (_fulldraw) {
+                _gl.clearColor(0.2, 0.2, 0.2, 0.2);
+                _gl.clear(_gl.COLOR_BUFFER_BIT/* | _gl.DEPTH_BUFFER_BIT*/);
+
+                _gl.useProgram(_screen.programInfo.program);
+            }
+
+            // this is const for all sprites
+            this.textureCoordBuffer = _gl.createBuffer();
+            _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
+            const textureCoordinates = [
+                0.0,  0.0,
+                0.0,  1.0,
+                1.0,  0.0,
+                1.0,  1.0,
+            ];
+            _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), _gl.STATIC_DRAW);
+            _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
+            _gl.vertexAttribPointer(_screen.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
+            _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.textureCoord);
+            //
+            var start_i = Math.round(xytoi(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom*1.6) - 1;
+            var start_j = Math.round(xytoj(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom*1.6);
+            var height_i = Math.round(_canvas.width/2*2/_cell_height*_screenZoom*2.6);
+            var width_j = Math.round(_canvas.height/2*2/_cell_width*_screenZoom*3.6)+1;
+            if (start_i < 0) {
+                start_i = 0;
+            }
+            if (start_j < 0) {
+                start_j = 0;
+            }
+            if (start_i + height_i >= _map_size) {
+                height_i = _map_size - start_i - 1
+            }
+            if (start_j + width_j >= _map_size) {
+                width_j = _map_size - start_j - 1
+            }
+            for (i=start_i; i < start_i + height_i; ++i) {
+                for (j=start_j + width_j; j >= start_j; --j) {
+//                    if (j >= 0 && i >= 0 && j < _map_size && i < _map_size) 
+{
+//                         alert(i)
+//                         alert(j)
+//                    x = i*200+j*200;
+//                    y = i*200-j*200;
+//////////////                        _step++;
+                        if (/*_map_terrain[i][j]==(0+(1<<4))&&_step%2 ||*/ _redraw) {
+                            // - _map_view[0]* /*20*/0*sqrt2
+                            // - _map_view[1]* /*20*/0*sqrt2 
+                            _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), i, j, /*(_map_terrain[i][j]==(0+(1<<4))&&_step%2)?8<<4:*/_map_terrain[i][j], _screenZoom);
+                            if ((_map_terrain[i][j]>>4&4) && (_map_terrain[i-1][j]>>4&4) == 0 && (_map_terrain[i][j-1]>>4&4) == 0) {
+                                _screen.drawSprite1(ijtox1(i,j) - _cell_width/_screenZoom, ijtoy1(i,j) - _cell_height/_screenZoom, i, j, _map_terrain[i][j], _screenZoom);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (_selection != -1) {
+                _screen.drawSprite(ijtox1(_units[_selection].i,_units[_selection].j), ijtoy1(_units[_selection].i,_units[_selection].j),
+                                   _units[_selection].i, _units[_selection].j, _step%2?512:513, _screenZoom);
+                _screen.drawSprite(ijtox1(_units[_selection].i,_units[_selection].j), ijtoy1(_units[_selection].i,_units[_selection].j),
+                                   _units[_selection].i, _units[_selection].j, _units[_selection].texture, _screenZoom);
+            }
+
+            if (_redraw) {
+                for (k=0; k < _units.length; k++) {
+                    _screen.drawSprite(ijtox1(_units[k].i,_units[k].j), ijtoy1(_units[k].i,_units[k].j),
+                                       _units[k].i, _units[k].j, _units[k].texture, _screenZoom);
+                }
+            }
+
+            _step++;
+            _redraw = 0;
+            _fulldraw = 0;
+            if (loop) {
+                setTimeout(drawScene, 700);
+            }
+            _in_drawing = 0;
+        }
+
+        function Xtox(X) { return X*2-_canvas.width/*/2*2*/; }
+        function Ytoy(Y) { return Y*2-_canvas.height/*/2*2*/; }
+        function align(to, val) { return to > val ? Math.ceil(val) : Math.floor(val); }
+        const _control = new class
+        {
+            mapLine(i1, j1, i2, j2, func)
+            {
+                i1 = Math.round(i1);
+                i2 = Math.round(i2);
+                j1 = Math.round(j1);
+                j2 = Math.round(j2);
+                if (Math.abs(i2-i1) < Math.abs(j2-j1)) {
+                    var di = (i2-i1)/(j2-j1);
+                    var i = i1
+                    for (var j=j1; align(j2, j) != j2; j+=(j2>=j1?1:-1)) {
+                        var arrow_num = 0;
+                        var new_i = i + (j2>=j1?di:-di);
+/*                        if (align(i2, new_i) > align(i2, i)) {
+                            if (align(i2, i)%2==0) {
+                                func(align(i2,new_i), align(j2,j), arrow_num);
+                            }
+                            arrow_num = 1;
+                        }
+                        if (align(i2, new_i) < align(i2, i)) {
+                            if (align(i2, i)%2==0) {
+                                func(align(i2,new_i), align(j2,j), arrow_num);
+                            }
+                            arrow_num = 5;
+                        }
+*/
+//align(i2,i)
+//align(j2,j)
+                        func(i, j, arrow_num);
+                        i = new_i;
+                    }
+                }
+                else {
+                    var dj = (j2-j1)/(i2-i1);
+                    var j = j1;
+                    var prev_j = 0;
+                    for (var i=i1; align(i2, i) != i2; i+=(i2>=i1?1:-1)) {
+                        var arrow_num = 0;
+                        var new_j = j + (i2>=i1?dj:-dj);
+                        if (new_j > j) arrow_num = align(i2, i)%2==1?5:4;
+                        if (new_j == j) arrow_num = align(i2, i)%2==1?4:5;
+                        if (new_j < j) arrow_num = align(i2, i)%2==1?5:4;
+                        if (align(i2, i)%2==1 && align(j2, j) > align(j2, prev_j)) {
+//                            func(align(j2, prev_j), align(i2, i), 0);
+//                            arrow_num = 5;
+                        }
+//                        if (align(j2, new_j) < align(j2, j)) {
+//                            if (align(j2, j)%2==0) {
+//                                func(j, new_i, arrow_num);
+//                            }
+//                            arrow_num = 5;
+//                        }
+                        func(align(i2,i), align(j2,j), arrow_num);
+                        j = new_j;
+                    }
+                }
+            }
+
+            drawGoto(i, j, x, y)
+            {
+                console.log("::: " + x + "," + y + " => " + " " + xy1toi(x,y) + ":" + xy1toj(x,y))
+                this.mapLine(i, j, xy1toi(x,y), xy1toj(x,y), function(i, j, arrow_num) {
+//console.log(":::" + i + ":" + j)
+                    _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), i, j, 514+arrow_num, _screenZoom);
+                })
+            }
+        }
+
+        setTimeout(drawScene, 700, 1);
+
+        window.onmousedown = function(event) {
+            _game.click(Xtox(event.pageX), Ytoy(event.pageY));
+            drawScene(0);
+            _mousedown = 1;
+        }
+
+        window.onmousemove = function(event) {
+            if (_mousedown && _selection != -1) {
+                _redraw = 1;
+                drawScene(0);
+                _control.drawGoto(_units[_selection].i, _units[_selection].j, Xtox(event.clientX), Ytoy(event.clientY));
+            }
+        }
+
+        document.body.onkeydown = function(event) {
+            if (event.shiftKey) {
+                _shift_pressed = 1;
+            }
+            else {
+                _shift_pressed = 0;
+            }
+            if (event.ctrlKey) {
+                _ctrl_pressed = 1;
+            }
+            else {
+                _ctrl_pressed = 0;
+            }
+        };
+
+        document.body.onkeyup = function(event) {
+            if (event.shiftKey) {
+                _shift_pressed = 1;
+            }
+            else {
+                _shift_pressed = 0;
+            }
+            if (event.ctrlKey) {
+                _ctrl_pressed = 1;
+            }
+            else {
+                _ctrl_pressed = 0;
+            }
+        };
+
+        window.onmouseup = function(event) {
+            _mousedown = 0;
+        }
+
+        window.onscroll = function(event) {
+//            _redraw = 1;
+//           setTimeout(drawScene, 100);
+        }
+
+        function checkScrollTimeout(X, Y)
+        {
+            if (_screenOffsetX == X && _screenOffsetY == Y) {
+                _scroll_step = 4;
+            }
+        }
+
+        var _scroll_step = 4;
+        document.addEventListener("wheel", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (_ctrl_pressed) {
+              _screenZoom -= event.deltaY>0?-0.2:0.2;
+              if (_screenZoom < 1) {
+                  _screenZoom = 1;
+              }
+              if (_screenZoom > 5) {
+                  _screenZoom = 5;
+              }
+              _fulldraw = 1;
+              _redraw = 1;
+          }
+          else
+          for (k=0; k<_scroll_step; ++k) {
+              if (!_shift_pressed) {
+                  _screenOffsetY -= event.deltaY>0?-_screenZoom/5:_screenZoom/5;
+              }
+              else {
+                  _screenOffsetX -= event.deltaY>0?-_screenZoom/5:_screenZoom/5;
+              }
+              _fulldraw = 1;
+              _redraw = 1;
+              if (!_in_drawing) {
+                  setTimeout(drawScene, 0, 0);
+              }
+          }
+                  setTimeout(drawScene, 0, 0);
+
+//drawScene(0);
+          _scroll_step = _scroll_step>128?_scroll_step:_scroll_step*2;
+          setTimeout(checkScrollTimeout, 500, _screenOffsetX, _screenOffsetY);
+          // now define custom functionality
+        }, { passive: false });
+
+   </script>
+</body>
+</html>
