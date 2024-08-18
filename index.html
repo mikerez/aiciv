@@ -548,7 +548,6 @@
 
         function Xtox(X) { return X*2-_canvas.width/*/2*2*/; }
         function Ytoy(Y) { return Y*2-_canvas.height/*/2*2*/; }
-        function align(to, val) { return to > val ? Math.ceil(val) : Math.floor(val); }
         const _control = new class
         {
             mapLine(i1, j1, i2, j2, func)
@@ -557,25 +556,56 @@
                 i2 = Math.round(i2);
                 j1 = Math.round(j1);
                 j2 = Math.round(j2);
+
+                var i = i1, pi = i1, pmi = 0;
+                var j = j1, pj = j1, pmj = 0;
+
+                var limit = 30;
+                while ((i != i2 || j != j2) && limit > 0) {
+                    var di = i2-i
+                    var dj = j2-j
+                    var pi = i
+                    var pj = j
+
+                    var mi = (di > 0 ? 1 : (di < 0 ? -1 : 0));
+                    var mj = (dj > 0 ? 1 : (dj < 0 ? -1 : 0));
+                    if ((mi == mj || mi == -mj) && pmi == mi && pmj == mj) {
+                        if (dj > 0 && di > dj || dj < 0 && di < dj) {
+                            mj = 0;
+                        }
+                        if (di > 0 && dj > di || di < 0 && dj < di) {
+                            mi = 0;
+                        }
+                    }
+                    if (mi == -mj) {
+                        if (limit%2==0) {
+                            mi = 0;
+                        }
+                        else {
+                            mj = 0;
+                        }
+                    }
+                    pmi = mi
+                    pmj = mj
+                    i += mi
+                    j += mj
+                    func(pi, pj, mi==1&&mj==1?0:(mi==1&&mj==0?1:mi==0&&mj==-1?2:mi==-1&&mj==-1?3:mi==-1&&mj==0?4:5));
+                    --limit;
+                }
+
+/*
                 if (Math.abs(i2-i1) < Math.abs(j2-j1)) {
                     var di = (i2-i1)/(j2-j1);
                     var i = i1
                     for (var j=j1; align(j2, j) != j2; j+=(j2>=j1?1:-1)) {
-                        var arrow_num = 0;
+                        var arrow_num = 2;
                         var new_i = i + (j2>=j1?di:-di);
-/*                        if (align(i2, new_i) > align(i2, i)) {
-                            if (align(i2, i)%2==0) {
-                                func(align(i2,new_i), align(j2,j), arrow_num);
-                            }
+                        if (align(i2,new_i) < align(i2,i)) {
+                            arrow_num = 3;
+                        }
+                        if (align(i2,new_i) > align(i2,i)) {
                             arrow_num = 1;
                         }
-                        if (align(i2, new_i) < align(i2, i)) {
-                            if (align(i2, i)%2==0) {
-                                func(align(i2,new_i), align(j2,j), arrow_num);
-                            }
-                            arrow_num = 5;
-                        }
-*/
                         func(align(i2,i), align(j2,j), arrow_num);
                         i = new_i;
                     }
@@ -585,30 +615,24 @@
                     var j = j1;
                     var prev_j = 0;
                     for (var i=i1; align(i2, i) != i2; i+=(i2>=i1?1:-1)) {
-                        var arrow_num = 0;
+                        var arrow_num = 6;
                         var new_j = j + (i2>=i1?dj:-dj);
-                        if (new_j > j) arrow_num = align(i2, i)%2==1?5:4;
-                        if (new_j == j) arrow_num = align(i2, i)%2==1?4:5;
-                        if (new_j < j) arrow_num = align(i2, i)%2==1?5:4;
-                        if (align(i2, i)%2==1 && align(j2, j) > align(j2, prev_j)) {
-//                            func(align(j2, prev_j), align(i2, i), 0);
-//                            arrow_num = 5;
+                        if (align(j2,new_j) < align(j2,j)) {
+                            arrow_num = 0;
                         }
-//                        if (align(j2, new_j) < align(j2, j)) {
-//                            if (align(j2, j)%2==0) {
-//                                func(j, new_i, arrow_num);
-//                            }
-//                            arrow_num = 5;
-//                        }
+                        if (align(j2,new_j) > align(j2,j)) {
+                            arrow_num = 5;
+                        }
                         func(align(i2,i), align(j2,j), arrow_num);
                         j = new_j;
                     }
                 }
+*/
             }
 
             drawGoto(i, j, x, y)
             {
-                console.log("::: " + x + "," + y + " => " + " " + xy1toi(x,y) + ":" + xy1toj(x,y))
+//                console.log("::: " + x + "," + y + " => " + " " + xy1toi(x,y) + ":" + xy1toj(x,y))
                 this.mapLine(i, j, xy1toi(x,y), xy1toj(x,y), function(i, j, arrow_num) {
 //console.log(":::" + i + ":" + j)
                     _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), i, j, 514+arrow_num, _screenZoom);
