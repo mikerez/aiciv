@@ -141,8 +141,8 @@
                                         var was = _map_terrain_tex[ri][rj]>>4
                                         _map_terrain_tex[ri][rj] &= 0x0F;
                                         _map_terrain_tex[ri][rj] |= (was==0?3:(was-1))<<4;
-                                        _map_terrain_bit[ri][rj] &= 0xFFF0;
                                         if ((_map_terrain_tex[ri][rj]>>4) < 3 && (_map_terrain_bit[ri][rj]&0x000F)) {
+                                            _map_terrain_bit[ri][rj] &= 0xFFF0;
                                             _map_terrain_bit[ri][rj] |= _map_terrain_tex[ri][rj]>>4;
                                         }
                                     }
@@ -173,46 +173,31 @@
 
             enhMap()
             {
-                for (var i=1; i < _map_size-1; i++) {
-                    for (var j=1; j < _map_size-1; j++) {
-                        if ((_map_terrain_tex[i][j]&0x1F) == 4+(3<<4) && (_map_terrain_tex[i+1][j]&0x1F) == 4+(3<<4)
-                         && (_map_terrain_tex[i][j+1]&0x1F) == 4+(3<<4) && (_map_terrain_tex[i+1][j+1]&0x1F) == 4+(3<<4)
-                         && (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) < 0xC0) {
-                             _map_terrain_tex[i][j] = 4+(3<<4);
-                             _map_terrain_tex[i+1][j] = 4+(3<<4);
-                             _map_terrain_tex[i][j+1] = 4+(3<<4);
-                             _map_terrain_tex[i+1][j+1] = 4+(4<<4);
+                for (var i=0; i < _map_size-1; i++) {
+                    for (var j=0; j < _map_size-1; j++) {
+                        for (var k=0; k < 16; k++) {
+                            for (var l=0; l < 4; l++) {
+                                if (_textures[k+((l+4)<<4)] !== undefined
+                                 && (_map_terrain_tex[i][j]&0x3F) == k+(l<<4) && (_map_terrain_tex[i+1][j]&0x3F) == k+(l<<4)
+                                 && (_map_terrain_tex[i][j+1]&0x3F) == k+(l<<4) && (_map_terrain_tex[i+1][j+1]&0x3F) == k+(l<<4)
+                                 /*&& (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) < 0xC0*/) {
+//                                     _map_terrain_tex[i][j] = k+((l+4)<<4);
+                                     _map_terrain_tex[i+1][j] = k+((l+4)<<4);
+//                                     _map_terrain_tex[i][j+1] = k+((l+4)<<4);
+                                     _map_terrain_tex[i+1][j+1] = k+((l+4)<<4);
+if ((_map_terrain_tex[i+1][j]&0xF)==4) {
+_map_terrain_bit[i+2][j+1] |= 1<<8;
+_map_terrain_bit[i+1][j+2] |= 1<<8;
+_map_terrain_bit[i+2][j+2] |= 1<<8;
+}
+                                }
+                            }
                         }
-                        if ((_map_terrain_tex[i][j]&0x1F) == 4+(3<<4) && (_map_terrain_tex[i+1][j]&0x1F) == 4+(3<<4)
-                         && (_map_terrain_tex[i][j+1]&0x1F) == 4+(3<<4) && (_map_terrain_tex[i+1][j+1]&0x1F) == 4+(3<<4)
-                         && (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) == 0xC0) {
-                             _map_terrain_tex[i][j] = 4+(3<<4);
-                             _map_terrain_tex[i+1][j] = 4+(3<<4);
-                             _map_terrain_tex[i][j+1] = 4+(3<<4);
-                             _map_terrain_tex[i+1][j+1] = 4+(5<<4);
+                        if (_map_terrain_tex[i][j]==4+((1+4)<<4) && Math.random() > 0.5) {
+                            _map_terrain_tex[i][j] |= 8<<4;
                         }
-                        if ((_map_terrain_tex[i][j]&0x2F) == 4+(0<<4) && (_map_terrain_tex[i+1][j]&0x2F) == 4+(0<<4)
-                         && (_map_terrain_tex[i][j+1]&0x2F) == 4+(0<<4) && (_map_terrain_tex[i+1][j+1]&0x2F) == 4+(0<<4)
-                         && (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) == 0x00) {
-                             _map_terrain_tex[i][j] = 4+(2<<4);
-                             _map_terrain_tex[i+1][j] = 4+(2<<4);
-                             _map_terrain_tex[i][j+1] = 4+(2<<4);
-                             _map_terrain_tex[i+1][j+1] = 4+(6<<4);
-                        }
-                        if ((_map_terrain_tex[i][j]&0x2F) == 1+(2<<4) && (_map_terrain_tex[i+1][j]&0x2F) == 1+(2<<4)
-                         && (_map_terrain_tex[i][j+1]&0x2F) == 1+(2<<4) && (_map_terrain_tex[i+1][j+1]&0x2F) == 1+(2<<4)
-                         && (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) <= 0xA0) {
-                             _map_terrain_tex[i][j] = 1+(2<<4);
-                             _map_terrain_tex[i+1][j] = 1+(2<<4);
-                             _map_terrain_tex[i][j+1] = 1+(2<<4);
-                             _map_terrain_tex[i+1][j+1] = 1+(4<<4);
-                        }
-                        if ((_map_terrain_tex[i][j]&0x3F) == 1+(3<<4) && (_map_terrain_tex[i+1][j]&0x3F) == 1+(3<<4)
-                         && (_map_terrain_tex[i][j+1]&0x3F) == 1+(3<<4) && (_map_terrain_tex[i+1][j+1]&0x3F) == 1+(3<<4)) {
-                             _map_terrain_tex[i][j] = 1+(3<<4);
-                             _map_terrain_tex[i+1][j] = 1+(3<<4);
-                             _map_terrain_tex[i][j+1] = 1+(3<<4);
-                             _map_terrain_tex[i+1][j+1] = 1+(5<<4);
+                        if (_map_terrain_tex[i][j]==4+((4)<<4) && Math.random() > 0.5) {
+                            _map_terrain_tex[i][j] |= 8<<4;
                         }
                     }
                 }
@@ -228,7 +213,7 @@
                 this.genMap(10, 10, 10, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[1]+(_map_view[3]-_map_view[1])/10, 3, 1, 1);  // snow
                 this.genMap(10, 10, 10, 5, _map_view[0], _map_view[3]-(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3], 3, 1, 1);  // snow
                 this.fixMap();  // before mod tiles
-                this.genMap(20, 15, 3, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[3], -1, 2, -1);  // mods
+                this.genMap(30, 20, 5, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[3], -1, 2, -1);  // mods
                 this.genMap(10, 20, 1, 1, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 0+(1<<4), 0, 0);  // wide rivers
                 this.genMap(6, 10, 1, 1, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/10, 7, 1, 0);  // narrow rivers
                 this.enhMap();
@@ -283,6 +268,7 @@
                     },
                     uniformLocations: {
                         sampler: _gl.getUniformLocation(this.shaderProgram, 'uSampler'),
+                        brightness: _gl.getUniformLocation(this.shaderProgram, 'uBrightness'),
                     },
                 };
             }
@@ -307,8 +293,10 @@
                 this.fsSource = `
                     varying highp vec2 vTextureCoord;
                     uniform sampler2D uSampler;
+                    uniform mediump float uBrightness;
                     void main(void) {
                         gl_FragColor = texture2D(uSampler, vTextureCoord);
+                        gl_FragColor = gl_FragColor * uBrightness;
                     }
                 `;
             }
@@ -373,7 +361,7 @@
 //                return (value & (value - 1)) == 0;
 //            }
 
-            drawSprite(x, y, i, j, type, zoom)
+            drawSprite(x, y, type, zoom)
             {
                 var positionBuffer = _gl.createBuffer();
                 _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
@@ -393,11 +381,12 @@
                 //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
                 _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
                 _gl.uniform1i(this.programInfo.uniformLocations.sampler, 0);
+                _gl.uniform1f(this.programInfo.uniformLocations.brightness, 1.0);
 
                 _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
             }
 
-            drawSprite1(x, y, i, j, type, zoom)
+            drawSprite1(x, y, type, zoom)
             {
                 var positionBuffer = _gl.createBuffer();
                 _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
@@ -417,18 +406,20 @@
                 //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
                 _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
                 _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
+                _gl.uniform1f(this.programInfo.uniformLocations.brightness, 1.0);
 
                 _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
             }
         }
 
         _screen.init();
-        // [A D D D T T T T], T - type 4 bit, D - depth/height/wildity, A - 4 blocks aggregation of similar type
-        _screen.loadTexture('waterdeep.png', 0);
-         _screen.loadTexture('waterdeep1.png', 0+(1<<4));  // deep
-         _screen.loadTexture('water.png', 0+(2<<4));  // deep
-         _screen.loadTexture('water.png', 0+(3<<4));  // deep
-         _screen.loadTexture('water-1.png', 0+(8<<4));  // deep
+        // [R A D D T T T T], T - type 4 bit, D - depth/height/wildity, A - 4 blocks aggregation of similar type
+        _screen.loadTexture('waterdeep1.png', 0);
+         _screen.loadTexture('water.png', 0+(1<<4));  // deep
+         _screen.loadTexture('waterdeep.png', 0+(2<<4));  // deep
+         _screen.loadTexture('waterdeep.png', 0+(3<<4));  // deep
+//         _screen.loadTexture('water-1.png', 0+(8<<4));  // deep
+//         _screen.loadTexture('water4.png', 0+(4<<4));  // deep
         _screen.loadTexture('sand.png', 1);
          _screen.loadTexture('sanddune3.png', 1+(1<<4));
          _screen.loadTexture('sanddune1.png', 1+(2<<4));
@@ -448,16 +439,19 @@
           _screen.loadTexture('hills2.png', 4+(2<<4));
           _screen.loadTexture('hills3.png', 4+(3<<4));
           _screen.loadTexture('hills4.png', 4+(4<<4));
-          _screen.loadTexture('hills5.png', 4+(5<<4));
-          _screen.loadTexture('hills6.png', 4+(6<<4));
+          _screen.loadTexture('hills5.png', 4+((1+4)<<4));
+          _screen.loadTexture('hills6.png', 4+((2+4)<<4));
+          _screen.loadTexture('hills12.png', 4+((8+4)<<4));
+          _screen.loadTexture('hills13.png', 4+((8+1+4)<<4));
         _screen.loadTexture('rocks.png', 5);
           _screen.loadTexture('rocks.png', 5+(1<<4));
           _screen.loadTexture('rocks2.png', 5+(2<<4));
           _screen.loadTexture('rocks1.png', 5+(3<<4));
-        _screen.loadTexture('grassforest2.png', 6);
-         _screen.loadTexture('grassforest1.png', 6+(1<<4));
-         _screen.loadTexture('grassforest3.png', 6+(2<<4));
-         _screen.loadTexture('grassforest2.png', 6+(3<<4));
+        _screen.loadTexture('forest.png', 6);
+         _screen.loadTexture('forest1.png', 6+(1<<4));
+         _screen.loadTexture('forest2.png', 6+(2<<4));
+         _screen.loadTexture('forest3.png', 6+(3<<4));
+         _screen.loadTexture('forest7.png', 6+(7<<4));
         _screen.loadTexture('grasswater.png', 7);
 
         _screen.loadTexture('settler.png', 256);
@@ -470,7 +464,7 @@
         _screen.loadTexture('arrow3.png', 516);
         _screen.loadTexture('arrow4.png', 517);
         _screen.loadTexture('arrow5.png', 518);
-        _screen.loadTexture('arrow6.png', 519);
+        _screen.loadTexture('arrow6.png', 519);                                      +
 
         _map.init();
         _map.gen();
@@ -506,8 +500,8 @@
             _gl.vertexAttribPointer(_screen.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
             _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.textureCoord);
             //
-            var start_i = Math.round(xytoi(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom*1.6) - 1;
-            var start_j = Math.round(xytoj(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom*1.6);
+            var start_i = Math.round(xytoi(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom) - 1;
+            var start_j = Math.round(xytoj(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom);
             var height_i = Math.round(_canvas.width/2*2/_cell_height*_screenZoom*2.6);
             var width_j = Math.round(_canvas.height/2*2/_cell_width*_screenZoom*3.6)+1;
             if (start_i < 0) {
@@ -522,6 +516,10 @@
             if (start_j + width_j >= _map_size) {
                 width_j = _map_size - start_j - 1
             }
+            WIDTH=1/_canvas.width
+            HEIGHT=1/_canvas.height
+            STARTX=220/_screenZoom
+            STARTY=160/_screenZoom
             for (i=start_i; i < start_i + height_i; ++i) {
                 for (j=start_j + width_j; j >= start_j; --j) {
 //                    if (j >= 0 && i >= 0 && j < _map_size && i < _map_size) 
@@ -534,10 +532,36 @@
                         if (/*_map_terrain_tex[i][j]==(0+(1<<4))&&_step%2 ||*/ _redraw) {
                             // - _map_view[0]* /*20*/0*sqrt2
                             // - _map_view[1]* /*20*/0*sqrt2 
-                            _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), i, j, /*(_map_terrain_tex[i][j]==(0+(1<<4))&&_step%2)?8<<4:*/_map_terrain_tex[i][j], _screenZoom);
-                            if ((_map_terrain_tex[i][j]>>4&4) && (_map_terrain_tex[i-1][j]>>4&4) == 0 && (_map_terrain_tex[i][j-1]>>4&4) == 0) {
-                                _screen.drawSprite1(ijtox1(i,j) - _cell_width/_screenZoom, ijtoy1(i,j) - _cell_height/_screenZoom, i, j, _map_terrain_tex[i][j], _screenZoom);
+
+                var positionBuffer = _gl.createBuffer();
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                var positions = [
+                    WIDTH*(-STARTX+ijtox1(i,j)),  HEIGHT*(STARTY-ijtoy1(i,j)),
+                    WIDTH*(-STARTX+ijtox1(i,j)), HEIGHT*(-STARTY-ijtoy1(i,j)),
+                    WIDTH*(STARTX+ijtox1(i,j)),  HEIGHT*(STARTY-ijtoy1(i,j)),
+                    WIDTH*(STARTX+ijtox1(i,j)), HEIGHT*(-STARTY-ijtoy1(i,j)),
+                ];
+                _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
+
+                _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+                _gl.vertexAttribPointer(_screen.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+                _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.vertexPosition);
+
+                _gl.activeTexture(_gl.TEXTURE0);
+                //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
+//                if (_textures[_map_terrain_tex[i][j]&~(4<<4)] === undefined) alert("Undefined struct " + (_map_terrain_tex[i][j]&~(4<<4)));
+                _gl.bindTexture(_gl.TEXTURE_2D, _textures[_map_terrain_tex[i][j]/*&~(4<<4)*/]);
+                _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
+                _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 1.0-(_map_terrain_bit[i][j]>>8)*0.1);
+
+                _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
+
+
+//                            _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), /*(_map_terrain_tex[i][j]==(0+(1<<4))&&_step%2)?8<<4:*/_map_terrain_tex[i][j]&~(4<<4), _screenZoom);
+                            if (((_map_terrain_tex[i][j]>>4)&4) /*&& ((_map_terrain_tex[i-1][j]>>4)&4) == 0 && ((_map_terrain_tex[i][j-1]>>4)&4) == 0*/) {
+                                _screen.drawSprite1(ijtox1(i,j) - _cell_width/_screenZoom/3, ijtoy1(i,j) - _cell_height/_screenZoom/10, _map_terrain_tex[i][j], _screenZoom);
                             }
+//, 1.0-(_map_terrain_bit>>8)
                         }
                     }
                 }
@@ -545,15 +569,15 @@
 
             if (_selection != -1) {
                 _screen.drawSprite(ijtox1(_units[_selection].i,_units[_selection].j), ijtoy1(_units[_selection].i,_units[_selection].j),
-                                   _units[_selection].i, _units[_selection].j, _step%2?512:513, _screenZoom);
+                                   _step%2?512:513, _screenZoom);
                 _screen.drawSprite(ijtox1(_units[_selection].i,_units[_selection].j), ijtoy1(_units[_selection].i,_units[_selection].j),
-                                   _units[_selection].i, _units[_selection].j, _units[_selection].texture, _screenZoom);
+                                   _units[_selection].texture, _screenZoom);
             }
 
             if (_redraw) {
                 for (k=0; k < _units.length; k++) {
                     _screen.drawSprite(ijtox1(_units[k].i,_units[k].j), ijtoy1(_units[k].i,_units[k].j),
-                                       _units[k].i, _units[k].j, _units[k].texture, _screenZoom);
+                                       _units[k].texture, _screenZoom);
                 }
             }
 
