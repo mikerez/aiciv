@@ -45,8 +45,8 @@ const _control = new class
             i += mi
             j += mj
 
-            if (Math.round(pi) < 0 || Math.round(pi) > _map_size || Math.round(pj) < 0 || Math.round(pj) > _map_size
-                 || (_map_terrain_tex[Math.round(pi)][Math.round(pj)]&0x0F) == 0) {
+            if (Math.round(i) < 0 || Math.round(i) > _map_size || Math.round(j) < 0 || Math.round(j) > _map_size
+                 || (_map_terrain_tex[Math.round(i)][Math.round(j)]&0x0F) == 0 /*water*/) {
                 break;
             }
             func(Math.round(pi), Math.round(pj), Math.round(i), Math.round(j), mi==1&&mj==1?0:mi==1&&mj==0?1:mi==1&&mj==-1?2:mi==0&&mj==-1?3:mi==-1&&mj==-1?4:mi==-1&&mj==0?5:mi==-1&&mj==1?6:7);
@@ -57,14 +57,14 @@ const _control = new class
 
     drawGoto(i1, j1, i2, j2, k)
     {
-        var ctx = _draw2D.clear();
+        var ctx = _draw.clear();
         _units[k].step_randomizer = 0;
         this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
 //console.log(":::" + i + ":" + j)
 //                    _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), 514+arrow_num, _screenZoom);
             var ix = arrow_num==0?10:arrow_num==1?5:arrow_num==2?0:arrow_num==3?-5:arrow_num==4?-10:arrow_num==5?-5:arrow_num==6?0:(5);
             var iy = arrow_num==0?0:arrow_num==1?5:arrow_num==2?10:arrow_num==3?5:arrow_num==4?0:arrow_num==5?-5:arrow_num==6?-10:(-5);
-            _draw2D.drawArrow(ctx, x1toX(ijtox1(i,j))+5-ix, y1toY(ijtoy1(i,j))+5-iy, x1toX(ijtox1(i,j))+5+ix, y1toY(ijtoy1(i,j))+5+iy);
+            _draw.drawArrow(ctx, x1toX(ijtox1(i,j))+5-ix, y1toY(ijtoy1(i,j))+5-iy, x1toX(ijtox1(i,j))+5+ix, y1toY(ijtoy1(i,j))+5+iy);
         }, k, 30)
         _units[k].step_randomizer = 0;
     }

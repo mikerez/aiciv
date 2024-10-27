@@ -62,7 +62,7 @@ const _screen = new class
             uniform mediump float uBrightness;
             void main(void) {
                 gl_FragColor = texture2D(uSampler, vTextureCoord);
-                gl_FragColor = gl_FragColor * uBrightness;
+                gl_FragColor.rgb = gl_FragColor.rgb * uBrightness;
             }
         `;
     }
@@ -172,7 +172,7 @@ const _screen = new class
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
         _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
-        _gl.uniform1f(this.programInfo.uniformLocations.brightness, 1.0);
+        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0xF)-((_map_terrain_bit[i][j]>>15)&1)*0.1);
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -259,8 +259,8 @@ function drawScene(loop)
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
 //                if (_textures[_map_terrain_tex[i][j]/*&~(4<<4)*/] === undefined) alert("Undefined struct " + (_map_terrain_tex[i][j]/*&~(4<<4*/));
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[_map_terrain_tex[i][j]/*&~(4<<4)*/]);
-        _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
-        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 1.0-(_map_terrain_bit[i][j]>>8)*0.1);
+        _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);  // there is another same place!!!
+        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0x5)-((_map_terrain_bit[i][j]>>15)&1)*0.1);
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
 
@@ -286,6 +286,8 @@ function drawScene(loop)
         for (k=0; k < _units.length; k++) {
             _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
                                _units[k].texture, _screenZoom);
+            _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
+                               514, _screenZoom);
         }
     }
 

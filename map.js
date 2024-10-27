@@ -9,8 +9,8 @@ const _map = new class
 
         for (var i=0; i < _map_size; i++) {
             for (var j=0; j<_map_size; j++) {
-                _map_terrain_tex[i][j] = 0;
-                _map_terrain_bit[i][j] = 0xFF;
+                _map_terrain_tex[i][j] = 0;  // see _textures
+                _map_terrain_bit[i][j] = 0xFF;  // {1'shadow,1'map_open,2'rsv,4'map_seen,4'turn_possible,4'height_cost}
             }
         }
     }
@@ -58,7 +58,7 @@ const _map = new class
                             if (op == 2 && (_map_terrain_tex[ri][rj]>>4) != 1) {  // mod terrain heights
                                 var was = _map_terrain_tex[ri][rj]>>4
                                 _map_terrain_tex[ri][rj] &= 0x0F;
-                                _map_terrain_tex[ri][rj] |= (was==0?3:(was-1))<<4;
+                                _map_terrain_tex[ri][rj] |= (was==0?3:(was-1))<<4;  //hz
                             }
                         }
                     }
@@ -100,13 +100,14 @@ const _map = new class
 //                                     _map_terrain_tex[i][j+1] = k+((l+4)<<4);
                              _map_terrain_tex[i+1][j+1] = k+((l+4)<<4);
 if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // shadows
-    if ((_map_terrain_tex[i+2][j+1]&0xF)!=4) _map_terrain_bit[i+2][j+1] |= 1<<8;
-    if ((_map_terrain_tex[i+1][j+2]&0xF)!=4) _map_terrain_bit[i+1][j+2] |= 1<<8;
-    if ((_map_terrain_tex[i+2][j+2]&0xF)!=4) _map_terrain_bit[i+2][j+2] |= 1<<8;
+    if ((_map_terrain_tex[i+2][j+1]&0xF)!=4) _map_terrain_bit[i+2][j+1] |= 1<<15;
+    if ((_map_terrain_tex[i+1][j+2]&0xF)!=4) _map_terrain_bit[i+1][j+2] |= 1<<15;
+    if ((_map_terrain_tex[i+2][j+2]&0xF)!=4) _map_terrain_bit[i+2][j+2] |= 1<<15;
 }
                         }
                     }
                 }
+                // alternative tiles
                 if (_map_terrain_tex[i][j]==4+((1+4)<<4) && Math.random() > 0.5) {
                     _map_terrain_tex[i][j] |= 8<<4;
                 }
@@ -117,9 +118,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // shadows
 //                            _map_terrain_tex[i][j] |= 8<<4;
                 }
 
-                if ((_map_terrain_tex[i][j]&0x0F) != 0) {
+                if ((_map_terrain_tex[i][j]&0x0F) != 0) {  // not water
                     _map_terrain_bit[i][j] &= 0xFFF0;
-                    _map_terrain_bit[i][j] |= (_map_terrain_tex[i][j]>>4)&0x3;
+                    _map_terrain_bit[i][j] |= (_map_terrain_tex[i][j]>>4)&0x3;  // penalty
                 }
             }
         }
@@ -140,4 +141,39 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // shadows
         this.genMap(6, 10, 1, 1, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/10, 7+(3<<4), 1);  // narrow rivers
         this.enhMap();
     }
+
+    closeMap(i1, j1)
+    {
+        for(var x=0; x < 5; x = x + 1) {
+            for(var y=0; y < 5; y = y + 1) {
+                var i = i1 - 2 + x;
+                var j = j1 - 2 + y;
+                if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+                    continue;
+                }
+                _map_terrain_bit[i][j] &= 0xF0FF;
+            }
+        }
+    }
+
+    openMap(i2, j2)
+    {
+        for(var x=0; x < 5; x = x + 1) {
+            for(var y=0; y < 5; y = y + 1) {
+                var i = i2 - 2 + x;
+                var j = j2 - 2 + y;
+                if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+                    continue;
+                }
+                _map_terrain_bit[i][j] |= 0x4000;  // seen
+                if (x > 0 && x < 4 && y > 0 && y < 4) {
+                    _map_terrain_bit[i][j] |= 0x0500;  // close view
+                }
+                else {
+                    _map_terrain_bit[i][j] |= 0x0100;  // far view, must be in mask of number 0x500
+                }
+            }
+        }
+    }
+
 }

@@ -13,7 +13,7 @@
         </div>
     </div>
     <script src="menu_unit.js"></script>
-    <script src="draw2d.js"></script>
+    <script src="draw.js"></script>
     <script src="control.js"></script>
     <script src="game.js"></script>
     <script src="map.js"></script>
@@ -22,7 +22,7 @@
         // very global vars
 //        var _redraw = 1;
         var _fulldraw = 1;
-        var sqrt2 = Math.sqrt(2)
+        var sqrt2 = Math.sqrt(2);
 
         // we dont use class members to do not always write "this." since we use only one object of any type
         const _map_size = 100;
@@ -87,8 +87,6 @@
         function x1toX(x) { return (x+_canvas.width)/2/*/2*2*/; }
         function y1toY(y) { return (y+_canvas.height)/2/*/2*2*/; }
 
-        const _textures = new Array(1024);  // first 256 are map tiles
-
         var _canvas = document.getElementById("canvas3D");
         var _gl = _canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "low-power", preserveDrawingBuffer: true });
         const _ratio = window.devicePixelRatio;
@@ -101,6 +99,7 @@
         function ijtox1(i,j) { return (i*_cell_height + j*_cell_width - _screenOffsetX*2*_ratio)/_screenZoom; }
         function ijtoy1(i,j) { return (i*_cell_height - j*_cell_width - _screenOffsetY*2*_ratio)/_screenZoom; }
 
+        const _textures = new Array(1024);  // first 256 are map tiles
         _screen.init();
         // [R A D D T T T T], T - type 4 bit, D - depth/height/wildity, A - 4 blocks aggregation of similar type
         _screen.loadTexture('waterdeep1.png', 0);
@@ -151,7 +150,7 @@
         _screen.loadTexture('warrior.png', 258);
         _screen.loadTexture('select.png', 512);
         _screen.loadTexture('select1.png', 513);
-        _screen.loadTexture('arrow1.png', 514);
+        _screen.loadTexture('green.png', 514);
         _screen.loadTexture('arrow2.png', 515);
         _screen.loadTexture('arrow3.png', 516);
         _screen.loadTexture('arrow4.png', 517);
@@ -241,7 +240,7 @@
         document.addEventListener("wheel", (event) => {
           event.preventDefault();
           event.stopPropagation();
-          _draw2D.clear();
+          _draw.clear();
 
           if (_ctrl_pressed) {
               _screenZoom -= event.deltaY>0?-0.2:0.2;

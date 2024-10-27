@@ -9,6 +9,7 @@ var tennysonQuote = hereDoc(function() {/*!
 <font size="5" color="darkblue" face="Courier New">
 <a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Goto (G)</a><br>
 <a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Fortificate (F)</a><br>
+<a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Road (R)</a><br>
 <a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Destroy (D)</a><br>
 <a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Wait (W)</a><br>
 <a onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"">Irrigate (I)</a><br>
