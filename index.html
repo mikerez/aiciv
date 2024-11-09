@@ -12,12 +12,6 @@
         <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 4;overflow-y: scroll; height:400px;">
         </div>
     </div>
-    <script src="menu_unit.js"></script>
-    <script src="draw.js"></script>
-    <script src="control.js"></script>
-    <script src="game.js"></script>
-    <script src="map.js"></script>
-    <script src="screen.js"></script>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -37,50 +31,14 @@
         function xytoj(x,y) { return (x-y)/2/*sqrt2^2*//_cell_width; }  //_map_size*sqrt2/2-
         function ijtox(i,j) { return i*_cell_height+j*_cell_width; }
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
-
-        const _unit_type_textures = new Map();
-        _unit_type_textures.set(0, 256);  // settler
-        _unit_type_textures.set(1, 257);  // explorer
-        _unit_type_textures.set(2, 258);  // warrior
-
-        class Coord
-        {
-            constructor(i, j)
-            {
-                this.i = i
-                this.j = j
-            }
-        }
-        class Unit
-        {
-            constructor(type, i, j)
-            {
-                this.type = type;
-                this.texture = _unit_type_textures.get(type);
-                this.coord = new Coord(i,j);
-                this.gotoCoord = null;
-                this.move_penalty = 0;  // wait after difficult landshaft
-                this.odd_move = 0;
-            }
-
-            setGoto(i, j)
-            {
-                this.gotoCoord = Coord(i,j);
-            }
-
-        }
-
-        const _units = Array();
-        _units[0] = new Unit(0, 16, 53);
-        _units[1] = new Unit(0, 25, 55);
-        _units[2] = new Unit(1, 13, 50);
-        _units[3] = new Unit(2, 10, 51);
-        _units[4] = new Unit(1, 6, 53);
-        _units[5] = new Unit(2, 5, 55);
-        _units[6] = new Unit(1, 3, 50);
-        _units[7] = new Unit(1, 8, 51);
-
-        var _selection = 0;
+    </script>
+    <script src="menu_unit.js"></script>
+    <script src="draw.js"></script>
+    <script src="control.js"></script>
+    <script src="game.js"></script>
+    <script src="map.js"></script>
+    <script src="screen.js"></script>
+    <script>
         // X,Y - screen coordinates, like event.clientX,event.clientY
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
         function Ytoy1(Y) { return Y*2-_canvas.height/*/2*2*/; }
@@ -90,7 +48,7 @@
         var _canvas = document.getElementById("canvas3D");
         var _gl = _canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "low-power", preserveDrawingBuffer: true });
         const _ratio = window.devicePixelRatio;
-        var _screenZoom = 4;
+        var _screenZoom = 2;
         var _screenOffsetX = _map_view[0]/_screenZoom+_canvas.width*2;
         var _screenOffsetY = _map_view[1]/_screenZoom-_canvas.height*2;
         // xy1 - *2 coordinates, starting from center of the screen
@@ -145,17 +103,9 @@
          _screen.loadTexture('forest7.png', 6+(7<<4));
         _screen.loadTexture('grasswater.png', 7+(3<<4));
 
-        _screen.loadTexture('city.png', 256);
-        _screen.loadTexture('explorer.png', 257);
-        _screen.loadTexture('warrior.png', 258);
         _screen.loadTexture('select.png', 512);
         _screen.loadTexture('select1.png', 513);
         _screen.loadTexture('green.png', 514);
-        _screen.loadTexture('arrow2.png', 515);
-        _screen.loadTexture('arrow3.png', 516);
-        _screen.loadTexture('arrow4.png', 517);
-        _screen.loadTexture('arrow5.png', 518);
-        _screen.loadTexture('arrow6.png', 519);                                      +
 
         _map.init();
         _map.gen();
@@ -168,6 +118,14 @@
 
         setTimeout(drawScene, 700, 1);
 
+    </script>
+    <script src="game_prehistory.js"></script>
+    <script>
+        // select current game package
+        _current_game = _game_prehistory;
+
+        _current_game.startGame();
+
         window.onmousedown = function(event) {
             _control.click(Xtox1(event.pageX), Ytoy1(event.pageY));
             drawScene(0);
@@ -175,7 +133,7 @@
         }
 
         window.onmousemove = function(event) {
-            if (_mousedown && _selection != -1) {
+            if (_mousedown && _selection != -1 && _units[_selection].can_move) {
                 _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, xy1toi(Xtox1(event.clientX),Ytoy1(event.clientY)), xy1toj(Xtox1(event.clientX),Ytoy1(event.clientY)), _selection);
                 _units[_selection].gotoCoord = new Coord(xy1toi(Xtox1(event.clientX),Ytoy1(event.clientY)), xy1toj(Xtox1(event.clientX),Ytoy1(event.clientY)));
             }
@@ -202,7 +160,12 @@
                 _ctrl_pressed = 0;
             }
             if (event.code === 'Enter') {
-                _game.makeTurn();
+                _current_game.makeTurn();
+                _fullredraw = 1;
+                drawScene(0);
+            }
+            if (event.code === 'KeyB') {
+                _current_game.doCommand('b');
                 _fullredraw = 1;
                 drawScene(0);
             }
@@ -275,6 +238,6 @@
           // now define custom functionality
         }, { passive: false });
 
-   </script>
+    </script>
 </body>
 </html>
