@@ -14,30 +14,28 @@ const _control = new class
 
         var i = i1, pi = i1;//, pmi = 0;
         var j = j1, pj = j1;//, pmj = 0;
-        var odd = _units[k].odd_move;
         while ((i != i2 || j != j2) && limit > 0) {
             var di = i2-i;
             var dj = j2-j;
+            var abs_di = Math.abs(di);
+            var abs_dj = Math.abs(dj);
             var pi = i;
             var pj = j;
 
             var mi = (di > 0 ? 1 : (di < 0 ? -1 : 0));
             var mj = (dj > 0 ? 1 : (dj < 0 ? -1 : 0));
-            if ((mi == mj || mi == -mj) && /*pmi == mi && pmj == mj*/++_units[k].step_randomizer%2==0) {  // if moving diagonal, move the direction first where distance is more
-//console.log(mi + " " + mj + " " + pmi + " " + pmj)
-                if (dj > 0 && di > dj || dj < 0 && di < dj) {
+            if (mi == -mj) {  // forbidden vertical diagonal
+                if (abs_di > abs_dj) {
                     mj = 0;
                 }
-                if (di > 0 && dj > di || di < 0 && dj < di) {
+                else if (abs_dj > abs_di) {
                     mi = 0;
                 }
-            }
-            if (mi == -mj && odd) {  // forbidden diagonal
-                if (++_units[k].step_randomizer%2==0) {
-                    mi = 0;
+                else if ((i + j) % 2 == 0) {
+                    mj = 0;
                 }
                 else {
-                    mj = 0;
+                    mi = 0;
                 }
             }
 //                    pmi = mi
@@ -51,33 +49,43 @@ const _control = new class
             }
             func(Math.round(pi), Math.round(pj), Math.round(i), Math.round(j), mi==1&&mj==1?0:mi==1&&mj==0?1:mi==1&&mj==-1?2:mi==0&&mj==-1?3:mi==-1&&mj==-1?4:mi==-1&&mj==0?5:mi==-1&&mj==1?6:7);
             --limit;
-            odd = 1-odd;
         }
     }
 
     drawGoto(i1, j1, i2, j2, k)
     {
         var ctx = _draw.clear();
-        _units[k].step_randomizer = 0;
+        var path = [];
         this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
 //console.log(":::" + i + ":" + j)
 //                    _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), 514+arrow_num, _screenZoom);
+            path.push(new Coord(ni, nj));
+            if (arrow_num == 2 || arrow_num == 6) {
+                return;
+            }
             var ix = arrow_num==0?10:arrow_num==1?5:arrow_num==2?0:arrow_num==3?-5:arrow_num==4?-10:arrow_num==5?-5:arrow_num==6?0:(5);
             var iy = arrow_num==0?0:arrow_num==1?5:arrow_num==2?10:arrow_num==3?5:arrow_num==4?0:arrow_num==5?-5:arrow_num==6?-10:(-5);
             _draw.drawArrow(ctx, x1toX(ijtox1(i,j))+5-ix, y1toY(ijtoy1(i,j))+5-iy, x1toX(ijtox1(i,j))+5+ix, y1toY(ijtoy1(i,j))+5+iy);
         }, k, 30)
-        _units[k].step_randomizer = 0;
+        _units[k].gotoPath = path;
+        _units[k].gotoCoord = path.length ? path[path.length - 1] : null;
     }
 
     click(x, y)
     {
-        for (k=0; k < _units.length; k++) {
-            if (x > ijtox1(_units[k].coord.i,_units[k].coord.j)-10 && x < ijtox1(_units[k].coord.i,_units[k].coord.j) + 200
-             && y > ijtoy1(_units[k].coord.i,_units[k].coord.j)-10 && y < ijtoy1(_units[k].coord.i,_units[k].coord.j) + 150) {
+        _selection = -1;
+        for (k=_units.length - 1; k >= 0; k--) {
+            var unitX = ijtox1(_units[k].coord.i, _units[k].coord.j);
+            var unitY = ijtoy1(_units[k].coord.i, _units[k].coord.j);
+            var unitHalfWidth = 220/_screenZoom;
+            var unitHalfHeight = 160/_screenZoom;
+            if (x >= unitX - unitHalfWidth && x <= unitX + unitHalfWidth
+             && y >= unitY - unitHalfHeight && y <= unitY + unitHalfHeight) {
                 _selection = k;
 //                        _redraw = 1;
                 break;
             }
-        }                
+        }
+        return _selection != -1;
     }
 }

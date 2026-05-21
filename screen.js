@@ -98,9 +98,9 @@ const _screen = new class
         return shaderProgram;
     }
 
-    loadTexture(url, id)
+    loadTexture(url, id, fallbackUrl)
     {
-                function onLoadImage(image, texture) {
+        function onLoadImage(image, texture) {
             const internalFormat = _gl.RGBA;
             const srcFormat = _gl.RGBA;
             const srcType = _gl.UNSIGNED_BYTE;
@@ -120,6 +120,12 @@ const _screen = new class
         _textures[id] = _gl.createTexture();
         const image = new Image();
         image.onload = function() { onLoadImage(image, _textures[id]); }
+        image.onerror = function() {
+            if (fallbackUrl) {
+                image.onerror = null;
+                image.src = "images/" + fallbackUrl;
+            }
+        }
         image.src = "images/" + url;
     }
 
@@ -176,6 +182,35 @@ const _screen = new class
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
+}
+
+function drawSelectionStroke()
+{
+    const canvasSelection = document.getElementById("canvasSelection");
+    if (!canvasSelection) {
+        return;
+    }
+
+    const ctx = canvasSelection.getContext("2d");
+    ctx.clearRect(0, 0, canvasSelection.width, canvasSelection.height);
+    if (_selection == -1 || _units[_selection] == undefined) {
+        return;
+    }
+
+    var x = x1toX(ijtox1(_units[_selection].coord.i, _units[_selection].coord.j));
+    var y = y1toY(ijtoy1(_units[_selection].coord.i, _units[_selection].coord.j));
+    var radiusX = 118/_screenZoom;
+    var radiusY = 82/_screenZoom;
+
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.setLineDash([10, 6]);
+    ctx.lineDashOffset = _step%2 ? 0 : 8;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 8/_screenZoom, radiusX, radiusY, 0, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function drawScene(loop)
@@ -275,21 +310,16 @@ function drawScene(loop)
         }
     }
 
-    if (_selection != -1) {
-        _screen.drawSprite(ijtox1(_units[_selection].coord.i,_units[_selection].coord.j), ijtoy1(_units[_selection].coord.i,_units[_selection].coord.j),
-                           _step%2?512:513, _screenZoom);
-        _screen.drawSprite(ijtox1(_units[_selection].i,_units[_selection].j), ijtoy1(_units[_selection].i,_units[_selection].j),
-                           _units[_selection].texture, _screenZoom);
-    }
-
     if (_fulldraw) {
         for (k=0; k < _units.length; k++) {
             _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
                                _units[k].texture, _screenZoom);
-            _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
-                               514, _screenZoom);
         }
     }
+    if (typeof _current_game !== 'undefined' && _current_game.drawUnitStateLetters) {
+        _current_game.drawUnitStateLetters(document.getElementById("canvas2D").getContext("2d"));
+    }
+    drawSelectionStroke();
 
     if (_fulldraw) {
         const endTime = performance.now();
