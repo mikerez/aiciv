@@ -2,14 +2,24 @@
 <html>
 <head>
     <title>WebGL 2D Sprite Example</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #canvas3D {
+            display: block;
+        }
+    </style>
 </head>
 <body>
                           <!-- width="400" height="300" style="width:400px;height:300px;" -->
     <canvas id="canvas3D" width="1500" height="1000"></canvas>
     <canvas id="canvas2D" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 2;"></canvas>
+    <canvas id="canvasSelection" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 3;pointer-events: none;mix-blend-mode: difference;"></canvas>
     <div class="container">
-        <div style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 3;"><img src="images/eee.png"></div>
-        <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 4;overflow-y: scroll; height:400px;">
+        <div style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 4;"><img src="images/eee.png"></div>
+        <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 5;overflow-y: scroll; height:400px;">
         </div>
     </div>
     <script>
@@ -39,11 +49,22 @@
     <script src="map.js"></script>
     <script src="screen.js"></script>
     <script>
-        // X,Y - screen coordinates, like event.clientX,event.clientY
+        // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
         function Ytoy1(Y) { return Y*2-_canvas.height/*/2*2*/; }
         function x1toX(x) { return (x+_canvas.width)/2/*/2*2*/; }
         function y1toY(y) { return (y+_canvas.height)/2/*/2*2*/; }
+        function eventToCanvas(event) {
+            const rect = _canvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - rect.left) * _canvas.width / rect.width,
+                y: (event.clientY - rect.top) * _canvas.height / rect.height,
+            };
+        }
+        function eventToMapCoord(event) {
+            const point = eventToCanvas(event);
+            return new Coord(xy1toi(Xtox1(point.x), Ytoy1(point.y)), xy1toj(Xtox1(point.x), Ytoy1(point.y)));
+        }
 
         var _canvas = document.getElementById("canvas3D");
         var _gl = _canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "low-power", preserveDrawingBuffer: true });
@@ -103,9 +124,6 @@
          _screen.loadTexture('forest7.png', 6+(7<<4));
         _screen.loadTexture('grasswater.png', 7+(3<<4));
 
-        _screen.loadTexture('select.png', 512);
-        _screen.loadTexture('select1.png', 513);
-        _screen.loadTexture('green.png', 514);
 
         _map.init();
         _map.gen();
@@ -127,15 +145,29 @@
         _current_game.startGame();
 
         window.onmousedown = function(event) {
-            _control.click(Xtox1(event.pageX), Ytoy1(event.pageY));
+            const point = eventToCanvas(event);
+            const coord = eventToMapCoord(event);
+            if (_current_game.handleMapClick(coord)) {
+                _current_game.applyMenuRules();
+                drawScene(0);
+                return;
+            }
+            _control.click(Xtox1(point.x), Ytoy1(point.y));
+            _current_game.applyMenuRules();
             drawScene(0);
             _mousedown = 1;
         }
 
         window.onmousemove = function(event) {
+            const coord = eventToMapCoord(event);
+            if (_current_game.previewMapCommand(coord)) {
+                return;
+            }
             if (_mousedown && _selection != -1 && _units[_selection].can_move) {
-                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, xy1toi(Xtox1(event.clientX),Ytoy1(event.clientY)), xy1toj(Xtox1(event.clientX),Ytoy1(event.clientY)), _selection);
-                _units[_selection].gotoCoord = new Coord(xy1toi(Xtox1(event.clientX),Ytoy1(event.clientY)), xy1toj(Xtox1(event.clientX),Ytoy1(event.clientY)));
+                if (_current_game.prepareManualMovement) {
+                    _current_game.prepareManualMovement(_selection);
+                }
+                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
             }
         }
 
