@@ -12,19 +12,40 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 ## Unit State Rules
 
 - `PREHISTORY-UNIT-001`: Settlers are movable units.
-- `PREHISTORY-UNIT-002`: Workers are movable units.
+- `PREHISTORY-UNIT-002`: Explorers and military/naval units are movable units.
 - `PREHISTORY-UNIT-003`: Cities are non-moving units.
 - `PREHISTORY-UNIT-004`: Every unit must have a `gotoPath` queue.
 - `PREHISTORY-UNIT-005`: Every unit has an explicit layer state.
+- `PREHISTORY-UNIT-006`: Prehistory unit definitions use the main `UnitType` structure.
+
+## Unit Types
+
+| Unit | Attack | Defence | Speed | View Range | Technology Required | Production Cost | Resource Required |
+| --- | ---: | ---: | ---: | ---: | --- | ---: | --- |
+| Settlers | 0 | 1 | 1 | 2 | none | 20 | none |
+| Explorer | 0 | 1 | 2 | 4 | none | 15 | none |
+| Warrior | 2 | 1 | 1 | 2 | none | 20 | none |
+| Slinger | 2 | 1 | 1 | 2 | Archery | 25 | none |
+| Archor | 3 | 1 | 1 | 2 | Archery | 35 | none |
+| Spearman | 2 | 3 | 1 | 2 | Bronze Working | 35 | Bronze |
+| Horseman | 4 | 2 | 3 | 3 | Horseback Riding | 50 | Horses |
+| Chariot | 3 | 2 | 2 | 3 | Wheel | 45 | Horses |
+| Elephant | 5 | 4 | 2 | 3 | Horseback Riding | 70 | Elephants |
+| Catapult | 5 | 1 | 1 | 2 | Construction | 60 | none |
+| Trebuchet | 7 | 1 | 1 | 2 | Engineering | 80 | none |
+| Galley | 2 | 2 | 2 | 3 | Sailing | 40 | none |
+| Galleon | 5 | 4 | 3 | 4 | Navigation | 90 | none |
 
 ## Building State Rules
 
-- `PREHISTORY-BUILD-001`: A selected settler can build a city with command `b`.
+- `PREHISTORY-BUILD-001`: A selected settler can build a city with the `build_city` command or `B` key.
 - `PREHISTORY-BUILD-002`: Building a city consumes the settler.
+- `PREHISTORY-BUILD-003`: A selected city can choose a unit production option with command `produce_unit:<unitTypeId>`.
+- `PREHISTORY-BUILD-004`: Cities show the current production item and remaining turns in the unit menu.
 
 ## Turn Processing Rules
 
-- `PREHISTORY-TURN-001`: Layer movement rules are applied before base turn processing.
+- `PREHISTORY-TURN-001`: Layer movement rules are applied by the main `_game.applyTurnProcessingRules(layer)` function before base turn processing.
 - `PREHISTORY-TURN-002`: Base turn processing moves units, applies terrain delay, updates visible map state, and redraws base overlays.
 - `PREHISTORY-TURN-003`: Layer unit and building state rules are re-applied after base turn processing.
 - `PREHISTORY-TURN-004`: End Turn selects and centers the view on the next movable unit without a task.
@@ -35,7 +56,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 
 - `PREHISTORY-MENU-001`: If no unit is selected, unit action menu options are hidden.
 - `PREHISTORY-MENU-002`: Movable units show movement-related commands.
-- `PREHISTORY-MENU-003`: Settlers show the city building command.
+- `PREHISTORY-MENU-003`: Settlers show the Build City command.
 - `PREHISTORY-MENU-004`: Cities show building management options and hide movement commands.
 - `PREHISTORY-MENU-005`: Menu visibility is recalculated after selection, command processing, and turn processing.
 
