@@ -1,23 +1,58 @@
 
 
 _screen.loadTexture('settler.png', 256);
-_screen.loadTexture('worker.png', 257, 'explorer.png');
+_screen.loadTexture('explorer.png', 257);
 _screen.loadTexture('warrior.png', 258);
-_screen.loadTexture('city.png', 259, 'factory.png');
+_screen.loadTexture('city.png', 259);
+_screen.loadTexture('unit_slinger.png', 260);
+_screen.loadTexture('Archers.png', 261);
+_screen.loadTexture('unit_spearman.png', 262);
+_screen.loadTexture('unit_horseman.png', 263);
+_screen.loadTexture('unit_chariot.png', 264);
+_screen.loadTexture('WarElephant.png', 265);
+_screen.loadTexture('unit_catapult.png', 266);
+_screen.loadTexture('unit_trebuchet.png', 267);
+_screen.loadTexture('unit_galley.png', 268);
+_screen.loadTexture('unit_galleon.png', 269);
+
+const _prehistory_unit_types = [
+    new UnitType('settlers', 'Settlers', 0, 256, 0, 1, 1, 2, null, 20, null),
+    new UnitType('explorer', 'Explorer', 1, 257, 0, 1, 2, 4, null, 15, null),
+    new UnitType('warrior', 'Warrior', 2, 258, 2, 1, 1, 2, null, 20, null),
+    new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
+    new UnitType('archor', 'Archor', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
+    new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Bronze'),
+    new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 3, 3, 'Horseback Riding', 50, 'Horses'),
+    new UnitType('chariot', 'Chariot', 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses'),
+    new UnitType('elephant', 'Elephant', 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Elephants'),
+    new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, null),
+    new UnitType('trebuchet', 'Trebuchet', 2, 267, 7, 1, 1, 2, 'Engineering', 80, null),
+    new UnitType('galley', 'Galley', 2, 268, 2, 2, 2, 3, 'Sailing', 40, null),
+    new UnitType('galleon', 'Galleon', 2, 269, 5, 4, 3, 4, 'Navigation', 90, null),
+];
 
 // game settings
 _start_game_settlers = 2;
-_start_game_workers = 2;
+_start_game_explorers = 2;
 _start_game_point = new Coord(0,0);
 // game state
 _prehistory_command_mode = null;
 
 
-_city = new Unit(3, 256+3);
+_city = new Unit(new UnitType('city', 'City', 3, 259, 0, 8, 0, 3, null, 0, null, false));
 _city.can_move = false;
+_city.cityProperties = new CityProperties(5);
 
 const _game_prehistory = new class
 {
+    constructor()
+    {
+        this.unitTypes = _prehistory_unit_types;
+        this.unitTypesById = {};
+        for (var k=0; k < this.unitTypes.length; k++) {
+            this.unitTypesById[this.unitTypes[k].id] = this.unitTypes[k];
+        }
+    }
 
     applyMovementRules()
     {
@@ -39,18 +74,16 @@ const _game_prehistory = new class
     {
         for (var k=0; k < _units.length; k++) {
             // PREHISTORY-UNIT-001, rules/prehostory.md: settlers are movable units.
-            if (_units[k].type == 0) {
-                _units[k].can_move = true;
-            }
-
-            // PREHISTORY-UNIT-002, rules/prehostory.md: workers are movable units.
-            if (_units[k].type == 1) {
+            if (_units[k].type == 0 || _units[k].type == 1 || _units[k].type == 2) {
                 _units[k].can_move = true;
             }
 
             // PREHISTORY-UNIT-003, rules/prehostory.md: cities are non-moving units.
             if (_units[k].type == 3) {
                 _units[k].can_move = false;
+                if (_units[k].cityProperties == null) {
+                    _units[k].cityProperties = new CityProperties(5);
+                }
             }
 
             // PREHISTORY-UNIT-004, rules/prehostory.md: every unit must have a movement path queue.
@@ -67,8 +100,8 @@ const _game_prehistory = new class
 
     applyBuildingStateRules(command)
     {
-        // PREHISTORY-BUILD-001, rules/prehostory.md: selected settler can build a city with command b.
-        if (command == 'b') {
+        // PREHISTORY-BUILD-001, rules/prehostory.md: selected settler can build a city.
+        if (command == 'build_city') {
             if (_selection != -1 && _units[_selection].type == 0) {
                 _game.make_unit(_city, _units[_selection].coord);
 
@@ -76,6 +109,10 @@ const _game_prehistory = new class
                 _game.del_unit(_selection);
                 _selection = -1;
             }
+        }
+
+        if (command && command.indexOf('produce_unit:') == 0) {
+            this.setCityProduction(_selection, command.substring('produce_unit:'.length));
         }
 
         for (var k=0; k < _units.length; k++) {
@@ -106,11 +143,13 @@ const _game_prehistory = new class
 
         var unit = _units[_selection];
         var show = function(name) {
-            var element = menu.querySelector('[data-menu-option="' + name + '"]');
-            if (element) {
-                element.style.display = '';
+            var elements = menu.querySelectorAll('[data-menu-option="' + name + '"]');
+            for (var i=0; i < elements.length; i++) {
+                elements[i].style.display = '';
             }
         };
+
+        this.updateCityProductionMenu(menu, unit);
 
         // PREHISTORY-MENU-002, rules/prehostory.md: movable units show movement-related commands.
         if (unit.can_move) {
@@ -128,19 +167,80 @@ const _game_prehistory = new class
             show('road');
             show('irrigate');
             show('chop_forest');
-            show('buildings');
             show('build_city');
         }
 
         // PREHISTORY-MENU-004, rules/prehostory.md: cities show building management options and hide movement commands.
         if (unit.type == 3) {
+            show('city_production_status');
+            show('city_production_options');
             show('buildings');
-            show('build_city');
+            show('build_city_hall');
             show('build_fabric');
             show('build_tank');
             show('build_city_2');
             show('build_fabric_2');
             show('build_tank_2');
+        }
+    }
+
+    setCityProduction(k, unitTypeId)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].type != 3 || this.unitTypesById[unitTypeId] == undefined) {
+            return;
+        }
+        _units[k].production = new CityProductionState(unitTypeId);
+    }
+
+    productionTurnsLeft(city)
+    {
+        if (city == undefined || city.production == null) {
+            return 0;
+        }
+        var unitType = this.unitTypesById[city.production.unitTypeId];
+        if (!unitType) {
+            return 0;
+        }
+        var perTurn = city.cityProperties ? city.cityProperties.productionPerTurn : 5;
+        return Math.max(1, Math.ceil((unitType.productionCost - city.production.productionPoints)/perTurn));
+    }
+
+    updateCityProductionMenu(menu, unit)
+    {
+        var status = menu.querySelector('[data-menu-option="city_production_status"]');
+        if (status) {
+            if (unit.type == 3 && unit.production != null && this.unitTypesById[unit.production.unitTypeId] != undefined) {
+                var unitType = this.unitTypesById[unit.production.unitTypeId];
+                status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)';
+            }
+            else if (unit.type == 3) {
+                status.textContent = 'Producing: none';
+            }
+            else {
+                status.textContent = '';
+            }
+        }
+
+        var options = menu.querySelector('[data-menu-option="city_production_options"]');
+        if (!options) {
+            return;
+        }
+        options.innerHTML = '';
+        if (unit.type != 3) {
+            return;
+        }
+
+        for (var k=0; k < this.unitTypes.length; k++) {
+            var unitType = this.unitTypes[k];
+            var link = document.createElement('a');
+            link.setAttribute('data-menu-command', 'produce_unit:' + unitType.id);
+            link.style.display = 'block';
+            link.style.cursor = 'pointer';
+            link.style.marginBottom = '4px';
+            link.onmouseover = function() { this.style.backgroundColor = 'orange'; };
+            link.onmouseout = function() { this.style.backgroundColor = ''; };
+            link.textContent = unitType.name + ' (' + unitType.productionCost + ')';
+            options.appendChild(link);
         }
     }
 
@@ -480,55 +580,29 @@ const _game_prehistory = new class
         return '';
     }
 
-    applyTurnProcessingRules()
-    {
-        // PREHISTORY-TURN-001, rules/prehostory.md: apply layer movement rules before base turn processing.
-        this.applyMovementRules();
-        var taskStatesBefore = this.collectUnitTaskStates();
-
-        // PREHISTORY-AUTO-004, rules/prehostory.md: auto-routes are refreshed when a unit has no active route.
-        this.applyAutoRoutingRules();
-
-        // PREHISTORY-CHOP-001..006, rules/prehostory.md: process active forest chopping orders.
-        this.applyForestChoppingRules();
-
-        // PREHISTORY-TURN-002, rules/prehostory.md: base turn processing handles map, terrain, movement, and overlays.
-        _game.makeTurn();
-
-        // PREHISTORY-TURN-003, rules/prehostory.md: re-apply layer state rules after base turn processing.
-        this.applyUnitStateRules();
-        this.applyBuildingStateRules();
-        if (!this.selectUnitThatFinishedTask(taskStatesBefore)) {
-            this.selectNextUnitWithoutTask();
-        }
-        // PREHISTORY-MENU-005, rules/prehostory.md: menu visibility follows turn state changes.
-        this.applyMenuRules();
-    }
-
     makeTurn()
     {
-        this.applyTurnProcessingRules();
+        _game.applyTurnProcessingRules(this);
     }
 
     startGame()
     {
         _start_game_point = _game.random_point();
-        _game.make_unit(_city, _start_game_point);
         this.applyUnitStateRules();
 
         for(var k=0; k < _start_game_settlers; k++) {
             var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
-            _game.add_unit(new Unit(0, 256+0, point));
+            _game.createUnit(this.unitTypesById['settlers'], point);
         }
-        for(var k=0; k < _start_game_workers; k++) {
+        for(var k=0; k < _start_game_explorers; k++) {
             var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
-            _game.add_unit(new Unit(1, 256+1, point));
+            _game.createUnit(this.unitTypesById['explorer'], point);
         }
 
         this.centerViewOnStartingUnits();
 
         this.applyUnitStateRules();
-        this.applyTurnProcessingRules();
+        this.makeTurn();
         this.applyMenuRules();
     }
 

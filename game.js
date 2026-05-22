@@ -17,14 +17,33 @@ class Unit
 {
     constructor(type, texture, coord = new Coord(0,0))
     {
-        this.type = type;
-        this.texture = texture;
+        if (type instanceof UnitType) {
+            this.type = type.type;
+            this.unitTypeId = type.id;
+            this.name = type.name;
+            this.texture = type.texture;
+            this.attack = type.attack;
+            this.defense = type.defense;
+            this.speed = type.speed;
+            this.viewRange = type.viewRange;
+            this.technologyRequired = type.technologyRequired;
+            this.productionCost = type.productionCost;
+            this.resourceRequired = type.resourceRequired;
+            this.can_move = type.canMove;
+        }
+        else {
+            this.type = type;
+            this.texture = texture;
+            this.can_move = true;
+        }
         this.coord = coord;
         this.gotoCoord = null;
         this.gotoPath = [];
         this.move_penalty = 0;  // wait after difficult landshaft
         this.odd_move = 0;
-        this.can_move = true;
+        this.productionPoints = 0;
+        this.cityProperties = null;
+        this.production = null;
     }
 
     setGoto(i, j)
@@ -34,11 +53,67 @@ class Unit
 
 }
 
+class UnitType
+{
+    constructor(id, name, type, texture, attack, defense, speed, viewRange, technologyRequired, productionCost, resourceRequired, canMove = true)
+    {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.texture = texture;
+        this.attack = attack;
+        this.defense = defense;
+        this.speed = speed;
+        this.viewRange = viewRange;
+        this.technologyRequired = technologyRequired;
+        this.productionCost = productionCost;
+        this.resourceRequired = resourceRequired;
+        this.canMove = canMove;
+    }
+}
+
+class CityProperties
+{
+    constructor(productionPerTurn = 5)
+    {
+        this.productionPerTurn = productionPerTurn;
+    }
+}
+
+class CityProductionState
+{
+    constructor(unitTypeId)
+    {
+        this.unitTypeId = unitTypeId;
+        this.productionPoints = 0;
+    }
+}
+
+class GameState
+{
+    constructor()
+    {
+        this.openTechnologies = {};
+    }
+
+    openTechnology(name)
+    {
+        this.openTechnologies[name] = true;
+    }
+
+    isTechnologyOpen(name)
+    {
+        return this.openTechnologies[name] == true;
+    }
+}
+
 const _units = Array();
 
 var _selection = -1;
 
 var _mark = 1;  // for drawStroke algorithm
+
+var _game_state = new GameState();
 
 const _game = new class
 {
@@ -61,6 +136,17 @@ const _game = new class
         Object.assign(coord, set_coord);
         unit.coord = coord;
         _units.push(unit);
+    }
+
+    createUnit(unitType, coord, productionPoints = 0)
+    {
+        var unit = new Unit(unitType, unitType.texture, coord);
+        unit.productionPoints = productionPoints;
+        if (unit.type == 3 && unit.cityProperties == null) {
+            unit.cityProperties = new CityProperties();
+        }
+        this.add_unit(unit);
+        return unit;
     }
 
     random_point(not_type = 0, from = new Coord(0,0), to = new Coord(_map_size-1,_map_size-1))
@@ -128,6 +214,72 @@ const _game = new class
             _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark);
         }
         ++_mark;
+    }
+
+    processCityProduction(layer)
+    {
+        if (!layer || !layer.unitTypesById) {
+            return;
+        }
+        for (var k=0; k < _units.length; k++) {
+            var city = _units[k];
+            if (city.type != 3 || city.production == null) {
+                continue;
+            }
+            var unitType = layer.unitTypesById[city.production.unitTypeId];
+            if (!unitType) {
+                city.production = null;
+                continue;
+            }
+            if (city.cityProperties == null) {
+                city.cityProperties = new CityProperties();
+            }
+            city.production.productionPoints += city.cityProperties.productionPerTurn;
+            if (city.production.productionPoints >= unitType.productionCost) {
+                this.createUnit(unitType, city.coord, city.production.productionPoints);
+                city.production = null;
+                _fulldraw = 1;
+            }
+        }
+    }
+
+    applyTurnProcessingRules(layer)
+    {
+        if (!layer) {
+            this.makeTurn();
+            return;
+        }
+
+        if (layer.applyMovementRules) {
+            layer.applyMovementRules();
+        }
+        var taskStatesBefore = layer.collectUnitTaskStates ? layer.collectUnitTaskStates() : undefined;
+
+        if (layer.applyAutoRoutingRules) {
+            layer.applyAutoRoutingRules();
+        }
+        if (layer.applyForestChoppingRules) {
+            layer.applyForestChoppingRules();
+        }
+
+        this.makeTurn();
+        this.processCityProduction(layer);
+
+        if (layer.applyUnitStateRules) {
+            layer.applyUnitStateRules();
+        }
+        if (layer.applyBuildingStateRules) {
+            layer.applyBuildingStateRules();
+        }
+        if (layer.selectUnitThatFinishedTask && !layer.selectUnitThatFinishedTask(taskStatesBefore) && layer.selectNextUnitWithoutTask) {
+            layer.selectNextUnitWithoutTask();
+        }
+        else if (!layer.selectUnitThatFinishedTask && layer.selectNextUnitWithoutTask) {
+            layer.selectNextUnitWithoutTask();
+        }
+        if (layer.applyMenuRules) {
+            layer.applyMenuRules();
+        }
     }
 
     doCommand(command)

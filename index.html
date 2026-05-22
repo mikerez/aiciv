@@ -46,6 +46,11 @@
     <script src="draw.js"></script>
     <script src="control.js"></script>
     <script src="game.js"></script>
+    <script src="menu_technology.js"></script>
+    <script src="menu_politics.js"></script>
+    <script src="menu_finance.js"></script>
+    <script src="menu_trade.js"></script>
+    <script src="menu_main.js"></script>
     <script src="map.js"></script>
     <script src="screen.js"></script>
     <script>
@@ -197,7 +202,7 @@
                 drawScene(0);
             }
             if (event.code === 'KeyB') {
-                _current_game.doCommand('b');
+                _current_game.doCommand('build_city');
                 _fullredraw = 1;
                 drawScene(0);
             }
