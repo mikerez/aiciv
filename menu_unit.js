@@ -24,10 +24,10 @@ var tennysonQuote = hereDoc(function() {/*!
 <div data-menu-option="buildings">
 <font size="3" color="white" face="Courier New" style="background-color: rgb(50,50,50)">Buildings:</font><br>
 <div data-menu-option="build_city_hall" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/city.png" width="100" style="vertical-align:middle"> <font size="4">City hall</text></div>
-<div data-menu-option="build_fabric" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/bbb.jpg" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
+<div data-menu-option="build_fabric" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/factory.png" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
 <div data-menu-option="build_tank" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/big.png" width="100" style="vertical-align:middle"> <font size="4">Tank!!!!</text></div>
-<div data-menu-option="build_city_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/aaa.jpg" width="100" style="vertical-align:middle"> <font size="4">City hall</text></div>
-<div data-menu-option="build_fabric_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/bbb.jpg" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
+<div data-menu-option="build_city_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/city.png" width="100" style="vertical-align:middle"> <font size="4">City hall</text></div>
+<div data-menu-option="build_fabric_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/factory.png" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
 <div data-menu-option="build_tank_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';""><img src="images/big.png" width="100" style="vertical-align:middle"> <font size="4">Tank!!!!</text></div>
 </div>
 */});

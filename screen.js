@@ -311,13 +311,17 @@ function drawScene(loop)
     }
 
     if (_fulldraw) {
-        for (k=0; k < _units.length; k++) {
+        for (var k=0; k < _units.length; k++) {
             _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
                                _units[k].texture, _screenZoom);
+            var teamTexture = _team_color_textures[_units[k].team % _team_color_textures.length];
+            _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
+                               teamTexture, _screenZoom);
         }
     }
+    var ctx2D = document.getElementById("canvas2D").getContext("2d");
     if (typeof _current_game !== 'undefined' && _current_game.drawUnitStateLetters) {
-        _current_game.drawUnitStateLetters(document.getElementById("canvas2D").getContext("2d"));
+        _current_game.drawUnitStateLetters(ctx2D);
     }
     drawSelectionStroke();
 

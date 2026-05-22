@@ -23,6 +23,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 | Unit | Attack | Defence | Speed | View Range | Technology Required | Production Cost | Resource Required |
 | --- | ---: | ---: | ---: | ---: | --- | ---: | --- |
 | Settlers | 0 | 1 | 1 | 2 | none | 20 | none |
+| Worker | 0 | 1 | 1 | 2 | none | 20 | none |
 | Explorer | 0 | 1 | 2 | 4 | none | 15 | none |
 | Warrior | 2 | 1 | 1 | 2 | none | 20 | none |
 | Slinger | 2 | 1 | 1 | 2 | Archery | 25 | none |
@@ -42,6 +43,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-BUILD-002`: Building a city consumes the settler.
 - `PREHISTORY-BUILD-003`: A selected city can choose a unit production option with command `produce_unit:<unitTypeId>`.
 - `PREHISTORY-BUILD-004`: Cities show the current production item and remaining turns in the unit menu.
+- `PREHISTORY-BUILD-005`: A built city inherits the team number of the settler that built it.
+- `PREHISTORY-BUILD-006`: A produced unit inherits the team number of the city that produced it.
 
 ## Turn Processing Rules
 
@@ -59,21 +62,22 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-MENU-003`: Settlers show the Build City command.
 - `PREHISTORY-MENU-004`: Cities show building management options and hide movement commands.
 - `PREHISTORY-MENU-005`: Menu visibility is recalculated after selection, command processing, and turn processing.
+- `PREHISTORY-MENU-006`: Workers show terrain improvement commands: Road, Irrigate, and Chop forest.
 
 ## Command State Rules
 
 - `PREHISTORY-STATE-001`: Goto enters a map targeting mode, previews arrows until the next map click, and stores that preview path on the unit.
 - `PREHISTORY-STATE-002`: Fortificate changes the unit state to `fortified` and consumes the unit's next turn.
 - `PREHISTORY-STATE-003`: Wait changes the unit state to `waiting`.
-- `PREHISTORY-STATE-004`: Road, Irrigate, and Chop forest are settler-only unit states.
+- `PREHISTORY-STATE-004`: Road, Irrigate, and Chop forest are worker-only unit states.
 - `PREHISTORY-STATE-005`: Explore, Patrol, and Automate are auto-routing unit states.
 - `PREHISTORY-STATE-006`: Unit state is drawn as a single letter over the unit sprite.
 - `PREHISTORY-STATE-007`: Manual movement by dragging a unit clears any modified state and returns the unit to `ready`.
 
 ## Forest Chopping Rules
 
-- `PREHISTORY-CHOP-001`: Chopping forest can be performed only by a settler in `chop_forest` state.
-- `PREHISTORY-CHOP-002`: Chopping can progress only while the settler stands on a forest terrain tile.
+- `PREHISTORY-CHOP-001`: Chopping forest can be performed only by a worker in `chop_forest` state.
+- `PREHISTORY-CHOP-002`: Chopping can progress only while the worker stands on a forest terrain tile.
 - `PREHISTORY-CHOP-003`: Forest terrain is terrain type `6`; `hills1` and `hills5` are forested hill variants and are also available for chopping.
 - `PREHISTORY-CHOP-004`: Chopping takes as many turns as the forest tile wildity level stored in terrain `D` bits.
 - `PREHISTORY-CHOP-005`: When chopping completes, a base forest tile becomes base grass terrain.

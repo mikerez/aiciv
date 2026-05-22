@@ -20,8 +20,14 @@
 ## Unit And City Structures
 
 - `MAIN-UNIT-001`: Unit definitions use `UnitType(id, name, type, texture, attack, defense, speed, viewRange, technologyRequired, productionCost, resourceRequired, canMove)`.
+- `MAIN-UNIT-002`: Every unit has a `team` number.
+- `MAIN-UNIT-003`: Team numbers map to team colors: `0` blue, `1` green, `2` yellow, `3` magenta, and `4` orange.
+- `MAIN-UNIT-004`: Each unit is drawn with its team color overlay sprite named `<color_name>.png`.
 - `MAIN-CITY-001`: City units have `CityProperties`, including `productionPerTurn`.
 - `MAIN-CITY-002`: City production is stored as `CityProductionState(unitTypeId)` with accumulated `productionPoints`.
 - `MAIN-TURN-001`: `_game.applyTurnProcessingRules(layer)` is the main end-turn function.
 - `MAIN-TURN-002`: Main turn processing delegates layer-specific movement, auto-routing, chopping, state, building, and menu rules through layer hooks.
 - `MAIN-TURN-003`: Main turn processing adds city production points each turn and creates the selected unit when accumulated production reaches the unit production cost.
+- `MAIN-MARKUP-001`: `drawStroke()` control-zone markup is skipped during initial game setup.
+- `MAIN-MARKUP-002`: End-turn processing redraws control-zone markup once after layer hooks finish selection and recentering.
+- `MAIN-MARKUP-003`: Control-zone strokes use the same team color family as the unit team overlay.

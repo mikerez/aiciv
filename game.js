@@ -44,6 +44,7 @@ class Unit
         this.productionPoints = 0;
         this.cityProperties = null;
         this.production = null;
+        this.team = 0;
     }
 
     setGoto(i, j)
@@ -115,6 +116,16 @@ var _mark = 1;  // for drawStroke algorithm
 
 var _game_state = new GameState();
 
+const _team_colors = ['blue', 'green', 'yellow', 'magenta', 'orange'];
+const _team_color_textures = [900, 901, 902, 903, 904];
+const _team_color_strokes = [
+    'rgba(50,120,255,0.35)',
+    'rgba(30,190,80,0.35)',
+    'rgba(245,210,40,0.4)',
+    'rgba(220,55,220,0.35)',
+    'rgba(245,135,35,0.35)'
+];
+
 const _game = new class
 {
 
@@ -138,10 +149,11 @@ const _game = new class
         _units.push(unit);
     }
 
-    createUnit(unitType, coord, productionPoints = 0)
+    createUnit(unitType, coord, productionPoints = 0, team = 0)
     {
         var unit = new Unit(unitType, unitType.texture, coord);
         unit.productionPoints = productionPoints;
+        unit.team = team;
         if (unit.type == 3 && unit.cityProperties == null) {
             unit.cityProperties = new CityProperties();
         }
@@ -166,13 +178,13 @@ const _game = new class
         return point;
     }
 
-    makeTurn()
+    makeTurn(drawControlZones = true)
     {
-        for (k=0; k < _units.length; k++) {
+        for (var k=0; k < _units.length; k++) {
             _map.closeMap(_units[k].coord.i, _units[k].coord.j);
         }
 
-        for (k=0; k < _units.length; k++) {
+        for (var k=0; k < _units.length; k++) {
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
 //console.log("goto: " + k + " (" + _units[k].coord.i + "," + _units[k].coord.j + ") to (" + _units[k].gotoCoord.i + "," + _units[k].gotoCoord.j + ")");
                 var prev = _units[k].coord;
@@ -202,16 +214,24 @@ const _game = new class
             }
         }
 
+        if (drawControlZones) {
+            this.redrawControlZones();
+        }
+    }
+
+    redrawControlZones()
+    {
         var ctx = _draw.clear();
         for (var k=0; k < _units.length; k++) {
-            _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j+1, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j+1, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i-1, _units[k].coord.j, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i-1, _units[k].coord.j, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark);
-            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark);
+            var strokeStyle = _team_color_strokes[_units[k].team % _team_color_strokes.length];
+            _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j+1, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j+1, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i-1, _units[k].coord.j, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i-1, _units[k].coord.j, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
+            _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
         }
         ++_mark;
     }
@@ -236,7 +256,7 @@ const _game = new class
             }
             city.production.productionPoints += city.cityProperties.productionPerTurn;
             if (city.production.productionPoints >= unitType.productionCost) {
-                this.createUnit(unitType, city.coord, city.production.productionPoints);
+                this.createUnit(unitType, city.coord, city.production.productionPoints, city.team);
                 city.production = null;
                 _fulldraw = 1;
             }
@@ -246,7 +266,7 @@ const _game = new class
     applyTurnProcessingRules(layer)
     {
         if (!layer) {
-            this.makeTurn();
+            this.makeTurn(false);
             return;
         }
 
@@ -262,7 +282,7 @@ const _game = new class
             layer.applyForestChoppingRules();
         }
 
-        this.makeTurn();
+        this.makeTurn(false);
         this.processCityProduction(layer);
 
         if (layer.applyUnitStateRules) {
@@ -280,6 +300,7 @@ const _game = new class
         if (layer.applyMenuRules) {
             layer.applyMenuRules();
         }
+        this.redrawControlZones();
     }
 
     doCommand(command)

@@ -4,19 +4,26 @@ _screen.loadTexture('settler.png', 256);
 _screen.loadTexture('explorer.png', 257);
 _screen.loadTexture('warrior.png', 258);
 _screen.loadTexture('city.png', 259);
-_screen.loadTexture('unit_slinger.png', 260);
+_screen.loadTexture('Slinger.png', 260);
 _screen.loadTexture('Archers.png', 261);
-_screen.loadTexture('unit_spearman.png', 262);
-_screen.loadTexture('unit_horseman.png', 263);
-_screen.loadTexture('unit_chariot.png', 264);
+_screen.loadTexture('Spearman.png', 262);
+_screen.loadTexture('Horseman.png', 263);
+_screen.loadTexture('Chariot.png', 264);
 _screen.loadTexture('WarElephant.png', 265);
 _screen.loadTexture('unit_catapult.png', 266);
 _screen.loadTexture('unit_trebuchet.png', 267);
 _screen.loadTexture('unit_galley.png', 268);
 _screen.loadTexture('unit_galleon.png', 269);
+_screen.loadTexture('worker.png', 270);
+_screen.loadTexture('blue.png', 900);
+_screen.loadTexture('green.png', 901);
+_screen.loadTexture('yellow.png', 902);
+_screen.loadTexture('magenta.png', 903);
+_screen.loadTexture('orange.png', 904);
 
 const _prehistory_unit_types = [
     new UnitType('settlers', 'Settlers', 0, 256, 0, 1, 1, 2, null, 20, null),
+    new UnitType('worker', 'Worker', 1, 270, 0, 1, 1, 2, null, 20, null),
     new UnitType('explorer', 'Explorer', 1, 257, 0, 1, 2, 4, null, 15, null),
     new UnitType('warrior', 'Warrior', 2, 258, 2, 1, 1, 2, null, 20, null),
     new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
@@ -104,6 +111,7 @@ const _game_prehistory = new class
         if (command == 'build_city') {
             if (_selection != -1 && _units[_selection].type == 0) {
                 _game.make_unit(_city, _units[_selection].coord);
+                _units[_units.length - 1].team = _units[_selection].team;
 
                 // PREHISTORY-BUILD-002, rules/prehostory.md: building a city consumes the settler.
                 _game.del_unit(_selection);
@@ -163,11 +171,15 @@ const _game_prehistory = new class
         }
 
         // PREHISTORY-MENU-003, rules/prehostory.md: settlers show the city building command.
-        if (unit.type == 0) {
+        if (unit.unitTypeId == 'settlers') {
+            show('build_city');
+        }
+
+        // PREHISTORY-MENU-006, rules/prehostory.md: workers show terrain improvement commands.
+        if (unit.unitTypeId == 'worker') {
             show('road');
             show('irrigate');
             show('chop_forest');
-            show('build_city');
         }
 
         // PREHISTORY-MENU-004, rules/prehostory.md: cities show building management options and hide movement commands.
@@ -369,8 +381,8 @@ const _game_prehistory = new class
     applyForestChoppingRules()
     {
         for (var k=0; k < _units.length; k++) {
-            // PREHISTORY-CHOP-001, rules/prehostory.md: only settlers in chop_forest state can chop.
-            if (_units[k].state != 'chop_forest' || _units[k].type != 0) {
+            // PREHISTORY-CHOP-001, rules/prehostory.md: only workers in chop_forest state can chop.
+            if (_units[k].state != 'chop_forest' || _units[k].unitTypeId != 'worker') {
                 continue;
             }
 
@@ -425,7 +437,7 @@ const _game_prehistory = new class
 
     canChopForest(k)
     {
-        if (k == -1 || _units[k] == undefined || _units[k].type != 0) {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
             return false;
         }
         var i = _units[k].coord.i;
@@ -592,17 +604,17 @@ const _game_prehistory = new class
 
         for(var k=0; k < _start_game_settlers; k++) {
             var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
-            _game.createUnit(this.unitTypesById['settlers'], point);
+            _game.createUnit(this.unitTypesById['settlers'], point, 0, 0);
         }
         for(var k=0; k < _start_game_explorers; k++) {
             var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
-            _game.createUnit(this.unitTypesById['explorer'], point);
+            _game.createUnit(this.unitTypesById['explorer'], point, 0, 0);
         }
 
         this.centerViewOnStartingUnits();
 
         this.applyUnitStateRules();
-        this.makeTurn();
+        _game.makeTurn(false);
         this.applyMenuRules();
     }
 
@@ -622,7 +634,7 @@ const _game_prehistory = new class
             this.setUnitState(_selection, 'waiting');
         }
         if ((command == 'road' || command == 'irrigate') && _selection != -1
-            && _units[_selection].type == 0) {
+            && _units[_selection].unitTypeId == 'worker') {
             this.setUnitState(_selection, command);
         }
         if (command == 'chop_forest' && this.canChopForest(_selection)) {

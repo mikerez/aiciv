@@ -74,7 +74,7 @@ const _control = new class
     click(x, y)
     {
         _selection = -1;
-        for (k=_units.length - 1; k >= 0; k--) {
+        for (var k=_units.length - 1; k >= 0; k--) {
             var unitX = ijtox1(_units[k].coord.i, _units[k].coord.j);
             var unitY = ijtoy1(_units[k].coord.i, _units[k].coord.j);
             var unitHalfWidth = 220/_screenZoom;

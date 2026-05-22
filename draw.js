@@ -35,7 +35,7 @@ const _draw = new class
         ctx.stroke();
     }
 
-    drawStroke(ctx, in_i, in_j, mark)
+    drawStroke(ctx, in_i, in_j, mark, strokeStyle)
     {
         if (in_i-1 < 0 || in_i+1 >= _map_size || in_j-1 < 0 || in_j+1 >= _map_size) {
             return;
@@ -57,7 +57,7 @@ const _draw = new class
             return;
         }
         ctx.lineWidth = 5;
-        ctx.strokeStyle = 'rgba(0,150,0,0.3)';
+        ctx.strokeStyle = strokeStyle || 'rgba(0,150,0,0.3)';
         var i = 0, j = 0;
         var start_i = out_i;
         var start_j = out_j;
