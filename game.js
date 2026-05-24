@@ -30,6 +30,7 @@ class Unit
             this.productionCost = type.productionCost;
             this.resourceRequired = type.resourceRequired;
             this.can_move = type.canMove;
+            this.nature = type.nature;
         }
         else {
             this.type = type;
@@ -56,7 +57,7 @@ class Unit
 
 class UnitType
 {
-    constructor(id, name, type, texture, attack, defense, speed, viewRange, technologyRequired, productionCost, resourceRequired, canMove = true)
+    constructor(id, name, type, texture, attack, defense, speed, viewRange, technologyRequired, productionCost, resourceRequired, canMove = true, nature = "land")
     {
         this.id = id;
         this.name = name;
@@ -70,6 +71,7 @@ class UnitType
         this.productionCost = productionCost;
         this.resourceRequired = resourceRequired;
         this.canMove = canMove;
+        this.nature = nature;
     }
 }
 
@@ -178,6 +180,17 @@ const _game = new class
         return point;
     }
 
+    canUnitEnterTile(k, i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return false;
+        }
+        if (typeof _current_game != "undefined" && _current_game && _current_game.canUnitEnterTile) {
+            return _current_game.canUnitEnterTile(k, i, j);
+        }
+        return (_map_terrain_tex[i][j]&0x0F) != 0;
+    }
+
     makeTurn(drawControlZones = true)
     {
         for (var k=0; k < _units.length; k++) {
@@ -189,7 +202,14 @@ const _game = new class
 //console.log("goto: " + k + " (" + _units[k].coord.i + "," + _units[k].coord.j + ") to (" + _units[k].gotoCoord.i + "," + _units[k].gotoCoord.j + ")");
                 var prev = _units[k].coord;
                 if (_units[k].gotoPath.length) {
-                    _units[k].coord = _units[k].gotoPath.shift();
+                    var nextCoord = _units[k].gotoPath.shift();
+                    if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
+                        _units[k].coord = nextCoord;
+                    }
+                    else {
+                        _units[k].gotoPath = [];
+                        _units[k].gotoCoord = null;
+                    }
                 }
                 else {
                     _control.mapLine(_units[k].coord.i, _units[k].coord.j, _units[k].gotoCoord.i, _units[k].gotoCoord.j, function(i, j, ni, nj, arrow_num) {
@@ -208,6 +228,9 @@ const _game = new class
             }
 
             _map.openMap(_units[k].coord.i, _units[k].coord.j);
+            if (_map.revealResourcesForUnit && _map.revealResourcesForUnit(_units[k])) {
+                _fulldraw = 1;
+            }
 
             if (_units[k].move_penalty) {
                 --_units[k].move_penalty;
@@ -251,6 +274,10 @@ const _game = new class
                 city.production = null;
                 continue;
             }
+            if (layer.canCityProduceUnit && !layer.canCityProduceUnit(city, unitType)) {
+                city.production = null;
+                continue;
+            }
             if (city.cityProperties == null) {
                 city.cityProperties = new CityProperties();
             }
@@ -277,6 +304,9 @@ const _game = new class
 
         if (layer.applyAutoRoutingRules) {
             layer.applyAutoRoutingRules();
+        }
+        if (layer.applyTerrainModifierRules) {
+            layer.applyTerrainModifierRules();
         }
         if (layer.applyForestChoppingRules) {
             layer.applyForestChoppingRules();

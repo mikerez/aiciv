@@ -1,4 +1,61 @@
+const _resource_types = [
+    null,
+    { id: 'bananas', name: 'Bananas', texture: 801, sprite: 'resource_bananas.png', gives: 'food from tropical forest and grass tiles', terrains: [6, 2], chance: 0.012 },
+    { id: 'cattle', name: 'Cattle', texture: 802, sprite: 'resource_cattle.png', gives: 'food and production from grassland herds', terrains: [2], chance: 0.012 },
+    { id: 'copper', name: 'Copper', texture: 803, sprite: 'resource_copper.png', gives: 'early metal production and trade value', terrains: [4, 5], chance: 0.010 },
+    { id: 'crabs', name: 'Crabs', texture: 804, sprite: 'resource_crabs.png', gives: 'food from coastal water and river grass', terrains: [0, 7], chance: 0.010 },
+    { id: 'deer', name: 'Deer', texture: 805, sprite: 'resource_deer.png', gives: 'food and hides from forest or snow edge tiles', terrains: [6, 3], chance: 0.010 },
+    { id: 'fish', name: 'Fish', texture: 806, sprite: 'resource_fish.png', gives: 'food from water tiles', terrains: [0], chance: 0.012 },
+    { id: 'rice', name: 'Rice', texture: 807, sprite: 'resource_rice.png', gives: 'food from wet grass and river grass', terrains: [2, 7], chance: 0.012 },
+    { id: 'sheep', name: 'Sheep', texture: 808, sprite: 'resource_sheep.png', gives: 'food and wool from grass or hills', terrains: [2, 4], chance: 0.012 },
+    { id: 'stone', name: 'Stone', texture: 809, sprite: 'resource_stone.png', gives: 'production support for early buildings and construction', terrains: [4, 5], chance: 0.012 },
+    { id: 'wheat', name: 'Wheat', texture: 810, sprite: 'resource_wheat.png', gives: 'food support for city growth', terrains: [2, 7], chance: 0.012 },
+    { id: 'amber', name: 'Amber', texture: 811, sprite: 'resource_amber.png', gives: 'luxury and trade value from forested lands', terrains: [6, 3], chance: 0.007 },
+    { id: 'citrus', name: 'Citrus', texture: 812, sprite: 'resource_citrus.png', gives: 'food and luxury from warm grass or forest', terrains: [2, 6], chance: 0.008 },
+    { id: 'cotton', name: 'Cotton', texture: 815, sprite: 'resource_cotton.png', gives: 'luxury and textile value from open land', terrains: [2, 1], chance: 0.008 },
+    { id: 'dyes', name: 'Dyes', texture: 816, sprite: 'resource_dyes.png', gives: 'luxury and trade colorants from forests or grass', terrains: [6, 2], chance: 0.008 },
+    { id: 'diamonds', name: 'Diamonds', texture: 817, sprite: 'resource_diamonds.png', gives: 'high-value luxury from hills and rocks', terrains: [4, 5], chance: 0.005 },
+    { id: 'furs', name: 'Furs', texture: 818, sprite: 'resource_furs.png', gives: 'luxury from cold terrain and forests', terrains: [3, 6], chance: 0.007 },
+    { id: 'gypsum', name: 'Gypsum', texture: 819, sprite: 'resource_gypsum.png', gives: 'construction material from desert, hills, and rocks', terrains: [1, 4, 5], chance: 0.008 },
+    { id: 'honey', name: 'Honey', texture: 820, sprite: 'resource_honey.png', gives: 'food and luxury from forest and grass', terrains: [6, 2], chance: 0.008 },
+    { id: 'incense', name: 'Incense', texture: 821, sprite: 'resource_incense.png', gives: 'luxury and ceremonial trade value', terrains: [1, 4], chance: 0.007 },
+    { id: 'ivory', name: 'Ivory', texture: 822, sprite: 'resource_ivory.png', gives: 'luxury and strategic animal material', terrains: [2, 6], chance: 0.006 },
+    { id: 'marble', name: 'Marble', texture: 823, sprite: 'resource_marble.png', gives: 'luxury stone and building production value', terrains: [4, 5], chance: 0.007 },
+    { id: 'olives', name: 'Olives', texture: 825, sprite: 'resource_olives.png', gives: 'food and luxury from grass or hills', terrains: [2, 4], chance: 0.008 },
+    { id: 'pearls', name: 'Pearls', texture: 826, sprite: 'resource_pearls.png', gives: 'luxury from water tiles', terrains: [0], chance: 0.006 },
+    { id: 'salt', name: 'Salt', texture: 827, sprite: 'resource_salt.png', gives: 'food preservation and trade value', terrains: [1, 0, 4], chance: 0.008 },
+    { id: 'silk', name: 'Silk', texture: 828, sprite: 'resource_silk.png', gives: 'luxury textile value from forest regions', terrains: [6], chance: 0.006 },
+    { id: 'silver', name: 'Silver', texture: 829, sprite: 'resource_silver.png', gives: 'precious metal commerce and trade value', terrains: [4, 5], chance: 0.007 },
+    { id: 'spices', name: 'Spices', texture: 830, sprite: 'resource_spices.png', gives: 'luxury and food trade value', terrains: [6, 2], chance: 0.008 },
+    { id: 'sugar', name: 'Sugar', texture: 831, sprite: 'resource_sugar.png', gives: 'food and luxury from wet grass or river grass', terrains: [2, 7], chance: 0.008 },
+    { id: 'tea', name: 'Tea', texture: 832, sprite: 'resource_tea.png', gives: 'luxury from hills or forest', terrains: [4, 6], chance: 0.007 },
+    { id: 'turtles', name: 'Turtles', texture: 834, sprite: 'resource_turtles.png', gives: 'food and luxury from water tiles', terrains: [0], chance: 0.006 },
+    { id: 'whales', name: 'Whales', texture: 835, sprite: 'resource_whales.png', gives: 'food, production, and luxury from water tiles', terrains: [0], chance: 0.005 },
+    { id: 'wine', name: 'Wine', texture: 836, sprite: 'resource_wine.png', gives: 'luxury and culture value from grass or hills', terrains: [2, 4], chance: 0.007 },
+    { id: 'horses', name: 'Horses', texture: 837, sprite: 'resource_horses.png', gives: 'strategic animal resource for horse units', terrains: [2, 1], chance: 0.010 },
+    { id: 'iron', name: 'Iron', texture: 838, sprite: 'resource_iron.png', gives: 'strategic metal for iron weapons and units', terrains: [4, 5], chance: 0.009 },
+    { id: 'gold', name: 'Gold', texture: 844, sprite: 'resource_gold.png', gives: 'commerce and trade value', terrains: [4, 5, 1], chance: 0.007 },
 
+    // Resources below are known only from medieval or later play and are disabled in prehistory.
+    // not known in the Old World before the medieval era.
+    // { id: 'cocoa', name: 'Cocoa', texture: 813, sprite: 'resource_cocoa.png', gives: 'luxury and trade value from forest tiles', terrains: [6], chance: 0.007 },
+    // widespread coffee use is medieval or later.
+    // { id: 'coffee', name: 'Coffee', texture: 814, sprite: 'resource_coffee.png', gives: 'luxury and commerce from hills or forest', terrains: [4, 6], chance: 0.007 },
+    // advanced extraction/use is outside prehistory.
+    // { id: 'mercury', name: 'Mercury', texture: 824, sprite: 'resource_mercury.png', gives: 'rare scientific and trade material', terrains: [4, 5], chance: 0.005 },
+    // not known in the Old World before the medieval era.
+    // { id: 'tobacco', name: 'Tobacco', texture: 833, sprite: 'resource_tobacco.png', gives: 'luxury and commerce from grass or forest', terrains: [2, 6], chance: 0.007 },
+    // gunpowder resource belongs after pre-medieval play.
+    // { id: 'niter', name: 'Niter', texture: 839, sprite: 'resource_niter.png', gives: 'strategic resource for gunpowder units', terrains: [1, 4, 5], chance: 0.007 },
+    // industrial fuel belongs after the medieval era.
+    // { id: 'coal', name: 'Coal', texture: 840, sprite: 'resource_coal.png', gives: 'strategic fuel for industry and railways', terrains: [4, 5], chance: 0.007 },
+    // modern strategic fuel belongs after the medieval era.
+    // { id: 'oil', name: 'Oil', texture: 841, sprite: 'resource_oil.png', gives: 'strategic fuel for modern units and industry', terrains: [0, 1, 5], chance: 0.006 },
+    // industrial metal belongs after the medieval era.
+    // { id: 'aluminum', name: 'Aluminum', texture: 842, sprite: 'resource_aluminum.png', gives: 'strategic metal for advanced units and construction', terrains: [4, 5], chance: 0.006 },
+    // modern nuclear resource belongs after the medieval era.
+    // { id: 'uranium', name: 'Uranium', texture: 843, sprite: 'resource_uranium.png', gives: 'strategic late-game energy and weapon resource', terrains: [4, 5, 1], chance: 0.004 },
+];
 
 _screen.loadTexture('settler.png', 256);
 _screen.loadTexture('explorer.png', 257);
@@ -34,13 +91,14 @@ const _prehistory_unit_types = [
     new UnitType('elephant', 'Elephant', 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Ivory'),
     new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, null),
     new UnitType('trebuchet', 'Trebuchet', 2, 267, 7, 1, 1, 2, 'Engineering', 80, null),
-    new UnitType('galley', 'Galley', 2, 268, 2, 2, 2, 3, 'Sailing', 40, null),
-    new UnitType('galleon', 'Galleon', 2, 269, 5, 4, 3, 4, 'Navigation', 90, null),
+    new UnitType('galley', 'Galley', 2, 268, 2, 2, 2, 3, 'Sailing', 40, null, true, 'water'),
+    new UnitType('galleon', 'Galleon', 2, 269, 5, 4, 3, 4, 'Navigation', 90, null, true, 'water'),
 ];
 
 // game settings
-_start_game_settlers = 2;
-_start_game_explorers = 2;
+_start_game_settlers = 1;
+_start_game_explorers = 1;
+_start_game_workers = 1;
 _start_game_point = new Coord(0,0);
 // game state
 _prehistory_command_mode = null;
@@ -177,8 +235,12 @@ const _game_prehistory = new class
 
         // PREHISTORY-MENU-006, rules/prehostory.md: workers show terrain improvement commands.
         if (unit.unitTypeId == 'worker') {
-            show('road');
-            show('irrigate');
+            if (this.canBuildRoad(_selection)) {
+                show('road');
+            }
+            if (this.canBuildIrrigation(_selection)) {
+                show('irrigate');
+            }
             show('chop_forest');
         }
 
@@ -196,9 +258,65 @@ const _game_prehistory = new class
         }
     }
 
+    isWaterUnitType(unitType)
+    {
+        return unitType != undefined && unitType.nature == "water";
+    }
+
+    isWaterTerrain(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return false;
+        }
+        return (_map_terrain_tex[i][j]&0x0F) == 0;
+    }
+
+    isSeasideCity(city)
+    {
+        if (city == undefined || city.type != 3) {
+            return false;
+        }
+        for (var di=-1; di <= 1; di++) {
+            for (var dj=-1; dj <= 1; dj++) {
+                if ((di != 0 || dj != 0) && this.isWaterTerrain(city.coord.i + di, city.coord.j + dj)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    canCityProduceUnit(city, unitType)
+    {
+        if (!this.isWaterUnitType(unitType)) {
+            return true;
+        }
+        // PREHISTORY-BUILD-007, rules/prehostory.md: water units can be produced only in seaside cities.
+        return this.isSeasideCity(city);
+    }
+
+    canUnitEnterTile(k, i, j)
+    {
+        if (k == -1 || _units[k] == undefined || i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return false;
+        }
+        var isWater = this.isWaterTerrain(i, j);
+        var unitType = this.unitTypesById[_units[k].unitTypeId];
+        if (this.isWaterUnitType(unitType)) {
+            // PREHISTORY-MOVE-004, rules/prehostory.md: water units move only on water.
+            return isWater;
+        }
+        // PREHISTORY-MOVE-005, rules/prehostory.md: land units cannot move onto water.
+        return !isWater;
+    }
+
     setCityProduction(k, unitTypeId)
     {
         if (k == -1 || _units[k] == undefined || _units[k].type != 3 || this.unitTypesById[unitTypeId] == undefined) {
+            return;
+        }
+        var unitType = this.unitTypesById[unitTypeId];
+        if (!this.canCityProduceUnit(_units[k], unitType)) {
             return;
         }
         _units[k].production = new CityProductionState(unitTypeId);
@@ -244,6 +362,9 @@ const _game_prehistory = new class
 
         for (var k=0; k < this.unitTypes.length; k++) {
             var unitType = this.unitTypes[k];
+            if (!this.canCityProduceUnit(unit, unitType)) {
+                continue;
+            }
             var link = document.createElement('a');
             link.setAttribute('data-menu-command', 'produce_unit:' + unitType.id);
             link.style.display = 'block';
@@ -266,6 +387,12 @@ const _game_prehistory = new class
         _units[k].gotoPath = [];
         if (state != 'chop_forest') {
             _units[k].chop_turns_left = undefined;
+        }
+        if (state != 'road') {
+            _units[k].road_turns_left = undefined;
+        }
+        if (state != 'irrigate') {
+            _units[k].irrigation_turns_left = undefined;
         }
     }
 
@@ -378,6 +505,77 @@ const _game_prehistory = new class
         }
     }
 
+    applyTerrainModifierRules()
+    {
+        for (var k=0; k < _units.length; k++) {
+            // PREHISTORY-ROAD-001, rules/prehostory.md: only workers in road state can build roads.
+            if (_units[k].state != 'road' || _units[k].unitTypeId != 'worker') {
+                continue;
+            }
+
+            var i = _units[k].coord.i;
+            var j = _units[k].coord.j;
+            var terrain = _map_terrain_tex[i][j];
+
+            // PREHISTORY-ROAD-002, rules/prehostory.md: roads are land terrain modifiers and cannot be built on water.
+            if (!this.canBuildRoad(k)) {
+                _units[k].state = 'ready';
+                _units[k].road_turns_left = undefined;
+                continue;
+            }
+
+            // PREHISTORY-ROAD-003, rules/prehostory.md: road building cost is two times terrain wildity.
+            if (_units[k].road_turns_left == undefined) {
+                _units[k].road_turns_left = 2*((terrain>>4)&0x3);
+            }
+            if (_units[k].road_turns_left > 0) {
+                --_units[k].road_turns_left;
+            }
+
+            if (_units[k].road_turns_left == 0) {
+                // PREHISTORY-ROAD-004, rules/prehostory.md: completed road building sets the road modifier on the tile.
+                _map.addRoad(i, j);
+                _units[k].state = 'ready';
+                _units[k].road_turns_left = undefined;
+                _fulldraw = 1;
+            }
+        }
+
+        for (var k=0; k < _units.length; k++) {
+            // PREHISTORY-IRRIGATION-001, rules/prehostory.md: only workers in irrigate state can build irrigation.
+            if (_units[k].state != 'irrigate' || _units[k].unitTypeId != 'worker') {
+                continue;
+            }
+
+            var i = _units[k].coord.i;
+            var j = _units[k].coord.j;
+            var terrain = _map_terrain_tex[i][j];
+
+            // PREHISTORY-IRRIGATION-002, rules/prehostory.md: irrigation is a land terrain modifier and cannot be built on water.
+            if (!this.canBuildIrrigation(k)) {
+                _units[k].state = 'ready';
+                _units[k].irrigation_turns_left = undefined;
+                continue;
+            }
+
+            // PREHISTORY-IRRIGATION-003, rules/prehostory.md: irrigation takes at least one turn based on terrain wildity.
+            if (_units[k].irrigation_turns_left == undefined) {
+                _units[k].irrigation_turns_left = Math.max(1, (terrain>>4)&0x3);
+            }
+            if (_units[k].irrigation_turns_left > 0) {
+                --_units[k].irrigation_turns_left;
+            }
+
+            if (_units[k].irrigation_turns_left == 0) {
+                // PREHISTORY-IRRIGATION-004, rules/prehostory.md: completed irrigation sets the irrigation modifier on the tile.
+                _map.addIrrigation(i, j);
+                _units[k].state = 'ready';
+                _units[k].irrigation_turns_left = undefined;
+                _fulldraw = 1;
+            }
+        }
+    }
+
     applyForestChoppingRules()
     {
         for (var k=0; k < _units.length; k++) {
@@ -446,6 +644,40 @@ const _game_prehistory = new class
         return this.isChoppableForestTerrain(_map_terrain_tex[i][j]);
     }
 
+    canBuildRoad(k)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return false;
+        }
+        var i = _units[k].coord.i;
+        var j = _units[k].coord.j;
+        var terrainType = _map_terrain_tex[i][j]&0x0F;
+        // PREHISTORY-ROAD-002, rules/prehostory.md: roads are land terrain modifiers and cannot be built on water.
+        if (terrainType == 0) {
+            return false;
+        }
+        // PREHISTORY-ROAD-005, rules/prehostory.md: mixed grass-water roads require Construction.
+        if (terrainType == 7 && !_game_state.isTechnologyOpen('Construction')) {
+            return false;
+        }
+        return true;
+    }
+
+    canBuildIrrigation(k)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return false;
+        }
+        var i = _units[k].coord.i;
+        var j = _units[k].coord.j;
+        var terrainType = _map_terrain_tex[i][j]&0x0F;
+        // PREHISTORY-IRRIGATION-002, rules/prehostory.md: irrigation is a land terrain modifier and cannot be built on water.
+        if (terrainType == 0) {
+            return false;
+        }
+        return !_map.hasIrrigation(i, j);
+    }
+
     centerViewOnStartingUnits()
     {
         if (_units.length == 0) {
@@ -485,6 +717,12 @@ const _game_prehistory = new class
             return true;
         }
         if (unit.chop_turns_left != undefined) {
+            return true;
+        }
+        if (unit.road_turns_left != undefined) {
+            return true;
+        }
+        if (unit.irrigation_turns_left != undefined) {
             return true;
         }
         if (unit.gotoCoord != undefined) {
@@ -610,6 +848,10 @@ const _game_prehistory = new class
             var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
             _game.createUnit(this.unitTypesById['explorer'], point, 0, 0);
         }
+        for(var k=0; k < _start_game_workers; k++) {
+            var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
+            _game.createUnit(this.unitTypesById['worker'], point, 0, 0);
+        }
 
         this.centerViewOnStartingUnits();
 
@@ -633,8 +875,10 @@ const _game_prehistory = new class
         if (command == 'wait' && _selection != -1 && _units[_selection].can_move) {
             this.setUnitState(_selection, 'waiting');
         }
-        if ((command == 'road' || command == 'irrigate') && _selection != -1
-            && _units[_selection].unitTypeId == 'worker') {
+        if (command == 'road' && this.canBuildRoad(_selection)) {
+            this.setUnitState(_selection, command);
+        }
+        if (command == 'irrigate' && this.canBuildIrrigation(_selection)) {
             this.setUnitState(_selection, command);
         }
         if (command == 'chop_forest' && this.canChopForest(_selection)) {

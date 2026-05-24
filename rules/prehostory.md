@@ -8,6 +8,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-MOVE-001`: Units that cannot move must not keep a movement order.
 - `PREHISTORY-MOVE-002`: Moving units follow the path assigned by player preview and base movement processing.
 - `PREHISTORY-MOVE-003`: Terrain cost and blocked terrain are handled by the base game/map systems.
+- `PREHISTORY-MOVE-004`: Water-nature units move only on water terrain.
+- `PREHISTORY-MOVE-005`: Land-nature units cannot move onto water terrain.
 
 ## Unit State Rules
 
@@ -17,25 +19,26 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-UNIT-004`: Every unit must have a `gotoPath` queue.
 - `PREHISTORY-UNIT-005`: Every unit has an explicit layer state.
 - `PREHISTORY-UNIT-006`: Prehistory unit definitions use the main `UnitType` structure.
+- `PREHISTORY-UNIT-007`: Unit type nature is `land` or `water`; movement and seaside production rules use this nature instead of unit names.
 
 ## Unit Types
 
-| Unit | Attack | Defence | Speed | View Range | Technology Required | Production Cost | Resource Required |
-| --- | ---: | ---: | ---: | ---: | --- | ---: | --- |
-| Settlers | 0 | 1 | 1 | 2 | none | 20 | none |
-| Worker | 0 | 1 | 1 | 2 | none | 20 | none |
-| Explorer | 0 | 1 | 2 | 4 | none | 15 | none |
-| Warrior | 2 | 1 | 1 | 2 | none | 20 | none |
-| Slinger | 2 | 1 | 1 | 2 | Archery | 25 | none |
-| Archor | 3 | 1 | 1 | 2 | Archery | 35 | none |
-| Spearman | 2 | 3 | 1 | 2 | Bronze Working | 35 | Copper |
-| Horseman | 4 | 2 | 3 | 3 | Horseback Riding | 50 | Horses |
-| Chariot | 3 | 2 | 2 | 3 | Wheel | 45 | Horses |
-| Elephant | 5 | 4 | 2 | 3 | Horseback Riding | 70 | Ivory |
-| Catapult | 5 | 1 | 1 | 2 | Construction | 60 | none |
-| Trebuchet | 7 | 1 | 1 | 2 | Engineering | 80 | none |
-| Galley | 2 | 2 | 2 | 3 | Sailing | 40 | none |
-| Galleon | 5 | 4 | 3 | 4 | Navigation | 90 | none |
+| Unit | Nature | Attack | Defence | Speed | View Range | Technology Required | Production Cost | Resource Required |
+| --- | --- | ---: | ---: | ---: | ---: | --- | ---: | --- |
+| Settlers | land | 0 | 1 | 1 | 2 | none | 20 | none |
+| Worker | land | 0 | 1 | 1 | 2 | none | 20 | none |
+| Explorer | land | 0 | 1 | 2 | 4 | none | 15 | none |
+| Warrior | land | 2 | 1 | 1 | 2 | none | 20 | none |
+| Slinger | land | 2 | 1 | 1 | 2 | Archery | 25 | none |
+| Archor | land | 3 | 1 | 1 | 2 | Archery | 35 | none |
+| Spearman | land | 2 | 3 | 1 | 2 | Bronze Working | 35 | Copper |
+| Horseman | land | 4 | 2 | 3 | 3 | Horseback Riding | 50 | Horses |
+| Chariot | land | 3 | 2 | 2 | 3 | Wheel | 45 | Horses |
+| Elephant | land | 5 | 4 | 2 | 3 | Horseback Riding | 70 | Ivory |
+| Catapult | land | 5 | 1 | 1 | 2 | Construction | 60 | none |
+| Trebuchet | land | 7 | 1 | 1 | 2 | Engineering | 80 | none |
+| Galley | water | 2 | 2 | 2 | 3 | Sailing | 40 | none |
+| Galleon | water | 5 | 4 | 3 | 4 | Navigation | 90 | none |
 
 ## Building State Rules
 
@@ -45,6 +48,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-BUILD-004`: Cities show the current production item and remaining turns in the unit menu.
 - `PREHISTORY-BUILD-005`: A built city inherits the team number of the settler that built it.
 - `PREHISTORY-BUILD-006`: A produced unit inherits the team number of the city that produced it.
+- `PREHISTORY-BUILD-007`: Water-nature units can be produced only in seaside cities.
 
 ## Turn Processing Rules
 
@@ -88,6 +92,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 ## Start View Rules
 
 - `PREHISTORY-VIEW-001`: When a prehistory game starts, the screen is centered on the initial cluster of spawned units.
+- `PREHISTORY-START-001`: A prehistory game starts with one Settler, one Explorer, and one Worker for team 0.
 
 ## Auto-Routing Rules
 
@@ -95,3 +100,19 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-AUTO-002`: Patrol routes around a remembered patrol origin.
 - `PREHISTORY-AUTO-003`: Automate chooses a nearby available land route.
 - `PREHISTORY-AUTO-004`: Auto-routing runs during turn processing when a unit has an auto-routing state and no active route.
+
+## Road Building Rules
+
+- `PREHISTORY-ROAD-001`: Only workers in `road` state can build roads.
+- `PREHISTORY-ROAD-002`: Roads are land terrain modifiers and cannot be built on water.
+- `PREHISTORY-ROAD-003`: Road building cost is two times terrain wildity stored in terrain `D` bits.
+- `PREHISTORY-ROAD-004`: Completed road building sets the road terrain modifier on the worker tile.
+- `PREHISTORY-ROAD-005`: Mixed grass-water terrain type `7` cannot receive roads until `Construction` is discovered.
+
+
+## Irrigation Rules
+
+- `PREHISTORY-IRRIGATION-001`: Only workers in `irrigate` state can build irrigation.
+- `PREHISTORY-IRRIGATION-002`: Irrigation is a land terrain modifier and cannot be built on water.
+- `PREHISTORY-IRRIGATION-003`: Irrigation takes at least one turn based on terrain wildity stored in terrain `D` bits.
+- `PREHISTORY-IRRIGATION-004`: Completed irrigation sets the irrigation terrain modifier on the worker tile.

@@ -36,6 +36,7 @@
         const _map_terrain_tex = new Array(_map_size);
         const _map_terrain_bit = new Array(_map_size);
         const _map_resource = new Array(_map_size);
+        const _map_terrain_mod = new Array(_map_size);
         // not zoomed coordinates from start of the map
         function xytoi(x,y) { return (x+y)/2/*sqrt2^2*//_cell_height; }
         function xytoj(x,y) { return (x-y)/2/*sqrt2^2*//_cell_width; }  //_map_size*sqrt2/2-
@@ -44,15 +45,15 @@
     </script>
     <script src="menu_unit.js?v=20260522f"></script>
     <script src="draw.js?v=20260522f"></script>
-    <script src="control.js?v=20260522f"></script>
-    <script src="game.js?v=20260522f"></script>
+    <script src="control.js?v=20260524a"></script>
+    <script src="game.js?v=20260524c"></script>
     <script src="menu_technology.js?v=20260522f"></script>
     <script src="menu_politics.js?v=20260522f"></script>
     <script src="menu_finance.js?v=20260522f"></script>
     <script src="menu_trade.js?v=20260522f"></script>
     <script src="menu_main.js?v=20260522f"></script>
-    <script src="map.js?v=20260524a"></script>
-    <script src="screen.js?v=20260523c"></script>
+    <script src="map.js?v=20260524f"></script>
+    <script src="screen.js?v=20260524a"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -128,7 +129,12 @@
          _screen.loadTexture('forest3.png', 6+(3<<4));
          _screen.loadTexture('forest7.png', 6+(7<<4));
         _screen.loadTexture('grasswater.png', 7+(3<<4));
+        _screen.loadTexture('road.png', 850);
+         _screen.loadTexture('irrigation.png', 851);
 
+    </script>
+    <script src="game_prehistory.js?v=20260524g"></script>
+    <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);
         }
@@ -144,9 +150,6 @@
 
         setTimeout(drawScene, 700, 1);
 
-    </script>
-    <script src="game_prehistory.js?v=20260524a"></script>
-    <script>
         // select current game package
         _current_game = _game_prehistory;
 

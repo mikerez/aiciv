@@ -46,3 +46,10 @@ Terrain is stored as one byte per map cell:
 - Aggregation is used by map enhancement/rendering to select larger or combined terrain textures.
 - The superblock is formed from neighboring cells of compatible terrain type and compatible `D` level.
 - `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
+
+## Terrain Modifiers
+
+- `TERRAIN-MOD-001`: Each map tile has a terrain modifier state stored separately from terrain type.
+- `TERRAIN-MOD-002`: Terrain modifiers currently include `road` and `irrigation`.
+- `TERRAIN-MOD-003`: Roads are drawn as `images/road.png` overlays above terrain.
+- `TERRAIN-MOD-004`: Irrigation is drawn as `images/irrigation.png` overlays above terrain.

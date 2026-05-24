@@ -44,7 +44,7 @@ const _control = new class
             j += mj
 
             if (Math.round(i) < 0 || Math.round(i) > _map_size || Math.round(j) < 0 || Math.round(j) > _map_size
-                 || (_map_terrain_tex[Math.round(i)][Math.round(j)]&0x0F) == 0 /*water*/) {
+                 || (typeof _game != "undefined" && !_game.canUnitEnterTile(k, Math.round(i), Math.round(j)))) {
                 break;
             }
             func(Math.round(pi), Math.round(pj), Math.round(i), Math.round(j), mi==1&&mj==1?0:mi==1&&mj==0?1:mi==1&&mj==-1?2:mi==0&&mj==-1?3:mi==-1&&mj==-1?4:mi==-1&&mj==0?5:mi==-1&&mj==1?6:7);

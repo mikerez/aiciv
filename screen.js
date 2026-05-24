@@ -145,6 +145,21 @@ const _screen = new class
         return brightness;
     }
 
+    drawTerrainModifierSprites(start_i, start_j, height_i, width_j)
+    {
+        if (!_map.terrainModifierSprites) {
+            return;
+        }
+        for (var k=0; k < _map.terrainModifierSprites.length; k++) {
+            var modifier = _map.terrainModifierSprites[k];
+            if (modifier.i < start_i || modifier.i >= start_i + height_i || modifier.j < start_j || modifier.j > start_j + width_j) {
+                continue;
+            }
+            var brightness = this.tileBrightness(modifier.i, modifier.j);
+            this.drawSpriteWithBrightness(ijtox1(modifier.i, modifier.j), ijtoy1(modifier.i, modifier.j), modifier.texture, _screenZoom, brightness);
+        }
+    }
+
     drawResourceSprites(start_i, start_j, height_i, width_j)
     {
         if (!_map.resourceSprites) {
@@ -362,6 +377,7 @@ function drawScene(loop)
     }
 
     if (_fulldraw) {
+        _screen.drawTerrainModifierSprites(start_i, start_j, height_i, width_j);
         _screen.drawResourceSprites(start_i, start_j, height_i, width_j);
 
         for (var k=0; k < _units.length; k++) {
