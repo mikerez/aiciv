@@ -133,6 +133,57 @@ const _screen = new class
 //                return (value & (value - 1)) == 0;
 //            }
 
+    tileBrightness(i, j)
+    {
+        var brightness = 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0x5)-((_map_terrain_bit[i][j]>>15)&1)*0.1;
+        if (brightness > 0.85) {
+            brightness = 0.85;
+        }
+        if (brightness < 0) {
+            brightness = 0;
+        }
+        return brightness;
+    }
+
+    drawResourceSprites(start_i, start_j, height_i, width_j)
+    {
+        if (!_map.resourceSprites) {
+            return;
+        }
+        for (var k=0; k < _map.resourceSprites.length; k++) {
+            var resource = _map.resourceSprites[k];
+            if (resource.i < start_i || resource.i >= start_i + height_i || resource.j < start_j || resource.j > start_j + width_j) {
+                continue;
+            }
+            var brightness = this.tileBrightness(resource.i, resource.j);
+            this.drawSpriteWithBrightness(ijtox1(resource.i, resource.j), ijtoy1(resource.i, resource.j), resource.texture, _screenZoom, brightness);
+        }
+    }
+
+    drawSpriteWithBrightness(x, y, type, zoom, brightness)
+    {
+        var positionBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+        var positions = [
+            1/_canvas.width*(-220/zoom+x),  1/_canvas.height*(160/zoom-y),
+            1/_canvas.width*(-220/zoom+x), 1/_canvas.height*(-160/zoom-y),
+            1/_canvas.width*(220/zoom+x),  1/_canvas.height*(160/zoom-y),
+            1/_canvas.width*(220/zoom+x), 1/_canvas.height*(-160/zoom-y),
+        ];
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+
+        _gl.activeTexture(_gl.TEXTURE0);
+        _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
+        _gl.uniform1i(this.programInfo.uniformLocations.sampler, 0);
+        _gl.uniform1f(this.programInfo.uniformLocations.brightness, brightness);
+
+        _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
+    }
+
     drawSprite(x, y, type, zoom)
     {
                 var positionBuffer = _gl.createBuffer();
@@ -178,7 +229,7 @@ const _screen = new class
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
         _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
-        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0xF)-((_map_terrain_bit[i][j]>>15)&1)*0.1);
+        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, _screen.tileBrightness(i, j));
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -295,7 +346,7 @@ function drawScene(loop)
 //                if (_textures[_map_terrain_tex[i][j]/*&~(4<<4)*/] === undefined) alert("Undefined struct " + (_map_terrain_tex[i][j]/*&~(4<<4*/));
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[_map_terrain_tex[i][j]/*&~(4<<4)*/]);
         _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);  // there is another same place!!!
-        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0x5)-((_map_terrain_bit[i][j]>>15)&1)*0.1);
+        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, _screen.tileBrightness(i, j));
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
 
@@ -311,6 +362,8 @@ function drawScene(loop)
     }
 
     if (_fulldraw) {
+        _screen.drawResourceSprites(start_i, start_j, height_i, width_j);
+
         for (var k=0; k < _units.length; k++) {
             _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
                                _units[k].texture, _screenZoom);

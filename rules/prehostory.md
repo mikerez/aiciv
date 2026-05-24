@@ -28,10 +28,10 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 | Warrior | 2 | 1 | 1 | 2 | none | 20 | none |
 | Slinger | 2 | 1 | 1 | 2 | Archery | 25 | none |
 | Archor | 3 | 1 | 1 | 2 | Archery | 35 | none |
-| Spearman | 2 | 3 | 1 | 2 | Bronze Working | 35 | Bronze |
+| Spearman | 2 | 3 | 1 | 2 | Bronze Working | 35 | Copper |
 | Horseman | 4 | 2 | 3 | 3 | Horseback Riding | 50 | Horses |
 | Chariot | 3 | 2 | 2 | 3 | Wheel | 45 | Horses |
-| Elephant | 5 | 4 | 2 | 3 | Horseback Riding | 70 | Elephants |
+| Elephant | 5 | 4 | 2 | 3 | Horseback Riding | 70 | Ivory |
 | Catapult | 5 | 1 | 1 | 2 | Construction | 60 | none |
 | Trebuchet | 7 | 1 | 1 | 2 | Engineering | 80 | none |
 | Galley | 2 | 2 | 2 | 3 | Sailing | 40 | none |
