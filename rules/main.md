@@ -31,3 +31,5 @@
 - `MAIN-MARKUP-001`: `drawStroke()` control-zone markup is skipped during initial game setup.
 - `MAIN-MARKUP-002`: End-turn processing redraws control-zone markup once after layer hooks finish selection and recentering.
 - `MAIN-MARKUP-003`: Control-zone strokes use the same team color family as the unit team overlay.
+- `MAIN-RESOURCE-001`: Map tile state contains a resource type id in `_map_resource[i][j]`.
+- `MAIN-RESOURCE-002`: Resource overlay sprites are prepared as a full-map resource sprite list and drawn above terrain and below units.

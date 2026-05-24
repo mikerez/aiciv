@@ -35,8 +35,14 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-TURN-004`: A penalty greater than `0` delays future movement while the penalty is decremented by turn processing.
 - `TERRAIN-TURN-005`: Water terrain is currently blocked for normal land movement.
 
+## Generation
+
+- `TERRAIN-GEN-001`: Random prehistory terrain generation favors forest and clean grass as common land terrain.
+- `TERRAIN-GEN-002`: Rough terrain passes for sand, rocks, hills, and terrain modifiers are lower than the grass and forest passes so clean grass remains visible.
+
 ## Aggregation
 
 - `A` marks terrain that belongs to a 4-cell superblock of similar type.
 - Aggregation is used by map enhancement/rendering to select larger or combined terrain textures.
 - The superblock is formed from neighboring cells of compatible terrain type and compatible `D` level.
+- `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
