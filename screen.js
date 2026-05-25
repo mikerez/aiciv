@@ -37,6 +37,15 @@ const _screen = new class
                 brightness: _gl.getUniformLocation(this.shaderProgram, 'uBrightness'),
             },
         };
+        this.positionBuffer = _gl.createBuffer();
+        this.textureCoordBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array([
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+            1.0, 1.0,
+        ]), _gl.STATIC_DRAW);
     }
 
     constructor()
@@ -133,6 +142,21 @@ const _screen = new class
 //                return (value & (value - 1)) == 0;
 //            }
 
+    bindTextureCoordinates()
+    {
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
+        _gl.vertexAttribPointer(this.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
+        _gl.enableVertexAttribArray(this.programInfo.attribLocations.textureCoord);
+    }
+
+    setPositionBuffer(positions)
+    {
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, this.positionBuffer);
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.DYNAMIC_DRAW);
+        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+    }
+
     tileBrightness(i, j)
     {
         var brightness = 0.5*((_map_terrain_bit[i][j]>>14)&1)+0.1*((_map_terrain_bit[i][j]>>8)&0x5)-((_map_terrain_bit[i][j]>>15)&1)*0.1;
@@ -177,19 +201,13 @@ const _screen = new class
 
     drawSpriteWithBrightness(x, y, type, zoom, brightness)
     {
-        var positionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
         var positions = [
             1/_canvas.width*(-220/zoom+x),  1/_canvas.height*(160/zoom-y),
             1/_canvas.width*(-220/zoom+x), 1/_canvas.height*(-160/zoom-y),
             1/_canvas.width*(220/zoom+x),  1/_canvas.height*(160/zoom-y),
             1/_canvas.width*(220/zoom+x), 1/_canvas.height*(-160/zoom-y),
         ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
-        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
-        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+        this.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
@@ -201,19 +219,13 @@ const _screen = new class
 
     drawSprite(x, y, type, zoom)
     {
-                var positionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
         var positions = [
             1/_canvas.width*(-220/zoom+x),  1/_canvas.height*(160/zoom-y),
             1/_canvas.width*(-220/zoom+x), 1/_canvas.height*(-160/zoom-y),
             1/_canvas.width*(220/zoom+x),  1/_canvas.height*(160/zoom-y),
             1/_canvas.width*(220/zoom+x), 1/_canvas.height*(-160/zoom-y),
         ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
-        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
-        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+        this.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
@@ -228,19 +240,13 @@ const _screen = new class
     {
         var halfWidth = width/2/zoom;
         var halfHeight = height/2/zoom;
-        var positionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
         var positions = [
             1/_canvas.width*(-halfWidth+x),  1/_canvas.height*(halfHeight-y),
             1/_canvas.width*(-halfWidth+x), 1/_canvas.height*(-halfHeight-y),
             1/_canvas.width*(halfWidth+x),  1/_canvas.height*(halfHeight-y),
             1/_canvas.width*(halfWidth+x), 1/_canvas.height*(-halfHeight-y),
         ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
-        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
-        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+        this.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
@@ -252,19 +258,13 @@ const _screen = new class
 
     drawSprite1(x, y, type, zoom)
     {
-        var positionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
         var positions = [
             1/_canvas.width*(-420/zoom+x),  1/_canvas.height*(310/zoom-y),
             1/_canvas.width*(-420/zoom+x), 1/_canvas.height*(-310/zoom-y),
             1/_canvas.width*(420/zoom+x),  1/_canvas.height*(310/zoom-y),
             1/_canvas.width*(420/zoom+x), 1/_canvas.height*(-310/zoom-y),
         ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
-        _gl.vertexAttribPointer(_screen.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
-        _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.vertexPosition);
+        this.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
@@ -308,8 +308,11 @@ function drawSelectionStroke()
 function drawScene(loop)
 {
     const startTime = performance.now();
-    if (loop) {
-        _fulldraw = 1;
+    if (loop && !_fulldraw) {
+        drawSelectionStroke();
+        _step++;
+        setTimeout(drawScene, 700, 1);
+        return;
     }
     _in_drawing = 1;
 //            _gl.viewport(0, 0, _canvas.width*ratio, _canvas.height*ratio);
@@ -321,18 +324,7 @@ function drawScene(loop)
     }
 
     // this is const for all sprites
-    this.textureCoordBuffer = _gl.createBuffer();
-    _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
-    const textureCoordinates = [
-        0.0,  0.0,
-        0.0,  1.0,
-        1.0,  0.0,
-        1.0,  1.0,
-    ];
-    _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), _gl.STATIC_DRAW);
-    _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
-    _gl.vertexAttribPointer(_screen.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
-    _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.textureCoord);
+    _screen.bindTextureCoordinates();
     // Project screen corners into map coordinates. This avoids desktop-only cutoff
     // multipliers that underdraw on narrow mobile viewports.
     var screenCorners = [
@@ -376,19 +368,13 @@ function drawScene(loop)
                     // - _map_view[1]* /*20*/0*sqrt2 
 
         // inlined drawSprite
-        var positionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
         var positions = [
             WIDTH*(-STARTX+ijtox1(i,j)),  HEIGHT*(STARTY-ijtoy1(i,j)),
             WIDTH*(-STARTX+ijtox1(i,j)), HEIGHT*(-STARTY-ijtoy1(i,j)),
             WIDTH*(STARTX+ijtox1(i,j)),  HEIGHT*(STARTY-ijtoy1(i,j)),
             WIDTH*(STARTX+ijtox1(i,j)), HEIGHT*(-STARTY-ijtoy1(i,j)),
         ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
-        _gl.vertexAttribPointer(_screen.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
-        _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.vertexPosition);
+        _screen.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
