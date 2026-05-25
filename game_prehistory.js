@@ -170,6 +170,9 @@ const _game_prehistory = new class
             if (_selection != -1 && _units[_selection].type == 0) {
                 _game.make_unit(_city, _units[_selection].coord);
                 _units[_units.length - 1].team = _units[_selection].team;
+                if (typeof _city_economy !== 'undefined') {
+                    _city_economy.ensureCity(_units[_units.length - 1]);
+                }
 
                 // PREHISTORY-BUILD-002, rules/prehostory.md: building a city consumes the settler.
                 _game.del_unit(_selection);
@@ -331,8 +334,11 @@ const _game_prehistory = new class
         if (!unitType) {
             return 0;
         }
+        if (typeof _city_economy !== 'undefined') {
+            _city_economy.ensureCity(city);
+        }
         var perTurn = city.cityProperties ? city.cityProperties.productionPerTurn : 5;
-        return Math.max(1, Math.ceil((unitType.productionCost - city.production.productionPoints)/perTurn));
+        return Math.max(1, Math.ceil((unitType.productionCost - city.production.productionPoints)/Math.max(1, perTurn)));
     }
 
     updateCityProductionMenu(menu, unit)
@@ -341,10 +347,21 @@ const _game_prehistory = new class
         if (status) {
             if (unit.type == 3 && unit.production != null && this.unitTypesById[unit.production.unitTypeId] != undefined) {
                 var unitType = this.unitTypesById[unit.production.unitTypeId];
-                status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)';
+                var economyText = '';
+                if (typeof _city_economy !== 'undefined') {
+                    _city_economy.ensureCity(unit);
+                    economyText = ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Growth:' + unit.economy.turnsToNewCitizen;
+                }
+                status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)' + economyText;
             }
             else if (unit.type == 3) {
-                status.textContent = 'Producing: none';
+                if (typeof _city_economy !== 'undefined') {
+                    _city_economy.ensureCity(unit);
+                    status.textContent = 'Producing: none F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Growth:' + unit.economy.turnsToNewCitizen;
+                }
+                else {
+                    status.textContent = 'Producing: none';
+                }
             }
             else {
                 status.textContent = '';
@@ -596,9 +613,9 @@ const _game_prehistory = new class
                 continue;
             }
 
-            // PREHISTORY-CHOP-004, rules/prehostory.md: chopping duration is the forest wildity level in D bits.
+            // PREHISTORY-CHOP-004, rules/prehostory.md: chopping duration is forest wildity plus two turns under current processing timing.
             if (_units[k].chop_turns_left == undefined) {
-                _units[k].chop_turns_left = (terrain>>4)&0x3;
+                _units[k].chop_turns_left = ((terrain>>4)&0x3) + 2;
             }
             if (_units[k].chop_turns_left > 0) {
                 --_units[k].chop_turns_left;
@@ -663,6 +680,73 @@ const _game_prehistory = new class
         return true;
     }
 
+    hasTerrainWaterSourceFlag(i, j)
+    {
+        var terrain = _map_terrain_tex[i][j];
+        var terrainType = terrain&0x0F;
+        // PREHISTORY-IRRIGATION-009, rules/prehostory.md: A marks water-source terrain for water-related tiles.
+        return (terrain&0x80) != 0 && (terrainType == 0 || terrainType == 7);
+    }
+
+    isSeaConnectedWaterSource(i, j)
+    {
+        var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (var d=0; d < dirs.length; d++) {
+            var ni = i + dirs[d][0];
+            var nj = j + dirs[d][1];
+            if (ni < 0 || ni >= _map_size || nj < 0 || nj >= _map_size) {
+                continue;
+            }
+            var terrain = _map_terrain_tex[ni][nj];
+            var terrainType = terrain&0x0F;
+            var depth = (terrain>>4)&0x3;
+            // PREHISTORY-IRRIGATION-007, rules/prehostory.md: water beside cardinal deep water belongs to sea and is not an irrigation source.
+            if (terrainType == 0 && depth > 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    isIrrigationWaterSource(i, j)
+    {
+        var terrain = _map_terrain_tex[i][j];
+        var terrainType = terrain&0x0F;
+        var depth = (terrain>>4)&0x3;
+        // PREHISTORY-IRRIGATION-005 and PREHISTORY-IRRIGATION-009, rules/prehostory.md: shallow water, mixed grass-water, and A-marked water sources are candidates.
+        return this.hasTerrainWaterSourceFlag(i, j) || (terrainType == 0 && depth <= 1) || terrainType == 7;
+    }
+
+    hasIrrigationSourceNear(i, j)
+    {
+        for (var di=-1; di <= 1; di++) {
+            for (var dj=-1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) {
+                    continue;
+                }
+                var ni = i + di;
+                var nj = j + dj;
+                if (ni < 0 || ni >= _map_size || nj < 0 || nj >= _map_size) {
+                    continue;
+                }
+                var sourceTerrain = _map_terrain_tex[ni][nj];
+                var sourceType = sourceTerrain&0x0F;
+                // PREHISTORY-IRRIGATION-005 and PREHISTORY-IRRIGATION-009, rules/prehostory.md: mixed grass-water and A-marked water sources are already local sources.
+                if (sourceType == 7 || this.hasTerrainWaterSourceFlag(ni, nj)) {
+                    return true;
+                }
+                if (this.isIrrigationWaterSource(ni, nj) && !this.isSeaConnectedWaterSource(ni, nj)) {
+                    return true;
+                }
+                // PREHISTORY-IRRIGATION-006, rules/prehostory.md: irrigation can extend from neighboring irrigation.
+                if (_map.hasIrrigation(ni, nj)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     canBuildIrrigation(k)
     {
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
@@ -671,11 +755,14 @@ const _game_prehistory = new class
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
         var terrainType = _map_terrain_tex[i][j]&0x0F;
-        // PREHISTORY-IRRIGATION-002, rules/prehostory.md: irrigation is a land terrain modifier and cannot be built on water.
-        if (terrainType == 0) {
+        // PREHISTORY-IRRIGATION-002 and PREHISTORY-IRRIGATION-008, rules/prehostory.md: irrigation can be built only on grass terrain.
+        if (terrainType != 2) {
             return false;
         }
-        return !_map.hasIrrigation(i, j);
+        if (_map.hasIrrigation(i, j)) {
+            return false;
+        }
+        return this.hasIrrigationSourceNear(i, j);
     }
 
     centerViewOnStartingUnits()

@@ -46,14 +46,15 @@
     <script src="menu_unit.js?v=20260522f"></script>
     <script src="draw.js?v=20260522f"></script>
     <script src="control.js?v=20260524a"></script>
-    <script src="game.js?v=20260524c"></script>
+    <script src="game.js?v=20260525c"></script>
+    <script src="city.js?v=20260525e"></script>
     <script src="menu_technology.js?v=20260522f"></script>
     <script src="menu_politics.js?v=20260522f"></script>
     <script src="menu_finance.js?v=20260522f"></script>
     <script src="menu_trade.js?v=20260522f"></script>
     <script src="menu_main.js?v=20260522f"></script>
     <script src="map.js?v=20260524f"></script>
-    <script src="screen.js?v=20260524a"></script>
+    <script src="screen.js?v=20260525b"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -86,7 +87,8 @@
 
         const _textures = new Array(1024);  // first 256 are map tiles
         _screen.init();
-        // [R A D D T T T T], T - type 4 bit, D - depth/height/wildity, A - 4 blocks aggregation of similar type
+        // [A S D1 D0 T3 T2 T1 T0], T - type 4 bit, D - depth/height/wildity, S - 4 blocks supertile of similar type, A - alternative view (+means water source exists)
+        // D0 for hills means forest exists, can be removed when forest is chopped, not touching other bits
         _screen.loadTexture('waterdeep1.png', 0);
          _screen.loadTexture('water.png', 0+(1<<4));  // deep
          _screen.loadTexture('waterdeep.png', 0+(2<<4));  // deep
@@ -131,9 +133,18 @@
         _screen.loadTexture('grasswater.png', 7+(3<<4));
         _screen.loadTexture('road.png', 850);
          _screen.loadTexture('irrigation.png', 851);
+        _screen.loadTexture('food.png', 860);
+        _screen.loadTexture('food5.png', 861);
+        _screen.loadTexture('production.png', 862);
+        _screen.loadTexture('production5.png', 863);
+        _screen.loadTexture('money.png', 864);
+        _screen.loadTexture('money5.png', 865);
+        if (typeof _city_economy !== 'undefined') {
+            _city_economy.init();
+        }
 
     </script>
-    <script src="game_prehistory.js?v=20260524g"></script>
+    <script src="game_prehistory.js?v=20260525c"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);

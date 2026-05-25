@@ -75,12 +75,12 @@ const _map = new class
     {
         for (var i=1; i < _map_size-1; i++) {
             for (var j=1; j < _map_size-1; j++) {
-                // sand near to water
+                // make some sand near to water
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i+1][j] == 2 && ijtoy(i,j) > _map_view[1]+(_map_view[3]-_map_view[1])/3 && ijtoy(i,j) < _map_view[3]-(_map_view[3]-_map_view[1])/3) _map_terrain_tex[i+1][j] = 1;
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i][j+1] == 2 && ijtoy(i,j) > _map_view[1]+(_map_view[3]-_map_view[1])/3 && ijtoy(i,j) < _map_view[3]-(_map_view[3]-_map_view[1])/3) _map_terrain_tex[i][j+1] = 1;
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i-1][j] == 2 && ijtoy(i,j) > _map_view[1]+(_map_view[3]-_map_view[1])/3 && ijtoy(i,j) < _map_view[3]-(_map_view[3]-_map_view[1])/3) _map_terrain_tex[i-1][j] = 1;
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i][j-1] == 2 && ijtoy(i,j) > _map_view[1]+(_map_view[3]-_map_view[1])/3 && ijtoy(i,j) < _map_view[3]-(_map_view[3]-_map_view[1])/3) _map_terrain_tex[i][j-1] = 1;
-                // shallow water near to land
+                // make shallow water near to land
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i+1][j] != 0) _map_terrain_tex[i][j] = 0+(1<<4);
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i][j+1] != 0) _map_terrain_tex[i][j] = 0+(1<<4);
                 if (_map_terrain_tex[i][j] == 0 && _map_terrain_tex[i-1][j] != 0) _map_terrain_tex[i][j] = 0+(1<<4);
@@ -89,7 +89,7 @@ const _map = new class
         }
     }
 
-    enhMap()
+    enhMap()  // make supertiles 4x4 where tiles are too repetitive or add some alternative looking tiles
     {
         for (var i=0; i < _map_size-1; i++) {
             for (var j=0; j < _map_size-1; j++) {
@@ -103,7 +103,7 @@ const _map = new class
                              _map_terrain_tex[i+1][j] = k+((l+4)<<4);
 //                                     _map_terrain_tex[i][j+1] = k+((l+4)<<4);
                              _map_terrain_tex[i+1][j+1] = k+((l+4)<<4);
-if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // shadows
+if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
     if ((_map_terrain_tex[i+2][j+1]&0xF)!=4) _map_terrain_bit[i+2][j+1] |= 1<<15;
     if ((_map_terrain_tex[i+1][j+2]&0xF)!=4) _map_terrain_bit[i+1][j+2] |= 1<<15;
     if ((_map_terrain_tex[i+2][j+2]&0xF)!=4) _map_terrain_bit[i+2][j+2] |= 1<<15;
@@ -252,8 +252,8 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // shadows
         this.genMap(14, 20, 32, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 2, 0);  // grass
         this.genMap(10, 10, 4, 4, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 1, 1);  // sand
         this.genMap(12, 2, 4, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks
-        this.genMap(14, 12, 6, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
-        this.genMap(30, 12, 12, 6, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 6, 1);  // forest
+        this.genMap(16, 12, 6, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
+        this.genMap(40, 12, 12, 6, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 6, 1);  // forest
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[1]+(_map_view[3]-_map_view[1])/10, 3, 1);  // snow
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[3]-(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3], 3, 1);  // snow
         this.fixMap();  // before mod tiles

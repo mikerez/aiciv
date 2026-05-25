@@ -224,6 +224,32 @@ const _screen = new class
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    drawSpriteSized(x, y, type, zoom, width, height, brightness = 1.0)
+    {
+        var halfWidth = width/2/zoom;
+        var halfHeight = height/2/zoom;
+        var positionBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+        var positions = [
+            1/_canvas.width*(-halfWidth+x),  1/_canvas.height*(halfHeight-y),
+            1/_canvas.width*(-halfWidth+x), 1/_canvas.height*(-halfHeight-y),
+            1/_canvas.width*(halfWidth+x),  1/_canvas.height*(halfHeight-y),
+            1/_canvas.width*(halfWidth+x), 1/_canvas.height*(-halfHeight-y),
+        ];
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(positions), _gl.STATIC_DRAW);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, positionBuffer);
+        _gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, _gl.FLOAT, false, 0, 0);
+        _gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+
+        _gl.activeTexture(_gl.TEXTURE0);
+        _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
+        _gl.uniform1i(this.programInfo.uniformLocations.sampler, 0);
+        _gl.uniform1f(this.programInfo.uniformLocations.brightness, brightness);
+
+        _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
+    }
+
     drawSprite1(x, y, type, zoom)
     {
         var positionBuffer = _gl.createBuffer();
@@ -379,6 +405,9 @@ function drawScene(loop)
     if (_fulldraw) {
         _screen.drawTerrainModifierSprites(start_i, start_j, height_i, width_j);
         _screen.drawResourceSprites(start_i, start_j, height_i, width_j);
+        if (typeof _city_economy !== 'undefined') {
+            _city_economy.drawCitizenTilesMap(start_i, start_j, height_i, width_j);
+        }
 
         for (var k=0; k < _units.length; k++) {
             _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),

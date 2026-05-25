@@ -134,6 +134,9 @@ const _game = new class
     add_unit(unit)
     {
         _units.push(unit);
+        if (unit.type == 3 && typeof _city_economy !== 'undefined') {
+            _city_economy.ensureCity(unit);
+        }
     }
 
     del_unit(k)
@@ -160,6 +163,9 @@ const _game = new class
             unit.cityProperties = new CityProperties();
         }
         this.add_unit(unit);
+        if (unit.type == 3 && typeof _city_economy !== 'undefined') {
+            _city_economy.ensureCity(unit);
+        }
         return unit;
     }
 
@@ -313,6 +319,9 @@ const _game = new class
         }
 
         this.makeTurn(false);
+        if (typeof _city_economy !== 'undefined') {
+            _city_economy.processCities();
+        }
         this.processCityProduction(layer);
 
         if (layer.applyUnitStateRules) {

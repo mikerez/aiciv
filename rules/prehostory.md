@@ -83,7 +83,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-CHOP-001`: Chopping forest can be performed only by a worker in `chop_forest` state.
 - `PREHISTORY-CHOP-002`: Chopping can progress only while the worker stands on a forest terrain tile.
 - `PREHISTORY-CHOP-003`: Forest terrain is terrain type `6`; `hills1` and `hills5` are forested hill variants and are also available for chopping.
-- `PREHISTORY-CHOP-004`: Chopping takes as many turns as the forest tile wildity level stored in terrain `D` bits.
+- `PREHISTORY-CHOP-004`: Chopping takes the forest tile wildity level stored in terrain `D1 D0` bits plus two turns, because the current turn-processing pass decrements progress immediately.
 - `PREHISTORY-CHOP-005`: When chopping completes, a base forest tile becomes base grass terrain.
 - `PREHISTORY-CHOP-006`: If the unit is not on forest terrain, the chop order is cancelled.
 - `PREHISTORY-CHOP-007`: A unit cannot enter `chop_forest` state unless it is already standing on forest terrain.
@@ -116,3 +116,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-IRRIGATION-002`: Irrigation is a land terrain modifier and cannot be built on water.
 - `PREHISTORY-IRRIGATION-003`: Irrigation takes at least one turn based on terrain wildity stored in terrain `D` bits.
 - `PREHISTORY-IRRIGATION-004`: Completed irrigation sets the irrigation terrain modifier on the worker tile.
+- `PREHISTORY-IRRIGATION-005`: New irrigation must be adjacent to a valid source: mixed grass-water terrain type `7`, shallow water terrain type `0` with depth up to 1, or existing irrigation.
+- `PREHISTORY-IRRIGATION-006`: New irrigation can also be adjacent to an existing irrigation tile, allowing irrigation chains away from the source.
+- `PREHISTORY-IRRIGATION-007`: A shallow water terrain type `0` source belongs to sea and cannot start irrigation if it has a cardinal neighboring water tile with depth greater than 1.
+- `PREHISTORY-IRRIGATION-008`: Irrigation can be built only on grass terrain type `2`.
+- `PREHISTORY-IRRIGATION-009`: For water-related terrain, the `A` terrain bit marks a water source and allows irrigation source detection.
