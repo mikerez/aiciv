@@ -10,17 +10,43 @@
         #canvas3D {
             display: block;
         }
+        body.mobile-ui button,
+        body.mobile-ui [data-menu-command],
+        body.mobile-ui a {
+            min-height: 40px;
+            font-size: 28px !important;
+        }
+        body.mobile-ui #endTurnButton {
+            top: 72px !important;
+            padding: 16px 24px !important;
+            font-size: 28px !important;
+            border-radius: 12px !important;
+        }
+        body.mobile-ui #main_menu_buttons button {
+            width: 40px !important;
+            height: 40px !important;
+            min-height: 40px !important;
+        }
+        body.mobile-ui #main_menu_buttons svg {
+            width: 32px !important;
+            height: 32px !important;
+        }
+        body.mobile-ui #foreground {
+            width: 420px !important;
+            font-size: 28px !important;
+        }
     </style>
 </head>
 <body>
                           <!-- width="400" height="300" style="width:400px;height:300px;" -->
-    <canvas id="canvas3D" width="1500" height="1000"></canvas>
-    <canvas id="canvas2D" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 2;"></canvas>
+    <canvas id="canvas3D" width="1500" height="1000" style="touch-action: none;"></canvas>
+    <canvas id="canvas2D" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 2;touch-action: none;"></canvas>
     <canvas id="canvasSelection" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 3;pointer-events: none;mix-blend-mode: difference;"></canvas>
     <div class="container">
         <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 5;overflow-y: scroll; height:400px;">
         </div>
     </div>
+    <button id="endTurnButton" style="position: fixed;left: 50%;top: 42px;transform: translateX(-50%);z-index: 6;background: rgba(255,255,255,0.75);border: 1px solid rgba(0,0,0,0.35);border-radius: 8px;padding: 8px 12px;font: bold 14px Arial;">End Turn</button>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -46,15 +72,15 @@
     <script src="menu_unit.js?v=20260522f"></script>
     <script src="draw.js?v=20260522f"></script>
     <script src="control.js?v=20260524a"></script>
-    <script src="game.js?v=20260525c"></script>
+    <script src="game.js?v=20260525d"></script>
     <script src="city.js?v=20260525e"></script>
     <script src="menu_technology.js?v=20260522f"></script>
     <script src="menu_politics.js?v=20260522f"></script>
     <script src="menu_finance.js?v=20260522f"></script>
     <script src="menu_trade.js?v=20260522f"></script>
-    <script src="menu_main.js?v=20260522f"></script>
+    <script src="menu_main.js?v=20260525b"></script>
     <script src="map.js?v=20260524f"></script>
-    <script src="screen.js?v=20260525b"></script>
+    <script src="screen.js?v=20260525c"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -144,7 +170,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260525c"></script>
+    <script src="game_prehistory.js?v=20260525e"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);
@@ -156,6 +182,9 @@
         var _shift_pressed = 0;
         var _ctrl_pressed = 0;
         var _mousedown = 0;
+        var _dragging_unit_path = 0;
+        var _panning_map = 0;
+        var _last_pointer_point = null;
         var _step = 0;
         var _in_drawing = 0;
 
@@ -166,9 +195,48 @@
 
         _current_game.startGame();
 
-        window.onmousedown = function(event) {
-            const point = eventToCanvas(event);
-            const coord = eventToMapCoord(event);
+        var _is_mobile_browser = window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        if (_is_mobile_browser) {
+            document.body.classList.add('mobile-ui');
+        }
+
+        function isGameInputTarget(target)
+        {
+            return target == _canvas || target == document.getElementById('canvas2D') || target == document.body || target == window;
+        }
+
+        function endTurn()
+        {
+            _current_game.makeTurn();
+            _fulldraw = 1;
+            drawScene(0);
+        }
+
+        document.getElementById('endTurnButton').onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            endTurn();
+        };
+
+        function primaryInput(event)
+        {
+            if (event.changedTouches && event.changedTouches.length) {
+                return event.changedTouches[0];
+            }
+            if (event.touches && event.touches.length) {
+                return event.touches[0];
+            }
+            return event;
+        }
+
+        function handlePointerDown(event) {
+            if (!isGameInputTarget(event.target)) {
+                return;
+            }
+            event.preventDefault();
+            const input = primaryInput(event);
+            const point = eventToCanvas(input);
+            const coord = eventToMapCoord(input);
             if (_current_game.handleMapClick(coord)) {
                 _current_game.applyMenuRules();
                 drawScene(0);
@@ -178,27 +246,70 @@
             _current_game.applyMenuRules();
             drawScene(0);
             _mousedown = 1;
+            _last_pointer_point = point;
+            _dragging_unit_path = (_selection != -1 && _units[_selection].can_move) ? 1 : 0;
+            _panning_map = _dragging_unit_path ? 0 : 1;
         }
 
-        window.onmousemove = function(event) {
-            const coord = eventToMapCoord(event);
+        function panMapToPoint(point) {
+            if (!_last_pointer_point) {
+                _last_pointer_point = point;
+                return;
+            }
+            var dx = point.x - _last_pointer_point.x;
+            var dy = point.y - _last_pointer_point.y;
+            _screenOffsetX -= dx*_screenZoom/(2*_ratio);
+            _screenOffsetY -= dy*_screenZoom/(2*_ratio);
+            _last_pointer_point = point;
+            _draw.clear();
+            _fulldraw = 1;
+            drawScene(0);
+        }
+
+        function handlePointerMove(event) {
+            if (!_mousedown && !isGameInputTarget(event.target)) {
+                return;
+            }
+            if (!_mousedown && !(event.touches && event.touches.length)) {
+                return;
+            }
+            event.preventDefault();
+            const input = primaryInput(event);
+            const point = eventToCanvas(input);
+            const coord = eventToMapCoord(input);
             if (_current_game.previewMapCommand(coord)) {
                 return;
             }
-            if (_mousedown && _selection != -1 && _units[_selection].can_move) {
+            if (_dragging_unit_path && _selection != -1 && _units[_selection].can_move) {
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
                 }
                 _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                return;
+            }
+            if (_panning_map) {
+                panMapToPoint(point);
             }
         }
 
-        window.onmouseup = function(event) {
-            if (_mousedown && _selection != -1) {
-                
+        function handlePointerUp(event) {
+            if (!_mousedown && !isGameInputTarget(event.target)) {
+                return;
             }
+            event.preventDefault();
             _mousedown = 0;
+            _dragging_unit_path = 0;
+            _panning_map = 0;
+            _last_pointer_point = null;
         }
+
+        window.onmousedown = handlePointerDown;
+        window.onmousemove = handlePointerMove;
+        window.onmouseup = handlePointerUp;
+        window.addEventListener('touchstart', handlePointerDown, { passive: false });
+        window.addEventListener('touchmove', handlePointerMove, { passive: false });
+        window.addEventListener('touchend', handlePointerUp, { passive: false });
+        window.addEventListener('touchcancel', handlePointerUp, { passive: false });
 
         document.body.onkeydown = function(event) {
             if (event.shiftKey) {
@@ -214,9 +325,7 @@
                 _ctrl_pressed = 0;
             }
             if (event.code === 'Enter') {
-                _current_game.makeTurn();
-                _fulldraw = 1;
-                drawScene(0);
+                endTurn();
             }
             if (event.code === 'KeyB') {
                 _current_game.doCommand('build_city');

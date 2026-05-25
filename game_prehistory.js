@@ -922,21 +922,46 @@ const _game_prehistory = new class
         _game.applyTurnProcessingRules(this);
     }
 
+    isValidStartingLand(coord)
+    {
+        return coord && coord.i >= 0 && coord.i < _map_size && coord.j >= 0 && coord.j < _map_size && (_map_terrain_tex[coord.i][coord.j]&0x0F) != 0;
+    }
+
+    randomStartingUnitPoint()
+    {
+        var candidates = [];
+        for (var di=-5; di <= 5; di++) {
+            for (var dj=-5; dj <= 5; dj++) {
+                var coord = _start_game_point.add(di, dj);
+                if (this.isValidStartingLand(coord)) {
+                    candidates.push(coord);
+                }
+            }
+        }
+        if (candidates.length) {
+            return candidates[Math.floor(Math.random()*candidates.length)];
+        }
+        if (this.isValidStartingLand(_start_game_point)) {
+            return _start_game_point;
+        }
+        return _game.random_point(0, new Coord(8, 8), new Coord(_map_size - 9, _map_size - 9));
+    }
+
     startGame()
     {
-        _start_game_point = _game.random_point();
+        _start_game_point = _game.random_point(0, new Coord(8, 8), new Coord(_map_size - 9, _map_size - 9));
         this.applyUnitStateRules();
 
         for(var k=0; k < _start_game_settlers; k++) {
-            var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
+            var point = this.randomStartingUnitPoint();
             _game.createUnit(this.unitTypesById['settlers'], point, 0, 0);
         }
         for(var k=0; k < _start_game_explorers; k++) {
-            var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
+            var point = this.randomStartingUnitPoint();
             _game.createUnit(this.unitTypesById['explorer'], point, 0, 0);
         }
         for(var k=0; k < _start_game_workers; k++) {
-            var point = _game.random_point(0, _start_game_point.add(-5,-5), _start_game_point.add(5,5));
+            var point = this.randomStartingUnitPoint();
             _game.createUnit(this.unitTypesById['worker'], point, 0, 0);
         }
 

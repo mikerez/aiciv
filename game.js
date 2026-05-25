@@ -171,19 +171,41 @@ const _game = new class
 
     random_point(not_type = 0, from = new Coord(0,0), to = new Coord(_map_size-1,_map_size-1))
     {
-        var i;
-        var j;
+        var minI = Math.max(0, Math.min(from.i, to.i));
+        var maxI = Math.min(_map_size - 1, Math.max(from.i, to.i));
+        var minJ = Math.max(0, Math.min(from.j, to.j));
+        var maxJ = Math.min(_map_size - 1, Math.max(from.j, to.j));
+        if (minI > maxI || minJ > maxJ) {
+            minI = 0;
+            maxI = _map_size - 1;
+            minJ = 0;
+            maxJ = _map_size - 1;
+        }
 
-        for (var k=0; k < 1000; k++) {
-            i = Math.floor(Math.random() * _map_size);
-            j = Math.floor(Math.random() * _map_size);
-            if (i >= from.i && i <= to.i && j >= from.j && j <= to.j && (_map_terrain_tex[i][j]&0xF) != not_type) {
+        var fallback = new Coord(minI, minJ);
+        var hasFallback = false;
+        for (var i=minI; i <= maxI; i++) {
+            for (var j=minJ; j <= maxJ; j++) {
+                if ((_map_terrain_tex[i][j]&0xF) != not_type) {
+                    fallback = new Coord(i, j);
+                    hasFallback = true;
+                    break;
+                }
+            }
+            if (hasFallback) {
                 break;
             }
         }
 
-        var point = new Coord(i, j);
-        return point;
+        for (var k=0; k < 1000; k++) {
+            var i = minI + Math.floor(Math.random() * (maxI - minI + 1));
+            var j = minJ + Math.floor(Math.random() * (maxJ - minJ + 1));
+            if ((_map_terrain_tex[i][j]&0xF) != not_type) {
+                return new Coord(i, j);
+            }
+        }
+
+        return fallback;
     }
 
     canUnitEnterTile(k, i, j)

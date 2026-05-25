@@ -333,23 +333,31 @@ function drawScene(loop)
     _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
     _gl.vertexAttribPointer(_screen.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
     _gl.enableVertexAttribArray(_screen.programInfo.attribLocations.textureCoord);
-    //
-    var start_i = Math.round(xytoi(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom) - 1;
-    var start_j = Math.round(xytoj(_screenOffsetX*2*_ratio, _screenOffsetY*2*_ratio) - _canvas.width/2*2*_ratio/_cell_height*_screenZoom);
-    var height_i = Math.round(_canvas.width/2*2/_cell_height*_screenZoom*2.6);
-    var width_j = Math.round(_canvas.height/2*2/_cell_width*_screenZoom*3.6)+1;
-    if (start_i < 0) {
-        start_i = 0;
+    // Project screen corners into map coordinates. This avoids desktop-only cutoff
+    // multipliers that underdraw on narrow mobile viewports.
+    var screenCorners = [
+        new Coord(xy1toi(Xtox1(0), Ytoy1(0)), xy1toj(Xtox1(0), Ytoy1(0))),
+        new Coord(xy1toi(Xtox1(_canvas.width), Ytoy1(0)), xy1toj(Xtox1(_canvas.width), Ytoy1(0))),
+        new Coord(xy1toi(Xtox1(0), Ytoy1(_canvas.height)), xy1toj(Xtox1(0), Ytoy1(_canvas.height))),
+        new Coord(xy1toi(Xtox1(_canvas.width), Ytoy1(_canvas.height)), xy1toj(Xtox1(_canvas.width), Ytoy1(_canvas.height))),
+    ];
+    var minI = screenCorners[0].i;
+    var maxI = screenCorners[0].i;
+    var minJ = screenCorners[0].j;
+    var maxJ = screenCorners[0].j;
+    for (var c=1; c < screenCorners.length; c++) {
+        minI = Math.min(minI, screenCorners[c].i);
+        maxI = Math.max(maxI, screenCorners[c].i);
+        minJ = Math.min(minJ, screenCorners[c].j);
+        maxJ = Math.max(maxJ, screenCorners[c].j);
     }
-    if (start_j < 0) {
-        start_j = 0;
-    }
-    if (start_i + height_i >= _map_size) {
-        height_i = _map_size - start_i - 1
-    }
-    if (start_j + width_j >= _map_size) {
-        width_j = _map_size - start_j - 1
-    }
+    var cullPadding = 8;
+    var start_i = Math.max(0, Math.floor(minI) - cullPadding);
+    var start_j = Math.max(0, Math.floor(minJ) - cullPadding);
+    var end_i = Math.min(_map_size - 1, Math.ceil(maxI) + cullPadding);
+    var end_j = Math.min(_map_size - 1, Math.ceil(maxJ) + cullPadding);
+    var height_i = Math.max(0, end_i - start_i + 1);
+    var width_j = Math.max(0, end_j - start_j + 1);
     WIDTH=1/_canvas.width
     HEIGHT=1/_canvas.height
     STARTX=220/_screenZoom

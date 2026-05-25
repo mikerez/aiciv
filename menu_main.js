@@ -65,8 +65,8 @@ function createMainMenuButtons()
     button.type = 'button';
     button.title = config.title;
     button.dataset.mainMenuButton = config.id;
-    button.style.width = '20px';
-    button.style.height = '20px';
+    button.style.width = document.body.classList.contains('mobile-ui') ? '40px' : '20px';
+    button.style.height = document.body.classList.contains('mobile-ui') ? '40px' : '20px';
     button.style.padding = '0';
     button.style.border = '1px solid rgba(20,40,80,0.75)';
     button.style.borderRadius = '4px';
@@ -75,7 +75,8 @@ function createMainMenuButtons()
     button.style.alignItems = 'center';
     button.style.justifyContent = 'center';
     button.style.cursor = 'pointer';
-    button.innerHTML = '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="rgb(20,40,80)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + config.icon + '</svg>';
+    var iconSize = document.body.classList.contains('mobile-ui') ? '32' : '16';
+    button.innerHTML = '<svg viewBox="0 0 20 20" width="' + iconSize + '" height="' + iconSize + '" fill="none" stroke="rgb(20,40,80)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + config.icon + '</svg>';
     button.addEventListener('mousedown', function(event) { event.stopPropagation(); });
     button.addEventListener('click', function(event) {
       event.stopPropagation();
