@@ -20,20 +20,8 @@ const _technology_tree = [
   { id: 'Engineering', sprite: 'images/tech_engineering.png', x: 4, y: 3, prerequired: ['Construction', 'Iron Working'] },
 ];
 
-function openDemoTechnologies()
-{
-  if (typeof _game_state === 'undefined') {
-    return;
-  }
-  ['Mining', 'Pottery', 'Animal Husbandry', 'Sailing'].forEach(function(name) {
-    _game_state.openTechnology(name);
-  });
-}
-
 function createTechnologyMenu()
 {
-  openDemoTechnologies();
-
   var panel = document.createElement('div');
   panel.id = 'technology_menu';
   panel.dataset.mainMenu = 'technology';
@@ -58,6 +46,38 @@ function createTechnologyMenu()
   title.style.fontWeight = 'bold';
   title.style.marginBottom = '10px';
   panel.appendChild(title);
+
+  var controls = document.createElement('div');
+  controls.style.display = 'flex';
+  controls.style.alignItems = 'center';
+  controls.style.gap = '10px';
+  controls.style.color = 'darkblue';
+  controls.style.fontSize = '14px';
+  controls.style.marginBottom = '10px';
+
+  var rateLabel = document.createElement('span');
+  rateLabel.id = 'technology_science_rate_label';
+  controls.appendChild(rateLabel);
+
+  var slider = document.createElement('input');
+  slider.id = 'technology_science_rate';
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '100';
+  slider.step = '10';
+  slider.value = (typeof _game_state !== 'undefined') ? _game_state.scienceRate : 0;
+  slider.style.width = '180px';
+  slider.addEventListener('input', function(event) {
+    if (typeof _game_state !== 'undefined') {
+      _game_state.setScienceRate(parseInt(event.target.value, 10));
+    }
+  });
+  controls.appendChild(slider);
+
+  var status = document.createElement('span');
+  status.id = 'technology_research_status';
+  controls.appendChild(status);
+  panel.appendChild(controls);
 
   var map = document.createElement('div');
   map.style.position = 'relative';
@@ -112,11 +132,17 @@ function createTechnologyMenu()
     var position = positions[technology.id];
     var item = document.createElement('div');
     item.title = technology.id;
+    item.dataset.technologyId = technology.id;
     item.style.position = 'absolute';
     item.style.left = position.x + 'px';
     item.style.top = position.y + 'px';
     item.style.width = spriteW + 'px';
     item.style.height = spriteH + 'px';
+    item.style.cursor = 'pointer';
+    item.style.border = '2px solid transparent';
+    item.style.borderRadius = '6px';
+    item.style.boxSizing = 'border-box';
+    item.style.backgroundColor = 'rgba(255,255,255,0.15)';
 
     var img = document.createElement('img');
     img.src = technology.sprite;
@@ -124,15 +150,95 @@ function createTechnologyMenu()
     img.style.width = spriteW + 'px';
     img.style.height = spriteH + 'px';
     img.style.display = 'block';
-    img.style.opacity = _game_state.isTechnologyOpen(technology.id) ? '1' : '0.5';
-    img.style.filter = _game_state.isTechnologyOpen(technology.id) ? '' : 'grayscale(40%)';
+    img.dataset.technologyImage = technology.id;
     item.appendChild(img);
+
+    var progress = document.createElement('div');
+    progress.dataset.technologyProgress = technology.id;
+    progress.style.position = 'absolute';
+    progress.style.left = '0';
+    progress.style.right = '0';
+    progress.style.bottom = '0';
+    progress.style.backgroundColor = 'rgba(255,255,255,0.7)';
+    progress.style.color = 'darkblue';
+    progress.style.fontSize = '12px';
+    progress.style.textAlign = 'center';
+    progress.style.padding = '1px 0';
+    item.appendChild(progress);
+
+    item.addEventListener('click', function(event) {
+      event.stopPropagation();
+      if (typeof _game_state !== 'undefined') {
+        if (_game_state.setResearch(technology.id) && typeof hideMainMenus === 'function') {
+          hideMainMenus();
+        }
+      }
+    });
     map.appendChild(item);
   });
 
   panel.addEventListener('mousedown', function(event) { event.stopPropagation(); });
   panel.addEventListener('click', function(event) { event.stopPropagation(); });
   document.body.appendChild(panel);
+  updateTechnologyMenu();
+}
+
+function updateTechnologyMenu()
+{
+  var panel = document.getElementById('technology_menu');
+  if (!panel || typeof _game_state === 'undefined') {
+    return;
+  }
+
+  var slider = document.getElementById('technology_science_rate');
+  if (slider && parseInt(slider.value, 10) != _game_state.scienceRate) {
+    slider.value = _game_state.scienceRate;
+  }
+
+  var rateLabel = document.getElementById('technology_science_rate_label');
+  if (rateLabel) {
+    rateLabel.textContent = 'Science: ' + _game_state.scienceRate + '%';
+  }
+
+  var status = document.getElementById('technology_research_status');
+  if (status) {
+    if (_game_state.currentResearch) {
+      var current = _game_state.currentResearch;
+      status.textContent = current + ' ' + _game_state.technologyProgressValue(current) + '/' + _game_state.technologyCost(current)
+        + ' +' + _game_state.lastScienceIncome + '/turn';
+    }
+    else {
+      status.textContent = 'Choose technology. Science total: ' + _game_state.science;
+    }
+  }
+
+  _technology_tree.forEach(function(technology) {
+    var item = panel.querySelector('[data-technology-id="' + technology.id + '"]');
+    var img = panel.querySelector('[data-technology-image="' + technology.id + '"]');
+    var progress = panel.querySelector('[data-technology-progress="' + technology.id + '"]');
+    var isOpen = _game_state.isTechnologyOpen(technology.id);
+    var canResearch = _game_state.canResearch(technology.id);
+    var isCurrent = _game_state.currentResearch == technology.id;
+    var cost = _game_state.technologyCost(technology.id);
+    var done = Math.min(cost, _game_state.technologyProgressValue(technology.id));
+
+    if (img) {
+      img.style.opacity = isOpen ? '1' : (canResearch || isCurrent ? '0.75' : '0.35');
+      img.style.filter = isOpen ? '' : 'grayscale(40%)';
+    }
+    if (item) {
+      item.style.borderColor = isCurrent ? 'orange' : (isOpen ? 'rgba(0,120,0,0.8)' : 'transparent');
+      item.style.cursor = canResearch ? 'pointer' : 'default';
+    }
+    if (progress) {
+      if (isOpen) {
+        progress.textContent = 'Open';
+      }
+      else {
+        progress.textContent = done + '/' + cost;
+      }
+    }
+  });
 }
 
 createTechnologyMenu();

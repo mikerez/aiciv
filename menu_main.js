@@ -31,6 +31,20 @@ function hideMainMenus()
   });
 }
 
+function showMainMenu(id)
+{
+  var menu = document.querySelector('[data-main-menu="' + id + '"]');
+  if (!menu) {
+    return;
+  }
+  hideMainMenus();
+  menu.style.display = 'block';
+  var button = document.querySelector('[data-main-menu-button="' + id + '"]');
+  if (button) {
+    button.style.backgroundColor = 'rgba(210,225,255,0.9)';
+  }
+}
+
 function toggleMainMenu(id)
 {
   var menu = document.querySelector('[data-main-menu="' + id + '"]');
@@ -40,11 +54,7 @@ function toggleMainMenu(id)
   var wasVisible = menu.style.display != 'none';
   hideMainMenus();
   if (!wasVisible) {
-    menu.style.display = 'block';
-    var button = document.querySelector('[data-main-menu-button="' + id + '"]');
-    if (button) {
-      button.style.backgroundColor = 'rgba(210,225,255,0.9)';
-    }
+    showMainMenu(id);
   }
 }
 

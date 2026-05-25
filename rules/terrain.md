@@ -52,6 +52,7 @@ Terrain is stored as one byte per map cell:
 ## Terrain Modifiers
 
 - `TERRAIN-MOD-001`: Each map tile has a terrain modifier state stored separately from terrain type.
-- `TERRAIN-MOD-002`: Terrain modifiers currently include `road` and `irrigation`.
+- `TERRAIN-MOD-002`: Terrain modifiers currently include `road`, `irrigation`, `pasture`, `fortification`, `cottage`, `workshop`, and `mine`.
 - `TERRAIN-MOD-003`: Roads are drawn as `images/road.png` overlays above terrain.
 - `TERRAIN-MOD-004`: Irrigation is drawn as `images/irrigation.png` overlays above terrain.
+- `TERRAIN-MOD-005`: Pasture, fortification, cottage, workshop, and mine are drawn as full `220x160` overlay sprites above terrain.

@@ -57,6 +57,14 @@ const _resource_types = [
     // { id: 'uranium', name: 'Uranium', texture: 843, sprite: 'resource_uranium.png', gives: 'strategic late-game energy and weapon resource', terrains: [4, 5, 1], chance: 0.004 },
 ];
 
+const _pasture_resource_ids = {
+    cattle: true,
+    deer: true,
+    sheep: true,
+    horses: true,
+    ivory: true
+};
+
 _screen.loadTexture('settler.png', 256);
 _screen.loadTexture('explorer.png', 257);
 _screen.loadTexture('warrior.png', 258);
@@ -86,7 +94,7 @@ const _prehistory_unit_types = [
     new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
     new UnitType('archor', 'Archor', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
     new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper'),
-    new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 3, 3, 'Horseback Riding', 50, 'Horses'),
+    new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 2, 3, 'Horseback Riding', 50, 'Horses'),
     new UnitType('chariot', 'Chariot', 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses'),
     new UnitType('elephant', 'Elephant', 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Ivory'),
     new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, null),
@@ -170,6 +178,9 @@ const _game_prehistory = new class
             if (_selection != -1 && _units[_selection].type == 0) {
                 _game.make_unit(_city, _units[_selection].coord);
                 _units[_units.length - 1].team = _units[_selection].team;
+                // PREHISTORY-BUILD-009, rules/prehostory.md: a built city starts with road and irrigation on its tile.
+                _map.addRoad(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
+                _map.addIrrigation(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(_units[_units.length - 1]);
                 }
@@ -223,7 +234,9 @@ const _game_prehistory = new class
         // PREHISTORY-MENU-002, rules/prehostory.md: movable units show movement-related commands.
         if (unit.can_move) {
             show('goto');
-            show('fortificate');
+            if (unit.unitTypeId != 'worker') {
+                show('fortificate');
+            }
             show('destroy');
             show('wait');
             show('explore');
@@ -238,13 +251,30 @@ const _game_prehistory = new class
 
         // PREHISTORY-MENU-006, rules/prehostory.md: workers show terrain improvement commands.
         if (unit.unitTypeId == 'worker') {
+            if (this.canBuildWorkerTileBuilding(_selection, 'fortification')) {
+                show('fortification');
+            }
+            if (this.canBuildWorkerTileBuilding(_selection, 'pasture')) {
+                show('pasture');
+            }
+            if (this.canBuildWorkerTileBuilding(_selection, 'cottage')) {
+                show('cottage');
+            }
+            if (this.canBuildWorkerTileBuilding(_selection, 'workshop')) {
+                show('workshop');
+            }
+            if (this.canBuildWorkerTileBuilding(_selection, 'mine')) {
+                show('mine');
+            }
             if (this.canBuildRoad(_selection)) {
                 show('road');
             }
             if (this.canBuildIrrigation(_selection)) {
                 show('irrigate');
             }
-            show('chop_forest');
+            if (this.canChopForest(_selection)) {
+                show('chop_forest');
+            }
         }
 
         // PREHISTORY-MENU-004, rules/prehostory.md: cities show building management options and hide movement commands.
@@ -291,6 +321,10 @@ const _game_prehistory = new class
 
     canCityProduceUnit(city, unitType)
     {
+        // PREHISTORY-BUILD-008, rules/prehostory.md: technology-required units need their technology opened before production.
+        if (unitType.technologyRequired && !_game_state.isTechnologyOpen(unitType.technologyRequired)) {
+            return false;
+        }
         if (!this.isWaterUnitType(unitType)) {
             return true;
         }
@@ -410,6 +444,9 @@ const _game_prehistory = new class
         }
         if (state != 'irrigate') {
             _units[k].irrigation_turns_left = undefined;
+        }
+        if (!this.workerTileBuildingDefinitions[state]) {
+            _units[k].building_turns_left = undefined;
         }
     }
 
@@ -575,9 +612,9 @@ const _game_prehistory = new class
                 continue;
             }
 
-            // PREHISTORY-IRRIGATION-003, rules/prehostory.md: irrigation takes at least one turn based on terrain wildity.
+            // PREHISTORY-IRRIGATION-003, rules/prehostory.md: irrigation takes twice the terrain wildity, with a minimum of two turns.
             if (_units[k].irrigation_turns_left == undefined) {
-                _units[k].irrigation_turns_left = Math.max(1, (terrain>>4)&0x3);
+                _units[k].irrigation_turns_left = Math.max(2, 2*((terrain>>4)&0x3));
             }
             if (_units[k].irrigation_turns_left > 0) {
                 --_units[k].irrigation_turns_left;
@@ -588,6 +625,38 @@ const _game_prehistory = new class
                 _map.addIrrigation(i, j);
                 _units[k].state = 'ready';
                 _units[k].irrigation_turns_left = undefined;
+                _fulldraw = 1;
+            }
+        }
+
+        for (var k=0; k < _units.length; k++) {
+            var building = this.workerTileBuildingDefinitions[_units[k].state];
+            // PREHISTORY-WORKER-BUILDING-001, rules/prehostory.md: only workers in a tile-building state can build worker buildings.
+            if (!building || _units[k].unitTypeId != 'worker') {
+                continue;
+            }
+
+            var i = _units[k].coord.i;
+            var j = _units[k].coord.j;
+
+            // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: worker building location is not limited by terrain rules.
+            if (!this.canBuildWorkerTileBuilding(k, _units[k].state)) {
+                _units[k].state = 'ready';
+                _units[k].building_turns_left = undefined;
+                continue;
+            }
+
+            if (_units[k].building_turns_left == undefined) {
+                _units[k].building_turns_left = building.turns;
+            }
+            if (_units[k].building_turns_left > 0) {
+                --_units[k].building_turns_left;
+            }
+
+            if (_units[k].building_turns_left == 0) {
+                building.apply(i, j);
+                _units[k].state = 'ready';
+                _units[k].building_turns_left = undefined;
                 _fulldraw = 1;
             }
         }
@@ -606,7 +675,7 @@ const _game_prehistory = new class
             var terrain = _map_terrain_tex[i][j];
 
             // PREHISTORY-CHOP-002 and PREHISTORY-CHOP-003, rules/prehostory.md: chopping requires forest terrain.
-            if (!this.isChoppableForestTerrain(terrain)) {
+            if (!this.canChopForest(k)) {
                 // PREHISTORY-CHOP-006, rules/prehostory.md: cancel chop order outside forest.
                 _units[k].state = 'ready';
                 _units[k].chop_turns_left = undefined;
@@ -655,6 +724,10 @@ const _game_prehistory = new class
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
             return false;
         }
+        // PREHISTORY-CHOP-009, rules/prehostory.md: chopping requires Bronze Working.
+        if (!_game_state.isTechnologyOpen('Bronze Working')) {
+            return false;
+        }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
         // PREHISTORY-CHOP-007, rules/prehostory.md: chop_forest state starts only on forest terrain.
@@ -664,6 +737,10 @@ const _game_prehistory = new class
     canBuildRoad(k)
     {
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return false;
+        }
+        // PREHISTORY-ROAD-006, rules/prehostory.md: workers cannot build roads before Wheel.
+        if (!_game_state.isTechnologyOpen('Wheel')) {
             return false;
         }
         var i = _units[k].coord.i;
@@ -752,6 +829,10 @@ const _game_prehistory = new class
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
             return false;
         }
+        // PREHISTORY-IRRIGATION-010, rules/prehostory.md: workers cannot build irrigation before Irrigation.
+        if (!_game_state.isTechnologyOpen('Irrigation')) {
+            return false;
+        }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
         var terrainType = _map_terrain_tex[i][j]&0x0F;
@@ -763,6 +844,71 @@ const _game_prehistory = new class
             return false;
         }
         return this.hasIrrigationSourceNear(i, j);
+    }
+
+    workerTileBuildingDefinitions = {
+        pasture: {
+            technology: 'Animal Husbandry',
+            turns: 2,
+            requiresAnimalResource: true,
+            apply: function(i, j) { return _map.addPasture(i, j); }
+        },
+        fortification: {
+            technology: 'Construction',
+            turns: 3,
+            apply: function(i, j) { return _map.addFortification(i, j); }
+        },
+        cottage: {
+            technology: 'Pottery',
+            turns: 2,
+            apply: function(i, j) { return _map.addCottage(i, j); }
+        },
+        workshop: {
+            technology: 'Construction',
+            turns: 3,
+            apply: function(i, j) { return _map.addWorkshop(i, j); }
+        },
+        mine: {
+            technology: 'Mining',
+            turns: 3,
+            terrainTypes: [4, 5],
+            apply: function(i, j) { return _map.addMine(i, j); }
+        }
+    };
+
+    canBuildWorkerTileBuilding(k, buildingName)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return false;
+        }
+        var building = this.workerTileBuildingDefinitions[buildingName];
+        if (!building || !_game_state.isTechnologyOpen(building.technology)) {
+            return false;
+        }
+        var i = _units[k].coord.i;
+        var j = _units[k].coord.j;
+        if (building.terrainTypes && building.terrainTypes.indexOf(_map_terrain_tex[i][j]&0x0F) == -1) {
+            return false;
+        }
+        if (building.requiresAnimalResource && !this.hasOpenedPastureResource(i, j)) {
+            return false;
+        }
+        // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: these buildings are not limited by terrain type.
+        return i >= 0 && i < _map_size && j >= 0 && j < _map_size && !_map.hasTerrainModifier(i, j, buildingName);
+    }
+
+    hasOpenedPastureResource(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return false;
+        }
+        var resourceState = _map_resource[i][j];
+        if (!resourceState || resourceState.hidden || !resourceState.type || !_resource_types[resourceState.type]) {
+            return false;
+        }
+        var resource = _resource_types[resourceState.type];
+        // PREHISTORY-WORKER-BUILDING-005, rules/prehostory.md: pasture requires an opened land animal resource on the worker tile.
+        return _pasture_resource_ids[resource.id] == true;
     }
 
     centerViewOnStartingUnits()
@@ -810,6 +956,9 @@ const _game_prehistory = new class
             return true;
         }
         if (unit.irrigation_turns_left != undefined) {
+            return true;
+        }
+        if (unit.building_turns_left != undefined) {
             return true;
         }
         if (unit.gotoCoord != undefined) {
@@ -907,10 +1056,15 @@ const _game_prehistory = new class
     unitStateLetter(unit)
     {
         if (unit.state == 'fortified') return 'F';
+        if (unit.state == 'fortification') return 'F';
         if (unit.state == 'waiting') return 'W';
         if (unit.state == 'road') return 'R';
         if (unit.state == 'irrigate') return 'I';
         if (unit.state == 'chop_forest') return 'C';
+        if (unit.state == 'pasture') return 'P';
+        if (unit.state == 'cottage') return 'H';
+        if (unit.state == 'workshop') return 'S';
+        if (unit.state == 'mine') return 'M';
         if (unit.state == 'explore') return 'E';
         if (unit.state == 'patrol') return 'P';
         if (unit.state == 'automate') return 'A';
@@ -983,6 +1137,10 @@ const _game_prehistory = new class
         if (command == 'fortificate' && _selection != -1 && _units[_selection].can_move) {
             this.setUnitState(_selection, 'fortified');
             _units[_selection].move_penalty = Math.max(_units[_selection].move_penalty, 1);
+        }
+        if ((command == 'fortification' || command == 'pasture' || command == 'cottage' || command == 'workshop' || command == 'mine')
+            && this.canBuildWorkerTileBuilding(_selection, command)) {
+            this.setUnitState(_selection, command);
         }
         if (command == 'wait' && _selection != -1 && _units[_selection].can_move) {
             this.setUnitState(_selection, 'waiting');

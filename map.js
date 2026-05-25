@@ -14,7 +14,15 @@ const _map = new class
                 _map_terrain_tex[i][j] = 0;  // see _textures
                 _map_terrain_bit[i][j] = 0xFF;  // {1'shadow,1'map_open,2'rsv,4'map_seen,4'turn_possible,4'height_cost}
                 _map_resource[i][j] = { type: 0, hidden: true };
-                _map_terrain_mod[i][j] = { road: false, irrigation: false };
+                _map_terrain_mod[i][j] = {
+                    road: false,
+                    irrigation: false,
+                    pasture: false,
+                    fortification: false,
+                    cottage: false,
+                    workshop: false,
+                    mine: false
+                };
             }
         }
     }
@@ -141,8 +149,38 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 if (_map_terrain_mod[i][j].irrigation) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 851 });
                 }
+                if (_map_terrain_mod[i][j].pasture) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 852 });
+                }
+                if (_map_terrain_mod[i][j].fortification) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 853 });
+                }
+                if (_map_terrain_mod[i][j].cottage) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 854 });
+                }
+                if (_map_terrain_mod[i][j].workshop) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 855 });
+                }
+                if (_map_terrain_mod[i][j].mine) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 856 });
+                }
             }
         }
+    }
+
+    addTerrainModifier(i, j, modifier)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || _map_terrain_mod[i][j][modifier]) {
+            return false;
+        }
+        _map_terrain_mod[i][j][modifier] = true;
+        this.prepareTerrainModifierSprites();
+        return true;
+    }
+
+    hasTerrainModifier(i, j, modifier)
+    {
+        return i >= 0 && i < _map_size && j >= 0 && j < _map_size && _map_terrain_mod[i][j][modifier];
     }
 
     addRoad(i, j)
@@ -179,6 +217,31 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
     hasIrrigation(i, j)
     {
         return i >= 0 && i < _map_size && j >= 0 && j < _map_size && _map_terrain_mod[i][j].irrigation;
+    }
+
+    addPasture(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'pasture');
+    }
+
+    addFortification(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'fortification');
+    }
+
+    addCottage(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'cottage');
+    }
+
+    addWorkshop(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'workshop');
+    }
+
+    addMine(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'mine');
     }
 
     genResources()

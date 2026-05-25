@@ -16,6 +16,8 @@
 - `MAIN-MENU-003`: A second click on an open main menu button hides that menu.
 - `MAIN-MENU-004`: Main menus use the same fixed screen area: `x=100`, `y=50`, right edge near the unit menu, and bottom at `y_max-200`.
 - `MAIN-MENU-005`: All main menus are hidden by default.
+- `MAIN-MENU-006`: Pressing `Escape` hides all open main menus.
+- `MAIN-MENU-007`: Main menu panels can be opened directly by game events, such as technology discovery.
 
 ## Unit And City Structures
 

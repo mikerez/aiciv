@@ -92,21 +92,140 @@ class CityProductionState
     }
 }
 
+const _technology_table = {
+    'Mining': { cost: 20, prerequired: [] },
+    'Pottery': { cost: 20, prerequired: [] },
+    'Animal Husbandry': { cost: 20, prerequired: [] },
+    'Sailing': { cost: 20, prerequired: [] },
+    'Masonry': { cost: 35, prerequired: ['Mining'] },
+    'Bronze Working': { cost: 40, prerequired: ['Mining'] },
+    'Irrigation': { cost: 35, prerequired: ['Pottery'] },
+    'Writing': { cost: 40, prerequired: ['Pottery'] },
+    'Archery': { cost: 35, prerequired: ['Animal Husbandry'] },
+    'Wheel': { cost: 35, prerequired: ['Animal Husbandry'] },
+    'Astronomy': { cost: 65, prerequired: ['Sailing', 'Writing'] },
+    'Currency': { cost: 60, prerequired: ['Writing'] },
+    'Horseback Riding': { cost: 60, prerequired: ['Animal Husbandry', 'Wheel'] },
+    'Iron Working': { cost: 70, prerequired: ['Bronze Working'] },
+    'Shipbuilding': { cost: 65, prerequired: ['Sailing', 'Bronze Working'] },
+    'Mathematics': { cost: 60, prerequired: ['Writing'] },
+    'Navigation': { cost: 90, prerequired: ['Sailing', 'Astronomy'] },
+    'Construction': { cost: 85, prerequired: ['Masonry', 'Mathematics'] },
+    'Engineering': { cost: 120, prerequired: ['Construction', 'Iron Working'] },
+};
+
 class GameState
 {
     constructor()
     {
         this.openTechnologies = {};
+        this.currentResearch = null;
+        this.technologyProgress = {};
+        this.science = 0;
+        this.scienceRate = 0;
+        this.lastScienceIncome = 0;
+        this.money = 0;
+        this.lastMoneyIncome = 0;
     }
 
     openTechnology(name)
     {
         this.openTechnologies[name] = true;
+        if (typeof updateTechnologyMenu === 'function') {
+            updateTechnologyMenu();
+        }
     }
 
     isTechnologyOpen(name)
     {
         return this.openTechnologies[name] == true;
+    }
+
+    technologyCost(name)
+    {
+        return _technology_table[name] ? _technology_table[name].cost : 0;
+    }
+
+    technologyPrerequired(name)
+    {
+        return _technology_table[name] ? _technology_table[name].prerequired : [];
+    }
+
+    technologyProgressValue(name)
+    {
+        return this.technologyProgress[name] || 0;
+    }
+
+    canResearch(name)
+    {
+        // TECHNOLOGY-MENU-004, rules/technology.md: only unopened technologies with open prerequisites can be selected.
+        if (!_technology_table[name] || this.isTechnologyOpen(name)) {
+            return false;
+        }
+        var prerequired = this.technologyPrerequired(name);
+        for (var k=0; k < prerequired.length; k++) {
+            if (!this.isTechnologyOpen(prerequired[k])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    setResearch(name)
+    {
+        // TECHNOLOGY-STATE-004, rules/technology.md: player clicks choose the current research target.
+        if (!this.canResearch(name)) {
+            return false;
+        }
+        this.currentResearch = name;
+        if (this.technologyProgress[name] == undefined) {
+            this.technologyProgress[name] = 0;
+        }
+        if (typeof updateTechnologyMenu === 'function') {
+            updateTechnologyMenu();
+        }
+        return true;
+    }
+
+    setScienceRate(rate)
+    {
+        this.scienceRate = Math.max(0, Math.min(100, Math.round(rate || 0)));
+        if (typeof updateTechnologyMenu === 'function') {
+            updateTechnologyMenu();
+        }
+    }
+
+    processMoneyIncome(moneyIncome)
+    {
+        // TECHNOLOGY-MENU-005 and CITY-TURN-004, rules/technology.md and rules/city.md: science rate dedicates city money to research.
+        this.lastMoneyIncome = moneyIncome || 0;
+        var scienceIncome = Math.floor(this.lastMoneyIncome * this.scienceRate / 100);
+        this.lastScienceIncome = scienceIncome;
+        this.money += this.lastMoneyIncome - scienceIncome;
+        this.addScience(scienceIncome);
+    }
+
+    addScience(points)
+    {
+        // TECHNOLOGY-RESEARCH-001 and TECHNOLOGY-RESEARCH-002, rules/technology.md: dedicated money becomes science and opens completed technology.
+        points = points || 0;
+        this.science += points;
+        if (this.currentResearch != null && this.canResearch(this.currentResearch)) {
+            var name = this.currentResearch;
+            this.technologyProgress[name] = (this.technologyProgress[name] || 0) + points;
+            if (this.technologyProgress[name] >= this.technologyCost(name)) {
+                this.currentResearch = null;
+                var wasOpen = this.isTechnologyOpen(name);
+                this.openTechnology(name);
+                if (!wasOpen && points > 0 && typeof showMainMenu === 'function') {
+                    // TECHNOLOGY-MENU-007, rules/technology.md: open the technology menu when research discovers a technology.
+                    showMainMenu('technology');
+                }
+            }
+        }
+        if (typeof updateTechnologyMenu === 'function') {
+            updateTechnologyMenu();
+        }
     }
 }
 
@@ -229,29 +348,36 @@ const _game = new class
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
 //console.log("goto: " + k + " (" + _units[k].coord.i + "," + _units[k].coord.j + ") to (" + _units[k].gotoCoord.i + "," + _units[k].gotoCoord.j + ")");
                 var prev = _units[k].coord;
-                if (_units[k].gotoPath.length) {
-                    var nextCoord = _units[k].gotoPath.shift();
-                    if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
-                        _units[k].coord = nextCoord;
+                var steps = Math.max(1, _units[k].speed || 1);
+                for (var step=0; step < steps; step++) {
+                    if (_units[k].gotoPath.length) {
+                        var nextCoord = _units[k].gotoPath.shift();
+                        if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
+                            _units[k].coord = nextCoord;
+                        }
+                        else {
+                            _units[k].gotoPath = [];
+                            _units[k].gotoCoord = null;
+                            break;
+                        }
                     }
                     else {
-                        _units[k].gotoPath = [];
-                        _units[k].gotoCoord = null;
+                        _control.mapLine(_units[k].coord.i, _units[k].coord.j, _units[k].gotoCoord.i, _units[k].gotoCoord.j, function(i, j, ni, nj, arrow_num) {
+                            _units[k].coord = new Coord(ni, nj);
+                        }, k, 1);
                     }
-                }
-                else {
-                    _control.mapLine(_units[k].coord.i, _units[k].coord.j, _units[k].gotoCoord.i, _units[k].gotoCoord.j, function(i, j, ni, nj, arrow_num) {
-                        _units[k].coord = new Coord(ni, nj);
-                    }, k, 1);
+                    if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord != undefined
+                        && _units[k].coord.i == _units[k].gotoCoord.i && _units[k].coord.j == _units[k].gotoCoord.j) {
+                        _units[k].gotoCoord = null;
+                        break;
+                    }
+                    if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord == undefined) {
+                        break;
+                    }
                 }
                 if (_units[k].coord != prev) {
                     _units[k].move_penalty = (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
 //console.log(_units[k].move_penalty)
-                }
-
-                if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord != undefined
-                    && _units[k].coord.i == _units[k].gotoCoord.i && _units[k].coord.j == _units[k].gotoCoord.j) {
-                    _units[k].gotoCoord = null;
                 }
             }
 

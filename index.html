@@ -69,17 +69,17 @@
         function ijtox(i,j) { return i*_cell_height+j*_cell_width; }
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
-    <script src="menu_unit.js?v=20260522f"></script>
+    <script src="menu_unit.js?v=20260525e"></script>
     <script src="draw.js?v=20260522f"></script>
-    <script src="control.js?v=20260524a"></script>
-    <script src="game.js?v=20260525d"></script>
-    <script src="city.js?v=20260525e"></script>
-    <script src="menu_technology.js?v=20260522f"></script>
+    <script src="control.js?v=20260525b"></script>
+    <script src="game.js?v=20260525h"></script>
+    <script src="city.js?v=20260525h"></script>
+    <script src="menu_technology.js?v=20260525b"></script>
     <script src="menu_politics.js?v=20260522f"></script>
     <script src="menu_finance.js?v=20260522f"></script>
     <script src="menu_trade.js?v=20260522f"></script>
-    <script src="menu_main.js?v=20260525b"></script>
-    <script src="map.js?v=20260524f"></script>
+    <script src="menu_main.js?v=20260525c"></script>
+    <script src="map.js?v=20260525b"></script>
     <script src="screen.js?v=20260525d"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
@@ -158,7 +158,12 @@
          _screen.loadTexture('forest7.png', 6+(7<<4));
         _screen.loadTexture('grasswater.png', 7+(3<<4));
         _screen.loadTexture('road.png', 850);
-         _screen.loadTexture('irrigation.png', 851);
+        _screen.loadTexture('irrigation.png', 851);
+        _screen.loadTexture('pasture.png', 852);
+        _screen.loadTexture('fortification.png', 853);
+        _screen.loadTexture('cottage.png', 854);
+        _screen.loadTexture('workshop.png', 855);
+        _screen.loadTexture('mine.png', 856);
         _screen.loadTexture('food.png', 860);
         _screen.loadTexture('food5.png', 861);
         _screen.loadTexture('production.png', 862);
@@ -170,7 +175,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260525e"></script>
+    <script src="game_prehistory.js?v=20260525l"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);
@@ -237,12 +242,21 @@
             const input = primaryInput(event);
             const point = eventToCanvas(input);
             const coord = eventToMapCoord(input);
+            if (event.button == 2 && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
+                if (_current_game.prepareManualMovement) {
+                    _current_game.prepareManualMovement(_selection);
+                }
+                _fulldraw = 1;
+                drawScene(0);
+                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                return;
+            }
             if (_current_game.handleMapClick(coord)) {
                 _current_game.applyMenuRules();
                 drawScene(0);
                 return;
             }
-            _control.click(Xtox1(point.x), Ytoy1(point.y));
+            _control.click(Xtox1(point.x), Ytoy1(point.y), coord, event.detail >= 2);
             _current_game.applyMenuRules();
             drawScene(0);
             _mousedown = 1;
@@ -306,6 +320,11 @@
         window.onmousedown = handlePointerDown;
         window.onmousemove = handlePointerMove;
         window.onmouseup = handlePointerUp;
+        window.oncontextmenu = function(event) {
+            if (isGameInputTarget(event.target)) {
+                event.preventDefault();
+            }
+        };
         window.addEventListener('touchstart', handlePointerDown, { passive: false });
         window.addEventListener('touchmove', handlePointerMove, { passive: false });
         window.addEventListener('touchend', handlePointerUp, { passive: false });
@@ -323,6 +342,10 @@
             }
             else {
                 _ctrl_pressed = 0;
+            }
+            if (event.code === 'Escape' && typeof hideMainMenus === 'function') {
+                hideMainMenus();
+                return;
             }
             if (event.code === 'Enter') {
                 endTurn();
