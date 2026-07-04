@@ -1,0 +1,1539 @@
+# AI Civ training situations v1
+# Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
+# Comment blocks explain the game meaning of each slot used by the following machine row.
+# situation 0: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 1: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 2: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 3: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 4: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 5: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 6: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 7: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 8: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 9: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 10: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 11: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 12: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 13: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 14: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 15: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 16: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 17: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 18: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 19: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 20: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 21: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 22: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 23: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 24: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 25: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 26: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 27: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 28: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 29: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 30: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 31: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 32: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 33: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 34: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 35: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 36: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 37: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 38: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 39: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 40: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 41: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 42: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 43: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 44: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 45: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 46: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 47: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 48: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 49: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 50: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 51: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 52: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 53: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 54: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 55: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 56: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 57: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 58: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 59: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 60: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 61: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 62: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 63: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 64: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 65: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 66: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 67: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 68: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 69: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 70: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 71: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 72: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 73: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 74: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 75: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 76: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 77: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 78: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 79: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 80: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 81: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 82: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 83: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 84: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 85: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers
+# situation 86: strategy production demand case: enemy military is stronger
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make military the main demand under war pressure.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.160000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.100000 means current military count normalized by 64.
+# input[961] = 0.180000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.100000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.750000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.180000,962:0.160000,963:0.350000,964:0.100000,965:0.450000,966:0.350000,974:0.050000,975:0.200000,980:0.050000,981:0.200000,982:0.100000,983:0.180000|64:0.100000,65:0.100000,66:0.050000,67:0.750000|strategy production demand case: enemy military is stronger
+# situation 87: strategy production demand case: many cities behind on workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: large empire with too few workers should prioritize workers.
+# input[974] = 0.050000 means current settler count normalized by 8.
+# input[975] = 0.100000 means current worker count normalized by 8.
+# input[962] = 0.300000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.220000 means current military count normalized by 64.
+# input[961] = 0.350000 means current city count normalized by 16.
+# target[64] = 0.100000 means settlers production percentage demand.
+# target[65] = 0.700000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.350000,962:0.300000,963:0.450000,964:0.220000,965:0.200000,966:0.550000,974:0.050000,975:0.100000,980:0.050000,981:0.100000,982:0.220000,983:0.350000|64:0.100000,65:0.700000,66:0.050000,67:0.150000|strategy production demand case: many cities behind on workers
+# situation 88: strategy production demand case: safe economy with few cities
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: safe economy should expand with settlers.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.150000 means current worker count normalized by 8.
+# input[962] = 0.140000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.180000 means current military count normalized by 64.
+# input[961] = 0.120000 means current city count normalized by 16.
+# target[64] = 0.650000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.150000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.120000,962:0.140000,963:0.550000,964:0.180000,965:0.050000,966:0.700000,975:0.150000,981:0.150000,982:0.180000,983:0.120000|64:0.650000,65:0.150000,66:0.050000,67:0.150000|strategy production demand case: safe economy with few cities
+# situation 89: strategy production demand case: frontier war economy
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: frontier pressure should move production toward military.
+# input[974] = 0.060000 means current settler count normalized by 8.
+# input[975] = 0.200000 means current worker count normalized by 8.
+# input[962] = 0.250000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.150000 means current military count normalized by 64.
+# input[961] = 0.250000 means current city count normalized by 16.
+# target[64] = 0.150000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.650000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+67|64,65,66,67|961:0.250000,962:0.250000,963:0.400000,964:0.150000,965:0.650000,966:0.450000,974:0.060000,975:0.200000,980:0.060000,981:0.200000,982:0.150000,983:0.250000|64:0.150000,65:0.150000,66:0.050000,67:0.650000|strategy production demand case: frontier war economy
+# situation 90: strategy production demand case: no cities and no settlers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make settlers the dominant demand because expansion is impossible without them.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.000000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.000000 means current city count normalized by 16.
+# target[64] = 0.900000 means settlers production percentage demand.
+# target[65] = 0.050000 means worker production percentage demand.
+# target[66] = 0.030000 means explorer production percentage demand.
+# target[67] = 0.020000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|963:0.100000,966:0.200000|64:0.900000,65:0.050000,66:0.030000,67:0.020000|strategy production demand case: no cities and no settlers
+# situation 91: strategy production demand case: one city no settler and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: ask for settlers first and workers second for early expansion.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.050000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.060000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.450000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+64|64,65,66,67|961:0.060000,962:0.050000,963:0.150000,964:0.060000,966:0.250000,982:0.060000,983:0.060000|64:0.450000,65:0.350000,66:0.150000,67:0.050000|strategy production demand case: one city no settler and no worker
+# situation 92: strategy production demand case: one city already has several explorers and no worker
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: do not ask for more explorers when the only city has no worker and existing units are non-military scouts.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.650000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.120000,966:0.250000,983:0.060000|64:0.200000,65:0.650000,66:0.050000,67:0.100000|strategy production demand case: one city already has several explorers and no worker
+# situation 93: strategy production demand case: one city several explorers and no defender
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: worker remains the largest need, with military second, because extra scout-like units do not improve the city.
+# input[974] = 0.000000 means current settler count normalized by 8.
+# input[975] = 0.120000 means current worker count normalized by 8.
+# input[962] = 0.080000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.000000 means current military count normalized by 64.
+# input[961] = 0.060000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.350000 means worker production percentage demand.
+# target[66] = 0.050000 means explorer production percentage demand.
+# target[67] = 0.350000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.060000,962:0.080000,963:0.180000,966:0.250000,975:0.120000,981:0.120000,983:0.060000|64:0.250000,65:0.350000,66:0.050000,67:0.350000|strategy production demand case: one city several explorers and no defender
+# situation 94: strategy production demand case: two cities and no workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make workers the main demand because cities need tile development.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.000000 means current worker count normalized by 8.
+# input[962] = 0.100000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.250000 means settlers production percentage demand.
+# target[65] = 0.550000 means worker production percentage demand.
+# target[66] = 0.150000 means explorer production percentage demand.
+# target[67] = 0.050000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+65|64,65,66,67|961:0.130000,962:0.100000,963:0.200000,964:0.080000,966:0.300000,974:0.120000,980:0.120000,982:0.080000,983:0.130000|64:0.250000,65:0.550000,66:0.150000,67:0.050000|strategy production demand case: two cities and no workers
+# situation 95: strategy production demand case: few explored tiles and enough workers
+# Purpose: teach Strategy general outputs 64..67 as city production demand percentages.
+# General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.
+# General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.
+# Decision meaning: make explorers the main demand because map knowledge is low and worker coverage exists.
+# input[974] = 0.120000 means current settler count normalized by 8.
+# input[975] = 0.250000 means current worker count normalized by 8.
+# input[962] = 0.120000 means current total unit count normalized by 64; when high while workers and military are zero, existing units are mostly scouts/explorers.
+# input[964] = 0.080000 means current military count normalized by 64.
+# input[961] = 0.130000 means current city count normalized by 16.
+# target[64] = 0.200000 means settlers production percentage demand.
+# target[65] = 0.150000 means worker production percentage demand.
+# target[66] = 0.550000 means explorer production percentage demand.
+# target[67] = 0.100000 means military production percentage demand.
+# Machine row below repeats the same situation in parser format.
+66|64,65,66,67|961:0.130000,962:0.120000,963:0.080000,964:0.080000,966:0.300000,974:0.120000,975:0.250000,980:0.120000,981:0.250000,982:0.080000,983:0.130000|64:0.200000,65:0.150000,66:0.550000,67:0.100000|strategy production demand case: few explored tiles and enough workers

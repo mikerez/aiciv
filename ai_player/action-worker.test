@@ -1,0 +1,329 @@
+# Worker simulations cover direct terrain jobs and resource improvements.
+
+scenario worker_irrigates_fresh_grass
+unit worker 3 3
+tile 3 3 grass water=1 local=0.47
+tile 4 3 grasswater water=1
+features worker=0.60 nearby=0.05 fresh=1.00 city_score=0.35 city_dist=0.50
+expect command irrigate
+expect effect irrigation
+end
+
+scenario worker_chops_plain_forest
+unit worker 3 3
+tile 3 3 forest local=0.75
+features worker=0.45 nearby=0.10 fresh=0.00 city_score=0.20 city_dist=0.35
+expect command chop_forest
+expect effect forest_chopped
+end
+
+scenario worker_builds_cottage_on_grass
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass city=1
+features worker=0.80 nearby=0.00 fresh=0.00 city_score=0.34 city_dist=0.25
+expect command build_improvement
+expect effect cottage
+end
+
+scenario worker_builds_mine_on_copper_hill
+unit worker 3 3
+tile 3 3 hills resource=copper local=0.66
+features worker=0.80 nearby=0.16 fresh=0.00 city_score=0.24 city_dist=0.46
+expect command build_improvement
+expect effect mine
+end
+
+scenario worker_builds_pasture_on_cattle
+unit worker 3 3
+tile 3 3 grass resource=cattle improvement=pasture local=0.54
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.52 city_dist=0.36
+expect command build_improvement
+expect effect pasture
+end
+
+scenario worker_builds_farm_on_wheat
+unit worker 3 3
+tile 3 3 grass resource=wheat improvement=farm water=1 local=0.46
+tile 4 3 grasswater water=1
+features worker=0.80 nearby=0.18 fresh=1.00 city_score=0.56 city_dist=0.24
+expect command build_improvement
+expect effect farm
+end
+
+scenario worker_builds_plantation_on_cotton
+unit worker 3 3
+tile 3 3 grass resource=cotton improvement=plantation local=0.50
+features worker=0.80 nearby=0.11 fresh=0.00 city_score=0.43 city_dist=0.34
+expect command build_improvement
+expect effect plantation
+end
+
+scenario worker_builds_camp_on_deer
+unit worker 3 3
+tile 3 3 forest resource=deer improvement=camp local=0.82
+features worker=0.80 nearby=0.16 fresh=0.00 city_score=0.36 city_dist=0.38
+expect command build_improvement
+expect effect camp
+end
+
+scenario worker_builds_fishing_boats_on_fish
+unit worker 3 3
+tile 3 3 water resource=fish improvement=fishing_boats local=0.18
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.36 city_dist=0.28
+expect command build_improvement
+expect effect fishing_boats
+end
+
+scenario worker_builds_quarry_on_stone
+unit worker 3 3
+tile 3 3 hills resource=stone improvement=quarry local=0.68
+features worker=0.80 nearby=0.08 fresh=0.00 city_score=0.28 city_dist=0.50
+expect command build_improvement
+expect effect quarry
+end
+
+scenario worker_builds_winery_on_wine
+unit worker 3 3
+tile 3 3 grass resource=wine improvement=winery local=0.56
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.44 city_dist=0.42
+expect command build_improvement
+expect effect winery
+end
+
+scenario worker_builds_workshop_on_plain
+unit worker 3 3
+tile 3 3 grass improvement=workshop local=0.31
+features worker=0.80 nearby=0.02 fresh=0.00 city_score=0.18 city_dist=0.55
+expect command build_improvement
+expect effect workshop
+end
+
+scenario worker_builds_fortification_on_frontier_hill
+unit worker 3 3
+tile 3 3 hills improvement=fortification local=0.48
+features worker=0.80 nearby=0.00 fresh=0.00 city_score=0.08 city_dist=0.85
+expect command build_improvement
+expect effect fortification
+end
+
+scenario worker_builds_road_on_current_land
+unit worker 3 3
+tile 3 3 grass local=0.25
+features worker=0.30 nearby=0.00 fresh=0.00 city_score=0.18 city_dist=0.42
+expect command road_to
+expect effect road
+end
+
+scenario worker_moves_to_cattle_city_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 5 3 grass resource=cattle improvement=pasture local=0.68
+tile 4 3 grass city=1 local=0.40
+target 5 3
+features worker=0.00 nearby=0.62 fresh=0.00 city_score=0.35 city_dist=0.12
+expect command goto
+expect effect moved_to_pasture
+end
+
+scenario worker_moves_to_rice_farm_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass resource=rice improvement=farm water=1 local=0.60
+tile 4 4 grasswater water=1
+target 4 3
+features worker=0.00 nearby=0.58 fresh=1.00 city_score=0.40 city_dist=0.10
+expect command goto
+expect effect moved_to_farm
+end
+
+scenario worker_moves_to_copper_mine_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 5 3 hills resource=copper improvement=mine local=0.72
+target 5 3
+features worker=0.00 nearby=0.55 fresh=0.00 city_score=0.28 city_dist=0.18
+expect command goto
+expect effect moved_to_mine
+end
+
+scenario worker_moves_to_deer_camp_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 forest resource=deer improvement=camp local=0.86
+target 4 3
+features worker=0.00 nearby=0.54 fresh=0.00 city_score=0.24 city_dist=0.18
+expect command goto
+expect effect moved_to_camp
+end
+
+scenario worker_moves_to_marble_quarry_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 5 3 hills resource=marble improvement=quarry local=0.70
+target 5 3
+features worker=0.00 nearby=0.48 fresh=0.00 city_score=0.28 city_dist=0.20
+expect command goto
+expect effect moved_to_quarry
+end
+
+scenario worker_moves_to_cotton_plantation_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass resource=cotton improvement=plantation local=0.58
+target 4 3
+features worker=0.00 nearby=0.48 fresh=0.00 city_score=0.32 city_dist=0.14
+expect command goto
+expect effect moved_to_plantation
+end
+
+scenario worker_moves_to_wine_winery_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass resource=wine improvement=winery local=0.57
+target 4 3
+features worker=0.00 nearby=0.46 fresh=0.00 city_score=0.32 city_dist=0.16
+expect command goto
+expect effect moved_to_winery
+end
+
+scenario worker_moves_to_empty_cottage_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass improvement=cottage city=1 local=0.38
+target 4 3
+features worker=0.00 nearby=0.18 fresh=0.00 city_score=0.42 city_dist=0.10
+expect command goto
+expect effect moved_to_cottage
+end
+
+scenario worker_moves_to_workshop_tile
+unit worker 3 3
+tile 3 3 grass local=0.25
+tile 5 3 grass improvement=workshop local=0.40
+target 5 3
+features worker=0.00 nearby=0.16 fresh=0.00 city_score=0.20 city_dist=0.22
+expect command goto
+expect effect moved_to_workshop
+end
+
+scenario worker_builds_pasture_on_sheep_hills
+unit worker 3 3
+tile 3 3 hills resource=sheep improvement=pasture local=0.60
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.42 city_dist=0.34
+expect command build_improvement
+expect effect pasture
+end
+
+scenario worker_builds_pasture_on_horses_grass
+unit worker 3 3
+tile 3 3 grass resource=horses improvement=pasture local=0.58
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.46 city_dist=0.40
+expect command build_improvement
+expect effect pasture
+end
+
+scenario worker_builds_farm_on_rice_river
+unit worker 3 3
+tile 3 3 grass resource=rice improvement=farm water=1 local=0.48
+tile 4 3 grasswater water=1
+features worker=0.80 nearby=0.18 fresh=1.00 city_score=0.58 city_dist=0.20
+expect command build_improvement
+expect effect farm
+end
+
+scenario worker_builds_plantation_on_bananas_jungle
+unit worker 3 3
+tile 3 3 forest resource=bananas improvement=plantation local=0.86
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.40 city_dist=0.32
+expect command build_improvement
+expect effect plantation
+end
+
+scenario worker_builds_plantation_on_sugar_flatland
+unit worker 3 3
+tile 3 3 grass resource=sugar improvement=plantation local=0.52
+features worker=0.80 nearby=0.14 fresh=0.00 city_score=0.44 city_dist=0.34
+expect command build_improvement
+expect effect plantation
+end
+
+scenario worker_builds_camp_on_furs_forest
+unit worker 3 3
+tile 3 3 forest resource=furs improvement=camp local=0.84
+features worker=0.80 nearby=0.16 fresh=0.00 city_score=0.34 city_dist=0.40
+expect command build_improvement
+expect effect camp
+end
+
+scenario worker_builds_camp_on_honey_forest
+unit worker 3 3
+tile 3 3 forest resource=honey improvement=camp local=0.84
+features worker=0.80 nearby=0.14 fresh=0.00 city_score=0.38 city_dist=0.36
+expect command build_improvement
+expect effect camp
+end
+
+scenario worker_builds_fishing_boats_on_crabs
+unit worker 3 3
+tile 3 3 water resource=crabs improvement=fishing_boats local=0.18
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.34 city_dist=0.28
+expect command build_improvement
+expect effect fishing_boats
+end
+
+scenario worker_builds_fishing_boats_on_whales
+unit worker 3 3
+tile 3 3 water resource=whales improvement=fishing_boats local=0.18
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.30 city_dist=0.35
+expect command build_improvement
+expect effect fishing_boats
+end
+
+scenario worker_builds_quarry_on_marble_hills
+unit worker 3 3
+tile 3 3 hills resource=marble improvement=quarry local=0.66
+features worker=0.80 nearby=0.10 fresh=0.00 city_score=0.26 city_dist=0.46
+expect command build_improvement
+expect effect quarry
+end
+
+scenario worker_builds_quarry_on_salt_desert
+unit worker 3 3
+tile 3 3 desert resource=salt improvement=quarry local=0.25
+features worker=0.80 nearby=0.08 fresh=0.00 city_score=0.20 city_dist=0.48
+expect command build_improvement
+expect effect quarry
+end
+
+scenario worker_builds_mine_on_iron_mountain
+unit worker 3 3
+tile 3 3 mountain resource=iron improvement=mine local=0.74
+features worker=0.80 nearby=0.14 fresh=0.00 city_score=0.10 city_dist=0.60
+expect command build_improvement
+expect effect mine
+end
+
+scenario worker_builds_mine_on_gold_hill
+unit worker 3 3
+tile 3 3 hills resource=gold improvement=mine local=0.64
+features worker=0.80 nearby=0.12 fresh=0.00 city_score=0.22 city_dist=0.48
+expect command build_improvement
+expect effect mine
+end
+
+scenario worker_builds_workshop_on_dry_plain
+unit worker 3 3
+tile 3 3 desert improvement=workshop local=0.22
+features worker=0.80 nearby=0.00 fresh=0.00 city_score=0.12 city_dist=0.55
+expect command build_improvement
+expect effect workshop
+end
+
+scenario worker_builds_fortification_on_frontier_forest
+unit worker 3 3
+tile 3 3 forest improvement=fortification local=0.70
+features worker=0.80 nearby=0.00 fresh=0.00 city_score=0.08 city_dist=0.88
+expect command build_improvement
+expect effect fortification
+end

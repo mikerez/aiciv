@@ -1,0 +1,12 @@
+# Explorer simulations.
+
+scenario explorer_moves_to_hidden_area
+unit explorer 3 3
+tile 3 3 grass local=0.25
+tile 3 4 grass hidden=1
+features nearby=0.00 fresh=0.00 city_score=0.00 city_dist=0.50
+target 3 4
+expect command goto
+expect effect moved
+end
+

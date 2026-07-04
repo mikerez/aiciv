@@ -1,0 +1,105 @@
+# Economics strategy tests.
+# Format:
+# scenario NAME
+# city record=N population=N food=N production=N money=N frontier=N seaside=N garrison=N free=1 legal=1
+# state cities=N free_cities=N workers=N military=N enemy_military=N idle=N
+# tech opened=N
+# demand settlers=N worker=N explorer=N military=N
+# expect production UNIT_TYPE
+# end
+
+scenario worker_shortage_productive_defended_city_builds_worker
+city record=0 population=0.20 food=0.45 production=0.72 money=0.25 frontier=0.50 seaside=0.00 garrison=0.40 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 enemy_military=0.00 idle=0.12
+tech opened=0.35
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario no_tech_no_workers_no_military_builds_warrior_first
+city record=0 population=0.20 food=0.45 production=0.65 money=0.25 frontier=0.70 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.00 enemy_military=0.00 idle=0.25
+tech opened=0.00
+demand settlers=0.20 worker=0.55 explorer=0.05 military=0.20
+expect production warrior
+end
+
+scenario one_city_four_explorers_no_worker_no_military_builds_warrior
+city record=0 population=0.18 food=0.45 production=0.60 money=0.35 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.00 enemy_military=0.00 idle=0.25
+tech opened=0.18
+demand settlers=0.20 worker=0.65 explorer=0.05 military=0.10
+expect production warrior
+end
+
+scenario no_tech_explorer_pressure_no_worker_builds_warrior
+city record=0 population=0.18 food=0.45 production=0.60 money=0.55 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.00 enemy_military=0.00 idle=0.25
+tech opened=0.00
+demand settlers=0.10 worker=0.45 explorer=0.40 military=0.05
+expect production warrior
+end
+
+scenario explorer_pressure_no_worker_no_military_builds_warrior
+city record=0 population=0.18 food=0.45 production=0.60 money=0.55 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.00 enemy_military=0.00 idle=0.25
+tech opened=0.18
+demand settlers=0.10 worker=0.45 explorer=0.40 military=0.05
+expect production warrior
+end
+
+scenario no_tech_high_worker_demand_builds_warrior
+city record=0 population=0.18 food=0.42 production=0.55 money=0.25 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.00 enemy_military=0.00 idle=0.12
+tech opened=0.00
+demand settlers=0.10 worker=0.70 explorer=0.05 military=0.15
+expect production warrior
+end
+
+scenario high_military_frontier_builds_warrior
+city record=0 population=0.18 food=0.35 production=0.60 money=0.20 frontier=1.00 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.12 military=0.00 enemy_military=0.40 idle=0.18
+tech opened=0.05
+demand settlers=0.05 worker=0.10 explorer=0.05 military=0.80
+expect production warrior
+end
+
+scenario high_military_productive_city_builds_slinger
+city record=0 population=0.25 food=0.45 production=0.80 money=0.25 frontier=0.50 seaside=0.00 garrison=0.20 free=1 legal=1
+state cities=0.13 free_cities=0.13 workers=0.18 military=0.12 enemy_military=0.40 idle=0.18
+tech opened=0.12
+demand settlers=0.05 worker=0.10 explorer=0.05 military=0.80
+expect production slinger
+end
+
+scenario high_explorer_demand_builds_explorer
+city record=0 population=0.18 food=0.45 production=0.35 money=0.55 frontier=0.60 seaside=0.00 garrison=0.20 free=1 legal=1
+state cities=0.13 free_cities=0.13 workers=0.25 military=0.08 enemy_military=0.00 idle=0.18
+tech opened=0.10
+demand settlers=0.10 worker=0.10 explorer=0.75 military=0.05
+expect production explorer
+end
+
+scenario high_explorer_demand_no_military_builds_warrior
+city record=0 population=0.18 food=0.40 production=0.55 money=0.55 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.18 military=0.00 enemy_military=0.00 idle=0.25
+tech opened=0.05
+demand settlers=0.10 worker=0.15 explorer=0.60 military=0.15
+expect production warrior
+end
+
+scenario many_explorers_one_worker_no_military_builds_warrior
+city record=0 population=0.20 food=0.45 production=0.55 money=0.50 frontier=0.60 seaside=0.00 garrison=0.00 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.12 military=0.00 enemy_military=0.00 idle=0.30
+tech opened=0.05
+demand settlers=0.15 worker=0.20 explorer=0.45 military=0.20
+expect production warrior
+end
+
+scenario high_settler_demand_food_city_builds_settlers
+city record=0 population=0.30 food=0.85 production=0.40 money=0.40 frontier=1.00 seaside=0.00 garrison=0.35 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.12 military=0.10 enemy_military=0.00 idle=0.18
+tech opened=0.15
+demand settlers=0.80 worker=0.10 explorer=0.05 military=0.05
+expect production settlers
+end

@@ -1,0 +1,11 @@
+# Horseman simulations.
+
+scenario horseman_attacks_adjacent_enemy
+unit horseman 3 3
+tile 3 3 grass local=0.25
+tile 4 3 grass enemy=1 local=-0.15
+target 4 3
+features worker=0.70 nearby=0.00 fresh=0.00 city_score=0.00 city_dist=0.50
+expect command attack
+expect effect enemy_removed
+end

@@ -1,0 +1,1503 @@
+# AI Civ training situations v1
+# Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
+# Comment blocks explain the game meaning of each slot used by the following machine row.
+# situation 0: strategy focus case 0: object=0 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[4] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+4|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.150000,4:0.100000,8:0.125000,9:0.250000,16:0.600000,960:0.500000|0:-0.750000,1:-0.500000,2:0.150000,3:0.100000,4:0.900000,5:-0.900000,6:-0.900000,7:-0.900000|strategy focus case 0: object=0 command_slot=4 -> research production technology
+# situation 1: strategy focus case 1: object=1 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[12] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+12|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.150000,124:0.100000,128:0.250000,129:0.250000,136:0.600000,960:0.500000|8:-0.250000,9:-0.500000,10:0.150000,11:0.100000,12:0.900000,13:-0.900000,14:-0.900000,15:-0.900000|strategy focus case 1: object=1 command_slot=4 -> research production technology
+# situation 2: strategy focus case 2: object=2 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[20] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+20|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.150000,244:0.100000,248:0.375000,249:0.250000,256:0.600000,960:0.500000|16:0.250000,17:-0.500000,18:0.150000,19:0.100000,20:0.900000,21:-0.900000,22:-0.900000,23:-0.900000|strategy focus case 2: object=2 command_slot=4 -> research production technology
+# situation 3: strategy focus case 3: object=3 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[28] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+28|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.150000,364:0.100000,368:0.500000,369:0.250000,376:0.600000,960:0.500000|24:0.750000,25:-0.500000,26:0.150000,27:0.100000,28:0.900000,29:-0.900000,30:-0.900000,31:-0.900000|strategy focus case 3: object=3 command_slot=4 -> research production technology
+# situation 4: strategy focus case 4: object=4 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[36] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[36] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+36|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.150000,484:0.100000,488:0.625000,489:0.250000,496:0.600000,960:0.500000|32:-0.750000,33:-0.150000,34:0.150000,35:0.100000,36:0.900000,37:-0.900000,38:-0.900000,39:-0.900000|strategy focus case 4: object=4 command_slot=4 -> research production technology
+# situation 5: strategy focus case 5: object=5 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[44] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[44] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+44|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.150000,604:0.100000,608:0.750000,609:0.250000,616:0.600000,960:0.500000|40:-0.250000,41:-0.150000,42:0.150000,43:0.100000,44:0.900000,45:-0.900000,46:-0.900000,47:-0.900000|strategy focus case 5: object=5 command_slot=4 -> research production technology
+# situation 6: strategy focus case 6: object=6 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[52] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[52] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+52|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.150000,724:0.100000,728:0.875000,729:0.250000,736:0.600000,960:0.500000|48:0.250000,49:-0.150000,50:0.150000,51:0.100000,52:0.900000,53:-0.900000,54:-0.900000,55:-0.900000|strategy focus case 6: object=6 command_slot=4 -> research production technology
+# situation 7: strategy focus case 7: object=7 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[60] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[60] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+60|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.150000,844:0.100000,848:1.000000,849:0.250000,856:0.600000,960:0.500000|56:0.750000,57:-0.150000,58:0.150000,59:0.100000,60:0.900000,61:-0.900000,62:-0.900000,63:-0.900000|strategy focus case 7: object=7 command_slot=4 -> research production technology
+# situation 8: strategy focus case 8: object=0 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[5] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+5|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.150000,4:0.100000,8:0.125000,9:0.500000,17:0.600000,961:0.500000|0:-0.750000,1:0.200000,2:0.150000,3:0.100000,4:-0.900000,5:0.900000,6:-0.900000,7:-0.900000|strategy focus case 8: object=0 command_slot=5 -> research naval technology
+# situation 9: strategy focus case 9: object=1 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[13] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[13] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+13|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.150000,124:0.100000,128:0.250000,129:0.500000,137:0.600000,961:0.500000|8:-0.250000,9:0.200000,10:0.150000,11:0.100000,12:-0.900000,13:0.900000,14:-0.900000,15:-0.900000|strategy focus case 9: object=1 command_slot=5 -> research naval technology
+# situation 10: strategy focus case 10: object=2 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[21] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[21] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+21|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.150000,244:0.100000,248:0.375000,249:0.500000,257:0.600000,961:0.500000|16:0.250000,17:0.200000,18:0.150000,19:0.100000,20:-0.900000,21:0.900000,22:-0.900000,23:-0.900000|strategy focus case 10: object=2 command_slot=5 -> research naval technology
+# situation 11: strategy focus case 11: object=3 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[29] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[29] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+29|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.150000,364:0.100000,368:0.500000,369:0.500000,377:0.600000,961:0.500000|24:0.750000,25:0.200000,26:0.150000,27:0.100000,28:-0.900000,29:0.900000,30:-0.900000,31:-0.900000|strategy focus case 11: object=3 command_slot=5 -> research naval technology
+# situation 12: strategy focus case 12: object=4 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[37] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[37] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+37|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.150000,484:0.100000,488:0.625000,489:0.500000,497:0.600000,961:0.500000|32:-0.750000,33:0.550000,34:0.150000,35:0.100000,36:-0.900000,37:0.900000,38:-0.900000,39:-0.900000|strategy focus case 12: object=4 command_slot=5 -> research naval technology
+# situation 13: strategy focus case 13: object=5 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[45] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[45] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+45|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.150000,604:0.100000,608:0.750000,609:0.500000,617:0.600000,961:0.500000|40:-0.250000,41:0.550000,42:0.150000,43:0.100000,44:-0.900000,45:0.900000,46:-0.900000,47:-0.900000|strategy focus case 13: object=5 command_slot=5 -> research naval technology
+# situation 14: strategy focus case 14: object=6 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[53] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[53] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+53|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.150000,724:0.100000,728:0.875000,729:0.500000,737:0.600000,961:0.500000|48:0.250000,49:0.550000,50:0.150000,51:0.100000,52:-0.900000,53:0.900000,54:-0.900000,55:-0.900000|strategy focus case 14: object=6 command_slot=5 -> research naval technology
+# situation 15: strategy focus case 15: object=7 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[61] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[61] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+61|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.150000,844:0.100000,848:1.000000,849:0.500000,857:0.600000,961:0.500000|56:0.750000,57:0.550000,58:0.150000,59:0.100000,60:-0.900000,61:0.900000,62:-0.900000,63:-0.900000|strategy focus case 15: object=7 command_slot=5 -> research naval technology
+# situation 16: strategy focus case 16: object=0 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[6] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+6|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.850000,4:0.300000,8:0.125000,9:0.750000,18:0.600000,962:0.500000|0:-0.750000,1:-0.500000,2:0.850000,3:0.300000,4:-0.900000,5:-0.900000,6:0.900000,7:-0.900000|strategy focus case 16: object=0 command_slot=6 -> focus anti-mounted units
+# situation 17: strategy focus case 17: object=1 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[14] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[14] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+14|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.850000,124:0.300000,128:0.250000,129:0.750000,138:0.600000,962:0.500000|8:-0.250000,9:-0.500000,10:0.850000,11:0.300000,12:-0.900000,13:-0.900000,14:0.900000,15:-0.900000|strategy focus case 17: object=1 command_slot=6 -> focus anti-mounted units
+# situation 18: strategy focus case 18: object=2 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[22] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[22] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+22|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.850000,244:0.300000,248:0.375000,249:0.750000,258:0.600000,962:0.500000|16:0.250000,17:-0.500000,18:0.850000,19:0.300000,20:-0.900000,21:-0.900000,22:0.900000,23:-0.900000|strategy focus case 18: object=2 command_slot=6 -> focus anti-mounted units
+# situation 19: strategy focus case 19: object=3 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[30] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[30] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+30|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.850000,364:0.300000,368:0.500000,369:0.750000,378:0.600000,962:0.500000|24:0.750000,25:-0.500000,26:0.850000,27:0.300000,28:-0.900000,29:-0.900000,30:0.900000,31:-0.900000|strategy focus case 19: object=3 command_slot=6 -> focus anti-mounted units
+# situation 20: strategy focus case 20: object=4 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[38] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[38] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+38|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.850000,484:0.300000,488:0.625000,489:0.750000,498:0.600000,962:0.500000|32:-0.750000,33:-0.150000,34:0.850000,35:0.300000,36:-0.900000,37:-0.900000,38:0.900000,39:-0.900000|strategy focus case 20: object=4 command_slot=6 -> focus anti-mounted units
+# situation 21: strategy focus case 21: object=5 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[46] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[46] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+46|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.850000,604:0.300000,608:0.750000,609:0.750000,618:0.600000,962:0.500000|40:-0.250000,41:-0.150000,42:0.850000,43:0.300000,44:-0.900000,45:-0.900000,46:0.900000,47:-0.900000|strategy focus case 21: object=5 command_slot=6 -> focus anti-mounted units
+# situation 22: strategy focus case 22: object=6 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[54] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[54] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+54|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.850000,724:0.300000,728:0.875000,729:0.750000,738:0.600000,962:0.500000|48:0.250000,49:-0.150000,50:0.850000,51:0.300000,52:-0.900000,53:-0.900000,54:0.900000,55:-0.900000|strategy focus case 22: object=6 command_slot=6 -> focus anti-mounted units
+# situation 23: strategy focus case 23: object=7 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[62] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[62] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+62|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.850000,844:0.300000,848:1.000000,849:0.750000,858:0.600000,962:0.500000|56:0.750000,57:-0.150000,58:0.850000,59:0.300000,60:-0.900000,61:-0.900000,62:0.900000,63:-0.900000|strategy focus case 23: object=7 command_slot=6 -> focus anti-mounted units
+# situation 24: strategy focus case 24: object=0 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[7] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[7] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+7|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.350000,4:0.800000,8:0.125000,9:1.000000,19:0.600000,963:0.500000|0:-0.750000,1:0.200000,2:0.350000,3:0.800000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|strategy focus case 24: object=0 command_slot=7 -> protect expansion point
+# situation 25: strategy focus case 25: object=1 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[15] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[15] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+15|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.350000,124:0.800000,128:0.250000,129:1.000000,139:0.600000,963:0.500000|8:-0.250000,9:0.200000,10:0.350000,11:0.800000,12:-0.900000,13:-0.900000,14:-0.900000,15:0.900000|strategy focus case 25: object=1 command_slot=7 -> protect expansion point
+# situation 26: strategy focus case 26: object=2 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[23] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[23] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+23|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.350000,244:0.800000,248:0.375000,249:1.000000,259:0.600000,963:0.500000|16:0.250000,17:0.200000,18:0.350000,19:0.800000,20:-0.900000,21:-0.900000,22:-0.900000,23:0.900000|strategy focus case 26: object=2 command_slot=7 -> protect expansion point
+# situation 27: strategy focus case 27: object=3 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[31] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[31] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+31|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.350000,364:0.800000,368:0.500000,369:1.000000,379:0.600000,963:0.500000|24:0.750000,25:0.200000,26:0.350000,27:0.800000,28:-0.900000,29:-0.900000,30:-0.900000,31:0.900000|strategy focus case 27: object=3 command_slot=7 -> protect expansion point
+# situation 28: strategy focus case 28: object=4 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[39] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[39] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+39|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.350000,484:0.800000,488:0.625000,489:1.000000,499:0.600000,963:0.500000|32:-0.750000,33:0.550000,34:0.350000,35:0.800000,36:-0.900000,37:-0.900000,38:-0.900000,39:0.900000|strategy focus case 28: object=4 command_slot=7 -> protect expansion point
+# situation 29: strategy focus case 29: object=5 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[47] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[47] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+47|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.350000,604:0.800000,608:0.750000,609:1.000000,619:0.600000,963:0.500000|40:-0.250000,41:0.550000,42:0.350000,43:0.800000,44:-0.900000,45:-0.900000,46:-0.900000,47:0.900000|strategy focus case 29: object=5 command_slot=7 -> protect expansion point
+# situation 30: strategy focus case 30: object=6 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[55] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[55] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+55|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.350000,724:0.800000,728:0.875000,729:1.000000,739:0.600000,963:0.500000|48:0.250000,49:0.550000,50:0.350000,51:0.800000,52:-0.900000,53:-0.900000,54:-0.900000,55:0.900000|strategy focus case 30: object=6 command_slot=7 -> protect expansion point
+# situation 31: strategy focus case 31: object=7 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[63] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[63] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+63|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.350000,844:0.800000,848:1.000000,849:1.000000,859:0.600000,963:0.500000|56:0.750000,57:0.550000,58:0.350000,59:0.800000,60:-0.900000,61:-0.900000,62:-0.900000,63:0.900000|strategy focus case 31: object=7 command_slot=7 -> protect expansion point
+# situation 32: strategy focus case 32: object=0 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[4] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+4|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.150000,4:0.100000,8:0.125000,9:0.250000,16:0.600000,960:0.500000|0:-0.750000,1:-0.500000,2:0.150000,3:0.100000,4:0.900000,5:-0.900000,6:-0.900000,7:-0.900000|strategy focus case 32: object=0 command_slot=4 -> research production technology
+# situation 33: strategy focus case 33: object=1 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[12] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+12|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.150000,124:0.100000,128:0.250000,129:0.250000,136:0.600000,960:0.500000|8:-0.250000,9:-0.500000,10:0.150000,11:0.100000,12:0.900000,13:-0.900000,14:-0.900000,15:-0.900000|strategy focus case 33: object=1 command_slot=4 -> research production technology
+# situation 34: strategy focus case 34: object=2 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[20] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+20|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.150000,244:0.100000,248:0.375000,249:0.250000,256:0.600000,960:0.500000|16:0.250000,17:-0.500000,18:0.150000,19:0.100000,20:0.900000,21:-0.900000,22:-0.900000,23:-0.900000|strategy focus case 34: object=2 command_slot=4 -> research production technology
+# situation 35: strategy focus case 35: object=3 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[28] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+28|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.150000,364:0.100000,368:0.500000,369:0.250000,376:0.600000,960:0.500000|24:0.750000,25:-0.500000,26:0.150000,27:0.100000,28:0.900000,29:-0.900000,30:-0.900000,31:-0.900000|strategy focus case 35: object=3 command_slot=4 -> research production technology
+# situation 36: strategy focus case 36: object=4 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[36] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[36] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+36|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.150000,484:0.100000,488:0.625000,489:0.250000,496:0.600000,960:0.500000|32:-0.750000,33:-0.150000,34:0.150000,35:0.100000,36:0.900000,37:-0.900000,38:-0.900000,39:-0.900000|strategy focus case 36: object=4 command_slot=4 -> research production technology
+# situation 37: strategy focus case 37: object=5 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[44] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[44] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+44|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.150000,604:0.100000,608:0.750000,609:0.250000,616:0.600000,960:0.500000|40:-0.250000,41:-0.150000,42:0.150000,43:0.100000,44:0.900000,45:-0.900000,46:-0.900000,47:-0.900000|strategy focus case 37: object=5 command_slot=4 -> research production technology
+# situation 38: strategy focus case 38: object=6 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[52] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[52] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+52|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.150000,724:0.100000,728:0.875000,729:0.250000,736:0.600000,960:0.500000|48:0.250000,49:-0.150000,50:0.150000,51:0.100000,52:0.900000,53:-0.900000,54:-0.900000,55:-0.900000|strategy focus case 38: object=6 command_slot=4 -> research production technology
+# situation 39: strategy focus case 39: object=7 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[60] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[60] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+60|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.150000,844:0.100000,848:1.000000,849:0.250000,856:0.600000,960:0.500000|56:0.750000,57:-0.150000,58:0.150000,59:0.100000,60:0.900000,61:-0.900000,62:-0.900000,63:-0.900000|strategy focus case 39: object=7 command_slot=4 -> research production technology
+# situation 40: strategy focus case 40: object=0 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[5] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+5|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.150000,4:0.100000,8:0.125000,9:0.500000,17:0.600000,961:0.500000|0:-0.750000,1:0.200000,2:0.150000,3:0.100000,4:-0.900000,5:0.900000,6:-0.900000,7:-0.900000|strategy focus case 40: object=0 command_slot=5 -> research naval technology
+# situation 41: strategy focus case 41: object=1 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[13] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[13] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+13|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.150000,124:0.100000,128:0.250000,129:0.500000,137:0.600000,961:0.500000|8:-0.250000,9:0.200000,10:0.150000,11:0.100000,12:-0.900000,13:0.900000,14:-0.900000,15:-0.900000|strategy focus case 41: object=1 command_slot=5 -> research naval technology
+# situation 42: strategy focus case 42: object=2 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[21] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[21] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+21|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.150000,244:0.100000,248:0.375000,249:0.500000,257:0.600000,961:0.500000|16:0.250000,17:0.200000,18:0.150000,19:0.100000,20:-0.900000,21:0.900000,22:-0.900000,23:-0.900000|strategy focus case 42: object=2 command_slot=5 -> research naval technology
+# situation 43: strategy focus case 43: object=3 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[29] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[29] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+29|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.150000,364:0.100000,368:0.500000,369:0.500000,377:0.600000,961:0.500000|24:0.750000,25:0.200000,26:0.150000,27:0.100000,28:-0.900000,29:0.900000,30:-0.900000,31:-0.900000|strategy focus case 43: object=3 command_slot=5 -> research naval technology
+# situation 44: strategy focus case 44: object=4 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[37] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[37] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+37|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.150000,484:0.100000,488:0.625000,489:0.500000,497:0.600000,961:0.500000|32:-0.750000,33:0.550000,34:0.150000,35:0.100000,36:-0.900000,37:0.900000,38:-0.900000,39:-0.900000|strategy focus case 44: object=4 command_slot=5 -> research naval technology
+# situation 45: strategy focus case 45: object=5 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[45] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[45] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+45|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.150000,604:0.100000,608:0.750000,609:0.500000,617:0.600000,961:0.500000|40:-0.250000,41:0.550000,42:0.150000,43:0.100000,44:-0.900000,45:0.900000,46:-0.900000,47:-0.900000|strategy focus case 45: object=5 command_slot=5 -> research naval technology
+# situation 46: strategy focus case 46: object=6 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[53] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[53] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+53|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.150000,724:0.100000,728:0.875000,729:0.500000,737:0.600000,961:0.500000|48:0.250000,49:0.550000,50:0.150000,51:0.100000,52:-0.900000,53:0.900000,54:-0.900000,55:-0.900000|strategy focus case 46: object=6 command_slot=5 -> research naval technology
+# situation 47: strategy focus case 47: object=7 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[61] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[61] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+61|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.150000,844:0.100000,848:1.000000,849:0.500000,857:0.600000,961:0.500000|56:0.750000,57:0.550000,58:0.150000,59:0.100000,60:-0.900000,61:0.900000,62:-0.900000,63:-0.900000|strategy focus case 47: object=7 command_slot=5 -> research naval technology
+# situation 48: strategy focus case 48: object=0 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[6] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+6|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.850000,4:0.300000,8:0.125000,9:0.750000,18:0.600000,962:0.500000|0:-0.750000,1:-0.500000,2:0.850000,3:0.300000,4:-0.900000,5:-0.900000,6:0.900000,7:-0.900000|strategy focus case 48: object=0 command_slot=6 -> focus anti-mounted units
+# situation 49: strategy focus case 49: object=1 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[14] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[14] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+14|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.850000,124:0.300000,128:0.250000,129:0.750000,138:0.600000,962:0.500000|8:-0.250000,9:-0.500000,10:0.850000,11:0.300000,12:-0.900000,13:-0.900000,14:0.900000,15:-0.900000|strategy focus case 49: object=1 command_slot=6 -> focus anti-mounted units
+# situation 50: strategy focus case 50: object=2 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[22] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[22] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+22|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.850000,244:0.300000,248:0.375000,249:0.750000,258:0.600000,962:0.500000|16:0.250000,17:-0.500000,18:0.850000,19:0.300000,20:-0.900000,21:-0.900000,22:0.900000,23:-0.900000|strategy focus case 50: object=2 command_slot=6 -> focus anti-mounted units
+# situation 51: strategy focus case 51: object=3 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[30] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[30] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+30|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.850000,364:0.300000,368:0.500000,369:0.750000,378:0.600000,962:0.500000|24:0.750000,25:-0.500000,26:0.850000,27:0.300000,28:-0.900000,29:-0.900000,30:0.900000,31:-0.900000|strategy focus case 51: object=3 command_slot=6 -> focus anti-mounted units
+# situation 52: strategy focus case 52: object=4 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[38] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[38] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+38|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.850000,484:0.300000,488:0.625000,489:0.750000,498:0.600000,962:0.500000|32:-0.750000,33:-0.150000,34:0.850000,35:0.300000,36:-0.900000,37:-0.900000,38:0.900000,39:-0.900000|strategy focus case 52: object=4 command_slot=6 -> focus anti-mounted units
+# situation 53: strategy focus case 53: object=5 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[46] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[46] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+46|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.850000,604:0.300000,608:0.750000,609:0.750000,618:0.600000,962:0.500000|40:-0.250000,41:-0.150000,42:0.850000,43:0.300000,44:-0.900000,45:-0.900000,46:0.900000,47:-0.900000|strategy focus case 53: object=5 command_slot=6 -> focus anti-mounted units
+# situation 54: strategy focus case 54: object=6 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[54] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[54] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+54|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.850000,724:0.300000,728:0.875000,729:0.750000,738:0.600000,962:0.500000|48:0.250000,49:-0.150000,50:0.850000,51:0.300000,52:-0.900000,53:-0.900000,54:0.900000,55:-0.900000|strategy focus case 54: object=6 command_slot=6 -> focus anti-mounted units
+# situation 55: strategy focus case 55: object=7 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[62] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[62] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+62|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.850000,844:0.300000,848:1.000000,849:0.750000,858:0.600000,962:0.500000|56:0.750000,57:-0.150000,58:0.850000,59:0.300000,60:-0.900000,61:-0.900000,62:0.900000,63:-0.900000|strategy focus case 55: object=7 command_slot=6 -> focus anti-mounted units
+# situation 56: strategy focus case 56: object=0 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[7] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[7] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+7|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.350000,4:0.800000,8:0.125000,9:1.000000,19:0.600000,963:0.500000|0:-0.750000,1:0.200000,2:0.350000,3:0.800000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|strategy focus case 56: object=0 command_slot=7 -> protect expansion point
+# situation 57: strategy focus case 57: object=1 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[15] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[15] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+15|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.350000,124:0.800000,128:0.250000,129:1.000000,139:0.600000,963:0.500000|8:-0.250000,9:0.200000,10:0.350000,11:0.800000,12:-0.900000,13:-0.900000,14:-0.900000,15:0.900000|strategy focus case 57: object=1 command_slot=7 -> protect expansion point
+# situation 58: strategy focus case 58: object=2 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[23] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[23] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+23|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.350000,244:0.800000,248:0.375000,249:1.000000,259:0.600000,963:0.500000|16:0.250000,17:0.200000,18:0.350000,19:0.800000,20:-0.900000,21:-0.900000,22:-0.900000,23:0.900000|strategy focus case 58: object=2 command_slot=7 -> protect expansion point
+# situation 59: strategy focus case 59: object=3 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[31] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[31] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+31|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.350000,364:0.800000,368:0.500000,369:1.000000,379:0.600000,963:0.500000|24:0.750000,25:0.200000,26:0.350000,27:0.800000,28:-0.900000,29:-0.900000,30:-0.900000,31:0.900000|strategy focus case 59: object=3 command_slot=7 -> protect expansion point
+# situation 60: strategy focus case 60: object=4 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[39] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[39] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+39|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.350000,484:0.800000,488:0.625000,489:1.000000,499:0.600000,963:0.500000|32:-0.750000,33:0.550000,34:0.350000,35:0.800000,36:-0.900000,37:-0.900000,38:-0.900000,39:0.900000|strategy focus case 60: object=4 command_slot=7 -> protect expansion point
+# situation 61: strategy focus case 61: object=5 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[47] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[47] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+47|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.350000,604:0.800000,608:0.750000,609:1.000000,619:0.600000,963:0.500000|40:-0.250000,41:0.550000,42:0.350000,43:0.800000,44:-0.900000,45:-0.900000,46:-0.900000,47:0.900000|strategy focus case 61: object=5 command_slot=7 -> protect expansion point
+# situation 62: strategy focus case 62: object=6 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[55] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[55] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+55|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.350000,724:0.800000,728:0.875000,729:1.000000,739:0.600000,963:0.500000|48:0.250000,49:0.550000,50:0.350000,51:0.800000,52:-0.900000,53:-0.900000,54:-0.900000,55:0.900000|strategy focus case 62: object=6 command_slot=7 -> protect expansion point
+# situation 63: strategy focus case 63: object=7 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[63] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[63] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+63|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.350000,844:0.800000,848:1.000000,849:1.000000,859:0.600000,963:0.500000|56:0.750000,57:0.550000,58:0.350000,59:0.800000,60:-0.900000,61:-0.900000,62:-0.900000,63:0.900000|strategy focus case 63: object=7 command_slot=7 -> protect expansion point
+# situation 64: strategy focus case 64: object=0 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[4] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+4|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.150000,4:0.100000,8:0.125000,9:0.250000,16:0.600000,960:0.500000|0:-0.750000,1:-0.500000,2:0.150000,3:0.100000,4:0.900000,5:-0.900000,6:-0.900000,7:-0.900000|strategy focus case 64: object=0 command_slot=4 -> research production technology
+# situation 65: strategy focus case 65: object=1 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[12] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+12|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.150000,124:0.100000,128:0.250000,129:0.250000,136:0.600000,960:0.500000|8:-0.250000,9:-0.500000,10:0.150000,11:0.100000,12:0.900000,13:-0.900000,14:-0.900000,15:-0.900000|strategy focus case 65: object=1 command_slot=4 -> research production technology
+# situation 66: strategy focus case 66: object=2 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[20] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+20|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.150000,244:0.100000,248:0.375000,249:0.250000,256:0.600000,960:0.500000|16:0.250000,17:-0.500000,18:0.150000,19:0.100000,20:0.900000,21:-0.900000,22:-0.900000,23:-0.900000|strategy focus case 66: object=2 command_slot=4 -> research production technology
+# situation 67: strategy focus case 67: object=3 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[28] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+28|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.150000,364:0.100000,368:0.500000,369:0.250000,376:0.600000,960:0.500000|24:0.750000,25:-0.500000,26:0.150000,27:0.100000,28:0.900000,29:-0.900000,30:-0.900000,31:-0.900000|strategy focus case 67: object=3 command_slot=4 -> research production technology
+# situation 68: strategy focus case 68: object=4 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[36] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[36] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+36|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.150000,484:0.100000,488:0.625000,489:0.250000,496:0.600000,960:0.500000|32:-0.750000,33:-0.150000,34:0.150000,35:0.100000,36:0.900000,37:-0.900000,38:-0.900000,39:-0.900000|strategy focus case 68: object=4 command_slot=4 -> research production technology
+# situation 69: strategy focus case 69: object=5 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[44] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[44] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+44|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.150000,604:0.100000,608:0.750000,609:0.250000,616:0.600000,960:0.500000|40:-0.250000,41:-0.150000,42:0.150000,43:0.100000,44:0.900000,45:-0.900000,46:-0.900000,47:-0.900000|strategy focus case 69: object=5 command_slot=4 -> research production technology
+# situation 70: strategy focus case 70: object=6 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[52] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[52] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+52|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.150000,724:0.100000,728:0.875000,729:0.250000,736:0.600000,960:0.500000|48:0.250000,49:-0.150000,50:0.150000,51:0.100000,52:0.900000,53:-0.900000,54:-0.900000,55:-0.900000|strategy focus case 70: object=6 command_slot=4 -> research production technology
+# situation 71: strategy focus case 71: object=7 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[60] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[60] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+60|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.150000,844:0.100000,848:1.000000,849:0.250000,856:0.600000,960:0.500000|56:0.750000,57:-0.150000,58:0.150000,59:0.100000,60:0.900000,61:-0.900000,62:-0.900000,63:-0.900000|strategy focus case 71: object=7 command_slot=4 -> research production technology
+# situation 72: strategy focus case 72: object=0 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[5] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+5|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.150000,4:0.100000,8:0.125000,9:0.500000,17:0.600000,961:0.500000|0:-0.750000,1:0.200000,2:0.150000,3:0.100000,4:-0.900000,5:0.900000,6:-0.900000,7:-0.900000|strategy focus case 72: object=0 command_slot=5 -> research naval technology
+# situation 73: strategy focus case 73: object=1 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[13] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[13] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+13|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.150000,124:0.100000,128:0.250000,129:0.500000,137:0.600000,961:0.500000|8:-0.250000,9:0.200000,10:0.150000,11:0.100000,12:-0.900000,13:0.900000,14:-0.900000,15:-0.900000|strategy focus case 73: object=1 command_slot=5 -> research naval technology
+# situation 74: strategy focus case 74: object=2 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[21] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[21] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+21|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.150000,244:0.100000,248:0.375000,249:0.500000,257:0.600000,961:0.500000|16:0.250000,17:0.200000,18:0.150000,19:0.100000,20:-0.900000,21:0.900000,22:-0.900000,23:-0.900000|strategy focus case 74: object=2 command_slot=5 -> research naval technology
+# situation 75: strategy focus case 75: object=3 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[29] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[29] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+29|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.150000,364:0.100000,368:0.500000,369:0.500000,377:0.600000,961:0.500000|24:0.750000,25:0.200000,26:0.150000,27:0.100000,28:-0.900000,29:0.900000,30:-0.900000,31:-0.900000|strategy focus case 75: object=3 command_slot=5 -> research naval technology
+# situation 76: strategy focus case 76: object=4 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[37] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[37] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+37|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.150000,484:0.100000,488:0.625000,489:0.500000,497:0.600000,961:0.500000|32:-0.750000,33:0.550000,34:0.150000,35:0.100000,36:-0.900000,37:0.900000,38:-0.900000,39:-0.900000|strategy focus case 76: object=4 command_slot=5 -> research naval technology
+# situation 77: strategy focus case 77: object=5 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[45] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[45] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+45|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.150000,604:0.100000,608:0.750000,609:0.500000,617:0.600000,961:0.500000|40:-0.250000,41:0.550000,42:0.150000,43:0.100000,44:-0.900000,45:0.900000,46:-0.900000,47:-0.900000|strategy focus case 77: object=5 command_slot=5 -> research naval technology
+# situation 78: strategy focus case 78: object=6 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[53] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[53] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+53|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.150000,724:0.100000,728:0.875000,729:0.500000,737:0.600000,961:0.500000|48:0.250000,49:0.550000,50:0.150000,51:0.100000,52:-0.900000,53:0.900000,54:-0.900000,55:-0.900000|strategy focus case 78: object=6 command_slot=5 -> research naval technology
+# situation 79: strategy focus case 79: object=7 command_slot=5 -> research naval technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[61] = research naval technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[61] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+61|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.150000,844:0.100000,848:1.000000,849:0.500000,857:0.600000,961:0.500000|56:0.750000,57:0.550000,58:0.150000,59:0.100000,60:-0.900000,61:0.900000,62:-0.900000,63:-0.900000|strategy focus case 79: object=7 command_slot=5 -> research naval technology
+# situation 80: strategy focus case 80: object=0 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[6] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+6|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.850000,4:0.300000,8:0.125000,9:0.750000,18:0.600000,962:0.500000|0:-0.750000,1:-0.500000,2:0.850000,3:0.300000,4:-0.900000,5:-0.900000,6:0.900000,7:-0.900000|strategy focus case 80: object=0 command_slot=6 -> focus anti-mounted units
+# situation 81: strategy focus case 81: object=1 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[14] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[14] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+14|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.850000,124:0.300000,128:0.250000,129:0.750000,138:0.600000,962:0.500000|8:-0.250000,9:-0.500000,10:0.850000,11:0.300000,12:-0.900000,13:-0.900000,14:0.900000,15:-0.900000|strategy focus case 81: object=1 command_slot=6 -> focus anti-mounted units
+# situation 82: strategy focus case 82: object=2 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[22] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[22] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+22|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.850000,244:0.300000,248:0.375000,249:0.750000,258:0.600000,962:0.500000|16:0.250000,17:-0.500000,18:0.850000,19:0.300000,20:-0.900000,21:-0.900000,22:0.900000,23:-0.900000|strategy focus case 82: object=2 command_slot=6 -> focus anti-mounted units
+# situation 83: strategy focus case 83: object=3 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[30] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[30] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+30|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.850000,364:0.300000,368:0.500000,369:0.750000,378:0.600000,962:0.500000|24:0.750000,25:-0.500000,26:0.850000,27:0.300000,28:-0.900000,29:-0.900000,30:0.900000,31:-0.900000|strategy focus case 83: object=3 command_slot=6 -> focus anti-mounted units
+# situation 84: strategy focus case 84: object=4 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[38] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[38] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+38|36,37,38,39|480:0.200000,481:-0.750000,482:-0.150000,483:0.850000,484:0.300000,488:0.625000,489:0.750000,498:0.600000,962:0.500000|32:-0.750000,33:-0.150000,34:0.850000,35:0.300000,36:-0.900000,37:-0.900000,38:0.900000,39:-0.900000|strategy focus case 84: object=4 command_slot=6 -> focus anti-mounted units
+# situation 85: strategy focus case 85: object=5 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[46] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[46] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+46|44,45,46,47|600:0.200000,601:-0.250000,602:-0.150000,603:0.850000,604:0.300000,608:0.750000,609:0.750000,618:0.600000,962:0.500000|40:-0.250000,41:-0.150000,42:0.850000,43:0.300000,44:-0.900000,45:-0.900000,46:0.900000,47:-0.900000|strategy focus case 85: object=5 command_slot=6 -> focus anti-mounted units
+# situation 86: strategy focus case 86: object=6 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[54] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[54] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+54|52,53,54,55|720:0.200000,721:0.250000,722:-0.150000,723:0.850000,724:0.300000,728:0.875000,729:0.750000,738:0.600000,962:0.500000|48:0.250000,49:-0.150000,50:0.850000,51:0.300000,52:-0.900000,53:-0.900000,54:0.900000,55:-0.900000|strategy focus case 86: object=6 command_slot=6 -> focus anti-mounted units
+# situation 87: strategy focus case 87: object=7 command_slot=6 -> focus anti-mounted units
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[62] = focus anti-mounted units.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[62] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = -0.150000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.850000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+62|60,61,62,63|840:0.200000,841:0.750000,842:-0.150000,843:0.850000,844:0.300000,848:1.000000,849:0.750000,858:0.600000,962:0.500000|56:0.750000,57:-0.150000,58:0.850000,59:0.300000,60:-0.900000,61:-0.900000,62:0.900000,63:-0.900000|strategy focus case 87: object=7 command_slot=6 -> focus anti-mounted units
+# situation 88: strategy focus case 88: object=0 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[7] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[7] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+7|4,5,6,7|0:-0.250000,1:-0.750000,2:0.200000,3:0.350000,4:0.800000,8:0.125000,9:1.000000,19:0.600000,963:0.500000|0:-0.750000,1:0.200000,2:0.350000,3:0.800000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|strategy focus case 88: object=0 command_slot=7 -> protect expansion point
+# situation 89: strategy focus case 89: object=1 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[15] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[15] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+15|12,13,14,15|120:-0.050000,121:-0.250000,122:0.200000,123:0.350000,124:0.800000,128:0.250000,129:1.000000,139:0.600000,963:0.500000|8:-0.250000,9:0.200000,10:0.350000,11:0.800000,12:-0.900000,13:-0.900000,14:-0.900000,15:0.900000|strategy focus case 89: object=1 command_slot=7 -> protect expansion point
+# situation 90: strategy focus case 90: object=2 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[23] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[23] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+23|20,21,22,23|240:0.150000,241:0.250000,242:0.200000,243:0.350000,244:0.800000,248:0.375000,249:1.000000,259:0.600000,963:0.500000|16:0.250000,17:0.200000,18:0.350000,19:0.800000,20:-0.900000,21:-0.900000,22:-0.900000,23:0.900000|strategy focus case 90: object=2 command_slot=7 -> protect expansion point
+# situation 91: strategy focus case 91: object=3 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[31] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[31] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = 0.200000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+31|28,29,30,31|360:0.350000,361:0.750000,362:0.200000,363:0.350000,364:0.800000,368:0.500000,369:1.000000,379:0.600000,963:0.500000|24:0.750000,25:0.200000,26:0.350000,27:0.800000,28:-0.900000,29:-0.900000,30:-0.900000,31:0.900000|strategy focus case 91: object=3 command_slot=7 -> protect expansion point
+# situation 92: strategy focus case 92: object=4 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
+# Correct answer: choose output[39] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[39] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[481] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[482] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[34] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+39|36,37,38,39|480:0.200000,481:-0.750000,482:0.550000,483:0.350000,484:0.800000,488:0.625000,489:1.000000,499:0.600000,963:0.500000|32:-0.750000,33:0.550000,34:0.350000,35:0.800000,36:-0.900000,37:-0.900000,38:-0.900000,39:0.900000|strategy focus case 92: object=4 command_slot=7 -> protect expansion point
+# situation 93: strategy focus case 93: object=5 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
+# Correct answer: choose output[47] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[47] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[601] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[602] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[42] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+47|44,45,46,47|600:0.200000,601:-0.250000,602:0.550000,603:0.350000,604:0.800000,608:0.750000,609:1.000000,619:0.600000,963:0.500000|40:-0.250000,41:0.550000,42:0.350000,43:0.800000,44:-0.900000,45:-0.900000,46:-0.900000,47:0.900000|strategy focus case 93: object=5 command_slot=7 -> protect expansion point
+# situation 94: strategy focus case 94: object=6 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
+# Correct answer: choose output[55] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[55] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[721] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[722] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[50] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+55|52,53,54,55|720:0.200000,721:0.250000,722:0.550000,723:0.350000,724:0.800000,728:0.875000,729:1.000000,739:0.600000,963:0.500000|48:0.250000,49:0.550000,50:0.350000,51:0.800000,52:-0.900000,53:-0.900000,54:-0.900000,55:0.900000|strategy focus case 94: object=6 command_slot=7 -> protect expansion point
+# situation 95: strategy focus case 95: object=7 command_slot=7 -> protect expansion point
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
+# Correct answer: choose output[63] = protect expansion point.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[63] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[841] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[842] = 0.550000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[58] = 0.350000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+63|60,61,62,63|840:0.200000,841:0.750000,842:0.550000,843:0.350000,844:0.800000,848:1.000000,849:1.000000,859:0.600000,963:0.500000|56:0.750000,57:0.550000,58:0.350000,59:0.800000,60:-0.900000,61:-0.900000,62:-0.900000,63:0.900000|strategy focus case 95: object=7 command_slot=7 -> protect expansion point
+# situation 96: strategy focus case 96: object=0 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
+# Correct answer: choose output[4] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[1] = -0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[2] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[2] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+4|4,5,6,7|0:-0.250000,1:-0.750000,2:-0.500000,3:0.150000,4:0.100000,8:0.125000,9:0.250000,16:0.600000,960:0.500000|0:-0.750000,1:-0.500000,2:0.150000,3:0.100000,4:0.900000,5:-0.900000,6:-0.900000,7:-0.900000|strategy focus case 96: object=0 command_slot=4 -> research production technology
+# situation 97: strategy focus case 97: object=1 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
+# Correct answer: choose output[12] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[121] = -0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[122] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[10] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+12|12,13,14,15|120:-0.050000,121:-0.250000,122:-0.500000,123:0.150000,124:0.100000,128:0.250000,129:0.250000,136:0.600000,960:0.500000|8:-0.250000,9:-0.500000,10:0.150000,11:0.100000,12:0.900000,13:-0.900000,14:-0.900000,15:-0.900000|strategy focus case 97: object=1 command_slot=4 -> research production technology
+# situation 98: strategy focus case 98: object=2 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
+# Correct answer: choose output[20] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[241] = 0.250000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[242] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[18] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+20|20,21,22,23|240:0.150000,241:0.250000,242:-0.500000,243:0.150000,244:0.100000,248:0.375000,249:0.250000,256:0.600000,960:0.500000|16:0.250000,17:-0.500000,18:0.150000,19:0.100000,20:0.900000,21:-0.900000,22:-0.900000,23:-0.900000|strategy focus case 98: object=2 command_slot=4 -> research production technology
+# situation 99: strategy focus case 99: object=3 command_slot=4 -> research production technology
+# Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
+# Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
+# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
+# Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
+# Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
+# Correct answer: choose output[28] = research production technology.
+# Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
+# Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.
+# input[361] = 0.750000 means known or calculated focus x coordinate normalized to [-1,1].
+# input[362] = -0.500000 means known or calculated focus y coordinate normalized to [-1,1].
+# target[26] = 0.150000 means military attack priority forwarded to lower-level engines.
+# Machine row below repeats the same situation in parser format.
+28|28,29,30,31|360:0.350000,361:0.750000,362:-0.500000,363:0.150000,364:0.100000,368:0.500000,369:0.250000,376:0.600000,960:0.500000|24:0.750000,25:-0.500000,26:0.150000,27:0.100000,28:0.900000,29:-0.900000,30:-0.900000,31:-0.900000|strategy focus case 99: object=3 command_slot=4 -> research production technology

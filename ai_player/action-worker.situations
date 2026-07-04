@@ -1,0 +1,1378 @@
+# AI Civ training situations v1
+# Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
+# Comment blocks explain the game meaning of each slot used by the following machine row.
+# situation 0: action worker case: worker on fresh grass builds irrigation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with irrigation/fresh-water support.
+# Decision meaning: irrigate because grass with fresh water should become a stronger food tile.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[4] = irrigate.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.600000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.470000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+4|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.600000,9:0.250000,11:0.050000,12:1.000000,13:0.350000,15:0.500000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:0.900000,5:-0.900000,6:-0.900000|action worker case: worker on fresh grass builds irrigation
+# situation 1: action worker case: worker on grasswater builds irrigation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is mixed grass-water.
+# Decision meaning: irrigate because mixed grass-water is a strong food source.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[4] = irrigate.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.880000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.600000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.880000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+4|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.600000,9:0.880000,11:0.100000,12:1.000000,13:0.420000,15:0.450000,56:0.880000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:0.900000,5:-0.900000,6:-0.900000|action worker case: worker on grasswater builds irrigation
+# situation 2: action worker case: worker on grass near irrigated city builds irrigation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile represents city or existing irrigation support.
+# Decision meaning: irrigate because adjacent city tiles should receive fresh-water food support.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[4] = irrigate.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[4] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.600000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[57] = 0.500000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+4|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.600000,9:0.250000,11:0.120000,12:1.000000,13:0.400000,15:0.180000,57:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:0.900000,5:-0.900000,6:-0.900000|action worker case: worker on grass near irrigated city builds irrigation
+# situation 3: action worker case: worker on forest without resource chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with no direct resource.
+# Decision meaning: chop forest because the tile can convert stored wildness into city production.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.750000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.100000,13:0.200000,15:0.350000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on forest without resource chops
+# situation 4: action worker case: worker on hills forest without resource chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forested hills with no direct resource.
+# Decision meaning: chop forest because clearing forest is the active supported worker job.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.700000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.060000,13:0.180000,15:0.450000,56:0.700000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on hills forest without resource chops
+# situation 5: action worker case: worker on dense forest near city chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is dense forest close enough to send production to a city.
+# Decision meaning: chop forest because no opened resource improvement is available.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.780000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.020000,13:0.280000,15:0.200000,56:0.780000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on dense forest near city chops
+# situation 6: action worker case: worker on remote forest chops before road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is remote forest and the preserved action signal says chop.
+# Decision meaning: chop forest because chop signal must beat generic improvement on non-resource forest.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.730000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,13:0.120000,15:0.650000,56:0.730000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on remote forest chops before road
+# situation 7: action worker case: worker on flat forest without resource chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is flat forest with no visible resource.
+# Decision meaning: chop forest because a forest without resource should not become workshop/cottage.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.760000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.040000,13:0.240000,15:0.400000,56:0.760000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on flat forest without resource chops
+# situation 8: action worker case: worker on wet forest without resource chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest near fresh water but has no direct resource.
+# Decision meaning: chop forest because fresh-water context does not make this an irrigation or improvement command.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.800000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.080000,12:1.000000,13:0.300000,15:0.320000,56:0.800000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on wet forest without resource chops
+# situation 9: action worker case: worker on old forest task continues chopping
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest and age pressure marks an ongoing chop task.
+# Decision meaning: chop forest because a started forest job should continue until finished.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.740000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.050000,13:0.220000,14:0.300000,15:0.380000,56:0.740000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker on old forest task continues chopping
+# situation 10: action worker case: worker exact plain forest chop test
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with no direct resource matching the simulation test.
+# Decision meaning: chop forest because signal 0.45 identifies current-tile chopping, not a generic improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.750000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.100000,13:0.200000,15:0.350000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker exact plain forest chop test
+# situation 11: action worker case: worker plain forest with no resource chops again
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is ordinary non-resource forest.
+# Decision meaning: chop forest because the forest has no opened resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.750000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.080000,13:0.180000,15:0.360000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker plain forest with no resource chops again
+# situation 12: action worker case: worker forest near city with chop signal chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is non-resource forest near a city.
+# Decision meaning: chop forest because nearby city can receive production from the chop.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.770000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.100000,13:0.260000,15:0.180000,56:0.770000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker forest near city with chop signal chops
+# situation 13: action worker case: worker wet forest with chop signal still chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is non-resource forest with fresh-water context.
+# Decision meaning: chop forest because water context does not create a resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.780000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.100000,12:1.000000,13:0.280000,15:0.320000,56:0.780000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker wet forest with chop signal still chops
+# situation 14: action worker case: worker remote non-resource forest with chop signal chops
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is remote non-resource forest.
+# Decision meaning: chop forest because the immediate signal is chop and no resource improvement is present.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[5] = chop forest.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[5] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.450000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.740000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+5|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.450000,9:0.750000,11:0.020000,13:0.100000,15:0.700000,56:0.740000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:0.900000,6:-0.900000|action worker case: worker remote non-resource forest with chop signal chops
+# situation 15: action worker case: worker on grass food resource builds farm or pasture
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with direct food resource.
+# Decision meaning: build improvement because direct food resource should get farm, pasture, plantation, or camp as appropriate.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.350000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.200000,13:0.550000,15:0.350000,56:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on grass food resource builds farm or pasture
+# situation 16: action worker case: worker on animal resource builds pasture
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is open land with an animal resource.
+# Decision meaning: build improvement because animal resources should receive pasture when Animal Husbandry is known.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.580000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.100000,13:0.450000,15:0.400000,56:0.580000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on animal resource builds pasture
+# situation 17: action worker case: worker on wheat builds farm
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with wheat and fresh-water support.
+# Decision meaning: build improvement because wheat and rice resources should receive farm.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.460000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.180000,12:1.000000,13:0.560000,15:0.240000,56:0.460000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on wheat builds farm
+# situation 18: action worker case: worker on forest animal resource builds camp
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with deer/furs/ivory-style resource.
+# Decision meaning: build improvement because resource access is more important than blind chopping.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.850000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,10:0.800000,11:0.150000,13:0.380000,15:0.400000,56:0.850000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on forest animal resource builds camp
+# situation 19: action worker case: worker on plantation luxury builds plantation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with plantation-style luxury resource.
+# Decision meaning: build improvement because plantation resources should be connected when Pottery is known.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.520000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.500000,11:0.080000,13:0.420000,15:0.380000,56:0.520000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on plantation luxury builds plantation
+# situation 20: action worker case: worker on water fish builds fishing boats
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is coastal water with fish-like resource.
+# Decision meaning: build improvement because water resources use fishing boats when Sailing is known.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.000000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.180000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,10:0.800000,11:0.120000,13:0.360000,15:0.280000,56:0.180000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on water fish builds fishing boats
+# situation 21: action worker case: worker on wine builds winery
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is fertile land with wine luxury resource.
+# Decision meaning: build improvement because wine should receive winery instead of a generic road.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.560000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.500000,11:0.120000,13:0.440000,15:0.420000,56:0.560000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on wine builds winery
+# situation 22: action worker case: worker on hills production resource builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with metal/resource signal.
+# Decision meaning: build improvement because hills with metal should receive mine.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.620000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.600000,11:0.100000,13:0.250000,15:0.480000,56:0.620000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on hills production resource builds mine
+# situation 23: action worker case: worker on rocks production resource builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is rocks/mountains with metal resource signal.
+# Decision meaning: build improvement because rocky production resources need mine support.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.630000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.720000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.630000,10:0.600000,11:0.100000,13:0.120000,15:0.550000,56:0.720000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on rocks production resource builds mine
+# situation 24: action worker case: worker on stone resource builds quarry
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with stone/marble/gypsum resource.
+# Decision meaning: build improvement because stone-like resources should receive quarry when Masonry is known.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.680000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.600000,11:0.080000,13:0.280000,15:0.500000,56:0.680000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on stone resource builds quarry
+# situation 25: action worker case: worker on empty hills builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is empty hills with Mining available.
+# Decision meaning: build improvement because mine is the useful supported generic hills improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.500000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,13:0.200000,15:0.500000,56:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on empty hills builds mine
+# situation 26: action worker case: worker on empty grass builds cottage
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is empty grass near a city with Masonry available.
+# Decision meaning: build improvement because cottage is the useful supported generic grass improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,13:0.340000,15:0.250000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on empty grass builds cottage
+# situation 27: action worker case: worker on city-side grass builds cottage
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east local tile represents a city worked-area connection.
+# Decision meaning: build improvement because close grassland should become cottage rather than idle.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[57] = 0.320000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,11:0.060000,13:0.460000,15:0.120000,57:0.320000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on city-side grass builds cottage
+# situation 28: action worker case: worker on river grass builds cottage when irrigation unavailable
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with a commerce-worked cue and no irrigation action signal.
+# Decision meaning: build improvement because the supported action is cottage, not road or wait.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.300000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,11:0.020000,13:0.400000,15:0.220000,56:0.300000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on river grass builds cottage when irrigation unavailable
+# situation 29: action worker case: worker on copper hills builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with copper-like metal resource.
+# Decision meaning: build improvement because metal resources should be mined.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.660000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.600000,11:0.160000,13:0.240000,15:0.460000,56:0.660000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on copper hills builds mine
+# situation 30: action worker case: worker on iron mountain builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is mountain/rocks with iron-like metal resource.
+# Decision meaning: build improvement because mine is the matching supported worker build.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.630000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.740000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.630000,10:0.600000,11:0.140000,13:0.100000,15:0.600000,56:0.740000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on iron mountain builds mine
+# situation 31: action worker case: worker on marble hills builds quarry
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with marble-like quarry resource.
+# Decision meaning: build improvement because quarry resources should not become generic roads.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.640000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.500000,11:0.100000,13:0.220000,15:0.500000,56:0.640000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on marble hills builds quarry
+# situation 32: action worker case: worker on cattle grass builds pasture
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with cattle-like animal resource.
+# Decision meaning: build improvement because pasture is the matched resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.540000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.120000,13:0.520000,15:0.360000,56:0.540000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on cattle grass builds pasture
+# situation 33: action worker case: worker on deer forest builds camp
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with deer-like animal resource.
+# Decision meaning: build improvement because camp should beat chop when the resource is opened.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.820000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,10:0.800000,11:0.160000,13:0.360000,15:0.380000,56:0.820000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on deer forest builds camp
+# situation 34: action worker case: worker on rice grass builds farm
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with rice-like food resource.
+# Decision meaning: build improvement because farm is the matched resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.440000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.180000,13:0.560000,15:0.300000,56:0.440000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on rice grass builds farm
+# situation 35: action worker case: worker on cotton grass builds plantation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with cotton-like luxury resource.
+# Decision meaning: build improvement because plantation is the matched resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.500000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.500000,11:0.110000,13:0.430000,15:0.340000,56:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on cotton grass builds plantation
+# situation 36: action worker case: worker on sheep hills builds pasture
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with sheep-like animal resource.
+# Decision meaning: build improvement because pasture can be the matched resource improvement even on hills.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.600000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.800000,11:0.120000,13:0.420000,15:0.340000,56:0.600000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on sheep hills builds pasture
+# situation 37: action worker case: worker on horses grass builds pasture
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with horses-like animal resource.
+# Decision meaning: build improvement because pasture connects mounted-resource tiles.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.580000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.800000,11:0.120000,13:0.460000,15:0.400000,56:0.580000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on horses grass builds pasture
+# situation 38: action worker case: worker on bananas jungle builds plantation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest/jungle with bananas-like plantation resource.
+# Decision meaning: build improvement because plantation resource beats blind chopping when the resource is opened.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.860000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,10:0.500000,11:0.120000,13:0.400000,15:0.320000,56:0.860000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on bananas jungle builds plantation
+# situation 39: action worker case: worker on sugar flatland builds plantation
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with sugar-like plantation resource.
+# Decision meaning: build improvement because plantation is the matched resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.520000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,10:0.500000,11:0.140000,13:0.440000,15:0.340000,56:0.520000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on sugar flatland builds plantation
+# situation 40: action worker case: worker on furs forest builds camp
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with furs-like camp resource.
+# Decision meaning: build improvement because camp resource beats chop when the resource is opened.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.840000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,10:0.800000,11:0.160000,13:0.340000,15:0.400000,56:0.840000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on furs forest builds camp
+# situation 41: action worker case: worker on honey forest builds camp
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest with honey-like camp resource.
+# Decision meaning: build improvement because camp is the matched resource improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.840000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,10:0.800000,11:0.140000,13:0.380000,15:0.360000,56:0.840000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on honey forest builds camp
+# situation 42: action worker case: worker on crabs water builds fishing boats
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is water with crabs-like resource.
+# Decision meaning: build improvement because water resources use fishing boats.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.000000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.180000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,10:0.800000,11:0.120000,13:0.340000,15:0.280000,56:0.180000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on crabs water builds fishing boats
+# situation 43: action worker case: worker on whales water builds fishing boats
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is water with whales-like resource.
+# Decision meaning: build improvement because sea resources use fishing boats.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.000000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.180000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,10:0.800000,11:0.120000,13:0.300000,15:0.350000,56:0.180000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on whales water builds fishing boats
+# situation 44: action worker case: worker on salt desert builds quarry
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is desert with salt-like quarry resource.
+# Decision meaning: build improvement because quarry resources are valid outside hills when the resource requires quarry.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.130000,10:0.500000,11:0.080000,13:0.200000,15:0.480000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on salt desert builds quarry
+# situation 45: action worker case: worker on gold hills builds mine
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with gold-like mining resource.
+# Decision meaning: build improvement because gold resources should be mined.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.640000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,10:0.600000,11:0.120000,13:0.220000,15:0.480000,56:0.640000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on gold hills builds mine
+# situation 46: action worker case: worker on dry plain builds workshop
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is dry non-resource land with Construction workshop available.
+# Decision meaning: build improvement because workshop is the supported generic production improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.220000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.130000,13:0.120000,15:0.550000,56:0.220000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on dry plain builds workshop
+# situation 47: action worker case: worker on frontier forest builds fortification
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is remote forest with Construction fortification available.
+# Decision meaning: build improvement because fortification is the encoded defensive build for frontier terrain.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.700000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.750000,13:0.080000,15:0.880000,56:0.700000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on frontier forest builds fortification
+# situation 48: action worker case: worker on production plain builds workshop
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is non-resource land with Construction workshop available.
+# Decision meaning: build improvement because workshop is the production-focused generic build when no resource job exists.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.310000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.250000,11:0.020000,13:0.180000,15:0.550000,56:0.310000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on production plain builds workshop
+# situation 49: action worker case: worker on frontier hill builds fortification
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is remote defensive hill with Construction fortification available.
+# Decision meaning: build improvement because fortification is useful on remote defensive points when no mine preference is encoded.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[6] = build improvement.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[6] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.800000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.480000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+6|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.800000,9:0.500000,13:0.080000,15:0.850000,56:0.480000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000|action worker case: worker on frontier hill builds fortification
+# situation 50: action worker case: worker on plain land builds road here
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is roadable land and no stronger worker action is available.
+# Decision meaning: road to because the runtime interprets this command as building the current road when legal.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.250000,13:0.180000,15:0.420000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker on plain land builds road here
+# situation 51: action worker case: worker road signal on empty grass builds road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is empty grass and the immediate worker signal is road-only.
+# Decision meaning: road to because signal 0.30 identifies current-tile road construction rather than generic cottage.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.250000,13:0.160000,15:0.440000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker road signal on empty grass builds road
+# situation 52: action worker case: worker road signal near city builds road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile suggests city connection and the immediate worker signal is road-only.
+# Decision meaning: road to because roads connect nearby city work areas when no improvement signal is active.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[57] = 0.350000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.250000,13:0.260000,15:0.200000,57:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker road signal near city builds road
+# situation 53: action worker case: worker road signal on dry land builds road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is dry land but roadable and no resource improvement is active.
+# Decision meaning: road to because road construction is the only encoded worker job.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.130000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.130000,13:0.100000,15:0.500000,56:0.130000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker road signal on dry land builds road
+# situation 54: action worker case: worker road signal on empty hill builds road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hill but the immediate signal is road-only.
+# Decision meaning: road to because the model must follow the legal road signal rather than infer a mine.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.420000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.500000,13:0.120000,15:0.480000,56:0.420000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker road signal on empty hill builds road
+# situation 55: action worker case: worker road signal on forest road corridor builds road
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest but the immediate signal is road-only, not chop.
+# Decision meaning: road to because the signal distinguishes road construction from chop forest.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.700000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.750000,13:0.100000,15:0.520000,56:0.700000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker road signal on forest road corridor builds road
+# situation 56: action worker case: worker between cities builds road-to
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile implies road/city connection target.
+# Decision meaning: road to because plain land without resource is best used connecting cities.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.200000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[57] = 0.350000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.200000,9:0.250000,13:0.300000,15:0.180000,57:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker between cities builds road-to
+# situation 57: action worker case: worker on already roaded land continues road-to
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: farther east local tile implies another city or route target.
+# Decision meaning: road to because a worker on an existing road should continue the route.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.200000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[58] = 0.350000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.200000,9:0.250000,13:0.240000,15:0.300000,58:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker on already roaded land continues road-to
+# situation 58: action worker case: worker on roadable hills builds road when no mine action exists
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills but the only immediate worker signal is road.
+# Decision meaning: road to because the JS legality layer says road is the available action.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.300000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[56] = 0.420000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.300000,9:0.500000,13:0.120000,15:0.480000,56:0.420000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker on roadable hills builds road when no mine action exists
+# situation 59: action worker case: worker leaving completed road continues road-to city
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: west local tile is an existing road and a city connection continues beyond.
+# Decision meaning: road to because route extension should continue after current road is done.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[3] = road to.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[3] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[8] = 0.200000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
+# input[55] = 0.340000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+3|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,8:0.200000,9:0.250000,13:0.280000,15:0.260000,55:0.340000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker leaving completed road continues road-to city
+# situation 60: action worker case: worker near cattle city tile moves to pasture job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: two tiles east is a cattle-like animal resource inside the city work area.
+# Decision meaning: goto because the useful worker job is nearby and should be reached before building pasture.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.680000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.620000,13:0.350000,15:0.120000,58:0.680000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near cattle city tile moves to pasture job
+# situation 61: action worker case: worker near rice and water moves to farm job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile is wet crop land beside city irrigation support.
+# Decision meaning: goto because worker should move to the crop tile before building farm.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.600000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.580000,12:1.000000,13:0.400000,15:0.100000,57:0.600000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near rice and water moves to farm job
+# situation 62: action worker case: worker near copper hill moves to mine job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: two tiles east is a copper hill resource in the city ring.
+# Decision meaning: goto because worker should move to production resource before building mine.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.720000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.550000,13:0.280000,15:0.180000,58:0.720000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near copper hill moves to mine job
+# situation 63: action worker case: worker near marble hill moves to quarry job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: two tiles east is a stone or marble resource in hills.
+# Decision meaning: goto because worker should move to quarry resource before building quarry.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.700000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.480000,13:0.280000,15:0.200000,58:0.700000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near marble hill moves to quarry job
+# situation 64: action worker case: worker near deer forest moves to camp job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile is a deer forest resource.
+# Decision meaning: goto because resource camp should be built before blind chopping elsewhere.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.860000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.540000,13:0.240000,15:0.180000,57:0.860000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near deer forest moves to camp job
+# situation 65: action worker case: worker near cotton flatland moves to plantation job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile is a plantation luxury in the city ring.
+# Decision meaning: goto because worker should move to plantation resource before building.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.580000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.480000,13:0.320000,15:0.140000,57:0.580000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near cotton flatland moves to plantation job
+# situation 66: action worker case: worker near wine flatland moves to winery job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile is wine in the city ring.
+# Decision meaning: goto because worker should move to wine before building winery.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.570000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.460000,13:0.320000,15:0.160000,57:0.570000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near wine flatland moves to winery job
+# situation 67: action worker case: worker near empty grass city tile moves to cottage job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east tile is empty grass next to a city.
+# Decision meaning: goto because worker should improve city grass with cottage instead of exploring.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.380000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.180000,13:0.420000,15:0.100000,57:0.380000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near empty grass city tile moves to cottage job
+# situation 68: action worker case: worker near production plain moves to workshop job
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: two tiles east is a non-resource production plain suitable for workshop.
+# Decision meaning: goto because worker should move to workshop site before building.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.400000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.160000,13:0.200000,15:0.220000,58:0.400000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker near production plain moves to workshop job
+# situation 69: action worker case: worker on desert no resource goes elsewhere
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is desert without resource.
+# Decision meaning: goto because weak desert has no supported early worker build.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.130000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.130000,13:0.100000,15:0.500000,56:0.130000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker on desert no resource goes elsewhere
+# situation 70: action worker case: worker on snow no resource goes elsewhere
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is snow without resource.
+# Decision meaning: goto because weak snow has no useful immediate worker build.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.380000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.380000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.380000,11:0.040000,13:0.080000,15:0.550000,56:0.380000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker on snow no resource goes elsewhere
+# situation 71: action worker case: worker sees better resource two tiles away
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: nearby local tile has strong resource signal.
+# Decision meaning: goto because moving to the resource enables a better improvement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.800000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.450000,13:0.180000,15:0.450000,58:0.800000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker sees better resource two tiles away
+# situation 72: action worker case: worker inside forwarded military focus retreats
+# Purpose: teach Action engine worker behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Civilian danger rule: this civil unit sees a high military-priority strategy focus, so goto means run away from those focus coordinates rather than attack.
+# Cue meaning: center tile is workable grass but strategy focus marks nearby danger.
+# Decision meaning: goto because civilian worker should run out of high military-priority coordinates instead of starting a build.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[3] = road to; output[4] = irrigate; output[5] = chop forest; output[6] = build improvement.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.062500 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.850000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,3,4,5,6|0:0.062500,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.150000,15:0.550000,56:0.250000,97:0.100000,98:-0.100000,99:0.850000,100:0.200000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000|action worker case: worker inside forwarded military focus retreats

@@ -1,0 +1,1335 @@
+# AI Civ training situations v1
+# Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
+# Comment blocks explain the game meaning of each slot used by the following machine row.
+# situation 0: action settler settlement case: settler stands on grass with A-bit local water source
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile is grass plus A-bit land water source.
+# Decision meaning: build city because field water source gives food and money immediately.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.860000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.370000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.100000,12:1.000000,13:0.860000,15:0.650000,56:0.370000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler stands on grass with A-bit local water source
+# situation 1: action settler settlement case: settler sees A-bit mountain water source from adjacent grass
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window tile east of center is mountain/rocks with the A bit set.
+# Decision meaning: build city on adjacent grass because mountain spring supports the city.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.820000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.100000,11:0.250000,12:1.000000,13:0.820000,15:0.700000,57:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler sees A-bit mountain water source from adjacent grass
+# situation 2: action settler settlement case: settler is standing on A-bit mountain water source
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile is mountain/rocks with the A bit set.
+# Decision meaning: goto a nearby field because mountains are not the preferred city tile.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.630000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.420000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.630000,11:0.150000,12:1.000000,13:0.420000,15:0.700000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler is standing on A-bit mountain water source
+# situation 3: action settler settlement case: settler sees shallow lake north of a good grass tile
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[47] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window tile north of center is shallow lake water.
+# Decision meaning: build city because lake access improves food and money around the city.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.840000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[47] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.200000,12:1.000000,13:0.840000,15:0.600000,47:0.100000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler sees shallow lake north of a good grass tile
+# situation 4: action settler settlement case: settler is on lake/water and must leave it
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile is water/lake, not a land city tile.
+# Decision meaning: goto land because cities cannot be built on water.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.000000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.000000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,11:0.250000,12:1.000000,15:0.550000,56:0.100000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler is on lake/water and must leave it
+# situation 5: action settler settlement case: settler sees lake but current desert plot is poor
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[55] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window tile west of center is lake water.
+# Decision meaning: goto a better field because lake alone does not save a poor desert plot.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.360000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[55] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.130000,11:0.100000,12:1.000000,13:0.360000,15:0.800000,55:0.100000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler sees lake but current desert plot is poor
+# situation 6: action settler settlement case: settler sees A-bit field water source and opened food resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile combines grass, A-bit water source, and food resource.
+# Decision meaning: build city because resource plus local water is a strong settlement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.930000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.800000,11:0.450000,12:1.000000,13:0.930000,15:0.720000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler sees A-bit field water source and opened food resource
+# situation 7: action settler settlement case: settler sees A-bit hill water source beside grass
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[48] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window north-east tile is hills with the A bit set.
+# Decision meaning: build city on grass because hill water source adds nearby production support.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.780000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[48] = 0.620000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.200000,12:1.000000,13:0.780000,15:0.680000,48:0.620000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler sees A-bit hill water source beside grass
+# situation 8: action settler settlement case: settler on A-bit hill should move to the adjacent field
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile is hills with the A bit set.
+# Decision meaning: goto the better field because hills are useful nearby but not ideal city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.480000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.620000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.500000,11:0.150000,12:1.000000,13:0.480000,15:0.700000,56:0.620000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on A-bit hill should move to the adjacent field
+# situation 9: action settler settlement case: settler sees no water source and mediocre field
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window center tile is ordinary grass without A-bit water or lake.
+# Decision meaning: build city because ordinary grass with enough spacing is acceptable under the more willing settlement policy.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.440000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.440000,15:0.760000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler sees no water source and mediocre field
+# situation 10: action settler settlement case: settler on plain grass far from city with mixed nearby resources
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center is normal grass; several neighboring resource signals are summarized by nearby resource score.
+# Decision meaning: build city because grass plus varied surrounding resources is a generic acceptable start.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.520000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.360000,13:0.520000,15:0.920000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on plain grass far from city with mixed nearby resources
+# situation 11: action settler settlement case: settler on grass beside forest and hills without visible water
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[48] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: north-east local window tile is hills and other nearby tiles imply forest production.
+# Decision meaning: build city because mixed grass, forest, and hills gives balanced food and production.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.480000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[48] = 0.500000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.180000,13:0.480000,15:0.840000,48:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass beside forest and hills without visible water
+# situation 12: action settler settlement case: settler on forest with nearby grass and food resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is forest carrying a generic visible resource signal.
+# Decision meaning: goto because forest/jungle may support a nearby city but should not be the city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.500000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,10:0.350000,11:0.280000,13:0.500000,15:0.880000,57:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on forest with nearby grass and food resource
+# situation 13: action settler settlement case: settler on grass with nearby hills production resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local window tile is hills with production/resource value.
+# Decision meaning: build city because grass center and hill resources form a generic productive settlement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.550000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.600000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.320000,13:0.550000,15:0.860000,57:0.600000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass with nearby hills production resource
+# situation 14: action settler settlement case: settler on grasswater river tile with no opened resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is mixed grass-water river terrain.
+# Decision meaning: build city because river grasswater is itself a strong generic settlement tile.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.880000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.580000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.880000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.880000,11:0.080000,12:1.000000,13:0.580000,15:0.800000,56:0.880000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grasswater river tile with no opened resource
+# situation 15: action settler settlement case: settler on grass near two generic luxury resources
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[55] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: west local window tile is a generic luxury/resource signal beside grass.
+# Decision meaning: build city because multiple generic resources justify settling even without fresh water.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.570000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[55] = 0.350000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.500000,11:0.300000,13:0.570000,15:0.900000,55:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass near two generic luxury resources
+# situation 16: action settler settlement case: settler on hills with grass and food nearby
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[47] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: north local window tile is grass while nearby resource score represents food access.
+# Decision meaning: goto because hills should provide nearby production rather than host the city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.530000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[47] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.500000,11:0.420000,13:0.530000,15:0.950000,47:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on hills with grass and food nearby
+# situation 17: action settler settlement case: settler on grass beside mountain production and food resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local window tile is mountain/rocks and nearby score carries food/resource support.
+# Decision meaning: build city because mountain production plus food nearby is a generic good city mix.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.590000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.630000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.440000,13:0.590000,15:0.940000,57:0.630000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass beside mountain production and food resource
+# situation 18: action settler settlement case: settler on generic grass after many turns searching
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass and unit age pressure says the settler has searched long enough.
+# Decision meaning: build city because after enough turns a merely acceptable land tile is better than endless wandering.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.440000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.080000,13:0.440000,15:0.820000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on generic grass after many turns searching
+# situation 19: action settler settlement case: settler on forest after many turns with mixed landscape
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is forest/jungle, no fresh water is present, and nearby resource support is weak.
+# Decision meaning: goto because turn pressure alone must not make a jungle or forest without resources and water acceptable.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.430000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,11:0.160000,13:0.430000,15:0.820000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on forest after many turns with mixed landscape
+# situation 20: action settler settlement case: settler on desert with no resource should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is desert and no surrounding resource or fresh water is encoded.
+# Decision meaning: goto because generic desert without resources is not a city site.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.220000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.130000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.130000,13:0.220000,15:0.850000,56:0.130000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on desert with no resource should continue
+# situation 21: action settler settlement case: settler on snow with one distant resource should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is snow and only weak nearby resource support exists.
+# Decision meaning: goto because weak snow starts should not be settled early.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.380000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.240000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.380000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.380000,11:0.080000,13:0.240000,15:0.900000,56:0.380000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on snow with one distant resource should continue
+# situation 22: action settler settlement case: settler too close to friendly city on good grass should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is good grass/resource land but nearest friendly city distance is very small.
+# Decision meaning: goto because settlement spacing is bad even when the local tile is decent.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.340000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.450000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.350000,11:0.250000,12:1.000000,13:0.340000,15:0.120000,56:0.450000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler too close to friendly city on good grass should continue
+# situation 23: action settler settlement case: settler on mountain with resources nearby should move to adjacent land
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is mountain/rocks with resource value but poor city-center terrain.
+# Decision meaning: goto because mountain resources should support a nearby city rather than host the center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.630000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.390000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.700000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.630000,10:0.600000,11:0.300000,13:0.390000,15:0.880000,56:0.700000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on mountain with resources nearby should move to adjacent land
+# situation 24: action settler settlement case: settler on grass with no resources but very far from any city
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass and expansion distance is maximal.
+# Decision meaning: build city because remote grass is acceptable for claiming territory.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.470000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.470000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass with no resources but very far from any city
+# situation 25: action settler settlement case: settler founds first city on ordinary grass
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass and no friendly city exists yet.
+# Decision meaning: build city because the first city should not wait for an ideal resource or water tile.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.380000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.380000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler founds first city on ordinary grass
+# situation 26: action settler settlement case: settler founds on clean grass after scouting
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is jungle but center tile is clean grass with acceptable spacing.
+# Decision meaning: build city because clean grass with enough distance is now acceptable.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.410000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.050000,13:0.410000,15:0.820000,57:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler founds on clean grass after scouting
+# situation 27: action settler settlement case: settler founds on plain grass with forest nearby
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[55] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: west local tile is forest and center tile is clean grass.
+# Decision meaning: build city because ordinary grass plus nearby production is sufficient.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.400000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[55] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.080000,13:0.400000,15:0.800000,55:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler founds on plain grass with forest nearby
+# situation 28: action settler settlement case: settler founds on plain grass with hills nearby
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is hills and center tile is clean grass.
+# Decision meaning: build city because ordinary grass plus nearby hills is sufficient.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.400000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.500000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.060000,13:0.400000,15:0.840000,57:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler founds on plain grass with hills nearby
+# situation 29: action settler settlement case: settler founds on old ordinary grass
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass and age pressure says wandering has gone long enough.
+# Decision meaning: build city because aged settlers accept merely decent land.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.340000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.340000,15:0.780000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler founds on old ordinary grass
+# situation 30: action settler settlement case: settler on grass with forest belt and one commerce resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[46] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: north-west local window tile is forest and center has generic commerce/resource value.
+# Decision meaning: build city because grass plus forest and commerce resource is a viable generic mix.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.540000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[46] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.500000,11:0.200000,13:0.540000,15:0.860000,46:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass with forest belt and one commerce resource
+# situation 31: action settler settlement case: settler on grass near coast and resource
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local window tile is water/coast and center has resource value.
+# Decision meaning: build city because coastal resource access is a generic acceptable settlement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.510000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.350000,11:0.220000,13:0.510000,15:0.820000,57:0.100000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass near coast and resource
+# situation 32: action settler settlement case: settler on mediocre grass beside enemy pressure should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: local window includes weak land but no resource support; tactical pressure is implied by generic fields.
+# Decision meaning: goto because mediocre land without support should keep searching.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.380000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.050000,13:0.380000,15:0.780000,57:0.100000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on mediocre grass beside enemy pressure should continue
+# situation 33: action settler settlement case: settler on grass with direct food resource but no water
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is grass with a direct generic food resource signal.
+# Decision meaning: build city because direct food resource compensates for missing fresh water.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.560000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.350000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.800000,11:0.120000,13:0.560000,15:0.840000,56:0.350000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass with direct food resource but no water
+# situation 34: action settler settlement case: settler on forest with direct production resource and nearby food
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center forest tile carries a production/resource signal and nearby score carries food.
+# Decision meaning: goto because resource forest should support a nearby grass city rather than become the center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.550000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,10:0.600000,11:0.250000,13:0.550000,15:0.860000,57:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on forest with direct production resource and nearby food
+# situation 35: action settler settlement case: settler on grass with road/irrigation-like improved surroundings
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center local signal is grass plus improvement/fresh-water support.
+# Decision meaning: build city because improved or irrigated surroundings are strong enough without special resources.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.600000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.180000,12:1.000000,13:0.600000,15:0.780000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass with road/irrigation-like improved surroundings
+# situation 36: action settler settlement case: settler on low-score land before turn limit should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center is ordinary grass and spacing is acceptable even without an ideal resource.
+# Decision meaning: build city because first-city and long-search behavior should accept merely decent grass.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.360000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.360000,15:0.700000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on low-score land before turn limit should continue
+# situation 37: action settler settlement case: first city runtime ordinary grass score builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass with the exact runtime score produced by cityPlotScore.
+# Decision meaning: build city because score 0.30 is the first-city threshold and must not loop as goto.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.300000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: first city runtime ordinary grass score builds
+# situation 38: action settler settlement case: first city runtime ordinary grass with neighbor builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is also ordinary grass and no city exists yet.
+# Decision meaning: build city because several plain grass tiles still form an acceptable first settlement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.300000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,15:1.000000,57:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: first city runtime ordinary grass with neighbor builds
+# situation 39: action settler settlement case: aged settler runtime ordinary grass builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is ordinary grass and the settler has already searched for several turns.
+# Decision meaning: build city because score 0.30 is also enough for an aged settler to stop wandering.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.300000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,15:0.820000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: aged settler runtime ordinary grass builds
+# situation 40: action settler settlement case: settler on jungle with no resource and no water should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is dense forest/jungle with no opened resource, no A-bit water source, and no lake or river nearby.
+# Decision meaning: goto because jungle without resources and water is a poor city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.300000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,13:0.300000,15:0.860000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on jungle with no resource and no water should continue
+# situation 41: action settler settlement case: settler on jungle without support after many turns should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is still unsupported jungle; age pressure is not enough to settle it.
+# Decision meaning: goto because the model should prefer moving to water or resource support instead of building a weak city.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.380000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,11:0.040000,13:0.380000,15:0.950000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on jungle without support after many turns should continue
+# situation 42: action settler settlement case: settler on jungle next to plain grass but no water should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is ordinary grass but there is still no visible resource or fresh water.
+# Decision meaning: goto because a single clean grass neighbor is not enough reason to build on jungle.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.360000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,11:0.080000,13:0.360000,15:0.880000,57:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: settler on jungle next to plain grass but no water should continue
+# situation 43: action settler settlement case: first city candidate on jungle should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is a better grass/water candidate while center is jungle.
+# Decision meaning: goto because first-city pressure must not accept jungle as the city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.420000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,11:0.120000,13:0.420000,15:1.000000,57:0.470000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: first city candidate on jungle should continue
+# situation 44: action settler settlement case: old settler on jungle with nearby resource should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: nearby resource and age pressure are present but center tile is still jungle.
+# Decision meaning: goto because resources near jungle should pull the settler to an adjacent grass city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.440000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,10:0.200000,11:0.220000,13:0.440000,15:0.950000,57:0.470000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: old settler on jungle with nearby resource should continue
+# situation 45: action settler settlement case: first city candidate on hills should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is hills with a good grass resource candidate east.
+# Decision meaning: goto because first-city pressure must not accept hills as the city center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.530000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.500000,11:0.350000,13:0.530000,15:1.000000,57:0.470000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: first city candidate on hills should continue
+# situation 46: action settler settlement case: old settler on hills with food nearby should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[55] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: nearby food exists but current city center would be hills.
+# Decision meaning: goto because hills should be worked by a nearby grass city instead of hosting it.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.500000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[55] = 0.470000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.500000,11:0.380000,13:0.500000,15:0.950000,55:0.470000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler settlement case: old settler on hills with food nearby should continue
+# situation 47: action settler settlement case: settler on clean grass near jungle without water should continue
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is jungle/forest and the settlement has no resource or water support.
+# Decision meaning: build city because clean grass with adequate spacing should not wander forever.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.410000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.050000,13:0.410000,15:0.820000,57:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on clean grass near jungle without water should continue
+# situation 48: action settler settlement case: settler on grass near water resource should build instead of jungle
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[47] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: north local tile is shallow water or lake and the area has visible resource support.
+# Decision meaning: build city because water plus resources is a strong site, unlike unsupported jungle.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 1.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.820000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[47] = 0.100000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.500000,11:0.450000,12:1.000000,13:0.820000,15:0.880000,47:0.100000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler on grass near water resource should build instead of jungle
+# situation 49: action settler settlement case: settler exact clean grass with spacing test builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is jungle while center is clean grass matching the simulation test.
+# Decision meaning: build city because clean grass at score 0.41 with good spacing is above the accepted threshold.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.410000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.050000,13:0.410000,15:0.820000,57:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler exact clean grass with spacing test builds
+# situation 50: action settler settlement case: settler exact first city ordinary grass test builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is ordinary grass and no city exists yet.
+# Decision meaning: build city because the first city should be founded on ordinary grass instead of wandering.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.410000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.410000,15:1.000000,57:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler exact first city ordinary grass test builds
+# situation 51: action settler settlement case: settler first city plain grass without resource builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: center tile is clean grass with minimal nearby support.
+# Decision meaning: build city because first-city pressure and acceptable grass score are sufficient.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.420000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[56] = 0.250000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.020000,13:0.420000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler first city plain grass without resource builds
+# situation 52: action settler settlement case: settler clean grass beside jungle but acceptable score builds
+# Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
+# A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
+# Cue meaning: east local tile is jungle but center grass is the candidate.
+# Decision meaning: build city because nearby jungle should not override a valid clean grass center.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means Settlers unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[12] = 0.000000 means fresh water is present on or near the settlement candidate.
+# input[13] = 0.420000 means city plot score calculated by ai.js from terrain, resources, water sources, and city distance.
+# input[57] = 0.750000 means local 9x9 map cue for lake water or A-bit land water source.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.040000,13:0.420000,15:0.820000,57:0.750000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler settlement case: settler clean grass beside jungle but acceptable score builds
+# situation 53: action settler case: settler inside forwarded military focus runs away
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Civilian danger rule: this civil unit sees a high military-priority strategy focus, so goto means run away from those focus coordinates rather than attack.
+# Cue meaning: center tile is acceptable grass, but strategy focus marks this area as dangerous.
+# Decision meaning: goto because civilian settler should run out of high military-priority coordinates before building.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.900000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.200000,13:0.580000,14:0.100000,15:0.800000,56:0.250000,99:0.900000,100:0.150000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler inside forwarded military focus runs away
+# situation 54: action settler case: first-city plain grass runtime score builds after wandering age 0.100000
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
+# Decision meaning: build city because first-city plain grass at runtime score 0.30 must settle within ten turns.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,14:0.100000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler case: first-city plain grass runtime score builds after wandering age 0.100000
+# situation 55: action settler case: first-city plain grass runtime score builds after wandering age 0.500000
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
+# Decision meaning: build city because first-city plain grass at runtime score 0.30 must settle within ten turns.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,14:0.500000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler case: first-city plain grass runtime score builds after wandering age 0.500000
+# situation 56: action settler case: first-city plain grass runtime score builds after wandering age 0.900000
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
+# Decision meaning: build city because first-city plain grass at runtime score 0.30 must settle within ten turns.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.250000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.300000,14:0.900000,15:1.000000,56:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler case: first-city plain grass runtime score builds after wandering age 0.900000
+# situation 57: action settler case: exact grass water resource settlement test builds
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is grass with cattle-like food resource and A-bit water source.
+# Decision meaning: build city because direct food, fresh water, and score 0.82 are a strong settlement.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.470000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.800000,11:0.450000,12:1.000000,13:0.820000,15:0.880000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler case: exact grass water resource settlement test builds
+# situation 58: action settler case: aged grass water resource settlement test builds
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile remains a strong grass food resource site after several turns.
+# Decision meaning: build city because wandering pressure should strengthen an already-good food and water city site.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[2] = build city.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[2] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.470000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+2|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.800000,11:0.450000,12:1.000000,13:0.820000,14:0.500000,15:0.880000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:0.900000|action settler case: aged grass water resource settlement test builds
+# situation 59: action settler case: settler on fresh grass must not irrigate
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile looks like a worker irrigation target.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.470000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,11:0.080000,12:1.000000,13:0.400000,14:0.050000,15:0.700000,56:0.470000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on fresh grass must not irrigate
+# situation 60: action settler case: settler on grasswater must not irrigate
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is mixed grass-water but settler is not a worker.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.880000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.880000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.880000,11:0.080000,12:1.000000,13:0.420000,14:0.050000,15:0.700000,56:0.880000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on grasswater must not irrigate
+# situation 61: action settler case: settler on forest must not chop
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is forest but chopping is worker-only.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.750000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,11:0.120000,13:0.380000,14:0.050000,15:0.700000,56:0.750000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on forest must not chop
+# situation 62: action settler case: settler on forest resource must not improve
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile has resource/forest improvement cue but settler cannot build improvements.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.750000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.850000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.750000,10:0.800000,11:0.180000,13:0.400000,14:0.050000,15:0.700000,56:0.850000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on forest resource must not improve
+# situation 63: action settler case: settler on hills resource must not mine
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is hills with mine-like production cue.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.620000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.500000,10:0.600000,11:0.200000,13:0.420000,14:0.050000,15:0.700000,56:0.620000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on hills resource must not mine
+# situation 64: action settler case: settler on rocks resource must not mine
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is rocky production terrain but mining is worker-only.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.630000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.720000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.630000,10:0.600000,11:0.180000,13:0.360000,14:0.050000,15:0.700000,56:0.720000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on rocks resource must not mine
+# situation 65: action settler case: settler between cities must not road-to
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: east local tile suggests road connection but settler cannot build roads.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[57] = 0.350000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,13:0.340000,14:0.050000,15:0.700000,57:0.350000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler between cities must not road-to
+# situation 66: action settler case: settler on water resource must not build boats
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is water resource but settler should seek land.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.000000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.200000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,10:0.800000,11:0.150000,12:1.000000,14:0.050000,15:0.700000,56:0.200000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on water resource must not build boats
+# situation 67: action settler case: settler near strong resource must move instead of improve
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: nearby local tile has strong resource improvement cue.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[58] = 0.800000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.700000,11:0.450000,13:0.390000,14:0.050000,15:0.700000,58:0.800000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler near strong resource must move instead of improve
+# situation 68: action settler case: settler on weak desert must not do worker task
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is weak desert and has no settlement support.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.130000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.130000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.130000,13:0.220000,14:0.050000,15:0.700000,56:0.130000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on weak desert must not do worker task
+# situation 69: action settler case: settler on weak snow must not do worker task
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: center tile is weak snow and should be left.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.380000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.380000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.380000,11:0.040000,13:0.240000,14:0.050000,15:0.700000,56:0.380000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler on weak snow must not do worker task
+# situation 70: action settler case: settler too close to city must move not improve
+# Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
+# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
+# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Cue meaning: good local tile is invalid because spacing to friendly city is too small.
+# Decision meaning: goto because settler commands are settlement or movement; irrigation, roads, chopping, and improvements are worker-only.
+# Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
+# Correct answer: choose output[0] = goto.
+# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
+# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
+# input[0] = 0.031250 means unit type normalized as unitTypeIndex/32.
+# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
+# input[56] = 0.450000 means main local 9x9 cue driving this action.
+# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Machine row below repeats the same situation in parser format.
+0|0,1,2|0:0.031250,4:1.000000,5:0.200000,6:1.000000,9:0.250000,10:0.350000,11:0.250000,12:1.000000,13:0.340000,14:0.050000,15:0.700000,56:0.450000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000|action settler case: settler too close to city must move not improve
