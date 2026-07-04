@@ -53,7 +53,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-BUILD-006`: A produced unit inherits the team number of the city that produced it.
 - `PREHISTORY-BUILD-007`: Water-nature units can be produced only in seaside cities.
 - `PREHISTORY-BUILD-008`: Units with a technology requirement can be produced only after that technology is discovered.
-- `PREHISTORY-BUILD-009`: A built city starts with road and irrigation modifiers on its tile.
+- `PREHISTORY-BUILD-009`: A built city starts with road and irrigation modifiers on its tile, but the city-created irrigation gives extra city-tile food only if fresh water is in a neighboring tile.
 
 ## Turn Processing Rules
 
@@ -63,6 +63,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-TURN-004`: End Turn selects and centers the view on the next movable unit without a task.
 - `PREHISTORY-TURN-005`: A movable unit is without a task when it has no active route, no target, and its layer state is `ready`.
 - `PREHISTORY-TURN-006`: When End Turn makes a movable unit finish its task, that newly idle unit is selected before scanning for the next idle unit.
+- `PREHISTORY-TURN-007`: End Turn selects and centers the view on the first city with no active production before movable unit prompts so the production status shows that it produces nothing.
+- `PREHISTORY-TURN-008`: End Turn is blocked while the current selected movable unit is idle and has no Goto path, route, target, or modified state task.
 
 ## Menu Rules
 
@@ -81,7 +83,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-STATE-001`: Goto enters a map targeting mode, previews arrows until the next map click, and stores that preview path on the unit.
 - `PREHISTORY-STATE-002`: Fortificate changes the unit state to `fortified` and consumes the unit's next turn.
 - `PREHISTORY-STATE-003`: Wait changes the unit state to `waiting`.
-- `PREHISTORY-STATE-004`: Road, Irrigate, Chop forest, Pasture, Cottage, Workshop, Mine, and Fortification are worker-only unit states.
+- `PREHISTORY-STATE-004`: Road, Road-to, Irrigate, Chop forest, Pasture, Cottage, Workshop, Mine, and Fortification are worker-only unit states.
 - `PREHISTORY-STATE-005`: Explore, Patrol, and Automate are auto-routing unit states.
 - `PREHISTORY-STATE-006`: Unit state is drawn as a single letter over the unit sprite.
 - `PREHISTORY-STATE-007`: Manual movement by dragging a unit clears any modified state and returns the unit to `ready`.
@@ -89,6 +91,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-STATE-009`: Pasture, Cottage, Workshop, Mine, and Fortification progress is stored as worker tile-building turn state.
 - `PREHISTORY-STATE-010`: Right mouse click assigns a Goto path for the selected movable unit.
 - `PREHISTORY-STATE-011`: Right mouse click draws the same Goto arrows as drag preview after assigning the path.
+- `PREHISTORY-STATE-012`: Goto preview follows normal mouse hover after the command is selected, even when the mouse button is not held.
 
 ## Selection Rules
 
@@ -106,18 +109,22 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-CHOP-007`: A unit cannot enter `chop_forest` state unless it is already standing on forest terrain.
 - `PREHISTORY-CHOP-008`: When chopping completes, `hills1` becomes `hills` and `hills5` becomes `hills4`.
 - `PREHISTORY-CHOP-009`: Workers cannot chop forest before `Bronze Working` is discovered.
+- `PREHISTORY-CHOP-010`: Completed chopping gives `5 * wildity` production to the first same-team city found by round search within four tiles of the chopped tile.
+- `PREHISTORY-CHOP-011`: If the chop target city has no active production task, chop production is saved in the city's stored production account.
+- `PREHISTORY-CHOP-012`: Workers cannot start forest chopping while standing on a city tile.
 
 ## Start View Rules
 
 - `PREHISTORY-VIEW-001`: When a prehistory game starts, the screen is centered on the initial cluster of spawned units.
-- `PREHISTORY-START-001`: A prehistory game starts with one Settler, one Explorer, and one Worker for team 0.
+- `PREHISTORY-START-001`: A prehistory game starts with one Settler and one Explorer for team 0.
 
 ## Auto-Routing Rules
 
-- `PREHISTORY-AUTO-001`: Explore routes toward the nearest known unseen land cell that can be reached by the base path builder.
+- `PREHISTORY-AUTO-001`: Explore chooses a new route with 50% probability toward a nearby hidden/black land cell and 50% probability toward the nearest known city or settler; if the preferred target type is unavailable it falls back to the other, then to Automate routing.
 - `PREHISTORY-AUTO-002`: Patrol routes around a remembered patrol origin.
 - `PREHISTORY-AUTO-003`: Automate chooses a nearby available land route.
 - `PREHISTORY-AUTO-004`: Auto-routing runs during turn processing when a unit has an auto-routing state and no active route.
+- `PREHISTORY-AUTO-005`: If an Explore unit finishes or loses its route while keeping Explore state, it immediately receives a new Explore route for the next turn.
 
 ## Road Building Rules
 
@@ -127,16 +134,23 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-ROAD-004`: Completed road building sets the road terrain modifier on the worker tile.
 - `PREHISTORY-ROAD-005`: Mixed grass-water terrain type `7` cannot receive roads until `Construction` is discovered.
 - `PREHISTORY-ROAD-006`: Workers cannot build roads before `Wheel` is discovered.
+- `PREHISTORY-ROAD-007`: Road-to uses the same path preview and path assignment as Goto, but is available only to Workers after `Wheel`.
+- `PREHISTORY-ROAD-008`: A Worker in Road-to state lays a road on every supported tile it leaves or enters while following its path.
+- `PREHISTORY-ROAD-009`: Workers cannot build roads on city tiles. A newly built city may still create its own starting road directly.
 
 
 ## Worker Tile Building Rules
 
-- `PREHISTORY-WORKER-BUILDING-001`: Only workers in a worker tile-building state can build Pasture, Cottage, Workshop, Mine, or Fortification.
-- `PREHISTORY-WORKER-BUILDING-002`: Worker tile-building commands are available only when the required technology is open: Pasture requires `Animal Husbandry`, Cottage requires `Pottery`, Workshop requires `Construction`, Mine requires `Mining`, and Fortification requires `Construction`.
-- `PREHISTORY-WORKER-BUILDING-003`: Worker tile-building location is not limited by terrain type; a worker may build any available worker tile building on its current tile if that tile does not already have the same building.
+- `PREHISTORY-WORKER-BUILDING-001`: Only workers in a worker tile-building state can build Pasture, Farm, Plantation, Camp, Fishing Boats, Quarry, Winery, Cottage, Workshop, Mine, or Fortification.
+- `PREHISTORY-WORKER-BUILDING-002`: Worker tile-building commands are available only when the required technology is open: Pasture and Camp require `Animal Husbandry`, Farm requires `Irrigation`, Fishing Boats requires `Sailing`, Plantation and Winery require `Pottery`, Cottage and Quarry require `Masonry`, Workshop and Fortification require `Construction`, and Mine requires `Mining`.
+- `PREHISTORY-WORKER-BUILDING-003`: Worker tile-building commands are shown only when the building is supported on the worker tile and that tile does not already have the same building.
 - `PREHISTORY-WORKER-BUILDING-004`: Completed worker tile buildings set the corresponding terrain modifier on the worker tile.
-- `PREHISTORY-WORKER-BUILDING-005`: Pasture also requires an opened land animal resource on the worker tile: Cattle, Deer, Sheep, Horses, or Ivory.
+- `PREHISTORY-WORKER-BUILDING-005`: Resource improvements require the matching opened resource on the worker tile: Pasture for Cattle, Sheep, and Horses; Farm for Rice and Wheat; Plantation for Bananas, Citrus, Cotton, Dyes, Incense, Olives, Silk, Spices, Sugar, and Tea; Camp for Deer, Amber, Furs, Honey, and Ivory; Fishing Boats for Crabs, Fish, Pearls, Turtles, and Whales; Quarry for Stone, Gypsum, Marble, and Salt; Winery for Wine; Mine for Copper, Diamonds, Silver, Iron, and Gold.
 - `PREHISTORY-WORKER-BUILDING-006`: Mine can be built only on hills terrain type `4` or mountains/rocks terrain type `5`.
+- `PREHISTORY-WORKER-BUILDING-007`: If the worker tile has an opened resource and its required improvement is currently buildable, the worker menu suggests only that resource improvement from the worker tile-building list.
+- `PREHISTORY-WORKER-BUILDING-008`: Land worker tile buildings are not supported on water tiles; Fishing Boats is supported only on water resource tiles.
+- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each turn; a cottage becomes a Hamlet after 10 turns and a Village after 20 turns.
+- `PREHISTORY-WORKER-BUILDING-010`: Workers cannot start Pasture, Farm, Plantation, Camp, Fishing Boats, Quarry, Winery, Cottage, Workshop, Mine, or Fortification while standing on a city tile.
 
 ## Irrigation Rules
 
@@ -148,5 +162,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-IRRIGATION-006`: New irrigation can also be adjacent to an existing irrigation tile, allowing irrigation chains away from the source.
 - `PREHISTORY-IRRIGATION-007`: A shallow water terrain type `0` source belongs to sea and cannot start irrigation if it has a cardinal neighboring water tile with depth greater than 1.
 - `PREHISTORY-IRRIGATION-008`: Irrigation can be built only on grass terrain type `2`.
-- `PREHISTORY-IRRIGATION-009`: For water-related terrain, the `A` terrain bit marks a water source and allows irrigation source detection.
+- `PREHISTORY-IRRIGATION-009`: The `A` terrain bit marks a local water source. On fields, hills, and mountains it represents land water; on water-related terrain it represents lake/source water and allows irrigation source detection.
 - `PREHISTORY-IRRIGATION-010`: Workers cannot build irrigation before `Irrigation` is discovered.
+- `PREHISTORY-IRRIGATION-011`: When a Worker completes irrigation next to a city, the city tile's existing irrigation starts giving its food bonus.
+- `PREHISTORY-IRRIGATION-012`: Fresh water means a neighboring water source tile that has no nearby cardinal deep-water tile.
+- `PREHISTORY-IRRIGATION-013`: Workers cannot build irrigation on city tiles. A newly built city may still create its own starting irrigation directly when fresh water is nearby.

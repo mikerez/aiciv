@@ -20,6 +20,8 @@ Each technology has a list of prerequisite technologies and a sprite asset in `i
 - `TECHNOLOGY-MENU-007`: When research progress discovers a technology, the technology menu opens so the player can see the new opened technology and select the next research.
 - `TECHNOLOGY-RESEARCH-001`: During turn processing, dedicated money is converted into science for the selected technology.
 - `TECHNOLOGY-RESEARCH-002`: When accumulated science reaches the selected technology cost, that technology becomes open.
+- `TECHNOLOGY-RESEARCH-003`: If any technology can be researched and no current research is selected, End Turn opens the technology menu and does not process the turn.
+- `TECHNOLOGY-RESEARCH-004`: New game state starts with 100% of city money income dedicated to science.
 
 ## Prehistory Technologies
 

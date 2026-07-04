@@ -57,12 +57,42 @@ const _resource_types = [
     // { id: 'uranium', name: 'Uranium', texture: 843, sprite: 'resource_uranium.png', gives: 'strategic late-game energy and weapon resource', terrains: [4, 5, 1], chance: 0.004 },
 ];
 
-const _pasture_resource_ids = {
-    cattle: true,
-    deer: true,
-    sheep: true,
-    horses: true,
-    ivory: true
+const _resource_improvement_requirements = {
+    bananas: 'plantation',
+    cattle: 'pasture',
+    copper: 'mine',
+    crabs: 'fishing_boats',
+    deer: 'camp',
+    fish: 'fishing_boats',
+    rice: 'farm',
+    sheep: 'pasture',
+    stone: 'quarry',
+    wheat: 'farm',
+    amber: 'camp',
+    citrus: 'plantation',
+    cotton: 'plantation',
+    dyes: 'plantation',
+    diamonds: 'mine',
+    furs: 'camp',
+    gypsum: 'quarry',
+    honey: 'camp',
+    incense: 'plantation',
+    ivory: 'camp',
+    marble: 'quarry',
+    olives: 'plantation',
+    pearls: 'fishing_boats',
+    salt: 'quarry',
+    silk: 'plantation',
+    silver: 'mine',
+    spices: 'plantation',
+    sugar: 'plantation',
+    tea: 'plantation',
+    turtles: 'fishing_boats',
+    whales: 'fishing_boats',
+    wine: 'winery',
+    horses: 'pasture',
+    iron: 'mine',
+    gold: 'mine'
 };
 
 _screen.loadTexture('settler.png', 256);
@@ -92,7 +122,7 @@ const _prehistory_unit_types = [
     new UnitType('explorer', 'Explorer', 1, 257, 0, 1, 2, 4, null, 15, null),
     new UnitType('warrior', 'Warrior', 2, 258, 2, 1, 1, 2, null, 20, null),
     new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
-    new UnitType('archor', 'Archor', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
+    new UnitType('archer', 'Archer', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
     new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper'),
     new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 2, 3, 'Horseback Riding', 50, 'Horses'),
     new UnitType('chariot', 'Chariot', 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses'),
@@ -106,7 +136,7 @@ const _prehistory_unit_types = [
 // game settings
 _start_game_settlers = 1;
 _start_game_explorers = 1;
-_start_game_workers = 1;
+_start_game_workers = 0;
 _start_game_point = new Coord(0,0);
 // game state
 _prehistory_command_mode = null;
@@ -180,7 +210,11 @@ const _game_prehistory = new class
                 _units[_units.length - 1].team = _units[_selection].team;
                 // PREHISTORY-BUILD-009, rules/prehostory.md: a built city starts with road and irrigation on its tile.
                 _map.addRoad(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
-                _map.addIrrigation(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
+                _map.addIrrigation(
+                    _units[_units.length - 1].coord.i,
+                    _units[_units.length - 1].coord.j,
+                    this.hasFreshWaterNear(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j)
+                );
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(_units[_units.length - 1]);
                 }
@@ -251,23 +285,15 @@ const _game_prehistory = new class
 
         // PREHISTORY-MENU-006, rules/prehostory.md: workers show terrain improvement commands.
         if (unit.unitTypeId == 'worker') {
-            if (this.canBuildWorkerTileBuilding(_selection, 'fortification')) {
-                show('fortification');
-            }
-            if (this.canBuildWorkerTileBuilding(_selection, 'pasture')) {
-                show('pasture');
-            }
-            if (this.canBuildWorkerTileBuilding(_selection, 'cottage')) {
-                show('cottage');
-            }
-            if (this.canBuildWorkerTileBuilding(_selection, 'workshop')) {
-                show('workshop');
-            }
-            if (this.canBuildWorkerTileBuilding(_selection, 'mine')) {
-                show('mine');
+            var buildings = this.workerTileBuildingMenuOptions(_selection);
+            for (var b=0; b < buildings.length; b++) {
+                show(buildings[b]);
             }
             if (this.canBuildRoad(_selection)) {
                 show('road');
+            }
+            if (this.canUseRoadTo(_selection)) {
+                show('road_to');
             }
             if (this.canBuildIrrigation(_selection)) {
                 show('irrigate');
@@ -356,7 +382,16 @@ const _game_prehistory = new class
         if (!this.canCityProduceUnit(_units[k], unitType)) {
             return;
         }
-        _units[k].production = new CityProductionState(unitTypeId);
+        var city = _units[k];
+        if (city.cityProperties == null) {
+            city.cityProperties = new CityProperties();
+        }
+        if (city.cityProperties.productionStored == undefined) {
+            city.cityProperties.productionStored = 0;
+        }
+        city.production = new CityProductionState(unitTypeId);
+        city.production.productionPoints = city.cityProperties.productionStored;
+        city.cityProperties.productionStored = 0;
     }
 
     productionTurnsLeft(city)
@@ -384,14 +419,16 @@ const _game_prehistory = new class
                 var economyText = '';
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
-                    economyText = ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    var storedProduction = unit.cityProperties && unit.cityProperties.productionStored ? unit.cityProperties.productionStored : 0;
+                    economyText = ' Pop:' + unit.economy.citizens.length + ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen + ' StoredP:' + storedProduction;
                 }
                 status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)' + economyText;
             }
             else if (unit.type == 3) {
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
-                    status.textContent = 'Producing: none F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    var storedProduction = unit.cityProperties && unit.cityProperties.productionStored ? unit.cityProperties.productionStored : 0;
+                    status.textContent = 'Producing: none Pop:' + unit.economy.citizens.length + ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen + ' StoredP:' + storedProduction;
                 }
                 else {
                     status.textContent = 'Producing: none';
@@ -481,7 +518,7 @@ const _game_prehistory = new class
         _units[k].gotoCoord = path[path.length - 1];
     }
 
-    autoRouteExplore(k)
+    nearestHiddenLandTarget(k)
     {
         for (var r=1; r < 20; r++) {
             for (var di=-r; di <= r; di++) {
@@ -497,12 +534,67 @@ const _game_prehistory = new class
                     if ((_map_terrain_bit[i][j]&0x4000) == 0) {
                         var path = this.buildPath(k, new Coord(i, j));
                         if (path.length) {
-                            this.assignPath(k, path);
-                            return;
+                            return { target: new Coord(i, j), path: path };
                         }
                     }
                 }
             }
+        }
+        return null;
+    }
+
+    nearestCityOrSettlerExploreTarget(k)
+    {
+        var best = null;
+        var bestDistance = Infinity;
+        var lists = [];
+        if (typeof _units_by_user != 'undefined') {
+            for (var userId in _units_by_user) {
+                lists.push(_units_by_user[userId]);
+            }
+        }
+        else {
+            lists.push(_units);
+        }
+        for (var listIndex=0; listIndex < lists.length; listIndex++) {
+            var list = lists[listIndex] || [];
+            for (var n=0; n < list.length; n++) {
+                var targetUnit = list[n];
+                if (targetUnit == undefined || (targetUnit.type != 3 && targetUnit.unitTypeId != 'settlers')) {
+                    continue;
+                }
+                if ((_map_terrain_bit[targetUnit.coord.i][targetUnit.coord.j]&0x4000) == 0) {
+                    continue;
+                }
+                var distance = Math.abs(targetUnit.coord.i - _units[k].coord.i)
+                    + Math.abs(targetUnit.coord.j - _units[k].coord.j);
+                if (distance <= 3) {
+                    continue;
+                }
+                if (distance >= bestDistance) {
+                    continue;
+                }
+                var path = this.buildPath(k, targetUnit.coord);
+                if (!path.length) {
+                    continue;
+                }
+                bestDistance = distance;
+                best = { target: new Coord(targetUnit.coord.i, targetUnit.coord.j), path: path };
+            }
+        }
+        return best;
+    }
+
+    autoRouteExplore(k)
+    {
+        // PREHISTORY-AUTO-001, rules/prehostory.md: Explore splits routing between nearby black area and nearest city/settler.
+        var preferHidden = Math.random() < 0.5;
+        var first = preferHidden ? this.nearestHiddenLandTarget(k) : this.nearestCityOrSettlerExploreTarget(k);
+        var second = preferHidden ? this.nearestCityOrSettlerExploreTarget(k) : this.nearestHiddenLandTarget(k);
+        var route = first || second;
+        if (route && route.path.length) {
+            this.assignPath(k, route.path);
+            return;
         }
         this.autoRouteAutomate(k);
     }
@@ -544,7 +636,7 @@ const _game_prehistory = new class
             if (!_units[k].can_move || _units[k].gotoPath.length || _units[k].gotoCoord != undefined) {
                 continue;
             }
-            // PREHISTORY-AUTO-001, rules/prehostory.md: explore routes toward unseen land.
+            // PREHISTORY-AUTO-001, rules/prehostory.md: explore alternates between nearby fog and nearest known city.
             if (_units[k].state == 'explore') {
                 this.autoRouteExplore(k);
             }
@@ -561,6 +653,13 @@ const _game_prehistory = new class
 
     applyTerrainModifierRules()
     {
+        for (var k=0; k < _units.length; k++) {
+            if (_units[k].state == 'road_to' && _units[k].unitTypeId == 'worker'
+                && (!(_units[k].gotoPath && _units[k].gotoPath.length) && _units[k].gotoCoord == undefined)) {
+                _units[k].state = 'ready';
+            }
+        }
+
         for (var k=0; k < _units.length; k++) {
             // PREHISTORY-ROAD-001, rules/prehostory.md: only workers in road state can build roads.
             if (_units[k].state != 'road' || _units[k].unitTypeId != 'worker') {
@@ -623,6 +722,7 @@ const _game_prehistory = new class
             if (_units[k].irrigation_turns_left == 0) {
                 // PREHISTORY-IRRIGATION-004, rules/prehostory.md: completed irrigation sets the irrigation modifier on the tile.
                 _map.addIrrigation(i, j);
+                this.enableNeighborCityIrrigationFood(i, j);
                 _units[k].state = 'ready';
                 _units[k].irrigation_turns_left = undefined;
                 _fulldraw = 1;
@@ -639,7 +739,7 @@ const _game_prehistory = new class
             var i = _units[k].coord.i;
             var j = _units[k].coord.j;
 
-            // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: worker building location is not limited by terrain rules.
+            // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: worker building can progress only while supported on the current tile.
             if (!this.canBuildWorkerTileBuilding(k, _units[k].state)) {
                 _units[k].state = 'ready';
                 _units[k].building_turns_left = undefined;
@@ -691,6 +791,8 @@ const _game_prehistory = new class
             }
 
             if (_units[k].chop_turns_left == 0) {
+                var wildity = (terrain>>4)&0x3;
+                this.addChopProductionToNearestCity(_units[k], wildity*5);
                 // PREHISTORY-CHOP-005 and PREHISTORY-CHOP-008, rules/prehostory.md: completed chopping converts forest to base terrain.
                 _map_terrain_tex[i][j] = this.choppedForestTerrain(terrain);
                 _map_terrain_bit[i][j] &= 0xFFF0;
@@ -699,6 +801,52 @@ const _game_prehistory = new class
                 _fulldraw = 1;
             }
         }
+    }
+
+    addChopProductionToNearestCity(worker, production)
+    {
+        if (!worker || production <= 0) {
+            return false;
+        }
+        var city = this.findFirstCityInRange(worker.coord, 4, worker.team);
+        if (!city) {
+            return false;
+        }
+        if (city.cityProperties == null) {
+            city.cityProperties = new CityProperties();
+        }
+        if (city.cityProperties.productionStored == undefined) {
+            city.cityProperties.productionStored = 0;
+        }
+        // PREHISTORY-CHOP-010 and MAIN-CITY-004, rules: chopping adds production to the nearest city account.
+        if (city.production != null) {
+            city.production.productionPoints += production;
+        }
+        else {
+            city.cityProperties.productionStored += production;
+        }
+        return true;
+    }
+
+    findFirstCityInRange(coord, radius, team)
+    {
+        for (var r=0; r <= radius; r++) {
+            for (var di=-r; di <= r; di++) {
+                for (var dj=-r; dj <= r; dj++) {
+                    if (Math.max(Math.abs(di), Math.abs(dj)) != r) {
+                        continue;
+                    }
+                    var i = coord.i + di;
+                    var j = coord.j + dj;
+                    for (var k=0; k < _units.length; k++) {
+                        if (_units[k].type == 3 && _units[k].team == team && _units[k].coord.i == i && _units[k].coord.j == j) {
+                            return _units[k];
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     isChoppableForestTerrain(terrain)
@@ -719,6 +867,20 @@ const _game_prehistory = new class
         return 2;
     }
 
+    isCityTile(i, j)
+    {
+        for (var k=0; k < _units.length; k++) {
+            if (_units[k] == undefined || _units[k].coord == undefined) {
+                continue;
+            }
+            if ((_units[k].type == 3 || _units[k].unitTypeId == 'city')
+                && _units[k].coord.i == i && _units[k].coord.j == j) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     canChopForest(k)
     {
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
@@ -730,6 +892,10 @@ const _game_prehistory = new class
         }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
+        // PREHISTORY-CHOP-012, rules/prehostory.md: Workers cannot chop on city tiles.
+        if (this.isCityTile(i, j)) {
+            return false;
+        }
         // PREHISTORY-CHOP-007, rules/prehostory.md: chop_forest state starts only on forest terrain.
         return this.isChoppableForestTerrain(_map_terrain_tex[i][j]);
     }
@@ -743,8 +909,30 @@ const _game_prehistory = new class
         if (!_game_state.isTechnologyOpen('Wheel')) {
             return false;
         }
-        var i = _units[k].coord.i;
-        var j = _units[k].coord.j;
+        return this.canBuildRoadAt(_units[k].coord.i, _units[k].coord.j);
+    }
+
+    canUseRoadTo(k)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return false;
+        }
+        // PREHISTORY-ROAD-007, rules/prehostory.md: Road-to uses the same technology requirement as road building.
+        return _game_state.isTechnologyOpen('Wheel');
+    }
+
+    canBuildRoadAt(i, j, allowExisting = false)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return false;
+        }
+        // PREHISTORY-ROAD-009, rules/prehostory.md: Workers cannot build roads on city tiles.
+        if (this.isCityTile(i, j)) {
+            return false;
+        }
+        if (!allowExisting && _map.hasRoad(i, j)) {
+            return false;
+        }
         var terrainType = _map_terrain_tex[i][j]&0x0F;
         // PREHISTORY-ROAD-002, rules/prehostory.md: roads are land terrain modifiers and cannot be built on water.
         if (terrainType == 0) {
@@ -757,12 +945,40 @@ const _game_prehistory = new class
         return true;
     }
 
+    afterUnitMoved(k, fromCoord, toCoord)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker' || _units[k].state != 'road_to') {
+            return;
+        }
+        // PREHISTORY-ROAD-008, rules/prehostory.md: Road-to lays road on each supported path tile while moving.
+        if (fromCoord && this.canBuildRoadAt(fromCoord.i, fromCoord.j)) {
+            _map.addRoad(fromCoord.i, fromCoord.j);
+        }
+        if (toCoord && this.canBuildRoadAt(toCoord.i, toCoord.j)) {
+            _map.addRoad(toCoord.i, toCoord.j);
+        }
+    }
+
+    afterUnitRouteUpdated(k)
+    {
+        if (k == -1 || _units[k] == undefined) {
+            return;
+        }
+        if (!(_units[k].gotoPath && _units[k].gotoPath.length) && _units[k].gotoCoord == undefined) {
+            if (_units[k].state == 'road_to') {
+                _units[k].state = 'ready';
+            }
+            else if (_units[k].state == 'explore') {
+                this.autoRouteExplore(k);
+            }
+        }
+    }
+
     hasTerrainWaterSourceFlag(i, j)
     {
         var terrain = _map_terrain_tex[i][j];
-        var terrainType = terrain&0x0F;
-        // PREHISTORY-IRRIGATION-009, rules/prehostory.md: A marks water-source terrain for water-related tiles.
-        return (terrain&0x80) != 0 && (terrainType == 0 || terrainType == 7);
+        // PREHISTORY-IRRIGATION-009, rules/prehostory.md: A marks local water-source terrain.
+        return (terrain&0x80) != 0;
     }
 
     isSeaConnectedWaterSource(i, j)
@@ -808,7 +1024,7 @@ const _game_prehistory = new class
                 }
                 var sourceTerrain = _map_terrain_tex[ni][nj];
                 var sourceType = sourceTerrain&0x0F;
-                // PREHISTORY-IRRIGATION-005 and PREHISTORY-IRRIGATION-009, rules/prehostory.md: mixed grass-water and A-marked water sources are already local sources.
+                // PREHISTORY-IRRIGATION-005 and PREHISTORY-IRRIGATION-009, rules/prehostory.md: mixed grass-water and A-marked land or water sources are already local sources.
                 if (sourceType == 7 || this.hasTerrainWaterSourceFlag(ni, nj)) {
                     return true;
                 }
@@ -817,6 +1033,27 @@ const _game_prehistory = new class
                 }
                 // PREHISTORY-IRRIGATION-006, rules/prehostory.md: irrigation can extend from neighboring irrigation.
                 if (_map.hasIrrigation(ni, nj)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    hasFreshWaterNear(i, j)
+    {
+        for (var di=-1; di <= 1; di++) {
+            for (var dj=-1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) {
+                    continue;
+                }
+                var ni = i + di;
+                var nj = j + dj;
+                if (ni < 0 || ni >= _map_size || nj < 0 || nj >= _map_size) {
+                    continue;
+                }
+                // PREHISTORY-IRRIGATION-012, rules/prehostory.md: fresh water is neighboring water without nearby deep water.
+                if (this.isIrrigationWaterSource(ni, nj) && !this.isSeaConnectedWaterSource(ni, nj)) {
                     return true;
                 }
             }
@@ -835,6 +1072,10 @@ const _game_prehistory = new class
         }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
+        // PREHISTORY-IRRIGATION-013, rules/prehostory.md: Workers cannot build irrigation on city tiles.
+        if (this.isCityTile(i, j)) {
+            return false;
+        }
         var terrainType = _map_terrain_tex[i][j]&0x0F;
         // PREHISTORY-IRRIGATION-002 and PREHISTORY-IRRIGATION-008, rules/prehostory.md: irrigation can be built only on grass terrain.
         if (terrainType != 2) {
@@ -846,12 +1087,67 @@ const _game_prehistory = new class
         return this.hasIrrigationSourceNear(i, j);
     }
 
+    enableNeighborCityIrrigationFood(i, j)
+    {
+        for (var k=0; k < _units.length; k++) {
+            if (_units[k].type != 3) {
+                continue;
+            }
+            var di = Math.abs(_units[k].coord.i - i);
+            var dj = Math.abs(_units[k].coord.j - j);
+            if (Math.max(di, dj) <= 1) {
+                // PREHISTORY-IRRIGATION-011, rules/prehostory.md: worker irrigation next to a city activates the city-tile irrigation food bonus.
+                _map.enableIrrigationCityFood(_units[k].coord.i, _units[k].coord.j);
+                if (typeof _city_economy !== 'undefined') {
+                    _city_economy.ensureCity(_units[k]);
+                }
+            }
+        }
+    }
+
     workerTileBuildingDefinitions = {
         pasture: {
             technology: 'Animal Husbandry',
             turns: 2,
-            requiresAnimalResource: true,
+            requiresResourceImprovement: true,
             apply: function(i, j) { return _map.addPasture(i, j); }
+        },
+        farm: {
+            technology: 'Irrigation',
+            turns: 2,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addFarm(i, j); }
+        },
+        plantation: {
+            technology: 'Pottery',
+            turns: 3,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addPlantation(i, j); }
+        },
+        camp: {
+            technology: 'Animal Husbandry',
+            turns: 2,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addCamp(i, j); }
+        },
+        fishing_boats: {
+            technology: 'Sailing',
+            turns: 2,
+            waterOnly: true,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addFishingBoats(i, j); }
+        },
+        quarry: {
+            technology: 'Masonry',
+            turns: 3,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addQuarry(i, j); }
+        },
+        winery: {
+            technology: 'Pottery',
+            turns: 3,
+            requiresResourceImprovement: true,
+            apply: function(i, j) { return _map.addWinery(i, j); }
         },
         fortification: {
             technology: 'Construction',
@@ -859,7 +1155,7 @@ const _game_prehistory = new class
             apply: function(i, j) { return _map.addFortification(i, j); }
         },
         cottage: {
-            technology: 'Pottery',
+            technology: 'Masonry',
             turns: 2,
             apply: function(i, j) { return _map.addCottage(i, j); }
         },
@@ -887,28 +1183,75 @@ const _game_prehistory = new class
         }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
-        if (building.terrainTypes && building.terrainTypes.indexOf(_map_terrain_tex[i][j]&0x0F) == -1) {
-            return false;
-        }
-        if (building.requiresAnimalResource && !this.hasOpenedPastureResource(i, j)) {
-            return false;
-        }
-        // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: these buildings are not limited by terrain type.
-        return i >= 0 && i < _map_size && j >= 0 && j < _map_size && !_map.hasTerrainModifier(i, j, buildingName);
-    }
-
-    hasOpenedPastureResource(i, j)
-    {
         if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
             return false;
         }
-        var resourceState = _map_resource[i][j];
-        if (!resourceState || resourceState.hidden || !resourceState.type || !_resource_types[resourceState.type]) {
+        // PREHISTORY-WORKER-BUILDING-010, rules/prehostory.md: Workers cannot build tile buildings on city tiles.
+        if (this.isCityTile(i, j)) {
             return false;
         }
+        var isWater = this.isWaterTerrain(i, j);
+        if (building.waterOnly && !isWater) {
+            return false;
+        }
+        if (!building.waterOnly && isWater) {
+            return false;
+        }
+        if (building.terrainTypes && building.terrainTypes.indexOf(_map_terrain_tex[i][j]&0x0F) == -1) {
+            return false;
+        }
+        if (building.requiresResourceImprovement && !this.hasOpenedResourceForImprovement(i, j, buildingName)) {
+            return false;
+        }
+        // PREHISTORY-WORKER-BUILDING-003, rules/prehostory.md: supported worker buildings cannot duplicate an existing modifier.
+        return !_map.hasTerrainModifier(i, j, buildingName);
+    }
+
+    workerTileBuildingMenuOptions(k)
+    {
+        if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
+            return [];
+        }
+        var i = _units[k].coord.i;
+        var j = _units[k].coord.j;
+        var resourceImprovement = this.openedResourceImprovementForTile(i, j);
+        if (resourceImprovement && this.canBuildWorkerTileBuilding(k, resourceImprovement)) {
+            // PREHISTORY-WORKER-BUILDING-007, rules/prehostory.md: accessible resource improvement hides generic worker buildings.
+            return [resourceImprovement];
+        }
+        var order = ['fortification', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry', 'winery', 'cottage', 'workshop', 'mine'];
+        var result = [];
+        for (var n=0; n < order.length; n++) {
+            if (this.canBuildWorkerTileBuilding(k, order[n])) {
+                result.push(order[n]);
+            }
+        }
+        return result;
+    }
+
+    openedResourceImprovementForTile(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
+            return null;
+        }
+        var resourceState = _map_resource[i][j];
+        if (!resourceState || !resourceState.type || !_resource_types[resourceState.type]) {
+            return null;
+        }
+        if (_map.isResourceVisible && !_map.isResourceVisible(i, j)) {
+            return null;
+        }
+        if (!_map.isResourceVisible && resourceState.hidden) {
+            return null;
+        }
         var resource = _resource_types[resourceState.type];
-        // PREHISTORY-WORKER-BUILDING-005, rules/prehostory.md: pasture requires an opened land animal resource on the worker tile.
-        return _pasture_resource_ids[resource.id] == true;
+        return _resource_improvement_requirements[resource.id] || null;
+    }
+
+    hasOpenedResourceForImprovement(i, j, buildingName)
+    {
+        // PREHISTORY-WORKER-BUILDING-005, rules/prehostory.md: resource improvements require the matching opened resource on the worker tile.
+        return this.openedResourceImprovementForTile(i, j) == buildingName;
     }
 
     centerViewOnStartingUnits()
@@ -967,6 +1310,26 @@ const _game_prehistory = new class
         return false;
     }
 
+    canEndTurnWithCurrentSelection()
+    {
+        if (typeof _user_types !== 'undefined' && _user_types[_current_user] == 'ai') {
+            return true;
+        }
+        if (_selection == -1 || _units[_selection] == undefined) {
+            return true;
+        }
+        var unit = _units[_selection];
+        if (!unit.can_move) {
+            return true;
+        }
+        // PREHISTORY-TURN-008, rules/prehostory.md: the selected idle movable unit must be given a task before End Turn can proceed.
+        if (!this.unitHasTask(unit)) {
+            this.applyMenuRules();
+            return false;
+        }
+        return true;
+    }
+
     collectUnitTaskStates()
     {
         var taskStates = [];
@@ -1000,6 +1363,17 @@ const _game_prehistory = new class
         for (var offset=0; offset < _units.length; offset++) {
             var k = (start + offset) % _units.length;
 
+            // PREHISTORY-TURN-007, rules/prehostory.md: cities without production are selected before movable unit prompts.
+            if (_units[k].type == 3 && _units[k].production == null) {
+                _selection = k;
+                this.centerViewOnUnit(k);
+                this.applyMenuRules();
+                return;
+            }
+        }
+        for (var offset=0; offset < _units.length; offset++) {
+            var k = (start + offset) % _units.length;
+
             // PREHISTORY-TURN-004, rules/prehostory.md: select and center the next movable unit without a task.
             if (_units[k].can_move && !this.unitHasTask(_units[k])) {
                 _selection = k;
@@ -1014,9 +1388,15 @@ const _game_prehistory = new class
 
     handleMapClick(coord)
     {
-        if (_prehistory_command_mode == 'goto' && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
+        if ((_prehistory_command_mode == 'goto' || _prehistory_command_mode == 'road_to') && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
             var path = this.buildPath(_selection, coord);
             this.assignPath(_selection, path);
+            if (_prehistory_command_mode == 'road_to' && _units[_selection].unitTypeId == 'worker') {
+                _units[_selection].state = 'road_to';
+                if (this.canBuildRoadAt(_units[_selection].coord.i, _units[_selection].coord.j)) {
+                    _map.addRoad(_units[_selection].coord.i, _units[_selection].coord.j);
+                }
+            }
             _prehistory_command_mode = null;
             _draw.clear();
             return true;
@@ -1026,7 +1406,7 @@ const _game_prehistory = new class
 
     previewMapCommand(coord)
     {
-        if (_prehistory_command_mode == 'goto' && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
+        if ((_prehistory_command_mode == 'goto' || _prehistory_command_mode == 'road_to') && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
             _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
             return true;
         }
@@ -1059,9 +1439,16 @@ const _game_prehistory = new class
         if (unit.state == 'fortification') return 'F';
         if (unit.state == 'waiting') return 'W';
         if (unit.state == 'road') return 'R';
+        if (unit.state == 'road_to') return 'J';
         if (unit.state == 'irrigate') return 'I';
         if (unit.state == 'chop_forest') return 'C';
         if (unit.state == 'pasture') return 'P';
+        if (unit.state == 'farm') return 'Y';
+        if (unit.state == 'plantation') return 'N';
+        if (unit.state == 'camp') return 'K';
+        if (unit.state == 'fishing_boats') return 'O';
+        if (unit.state == 'quarry') return 'Q';
+        if (unit.state == 'winery') return 'V';
         if (unit.state == 'cottage') return 'H';
         if (unit.state == 'workshop') return 'S';
         if (unit.state == 'mine') return 'M';
@@ -1073,7 +1460,12 @@ const _game_prehistory = new class
 
     makeTurn()
     {
-        _game.applyTurnProcessingRules(this);
+        return _game.applyTurnProcessingRules(this);
+    }
+
+    async makeTurnAnimated()
+    {
+        return await _game.applyTurnProcessingRulesAnimated(this);
     }
 
     isValidStartingLand(coord)
@@ -1103,26 +1495,41 @@ const _game_prehistory = new class
 
     startGame()
     {
-        _start_game_point = _game.random_point(0, new Coord(8, 8), new Coord(_map_size - 9, _map_size - 9));
-        this.applyUnitStateRules();
-
-        for(var k=0; k < _start_game_settlers; k++) {
-            var point = this.randomStartingUnitPoint();
-            _game.createUnit(this.unitTypesById['settlers'], point, 0, 0);
-        }
-        for(var k=0; k < _start_game_explorers; k++) {
-            var point = this.randomStartingUnitPoint();
-            _game.createUnit(this.unitTypesById['explorer'], point, 0, 0);
-        }
-        for(var k=0; k < _start_game_workers; k++) {
-            var point = this.randomStartingUnitPoint();
-            _game.createUnit(this.unitTypesById['worker'], point, 0, 0);
+        if (typeof _multiplayer !== 'undefined') {
+            _multiplayer.initUsers([0, 1]);
         }
 
+        var users = typeof _user_ids !== 'undefined' ? _user_ids : [0];
+        for (var u=0; u < users.length; u++) {
+            var userId = users[u];
+            if (typeof _multiplayer !== 'undefined') {
+                _multiplayer.setCurrentUser(userId, false);
+            }
+            _start_game_point = _game.random_point(0, new Coord(8, 8), new Coord(_map_size - 9, _map_size - 9));
+            this.applyUnitStateRules();
+
+            for(var k=0; k < _start_game_settlers; k++) {
+                var point = this.randomStartingUnitPoint();
+                _game.createUnit(this.unitTypesById['settlers'], point, 0, userId);
+            }
+            for(var k=0; k < _start_game_explorers; k++) {
+                var point = this.randomStartingUnitPoint();
+                _game.createUnit(this.unitTypesById['explorer'], point, 0, userId);
+            }
+            for(var k=0; k < _start_game_workers; k++) {
+                var point = this.randomStartingUnitPoint();
+                _game.createUnit(this.unitTypesById['worker'], point, 0, userId);
+            }
+
+            this.applyUnitStateRules();
+            _game.makeTurn(false);
+        }
+
+        if (typeof _multiplayer !== 'undefined') {
+            _multiplayer.setCurrentUser(users[0], false);
+            _multiplayer.updateTurnLabel();
+        }
         this.centerViewOnStartingUnits();
-
-        this.applyUnitStateRules();
-        _game.makeTurn(false);
         this.applyMenuRules();
     }
 
@@ -1132,13 +1539,27 @@ const _game_prehistory = new class
             _prehistory_command_mode = 'goto';
             this.setUnitState(_selection, 'ready');
             this.applyMenuRules();
+            if (typeof _last_hover_coord !== 'undefined' && _last_hover_coord) {
+                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, _last_hover_coord.i, _last_hover_coord.j, _selection);
+            }
+            return;
+        }
+        if (command == 'road_to' && this.canUseRoadTo(_selection)) {
+            _prehistory_command_mode = 'road_to';
+            this.setUnitState(_selection, 'road_to');
+            this.applyMenuRules();
+            if (typeof _last_hover_coord !== 'undefined' && _last_hover_coord) {
+                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, _last_hover_coord.i, _last_hover_coord.j, _selection);
+            }
             return;
         }
         if (command == 'fortificate' && _selection != -1 && _units[_selection].can_move) {
             this.setUnitState(_selection, 'fortified');
             _units[_selection].move_penalty = Math.max(_units[_selection].move_penalty, 1);
         }
-        if ((command == 'fortification' || command == 'pasture' || command == 'cottage' || command == 'workshop' || command == 'mine')
+        if ((command == 'fortification' || command == 'pasture' || command == 'farm' || command == 'plantation'
+            || command == 'camp' || command == 'fishing_boats' || command == 'quarry' || command == 'winery'
+            || command == 'cottage' || command == 'workshop' || command == 'mine')
             && this.canBuildWorkerTileBuilding(_selection, command)) {
             this.setUnitState(_selection, command);
         }
@@ -1157,6 +1578,9 @@ const _game_prehistory = new class
         if ((command == 'explore' || command == 'patrol' || command == 'automate') && _selection != -1
             && _units[_selection].can_move) {
             this.setUnitState(_selection, command);
+            if (command == 'explore') {
+                this.autoRouteExplore(_selection);
+            }
         }
         this.applyBuildingStateRules(command);
         // PREHISTORY-MENU-005, rules/prehostory.md: menu visibility follows command state changes.

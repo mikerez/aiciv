@@ -2,6 +2,10 @@
 <html>
 <head>
     <title>WebGL 2D Sprite Example</title>
+    <link rel="preload" href="ai_player/strategy.db.gz?v=20260630c" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/tactics.db.gz?v=20260625k" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/action.db.gz?v=20260704d" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/economics.db.gz?v=20260704a" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -35,6 +39,11 @@
             width: 420px !important;
             font-size: 28px !important;
         }
+        body.mobile-ui #console_log,
+        body.mobile-ui #console_status,
+        body.mobile-ui #console_menu button {
+            font-size: 19px !important;
+        }
     </style>
 </head>
 <body>
@@ -60,7 +69,7 @@
         const _map_view = [_map_size/2*_cell_width,-_map_size/2*_cell_height,
                            _map_size/2*3*_cell_width,_map_size/2*_cell_height];
         const _map_terrain_tex = new Array(_map_size);
-        const _map_terrain_bit = new Array(_map_size);
+        var _map_terrain_bit = new Array(_map_size);
         const _map_resource = new Array(_map_size);
         const _map_terrain_mod = new Array(_map_size);
         // not zoomed coordinates from start of the map
@@ -69,18 +78,30 @@
         function ijtox(i,j) { return i*_cell_height+j*_cell_width; }
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
-    <script src="menu_unit.js?v=20260525e"></script>
-    <script src="draw.js?v=20260522f"></script>
+    <script src="menu_unit.js?v=20260526a"></script>
+    <script src="draw.js?v=20260625b"></script>
     <script src="control.js?v=20260525b"></script>
-    <script src="game.js?v=20260525h"></script>
-    <script src="city.js?v=20260525h"></script>
-    <script src="menu_technology.js?v=20260525b"></script>
+    <script src="ai.js?v=20260704d"></script>
+    <script>
+        if (typeof _ai_player !== 'undefined') {
+            _ai_player.ensureDefaultModelsLoaded(false).catch(function(error) {
+                if (typeof console !== 'undefined' && console.error) {
+                    console.error('AI background model load failed', error);
+                }
+            });
+        }
+    </script>
+    <script src="game.js?v=20260625c"></script>
+    <script src="multiplayer.js?v=20260625a"></script>
+    <script src="city.js?v=20260625e"></script>
+    <script src="menu_technology.js?v=20260625a"></script>
     <script src="menu_politics.js?v=20260522f"></script>
     <script src="menu_finance.js?v=20260522f"></script>
     <script src="menu_trade.js?v=20260522f"></script>
-    <script src="menu_main.js?v=20260525c"></script>
-    <script src="map.js?v=20260525b"></script>
-    <script src="screen.js?v=20260525d"></script>
+    <script src="menu_console.js?v=20260625b"></script>
+    <script src="menu_main.js?v=20260625a"></script>
+    <script src="map.js?v=20260526b"></script>
+    <script src="screen.js?v=20260625a"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -164,18 +185,26 @@
         _screen.loadTexture('cottage.png', 854);
         _screen.loadTexture('workshop.png', 855);
         _screen.loadTexture('mine.png', 856);
+        _screen.loadTexture('farm.png', 857);
+        _screen.loadTexture('plantation.png', 858);
+        _screen.loadTexture('camp.png', 859);
         _screen.loadTexture('food.png', 860);
         _screen.loadTexture('food5.png', 861);
         _screen.loadTexture('production.png', 862);
         _screen.loadTexture('production5.png', 863);
         _screen.loadTexture('money.png', 864);
         _screen.loadTexture('money5.png', 865);
+        _screen.loadTexture('fishing_boats.png', 866);
+        _screen.loadTexture('quarry.png', 867);
+        _screen.loadTexture('winery.png', 868);
+        _screen.loadTexture('hamlet.png', 869);
+        _screen.loadTexture('village.png', 870);
         if (typeof _city_economy !== 'undefined') {
             _city_economy.init();
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260525l"></script>
+    <script src="game_prehistory.js?v=20260630a"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);
@@ -183,6 +212,9 @@
 
         _map.init();
         _map.gen();
+        if (typeof _multiplayer !== 'undefined') {
+            _multiplayer.initMapVisibility();
+        }
 
         var _shift_pressed = 0;
         var _ctrl_pressed = 0;
@@ -190,6 +222,8 @@
         var _dragging_unit_path = 0;
         var _panning_map = 0;
         var _last_pointer_point = null;
+        var _last_hover_coord = null;
+        var _turn_in_progress = 0;
         var _step = 0;
         var _in_drawing = 0;
 
@@ -204,17 +238,44 @@
         if (_is_mobile_browser) {
             document.body.classList.add('mobile-ui');
         }
+        if (typeof _multiplayer !== 'undefined') {
+            _multiplayer.prepareInitialAiTurn();
+        }
 
         function isGameInputTarget(target)
         {
             return target == _canvas || target == document.getElementById('canvas2D') || target == document.body || target == window;
         }
 
-        function endTurn()
+        async function endTurn()
         {
-            _current_game.makeTurn();
-            _fulldraw = 1;
-            drawScene(0);
+            if (_turn_in_progress) {
+                return;
+            }
+            _turn_in_progress = 1;
+            var endTurnButton = document.getElementById('endTurnButton');
+            if (endTurnButton) {
+                endTurnButton.disabled = true;
+            }
+            try {
+                var processed = _current_game.makeTurnAnimated
+                    ? await _current_game.makeTurnAnimated()
+                    : _current_game.makeTurn();
+                if (processed !== false && typeof _multiplayer !== 'undefined') {
+                    if (typeof _game !== 'undefined' && _game.sleep) {
+                        await _game.sleep(220);
+                    }
+                    await _multiplayer.endCurrentUserTurn();
+                }
+                _fulldraw = 1;
+                drawScene(0);
+            }
+            finally {
+                _turn_in_progress = 0;
+                if (endTurnButton) {
+                    endTurnButton.disabled = false;
+                }
+            }
         }
 
         document.getElementById('endTurnButton').onclick = function(event) {
@@ -242,6 +303,7 @@
             const input = primaryInput(event);
             const point = eventToCanvas(input);
             const coord = eventToMapCoord(input);
+            _last_hover_coord = coord;
             if (event.button == 2 && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
@@ -284,16 +346,18 @@
             if (!_mousedown && !isGameInputTarget(event.target)) {
                 return;
             }
+            const input = primaryInput(event);
+            const point = eventToCanvas(input);
+            const coord = eventToMapCoord(input);
+            _last_hover_coord = coord;
+            if (_current_game.previewMapCommand(coord)) {
+                event.preventDefault();
+                return;
+            }
             if (!_mousedown && !(event.touches && event.touches.length)) {
                 return;
             }
             event.preventDefault();
-            const input = primaryInput(event);
-            const point = eventToCanvas(input);
-            const coord = eventToMapCoord(input);
-            if (_current_game.previewMapCommand(coord)) {
-                return;
-            }
             if (_dragging_unit_path && _selection != -1 && _units[_selection].can_move) {
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
@@ -348,7 +412,15 @@
                 return;
             }
             if (event.code === 'Enter') {
+                event.preventDefault();
                 endTurn();
+                return;
+            }
+            if (event.code === 'KeyG') {
+                _current_game.doCommand('goto');
+                _fulldraw = 1;
+                drawScene(0);
+                return;
             }
             if (event.code === 'KeyB') {
                 _current_game.doCommand('build_city');

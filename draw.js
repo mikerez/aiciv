@@ -11,7 +11,45 @@ const _draw = new class
 //ctx.fillText("Hello, WebGL!", 10, 50);  // Draws the text on the canvas
 //        console.log("::: " + x + "," + y + " => " + " " + xy1toi(x,y) + ":" + xy1toj(x,y))
         ctx.clearRect(0, 0, canvas2D.width, canvas2D.height);
+        this.drawTechnologyStatus(ctx);
         return ctx;
+    }
+
+    technologyStatusText()
+    {
+        if (typeof _game_state === 'undefined' || _game_state == null) {
+            return '';
+        }
+        if (_game_state.researchStatusText) {
+            return _game_state.researchStatusText();
+        }
+        return '';
+    }
+
+    drawTechnologyStatus(ctx)
+    {
+        if (!ctx) {
+            return;
+        }
+        const text = this.technologyStatusText();
+        if (!text) {
+            return;
+        }
+        const mobile = document.body && document.body.classList && document.body.classList.contains('mobile-ui');
+        const fontSize = mobile ? 19 : 11;
+        const x = mobile ? 14 : 10;
+        const y = mobile ? 34 : 24;
+        ctx.save();
+        ctx.font = 'bold ' + fontSize + 'px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        const height = fontSize + 14;
+        ctx.clearRect(0, 0, ctx.canvas.width, height + 8);
+        ctx.fillStyle = 'rgba(0,0,0,0.92)';
+        ctx.fillText(text, x + 2, y + 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.96)';
+        ctx.fillText(text, x, y);
+        ctx.restore();
     }
 
     drawArrow(ctx, fromX, fromY, toX, toY)

@@ -412,6 +412,9 @@ function drawScene(loop)
         }
     }
     var ctx2D = document.getElementById("canvas2D").getContext("2d");
+    if (typeof _draw !== 'undefined' && _draw.drawTechnologyStatus) {
+        _draw.drawTechnologyStatus(ctx2D);
+    }
     if (typeof _current_game !== 'undefined' && _current_game.drawUnitStateLetters) {
         _current_game.drawUnitStateLetters(ctx2D);
     }

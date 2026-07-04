@@ -17,11 +17,19 @@ const _map = new class
                 _map_terrain_mod[i][j] = {
                     road: false,
                     irrigation: false,
+                    irrigationCityFood: false,
                     pasture: false,
                     fortification: false,
                     cottage: false,
+                    cottageAge: 0,
                     workshop: false,
-                    mine: false
+                    mine: false,
+                    farm: false,
+                    plantation: false,
+                    camp: false,
+                    fishing_boats: false,
+                    quarry: false,
+                    winery: false
                 };
             }
         }
@@ -156,13 +164,32 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 853 });
                 }
                 if (_map_terrain_mod[i][j].cottage) {
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: 854 });
+                    var cottageAge = _map_terrain_mod[i][j].cottageAge || 0;
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 20 ? 870 : (cottageAge >= 10 ? 869 : 854) });
                 }
                 if (_map_terrain_mod[i][j].workshop) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 855 });
                 }
                 if (_map_terrain_mod[i][j].mine) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 856 });
+                }
+                if (_map_terrain_mod[i][j].farm) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 857 });
+                }
+                if (_map_terrain_mod[i][j].plantation) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 858 });
+                }
+                if (_map_terrain_mod[i][j].camp) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 859 });
+                }
+                if (_map_terrain_mod[i][j].fishing_boats) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 866 });
+                }
+                if (_map_terrain_mod[i][j].quarry) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 867 });
+                }
+                if (_map_terrain_mod[i][j].winery) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 868 });
                 }
             }
         }
@@ -201,16 +228,29 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         return i >= 0 && i < _map_size && j >= 0 && j < _map_size && _map_terrain_mod[i][j].road;
     }
 
-    addIrrigation(i, j)
+    addIrrigation(i, j, enablesFood = true)
     {
         if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || (_map_terrain_tex[i][j]&0x0F) == 0) {
             return false;
         }
         if (_map_terrain_mod[i][j].irrigation) {
+            if (enablesFood) {
+                _map_terrain_mod[i][j].irrigationCityFood = true;
+            }
             return false;
         }
         _map_terrain_mod[i][j].irrigation = true;
+        _map_terrain_mod[i][j].irrigationCityFood = enablesFood;
         this.prepareTerrainModifierSprites();
+        return true;
+    }
+
+    enableIrrigationCityFood(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || !_map_terrain_mod[i][j].irrigation) {
+            return false;
+        }
+        _map_terrain_mod[i][j].irrigationCityFood = true;
         return true;
     }
 
@@ -231,7 +271,12 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
 
     addCottage(i, j)
     {
-        return this.addTerrainModifier(i, j, 'cottage');
+        if (!this.addTerrainModifier(i, j, 'cottage')) {
+            return false;
+        }
+        _map_terrain_mod[i][j].cottageAge = -1;
+        this.prepareTerrainModifierSprites();
+        return true;
     }
 
     addWorkshop(i, j)
@@ -242,6 +287,59 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
     addMine(i, j)
     {
         return this.addTerrainModifier(i, j, 'mine');
+    }
+
+    addFarm(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'farm');
+    }
+
+    addPlantation(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'plantation');
+    }
+
+    addCamp(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'camp');
+    }
+
+    addFishingBoats(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'fishing_boats');
+    }
+
+    addQuarry(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'quarry');
+    }
+
+    addWinery(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'winery');
+    }
+
+    processTerrainModifierTurns()
+    {
+        var changed = false;
+        for (var i=0; i < _map_size; i++) {
+            for (var j=0; j < _map_size; j++) {
+                if (_map_terrain_mod[i][j].cottage) {
+                    var previousAge = _map_terrain_mod[i][j].cottageAge || 0;
+                    _map_terrain_mod[i][j].cottageAge = previousAge + 1;
+                    if (previousAge < 10 && _map_terrain_mod[i][j].cottageAge >= 10) {
+                        changed = true;
+                    }
+                    if (previousAge < 20 && _map_terrain_mod[i][j].cottageAge >= 20) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if (changed) {
+            this.prepareTerrainModifierSprites();
+            _fulldraw = 1;
+        }
     }
 
     genResources()
@@ -274,11 +372,32 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
             for (var j=0; j < _map_size; j++) {
                 var resourceState = _map_resource[i][j];
                 var resourceId = resourceState ? resourceState.type : 0;
-                if (resourceId && !resourceState.hidden && _resource_types[resourceId] != undefined) {
+                if (resourceId && this.isResourceVisible(i, j) && _resource_types[resourceId] != undefined) {
                     this.resourceSprites.push({ i: i, j: j, texture: _resource_types[resourceId].texture });
                 }
             }
         }
+    }
+
+    isResourceVisible(i, j)
+    {
+        if (typeof _multiplayer !== 'undefined' && _multiplayer.isResourceVisible) {
+            return _multiplayer.isResourceVisible(i, j);
+        }
+        var resourceState = _map_resource[i] ? _map_resource[i][j] : null;
+        return !!(resourceState && !resourceState.hidden);
+    }
+
+    setResourceVisible(i, j)
+    {
+        if (typeof _multiplayer !== 'undefined' && _multiplayer.setResourceVisible) {
+            return _multiplayer.setResourceVisible(i, j);
+        }
+        if (_map_resource[i] && _map_resource[i][j]) {
+            _map_resource[i][j].hidden = false;
+            return true;
+        }
+        return false;
     }
 
     revealResourcesForUnit(unit)
@@ -298,12 +417,12 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
             return false;
         }
         var resourceState = _map_resource[i][j];
-        if (!resourceState || !resourceState.type || !resourceState.hidden) {
+        if (!resourceState || !resourceState.type || this.isResourceVisible(i, j)) {
             return false;
         }
         var isWaterTile = (_map_terrain_tex[i][j]&0x0F) == 0;
         if ((isWaterTile && canRevealWater) || (!isWaterTile && canRevealLand)) {
-            resourceState.hidden = false;
+            this.setResourceVisible(i, j);
             this.prepareResourceSprites();
             return true;
         }

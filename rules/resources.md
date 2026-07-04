@@ -85,3 +85,46 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-VIS-002`: Land resources are revealed only when an Explorer stands on the resource tile.
 - `RESOURCE-VIS-003`: Water resources are revealed only when a ship stands on the resource tile.
 - `RESOURCE-VIS-004`: Hidden resources are not included in the prepared resource sprite list and are not drawn.
+
+## Improvements
+
+- `RESOURCE-IMPROVEMENT-001`: A resource tile is enhanced by the terrain modifier listed for that resource after the resource has been opened.
+- `RESOURCE-IMPROVEMENT-002`: Farm requires `Irrigation`; Pasture and Camp require `Animal Husbandry`; Fishing Boats requires `Sailing`; Plantation and Winery require `Pottery`; Quarry requires `Masonry`; Mine requires `Mining`.
+
+| Resource | Improvement |
+| --- | --- |
+| Bananas | Plantation |
+| Cattle | Pasture |
+| Copper | Mine |
+| Crabs | Fishing Boats |
+| Deer | Camp |
+| Fish | Fishing Boats |
+| Rice | Farm |
+| Sheep | Pasture |
+| Stone | Quarry |
+| Wheat | Farm |
+| Amber | Camp |
+| Citrus | Plantation |
+| Cotton | Plantation |
+| Dyes | Plantation |
+| Diamonds | Mine |
+| Furs | Camp |
+| Gypsum | Quarry |
+| Honey | Camp |
+| Incense | Plantation |
+| Ivory | Camp |
+| Marble | Quarry |
+| Olives | Plantation |
+| Pearls | Fishing Boats |
+| Salt | Quarry |
+| Silk | Plantation |
+| Silver | Mine |
+| Spices | Plantation |
+| Sugar | Plantation |
+| Tea | Plantation |
+| Turtles | Fishing Boats |
+| Whales | Fishing Boats |
+| Wine | Winery |
+| Horses | Pasture |
+| Iron | Mine |
+| Gold | Mine |

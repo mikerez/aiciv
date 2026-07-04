@@ -202,14 +202,7 @@ function updateTechnologyMenu()
 
   var status = document.getElementById('technology_research_status');
   if (status) {
-    if (_game_state.currentResearch) {
-      var current = _game_state.currentResearch;
-      status.textContent = current + ' ' + _game_state.technologyProgressValue(current) + '/' + _game_state.technologyCost(current)
-        + ' +' + _game_state.lastScienceIncome + '/turn';
-    }
-    else {
-      status.textContent = 'Choose technology. Science total: ' + _game_state.science;
-    }
+    status.textContent = _game_state.researchStatusText ? _game_state.researchStatusText() : 'Research: unavailable';
   }
 
   _technology_tree.forEach(function(technology) {

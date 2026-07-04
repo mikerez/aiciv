@@ -18,6 +18,11 @@ const _main_menu_buttons = [
     id: 'trade',
     title: 'Trade',
     icon: '<path d="M4 7h10l-2-2M14 7l-2 2M16 13H6l2 2M6 13l2-2"/>'
+  },
+  {
+    id: 'console',
+    title: 'AI Console',
+    icon: '<path d="M4 5l4 5-4 5M10 15h6"/>'
   }
 ];
 
