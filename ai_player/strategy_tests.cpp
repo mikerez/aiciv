@@ -1,6 +1,7 @@
 #include "strategy_tests.h"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -30,6 +31,39 @@ struct StrategyTechnologyScenario {
     float cityAnchor = 0.0f;
     float settlerAnchor = 1.0f;
     std::string expectedTechnology;
+    struct BirdsviewCell {
+        int x = 0;
+        int y = 0;
+        float civ = -1.0f;
+        float military = 0.0f;
+        float height = 0.0f;
+        float resource = 0.0f;
+    };
+    std::vector<BirdsviewCell> birdsviewCells;
+};
+
+struct StrategyBudgetScenario {
+    std::string name;
+    float funds = 0.0f;
+    float accountDelta = 0.0f;
+    float upkeep = 0.0f;
+    float expectedScienceRate = 1.0f;
+    float tolerance = 0.16f;
+};
+
+struct StrategyWorkerScenario {
+    std::string name;
+    float targetX = 0.0f;
+    float targetY = 0.0f;
+    float cityCount = 0.0f;
+    float workerCount = 0.0f;
+    float idleWorkers = 0.0f;
+    float smallestPopulation = 0.0f;
+    float workersAtSmallest = 0.0f;
+    float expectedX = 0.0f;
+    float expectedY = 0.0f;
+    float expectedPriority = 0.8f;
+    float tolerance = 0.18f;
 };
 
 std::string trim(const std::string& text)
@@ -83,6 +117,22 @@ std::vector<std::string> technologyLabels()
     return { "Mining", "Animal_Husbandry", "Masonry", "Irrigation" };
 }
 
+int birdsviewSlot(int x, int y)
+{
+    x = std::max(0, std::min(AI_PLAYER_BIRDSVIEW_SIZE - 1, x));
+    y = std::max(0, std::min(AI_PLAYER_BIRDSVIEW_SIZE - 1, y));
+    return AI_PLAYER_BIRDSVIEW_BASE + y * AI_PLAYER_BIRDSVIEW_SIZE + x;
+}
+
+float compactBirdsviewValue(float civ, float military, float height, float resource)
+{
+    const float controlSignal = civ >= 0.0f ? (civ + 1.0f) / 16.0f : 0.0f;
+    const float forceSignal = std::max(0.0f, std::min(1.0f, military / 30.0f));
+    const float resourceSignal = std::max(0.0f, std::min(1.0f, resource / 48.0f));
+    return std::max(-1.0f, std::min(1.0f, height * 0.60f + controlSignal * 0.18f
+        + forceSignal * 0.17f + resourceSignal * 0.05f));
+}
+
 InputSignal buildStrategyTechnologyInput(const StrategyTechnologyScenario& scenario)
 {
     InputSignal input{};
@@ -106,6 +156,38 @@ InputSignal buildStrategyTechnologyInput(const StrategyTechnologyScenario& scena
     input[AI_PLAYER_SITUATION_BASE + 38] = scenario.mineralResources;
     input[AI_PLAYER_SITUATION_BASE + 39] = scenario.cityAnchor;
     input[AI_PLAYER_SITUATION_BASE + 40] = scenario.settlerAnchor;
+    for (const StrategyTechnologyScenario::BirdsviewCell& cell : scenario.birdsviewCells) {
+        input[birdsviewSlot(cell.x, cell.y)] = compactBirdsviewValue(cell.civ, cell.military,
+                                                                     cell.height, cell.resource);
+    }
+    return input;
+}
+
+InputSignal buildStrategyBudgetInput(const StrategyBudgetScenario& scenario)
+{
+    InputSignal input{};
+    input.fill(0.0f);
+    const float clampedFunds = std::max(0.0f, std::min(50.0f, scenario.funds));
+    input[AI_PLAYER_SITUATION_BASE + 6] = std::max(-1.0f, std::min(1.0f, scenario.funds / 200.0f));
+    input[AI_PLAYER_SITUATION_BASE + 41] = clampedFunds / 50.0f;
+    input[AI_PLAYER_SITUATION_BASE + 42] = scenario.accountDelta;
+    input[AI_PLAYER_SITUATION_BASE + 43] = scenario.upkeep;
+    return input;
+}
+
+InputSignal buildStrategyWorkerInput(const StrategyWorkerScenario& scenario)
+{
+    InputSignal input{};
+    input.fill(0.0f);
+    input[14] = scenario.targetX;
+    input[15] = scenario.targetY;
+    input[16] = scenario.smallestPopulation;
+    input[17] = scenario.idleWorkers;
+    input[18] = scenario.workersAtSmallest;
+    input[19] = 1.0f;
+    input[AI_PLAYER_SITUATION_BASE + 1] = scenario.cityCount;
+    input[AI_PLAYER_SITUATION_BASE + 15] = scenario.workerCount;
+    input[AI_PLAYER_SITUATION_BASE + 21] = scenario.workerCount;
     return input;
 }
 
@@ -196,6 +278,17 @@ std::vector<StrategyTechnologyScenario> loadStrategyTechnologyTestFile(const std
             current.cityAnchor = optionFloat(options, "city", current.cityAnchor);
             current.settlerAnchor = optionFloat(options, "settler", current.settlerAnchor);
         }
+        else if (words[0] == "birdsview") {
+            const auto options = parseOptions(words, 1);
+            StrategyTechnologyScenario::BirdsviewCell cell;
+            cell.x = static_cast<int>(optionFloat(options, "x", 0.0f));
+            cell.y = static_cast<int>(optionFloat(options, "y", 0.0f));
+            cell.civ = optionFloat(options, "civ", -1.0f);
+            cell.military = optionFloat(options, "military", 0.0f);
+            cell.height = optionFloat(options, "height", 0.0f);
+            cell.resource = optionFloat(options, "resource", 0.0f);
+            current.birdsviewCells.push_back(cell);
+        }
         else if (words[0] == "expect") {
             const auto options = parseOptions(words, 1);
             current.expectedTechnology = optionText(options, "technology", current.expectedTechnology);
@@ -220,6 +313,143 @@ std::vector<StrategyTechnologyScenario> loadStrategyTechnologyTestFile(const std
     return scenarios;
 }
 
+std::vector<StrategyBudgetScenario> loadStrategyBudgetTestFile(const std::string& path)
+{
+    std::ifstream in(path);
+    if (!in) {
+        throw std::runtime_error("could not open strategy budget test file: " + path);
+    }
+
+    std::vector<StrategyBudgetScenario> scenarios;
+    StrategyBudgetScenario current;
+    bool inScenario = false;
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(in, line)) {
+        ++lineNumber;
+        line = trim(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        const std::vector<std::string> words = splitWords(line);
+        if (words.empty()) {
+            continue;
+        }
+        if (words[0] == "scenario") {
+            if (inScenario) {
+                throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": nested scenario");
+            }
+            current = StrategyBudgetScenario{};
+            current.name = words.size() > 1 ? words[1] : "unnamed";
+            inScenario = true;
+            continue;
+        }
+        if (!inScenario) {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": directive outside scenario");
+        }
+        if (words[0] == "budget") {
+            const auto options = parseOptions(words, 1);
+            current.funds = optionFloat(options, "funds", current.funds);
+            current.accountDelta = optionFloat(options, "delta", current.accountDelta);
+            current.upkeep = optionFloat(options, "upkeep", current.upkeep);
+        }
+        else if (words[0] == "expect") {
+            const auto options = parseOptions(words, 1);
+            current.expectedScienceRate = optionFloat(options, "science_rate", current.expectedScienceRate);
+            current.tolerance = optionFloat(options, "tolerance", current.tolerance);
+        }
+        else if (words[0] == "end") {
+            scenarios.push_back(current);
+            inScenario = false;
+        }
+        else {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": unknown directive " + words[0]);
+        }
+    }
+    if (inScenario) {
+        throw std::runtime_error(path + ": unterminated scenario");
+    }
+    return scenarios;
+}
+
+std::vector<StrategyWorkerScenario> loadStrategyWorkerTestFile(const std::string& path)
+{
+    std::ifstream in(path);
+    if (!in) {
+        throw std::runtime_error("could not open strategy worker test file: " + path);
+    }
+
+    std::vector<StrategyWorkerScenario> scenarios;
+    StrategyWorkerScenario current;
+    bool inScenario = false;
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(in, line)) {
+        ++lineNumber;
+        line = trim(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        const std::vector<std::string> words = splitWords(line);
+        if (words.empty()) {
+            continue;
+        }
+        if (words[0] == "scenario") {
+            if (inScenario) {
+                throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": nested scenario");
+            }
+            current = StrategyWorkerScenario{};
+            current.name = words.size() > 1 ? words[1] : "unnamed";
+            inScenario = true;
+            continue;
+        }
+        if (!inScenario) {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": directive outside scenario");
+        }
+        if (words[0] == "smallest_city") {
+            const auto options = parseOptions(words, 1);
+            current.targetX = optionFloat(options, "x", current.targetX);
+            current.targetY = optionFloat(options, "y", current.targetY);
+            current.smallestPopulation = optionFloat(options, "population", current.smallestPopulation);
+            current.workersAtSmallest = optionFloat(options, "workers", current.workersAtSmallest);
+        }
+        else if (words[0] == "empire") {
+            const auto options = parseOptions(words, 1);
+            current.cityCount = optionFloat(options, "cities", current.cityCount);
+            current.workerCount = optionFloat(options, "workers", current.workerCount);
+            current.idleWorkers = optionFloat(options, "idle_workers", current.idleWorkers);
+        }
+        else if (words[0] == "expect") {
+            const auto options = parseOptions(words, 1);
+            current.expectedX = optionFloat(options, "x", current.expectedX);
+            current.expectedY = optionFloat(options, "y", current.expectedY);
+            current.expectedPriority = optionFloat(options, "priority", current.expectedPriority);
+            current.tolerance = optionFloat(options, "tolerance", current.tolerance);
+        }
+        else if (words[0] == "end") {
+            scenarios.push_back(current);
+            inScenario = false;
+        }
+        else {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": unknown directive " + words[0]);
+        }
+    }
+    if (inScenario) {
+        throw std::runtime_error(path + ": unterminated scenario");
+    }
+    return scenarios;
+}
+
+bool isBudgetTestPath(const std::string& path)
+{
+    return path.find("budget") != std::string::npos;
+}
+
+bool isWorkerTestPath(const std::string& path)
+{
+    return path.find("worker") != std::string::npos;
+}
+
 } // namespace
 
 StrategyTestSummary runStrategyTests(const StrategyEngine& engine, const std::vector<std::string>& paths,
@@ -228,6 +458,54 @@ StrategyTestSummary runStrategyTests(const StrategyEngine& engine, const std::ve
     StrategyTestSummary summary;
     out << "\nRunning Strategy technology tests:\n";
     for (const std::string& path : paths) {
+        if (isBudgetTestPath(path)) {
+            const std::vector<StrategyBudgetScenario> scenarios = loadStrategyBudgetTestFile(path);
+            out << "  " << path << " (" << scenarios.size() << " scenarios)\n";
+            for (const StrategyBudgetScenario& scenario : scenarios) {
+                ++summary.total;
+                const OutputSignal output = engine.infer(buildStrategyBudgetInput(scenario));
+                const float scienceRate = std::max(0.0f, std::min(1.0f, output[67]));
+                const bool ok = std::abs(scienceRate - scenario.expectedScienceRate) <= scenario.tolerance;
+                if (ok) {
+                    ++summary.passed;
+                }
+                out << "    " << (ok ? "PASS" : "FAIL") << " " << scenario.name
+                    << ": science_rate=" << std::fixed << std::setprecision(3) << scienceRate;
+                if (!ok) {
+                    out << " expected=" << scenario.expectedScienceRate
+                        << " tolerance=" << scenario.tolerance;
+                }
+                out << "\n";
+            }
+            continue;
+        }
+        if (isWorkerTestPath(path)) {
+            const std::vector<StrategyWorkerScenario> scenarios = loadStrategyWorkerTestFile(path);
+            out << "  " << path << " (" << scenarios.size() << " scenarios)\n";
+            for (const StrategyWorkerScenario& scenario : scenarios) {
+                ++summary.total;
+                const OutputSignal output = engine.infer(buildStrategyWorkerInput(scenario));
+                const float x = std::max(-1.0f, std::min(1.0f, output[0]));
+                const float y = std::max(-1.0f, std::min(1.0f, output[1]));
+                const float priority = std::max(-1.0f, std::min(1.0f, output[3]));
+                const bool ok = std::abs(x - scenario.expectedX) <= scenario.tolerance
+                    && std::abs(y - scenario.expectedY) <= scenario.tolerance
+                    && priority + scenario.tolerance >= scenario.expectedPriority;
+                if (ok) {
+                    ++summary.passed;
+                }
+                out << "    " << (ok ? "PASS" : "FAIL") << " " << scenario.name
+                    << ": worker_focus=(" << std::fixed << std::setprecision(3) << x
+                    << "," << y << ") priority=" << priority;
+                if (!ok) {
+                    out << " expected=(" << scenario.expectedX << "," << scenario.expectedY
+                        << ") priority>=" << scenario.expectedPriority
+                        << " tolerance=" << scenario.tolerance;
+                }
+                out << "\n";
+            }
+            continue;
+        }
         const std::vector<StrategyTechnologyScenario> scenarios = loadStrategyTechnologyTestFile(path);
         out << "  " << path << " (" << scenarios.size() << " scenarios)\n";
         for (const StrategyTechnologyScenario& scenario : scenarios) {

@@ -5,6 +5,8 @@ Each technology has a list of prerequisite technologies and a sprite asset in `i
 
 ## Technology State Rules
 
+- `TECHNOLOGY-TEMP-001`: Technology discovery and its menu are temporarily disabled for this multiplayer version. Every technology is open for every new, existing, and loaded player state.
+
 - `TECHNOLOGY-STATE-001`: `GameState` stores open technologies in `openTechnologies`.
 - `TECHNOLOGY-STATE-002`: A technology is open when its name exists in `GameState.openTechnologies` with value `true`.
 - `TECHNOLOGY-STATE-003`: `GameState` starts with zero accumulated science and no opened technologies.
@@ -15,13 +17,16 @@ Each technology has a list of prerequisite technologies and a sprite asset in `i
 - `TECHNOLOGY-MENU-002`: The technology menu draws all prehistory technologies once as a dependency tree.
 - `TECHNOLOGY-MENU-003`: Technology sprites that are not open are drawn at 50% opacity.
 - `TECHNOLOGY-MENU-004`: Clicking a technology selects it as current research only when all prerequisite technologies are open.
-- `TECHNOLOGY-MENU-005`: The technology menu slider selects how much city money income is dedicated to science.
+- `TECHNOLOGY-MENU-005`: The technology menu slider selects what percent of gross city money income becomes the technology expense.
+- `TECHNOLOGY-MENU-005A`: Moving the science slider updates displayed money and science per-turn values immediately as a preview; account and science totals change only during turn processing.
 - `TECHNOLOGY-MENU-006`: After a valid technology is selected for research, the technology menu closes.
 - `TECHNOLOGY-MENU-007`: When research progress discovers a technology, the technology menu opens so the player can see the new opened technology and select the next research.
 - `TECHNOLOGY-RESEARCH-001`: During turn processing, dedicated money is converted into science for the selected technology.
 - `TECHNOLOGY-RESEARCH-002`: When accumulated science reaches the selected technology cost, that technology becomes open.
 - `TECHNOLOGY-RESEARCH-003`: If any technology can be researched and no current research is selected, End Turn opens the technology menu and does not process the turn.
+- `TECHNOLOGY-RESEARCH-005`: AI users never select research by technology-table order. Strategy selects from landscape/resource priorities and may replace an unstarted zero-progress target; research with accumulated science is preserved.
 - `TECHNOLOGY-RESEARCH-004`: New game state starts with 100% of city money income dedicated to science.
+- `TECHNOLOGY-RESEARCH-005`: AI Strategy output controls science funding. When the money account is below 50, the target science rate is proportional to remaining funds (`funds / 50`); at 50 or more funds, the target science rate is 100%.
 
 ## Prehistory Technologies
 

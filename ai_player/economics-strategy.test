@@ -2,7 +2,7 @@
 # Format:
 # scenario NAME
 # city record=N population=N food=N production=N money=N frontier=N seaside=N garrison=N free=1 legal=1
-# state cities=N free_cities=N workers=N military=N enemy_military=N idle=N
+# state cities=N free_cities=N workers=N military=N enemy_military=N idle=N account=N delta=N upkeep=N
 # tech opened=N
 # demand settlers=N worker=N explorer=N military=N
 # expect production UNIT_TYPE
@@ -12,6 +12,8 @@ scenario worker_shortage_productive_defended_city_builds_worker
 city record=0 population=0.20 food=0.45 production=0.72 money=0.25 frontier=0.50 seaside=0.00 garrison=0.40 free=1 legal=1
 state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 enemy_military=0.00 idle=0.12
 tech opened=0.35
+tech mining=1
+plots mine=0.50
 demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
 expect production worker
 end
@@ -102,4 +104,28 @@ state cities=0.06 free_cities=0.13 workers=0.12 military=0.10 enemy_military=0.0
 tech opened=0.15
 demand settlers=0.80 worker=0.10 explorer=0.05 military=0.05
 expect production settlers
+end
+
+scenario negative_delta_keeps_city_idle
+city record=0 population=0.22 food=0.50 production=0.70 money=0.30 frontier=0.50 seaside=0.00 garrison=0.20 free=1 legal=1
+state cities=0.13 free_cities=0.13 workers=0.12 military=0.10 enemy_military=0.00 idle=0.18 account=0.10 delta=-0.25 upkeep=0.55
+tech opened=0.15
+demand settlers=0.40 worker=0.20 explorer=0.10 military=0.30
+expect production none
+end
+
+scenario negative_money_account_keeps_city_idle
+city record=0 population=0.25 food=0.55 production=0.80 money=0.35 frontier=0.40 seaside=0.00 garrison=0.35 free=1 legal=1
+state cities=0.18 free_cities=0.13 workers=0.25 military=0.20 enemy_military=0.00 idle=0.18 account=-0.30 delta=-0.10 upkeep=0.60
+tech opened=0.25
+demand settlers=0.20 worker=0.35 explorer=0.10 military=0.35
+expect production none
+end
+
+scenario high_upkeep_blocks_explorer_spam
+city record=0 population=0.18 food=0.45 production=0.35 money=0.65 frontier=0.60 seaside=0.00 garrison=0.20 free=1 legal=1
+state cities=0.13 free_cities=0.13 workers=0.18 military=0.12 enemy_military=0.00 idle=0.18 account=0.08 delta=-0.20 upkeep=0.50
+tech opened=0.10
+demand settlers=0.10 worker=0.10 explorer=0.75 military=0.05
+expect production none
 end

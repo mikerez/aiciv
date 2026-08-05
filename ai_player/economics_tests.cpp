@@ -1,6 +1,7 @@
 #include "economics_tests.h"
 
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -33,6 +34,11 @@ struct EconomicsScenario {
     float explorerDemand = 0.15f;
     float militaryDemand = 0.35f;
     float openedTechRate = 0.0f;
+    float account = 0.10f;
+    float accountDelta = 0.05f;
+    float upkeep = 0.10f;
+    std::array<float, 8> improvementTechnology{};
+    std::array<float, 8> improvementOpportunity{};
     std::string expectedProduction;
 };
 
@@ -92,7 +98,7 @@ std::vector<std::string> productionLabels()
         "slinger",
         "archer",
         "spearman",
-        "horseman",
+        "none",
     };
 }
 
@@ -122,6 +128,15 @@ InputSignal buildEconomicsInput(const EconomicsScenario& scenario)
     input[AI_PLAYER_SITUATION_BASE + 21] = scenario.workerDemand;
     input[AI_PLAYER_SITUATION_BASE + 22] = scenario.explorerDemand;
     input[AI_PLAYER_SITUATION_BASE + 23] = scenario.militaryDemand;
+    input[AI_PLAYER_SITUATION_BASE + 24] = scenario.account;
+    input[AI_PLAYER_SITUATION_BASE + 25] = scenario.accountDelta;
+    input[AI_PLAYER_SITUATION_BASE + 26] = scenario.upkeep;
+    for (int n = 0; n < 8; ++n) {
+        input[AI_PLAYER_SITUATION_BASE + 27 + n] = scenario.improvementTechnology[n];
+        input[AI_PLAYER_SITUATION_BASE + 35 + n] = scenario.improvementOpportunity[n];
+        input[AI_PLAYER_SITUATION_BASE + 43 + n]
+            = scenario.improvementTechnology[n] * scenario.improvementOpportunity[n];
+    }
     return input;
 }
 
@@ -213,10 +228,29 @@ std::vector<EconomicsScenario> loadEconomicsTestFile(const std::string& path)
             current.militaryCount = optionFloat(options, "military", current.militaryCount);
             current.enemyMilitaryCount = optionFloat(options, "enemy_military", current.enemyMilitaryCount);
             current.idleMovableCount = optionFloat(options, "idle", current.idleMovableCount);
+            current.account = optionFloat(options, "account", current.account);
+            current.accountDelta = optionFloat(options, "delta", current.accountDelta);
+            current.accountDelta = optionFloat(options, "account_delta", current.accountDelta);
+            current.upkeep = optionFloat(options, "upkeep", current.upkeep);
         }
         else if (words[0] == "tech") {
             const auto options = parseOptions(words, 1);
             current.openedTechRate = optionFloat(options, "opened", current.openedTechRate);
+            const std::array<const char*, 8> names = {
+                "wheel", "bronze", "irrigation", "animals", "mining", "masonry", "pottery", "construction"
+            };
+            for (int n = 0; n < 8; ++n) {
+                current.improvementTechnology[n] = optionFloat(options, names[n], current.improvementTechnology[n]);
+            }
+        }
+        else if (words[0] == "plots") {
+            const auto options = parseOptions(words, 1);
+            const std::array<const char*, 8> names = {
+                "road", "forest", "irrigation", "animals", "mine", "masonry", "pottery", "construction"
+            };
+            for (int n = 0; n < 8; ++n) {
+                current.improvementOpportunity[n] = optionFloat(options, names[n], current.improvementOpportunity[n]);
+            }
         }
         else if (words[0] == "expect") {
             const auto options = parseOptions(words, 1);

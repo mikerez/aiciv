@@ -1,0 +1,39 @@
+# Strategy worker-support tests.
+# Format:
+# scenario NAME
+# smallest_city x=N y=N population=N workers=N
+# empire cities=N workers=N idle_workers=N
+# expect x=N y=N priority=N tolerance=N
+# end
+#
+# The smallest own city is encoded in Strategy input object record 0:
+# input[14]=smallest city x, input[15]=smallest city y,
+# input[16]=smallest city population, input[17]=idle worker count,
+# input[18]=worker presence near that city.
+# The expected Strategy suggestion is output[0..3] on record 0:
+# output[0]=target x, output[1]=target y, output[2]=low military priority,
+# output[3]=worker-support priority.
+
+scenario spare_workers_to_size_one_west_city
+smallest_city x=-0.55 y=-0.30 population=0.04 workers=0.00
+empire cities=0.25 workers=0.38 idle_workers=0.25
+expect x=-0.55 y=-0.30 priority=0.80 tolerance=0.18
+end
+
+scenario many_workers_to_frontier_new_city
+smallest_city x=0.48 y=-0.44 population=0.06 workers=0.00
+empire cities=0.30 workers=0.50 idle_workers=0.38
+expect x=0.48 y=-0.44 priority=0.78 tolerance=0.18
+end
+
+scenario small_coastal_city_gets_support
+smallest_city x=-0.18 y=0.52 population=0.08 workers=0.05
+empire cities=0.22 workers=0.44 idle_workers=0.25
+expect x=-0.18 y=0.52 priority=0.74 tolerance=0.20
+end
+
+scenario weak_east_city_with_spare_workers
+smallest_city x=0.62 y=0.08 population=0.10 workers=0.10
+empire cities=0.42 workers=0.75 idle_workers=0.62
+expect x=0.62 y=0.08 priority=0.76 tolerance=0.20
+end

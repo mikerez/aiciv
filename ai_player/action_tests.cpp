@@ -31,6 +31,7 @@ struct TestTile {
 struct ActionScenario {
     std::string name;
     std::string unitType;
+    std::string unitState = "ready";
     int unitI = 3;
     int unitJ = 3;
     int targetI = -1;
@@ -41,6 +42,11 @@ struct ActionScenario {
     float cityScore = 0.0f;
     float cityDistance = 0.5f;
     float agePressure = 0.0f;
+    float taskFlag = 0.0f;
+    float strategyDx = 0.0f;
+    float strategyDy = 0.0f;
+    float strategyPriority = 0.0f;
+    float nearbyWorkers = 0.0f;
     std::string expectedCommand;
     std::string expectedEffect;
     std::string expectedFinalEffect;
@@ -162,6 +168,20 @@ float unitTypeSignal(const std::string& unitType)
     return static_cast<float>(it->second) / 32.0f;
 }
 
+float unitStateSignal(const std::string& state)
+{
+    static const std::vector<std::string> order = {
+        "ready", "waiting", "fortified", "fortification", "road", "road_to", "irrigate",
+        "chop_forest", "pasture", "farm", "plantation", "camp", "fishing_boats", "quarry",
+        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate",
+    };
+    const auto it = std::find(order.begin(), order.end(), state);
+    if (it == order.end()) {
+        throw std::runtime_error("unknown action test unit state: " + state);
+    }
+    return static_cast<float>(std::distance(order.begin(), it)) / static_cast<float>(order.size() - 1);
+}
+
 float normalizedCoord(int coord)
 {
     return std::max(-1.0f, std::min(1.0f, (static_cast<float>(coord) / (kTestMapSize - 1)) * 2.0f - 1.0f));
@@ -280,6 +300,22 @@ float cityPlotScore(const ActionScenario& scenario, int i, int j)
     return clamp(score / 10.0f, 0.0f, 1.0f);
 }
 
+float nearestCityDistance(const ActionScenario& scenario)
+{
+    int best = kTestMapSize * 2;
+    bool found = false;
+    for (const auto& entry : scenario.tiles) {
+        if (!entry.second.city) {
+            continue;
+        }
+        found = true;
+        best = std::min(best, std::abs(entry.first.first - scenario.unitI)
+                              + std::abs(entry.first.second - scenario.unitJ));
+    }
+    return found ? clamp(static_cast<float>(best) / kTestMapSize, 0.0f, 1.0f)
+                 : scenario.cityDistance;
+}
+
 InputSignal buildActionInput(const ActionScenario& scenario)
 {
     InputSignal input{};
@@ -287,13 +323,13 @@ InputSignal buildActionInput(const ActionScenario& scenario)
     const TestTile current = tileAt(scenario, scenario.unitI, scenario.unitJ);
 
     input[0] = unitTypeSignal(scenario.unitType);
-    input[1] = 0.0f;
+    input[1] = unitStateSignal(scenario.unitState);
     input[2] = normalizedCoord(scenario.unitI);
     input[3] = normalizedCoord(scenario.unitJ);
     input[4] = 1.0f;
     input[5] = scenario.unitType == "explorer" || scenario.unitType == "horseman" ? 0.4f : 0.2f;
     input[6] = 1.0f;
-    input[7] = 0.0f;
+    input[7] = scenario.taskFlag;
     input[8] = scenario.workerSignal;
     input[9] = static_cast<float>(current.terrain) / 8.0f;
     input[10] = resourceSignal(current.resource);
@@ -311,19 +347,44 @@ InputSignal buildActionInput(const ActionScenario& scenario)
         }
     }
 
+    input[97] = scenario.strategyDx;
+    input[98] = scenario.strategyDy;
+    input[100] = scenario.strategyPriority;
+    input[101] = scenario.nearbyWorkers;
+
     input[960] = 0.50f;
     input[965] = 0.35f;
     input[968] = 0.25f;
     return input;
 }
 
+std::string resourceImprovement(const TestTile& tile);
+
 InputSignal buildActionInputForTurn(const ActionScenario& scenario, int turnIndex)
 {
     ActionScenario turn = scenario;
-    turn.nearbyResource = nearbyResourceScore(turn);
     turn.freshWater = hasFreshWaterNear(turn, turn.unitI, turn.unitJ) || tileAt(turn, turn.unitI, turn.unitJ).waterSource ? 1.0f : 0.0f;
     turn.cityScore = cityPlotScore(turn, turn.unitI, turn.unitJ);
+    turn.cityDistance = nearestCityDistance(turn);
     turn.agePressure = std::max(turn.agePressure, clamp(static_cast<float>(turnIndex) / std::max(1, turn.maxTurns), 0.0f, 1.0f));
+    if (turn.unitType == "worker") {
+        turn.workerSignal = 0.0f;
+        const TestTile current = tileAt(turn, turn.unitI, turn.unitJ);
+        const bool atTarget = turn.targetI == turn.unitI && turn.targetJ == turn.unitJ;
+        // The browser puts the best legal Worker job in field 11, including
+        // non-resource jobs such as an empty-hill mine. Preserve the scenario's
+        // equivalent signal while approaching that job.
+        turn.nearbyResource = atTarget ? nearbyResourceScore(turn) : scenario.nearbyResource;
+        if (atTarget) {
+            const std::string improvement = resourceImprovement(current);
+            if (improvement == "irrigation") turn.workerSignal = 0.60f;
+            else if (improvement == "chop_forest") turn.workerSignal = 0.45f;
+            else if (improvement == "road") turn.workerSignal = 0.30f;
+            else turn.workerSignal = 0.80f;
+        }
+    } else {
+        turn.nearbyResource = nearbyResourceScore(turn);
+    }
     return buildActionInput(turn);
 }
 
@@ -547,6 +608,11 @@ std::vector<ActionScenario> loadActionTestFile(const std::string& path)
             current.unitI = std::stoi(words[2]);
             current.unitJ = std::stoi(words[3]);
         }
+        else if (words[0] == "state") {
+            const auto options = parseOptions(words, 1);
+            current.unitState = optionText(options, "name", current.unitState);
+            current.taskFlag = toFloat(options, "task", current.taskFlag);
+        }
         else if (words[0] == "tile") {
             if (words.size() < 4) {
                 throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": tile requires i j terrain");
@@ -585,6 +651,10 @@ std::vector<ActionScenario> loadActionTestFile(const std::string& path)
             current.cityScore = toFloat(options, "city_score", current.cityScore);
             current.cityDistance = toFloat(options, "city_dist", current.cityDistance);
             current.agePressure = toFloat(options, "age", current.agePressure);
+            current.strategyDx = toFloat(options, "strategy_dx", current.strategyDx);
+            current.strategyDy = toFloat(options, "strategy_dy", current.strategyDy);
+            current.strategyPriority = toFloat(options, "worker_focus", current.strategyPriority);
+            current.nearbyWorkers = toFloat(options, "nearby_workers", current.nearbyWorkers);
         }
         else if (words[0] == "expect") {
             if (words.size() < 3) {

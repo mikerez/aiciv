@@ -1,0 +1,123 @@
+# Economics Worker usefulness tests.
+# Technology flags and matching plot counts are separate inputs. A Worker is
+# correct only when both members of at least one pair are present.
+#
+# tech: wheel bronze irrigation animals mining masonry pottery construction
+# plots: road forest irrigation animals mine masonry pottery construction
+
+scenario wheel_and_road_plot_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 wheel=1
+plots road=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario road_plot_without_wheel_rejects_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.00
+plots road=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production warrior
+end
+
+scenario bronze_and_forest_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.15 bronze=1
+plots forest=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario bronze_without_forest_rejects_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.15 bronze=1
+plots forest=0.00
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production warrior
+end
+
+scenario irrigation_and_wet_grass_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.15 irrigation=1
+plots irrigation=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario animal_husbandry_and_animal_resource_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 animals=1
+plots animals=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario animal_resource_without_husbandry_rejects_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 pottery=1
+plots animals=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production warrior
+end
+
+scenario mining_and_hills_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 mining=1
+plots mine=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario mining_without_hills_rejects_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 mining=1
+plots mine=0.00
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production warrior
+end
+
+scenario masonry_and_cottage_plot_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.15 masonry=1
+plots masonry=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario pottery_and_plantation_resource_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 pottery=1
+plots pottery=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario construction_and_workshop_plot_produce_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.30 construction=1
+plots construction=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production worker
+end
+
+scenario unrelated_technology_and_plot_reject_worker
+city record=0 population=0.22 food=0.48 production=0.68 money=0.30 frontier=0.30 garrison=0.45 free=1 legal=1
+state cities=0.06 free_cities=0.13 workers=0.00 military=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=0.10 mining=1
+plots animals=0.50
+demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
+expect production warrior
+end

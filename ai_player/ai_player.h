@@ -12,6 +12,7 @@
 
 namespace aiciv::ai {
 
+constexpr int kBaseInputWidth = AI_PLAYER_BASE_INPUT_WIDTH;
 constexpr int kInputWidth = AI_PLAYER_INPUT_WIDTH;
 constexpr int kOutputWidth = AI_PLAYER_OUTPUT_WIDTH;
 constexpr int kLayerCount = 8;
@@ -59,7 +60,7 @@ struct TrainingReport {
 
 class DensePerceptronEngine {
 public:
-    explicit DensePerceptronEngine(uint32_t seed = 1);
+    explicit DensePerceptronEngine(uint32_t seed = 1, int inputWidth = kBaseInputWidth);
 
     OutputSignal forward(const InputSignal& input) const;
     std::vector<float> hiddenBeforeLast(const InputSignal& input) const;
@@ -94,7 +95,7 @@ private:
 
 class AIEngine {
 public:
-    AIEngine(Schema schema, uint32_t seed);
+    AIEngine(Schema schema, uint32_t seed, int inputWidth = kBaseInputWidth);
     virtual ~AIEngine() = default;
 
     const Schema& schema() const { return schema_; }
@@ -135,6 +136,9 @@ Schema makeEconomicsSchema();
 std::vector<TrainingExample> makeStrategyExamples();
 std::vector<TrainingExample> makeStrategyDemandExamples();
 std::vector<TrainingExample> makeStrategyTechnologyExamples();
+std::vector<TrainingExample> makeStrategyLandscapeExamples();
+std::vector<TrainingExample> makeStrategyBudgetExamples();
+std::vector<TrainingExample> makeStrategyWorkerExamples();
 std::vector<TrainingExample> makeTacticsExamples();
 std::vector<TrainingExample> makeActionBootstrapExamples();
 std::vector<TrainingExample> makeActionSettlerExamples();
@@ -147,6 +151,7 @@ std::vector<TrainingExample> makeActionHorsemanExamples();
 std::vector<TrainingExample> makeActionExamples();
 std::vector<TrainingExample> makeEconomicsExamples();
 std::vector<TrainingExample> makeEconomicsStrategyExamples();
+std::vector<TrainingExample> makeEconomicsWorkerExamples();
 
 std::vector<TrainingExample> loadTrainingExamples(const std::string& path);
 void saveTrainingExamples(const std::string& path, const std::vector<TrainingExample>& examples);

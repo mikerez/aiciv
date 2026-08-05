@@ -26,8 +26,19 @@ City economy is implemented by `city.js`.
 - `CITY-TURN-001`: City food and money income are collected each turn.
 - `CITY-TURN-002`: City production income updates the city production-per-turn value used by unit production.
 - `CITY-TURN-003`: Growth turns are calculated from remaining food cost divided by current food income.
-- `CITY-TURN-004`: City money income is reported to `GameState` so the science slider can dedicate part of it to technology discovery.
+- `CITY-TURN-004`: City money income is reported as gross money to `economics.js`; upkeep is paid before the science slider dedicates remaining money to technology discovery.
 - `CITY-TURN-005`: Food stored each turn uses net food after citizen consumption.
+- `CITY-TURN-006`: A city may intentionally produce nothing. This state is stored separately from an unassigned production task so the end-turn idle-city selector does not keep reopening the city.
+- `CITY-TURN-007`: If the civilization money account is negative, cities cannot start or progress unit production until the account is non-negative again.
+
+## Money Account
+
+- `CITY-MONEY-001`: `GameState.money` is the civilization money account.
+- `CITY-MONEY-002`: Each unit, city, and terrain-improvement building has 1 money upkeep per turn unless explicitly marked otherwise. Road and irrigation records on the city tile are covered by the city upkeep and do not add separate upkeep.
+- `CITY-MONEY-003`: Technology funding is a separate expense equal to `scienceRate` percent of gross city money income. Account delta is gross city money minus upkeep minus technology expense.
+- `CITY-MONEY-003A`: The technology expense is converted into science points for the current research target.
+- `CITY-MONEY-004`: The top-left status line shows the money account before research status.
+- `CITY-MONEY-005`: If the civilization money account is negative after turn income and upkeep are processed, one maintained unit or building is destroyed due to lack of funds. The event is shown for one turn on the second top-left status line and appended to the console.
 
 ## Drawing
 

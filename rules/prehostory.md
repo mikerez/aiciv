@@ -46,8 +46,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 ## Building State Rules
 
 - `PREHISTORY-BUILD-001`: A selected settler can build a city with the `build_city` command or `B` key.
-- `PREHISTORY-BUILD-002`: Building a city consumes the settler.
-- `PREHISTORY-BUILD-003`: A selected city can choose a unit production option with command `produce_unit:<unitTypeId>`.
+- `PREHISTORY-BUILD-002`: Building a city consumes the settler. In a server game, `build_city` deletes the authoritative Settler and creates the City atomically.
+- `PREHISTORY-BUILD-003`: A selected city can choose a unit production option with command `produce_unit:<unitTypeId>`. A server game sends the choice immediately with `select_production` instead of waiting for End Turn.
 - `PREHISTORY-BUILD-004`: Cities show the current production item and remaining turns in the unit menu.
 - `PREHISTORY-BUILD-005`: A built city inherits the team number of the settler that built it.
 - `PREHISTORY-BUILD-006`: A produced unit inherits the team number of the city that produced it.
@@ -65,10 +65,11 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-TURN-006`: When End Turn makes a movable unit finish its task, that newly idle unit is selected before scanning for the next idle unit.
 - `PREHISTORY-TURN-007`: End Turn selects and centers the view on the first city with no active production before movable unit prompts so the production status shows that it produces nothing.
 - `PREHISTORY-TURN-008`: End Turn is blocked while the current selected movable unit is idle and has no Goto path, route, target, or modified state task.
+- `PREHISTORY-TURN-009`: Expiration of the client turn timer forces End Turn even when the selected unit is idle and has no order; manual End Turn retains the idle-unit prompt.
 
 ## Menu Rules
 
-- `PREHISTORY-MENU-001`: If no unit is selected, unit action menu options are hidden.
+- `PREHISTORY-MENU-001`: On phones, if no unit is selected, the complete unit action menu panel is hidden.
 - `PREHISTORY-MENU-002`: Movable units show movement-related commands.
 - `PREHISTORY-MENU-003`: Settlers show the Build City command.
 - `PREHISTORY-MENU-004`: Cities show building management options and hide movement commands.
@@ -77,6 +78,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-MENU-007`: Workers show the Fortification command instead of Fortificate after `Construction` is discovered.
 - `PREHISTORY-MENU-008`: Workers show Pasture, Cottage, Workshop, Mine, and Fortification when the required technology is known and the tile does not already have that building.
 - `PREHISTORY-MENU-009`: Unit command menu entries show their command letter as a small button.
+- `PREHISTORY-MENU-010`: Selected movable units show attack force, defence force, steps per turn, health, and experience before movement commands.
+- `PREHISTORY-MENU-011`: On phones, giving a unit or city an order hides the complete action menu panel. Selecting a unit or city again, including automatic next-unit selection, shows its applicable actions again. Desktop menu visibility is unchanged.
 
 ## Command State Rules
 
@@ -116,7 +119,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 ## Start View Rules
 
 - `PREHISTORY-VIEW-001`: When a prehistory game starts, the screen is centered on the initial cluster of spawned units.
-- `PREHISTORY-START-001`: A prehistory game starts with one Settler and one Explorer for team 0.
+- `PREHISTORY-START-001`: A prehistory game starts with one Settler and three Explorers for each registered player.
+- `PREHISTORY-START-002`: Temporarily for coexistence and combat testing, default teams are placed about 30 map tiles apart. The previous independent random start placement remains commented in `game_prehistory.js` for restoration.
 
 ## Auto-Routing Rules
 

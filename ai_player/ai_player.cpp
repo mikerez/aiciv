@@ -229,6 +229,35 @@ void addSignalComment(std::vector<std::string>& comments, const std::string& sig
     comments.push_back(signalName + "[" + std::to_string(slot) + "] = " + fp(value) + " means " + meaning + ".");
 }
 
+int birdsviewSlot(int x, int y)
+{
+    x = std::max(0, std::min(AI_PLAYER_BIRDSVIEW_SIZE - 1, x));
+    y = std::max(0, std::min(AI_PLAYER_BIRDSVIEW_SIZE - 1, y));
+    return AI_PLAYER_BIRDSVIEW_BASE + y * AI_PLAYER_BIRDSVIEW_SIZE + x;
+}
+
+float compactBirdsviewValue(float civ, float military, float height, float resource)
+{
+    const float controlSignal = civ >= 0.0f ? (civ + 1.0f) / 16.0f : 0.0f;
+    const float forceSignal = std::max(0.0f, std::min(1.0f, military / 30.0f));
+    const float resourceSignal = std::max(0.0f, std::min(1.0f, resource / 48.0f));
+    return std::max(-1.0f, std::min(1.0f, height * 0.60f + controlSignal * 0.18f
+        + forceSignal * 0.17f + resourceSignal * 0.05f));
+}
+
+void setBirdsviewCell(TrainingExample& ex, int x, int y, float civ, float military, float height,
+                      float resource, const std::string& meaning)
+{
+    const int slot = birdsviewSlot(x, y);
+    const float value = compactBirdsviewValue(civ, military, height, resource);
+    ex.input[slot] = value;
+    ex.comments.push_back("Birdsview cell (" + std::to_string(x) + "," + std::to_string(y)
+        + ") is Strategy input[" + std::to_string(slot) + "]. Compact value " + fp(value)
+        + " is derived from civ=" + fp(civ) + ", military=" + fp(military)
+        + ", landscape_height=" + fp(height) + ", resource_id=" + fp(resource)
+        + ". " + meaning + ".");
+}
+
 int local9SlotFromOld10Slot(int oldSlot)
 {
     const int oldDi = oldSlot / 10 - 5;
@@ -269,6 +298,20 @@ std::vector<int> actionDecisionSlotsForFamily(int outputBase, const std::string&
     return slotRange(outputBase, AI_PLAYER_COMMAND_FLOATS);
 }
 
+float actionStateSignal(const std::string& state)
+{
+    static const std::vector<std::string> order = {
+        "ready", "waiting", "fortified", "fortification", "road", "road_to", "irrigate",
+        "chop_forest", "pasture", "farm", "plantation", "camp", "fishing_boats", "quarry",
+        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate",
+    };
+    const auto it = std::find(order.begin(), order.end(), state);
+    if (it == order.end()) {
+        return 0.0f;
+    }
+    return static_cast<float>(std::distance(order.begin(), it)) / static_cast<float>(order.size() - 1);
+}
+
 TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
                                         const std::string& family,
                                         const std::string& title,
@@ -305,6 +348,15 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
     }
     ex.target[ex.correctSlot] = 0.9f;
 
+    const bool militaryFamily = family == "warrior" || family == "slinger"
+        || family == "archer" || family == "horseman";
+    if (!militaryFamily && family != "worker") {
+        strategyTargetX = 0.0f;
+        strategyTargetY = 0.0f;
+        strategyMilitaryPriority = 0.0f;
+        strategyDefensePriority = 0.0f;
+    }
+
     ex.input[objectBase + 0] = unitTypeSignal;
     ex.input[objectBase + 4] = 1.0f;
     ex.input[objectBase + 5] = 0.2f;
@@ -329,17 +381,18 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
 
     ex.comments.push_back("Purpose: teach Action engine " + family + " behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.");
     ex.comments.push_back("Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.");
-    ex.comments.push_back("Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.");
+    ex.comments.push_back("Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.");
     ex.comments.push_back("Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.");
-    ex.comments.push_back("Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.");
-    if (strategyMilitaryPriority > 0.01f && (family == "settler" || family == "worker" || family == "explorer")) {
-        ex.comments.push_back("Civilian danger rule: this civil unit sees a high military-priority strategy focus, so goto means run away from those focus coordinates rather than attack.");
-    }
+    ex.comments.push_back("Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.");
     ex.comments.push_back("Cue meaning: " + cueMeaning + ".");
     ex.comments.push_back("Decision meaning: " + decisionMeaning + ".");
     addClassificationTargetSlotComments(ex, outputBase, labels, ex.decisionSlots, ex.correctSlot);
     addSignalComment(ex.comments, "input", objectBase + 0, ex.input[objectBase + 0],
                      "unit type normalized as unitTypeIndex/32");
+    addSignalComment(ex.comments, "input", objectBase + 1, ex.input[objectBase + 1],
+                     "unit state normalized by the same state order used in ai.js");
+    addSignalComment(ex.comments, "input", objectBase + 7, ex.input[objectBase + 7],
+                     "has active task flag; 1.0 means the unit is already busy and should usually preserve its current order");
     addSignalComment(ex.comments, "input", objectBase + 9, ex.input[objectBase + 9],
                      "current tile terrain type normalized as terrainType/8");
     if (immediateActionSignal > 0.0f) {
@@ -356,13 +409,16 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
 
 } // namespace
 
-DensePerceptronEngine::DensePerceptronEngine(uint32_t seed)
+DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth)
 {
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> small(-0.002f, 0.002f);
+    const std::array<int, kLayerCount + 1> layerWidths = {
+        inputWidth, 888, 752, 616, 480, 344, 208, 176, kOutputWidth
+    };
     for (int layer = 0; layer < kLayerCount; ++layer) {
-        const int inWidth = kLayerWidths[layer];
-        const int outWidth = kLayerWidths[layer + 1];
+        const int inWidth = layerWidths[layer];
+        const int outWidth = layerWidths[layer + 1];
         layers_[layer].inputWidth = inWidth;
         layers_[layer].outputWidth = outWidth;
         layers_[layer].weights.assign(inWidth * outWidth, 0.0f);
@@ -375,9 +431,11 @@ DensePerceptronEngine::DensePerceptronEngine(uint32_t seed)
                     layers_[layer].weights[(summaryOutput + field) * inWidth + objectInput + field] = 1.0f;
                 }
             }
-            const std::array<int, 21> genericSlots = {
+            const std::array<int, 40> genericSlots = {
                 1, 2, 3, 4, 5, 6, 10, 14, 15, 20, 21, 22, 23,
-                24, 25, 26, 27, 28, 29, 30, 31
+                24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+                35, 36, 37, 38, 39, 40, 41, 42,
+                43, 44, 45, 46, 47, 48, 49, 50
             };
             for (int field = 0; field < static_cast<int>(genericSlots.size()); ++field) {
                 layers_[layer].weights[(128 + field) * inWidth + AI_PLAYER_SITUATION_BASE + genericSlots[field]] = 1.0f;
@@ -500,14 +558,14 @@ void DensePerceptronEngine::saveBinary(const std::string& path) const
     header.magic[6] = 'I';
     header.magic[7] = '\0';
     header.version = 2;
-    header.width = kInputWidth;
+    header.width = layers_[0].inputWidth;
     header.layer_count = kLayerCount;
     header.activation = 1; // tanh
     header.weight_layout = 1; // row-major [out][in]
-    header.reserved[0] = kInputWidth;
+    header.reserved[0] = layers_[0].inputWidth;
     header.reserved[1] = kOutputWidth;
     for (int layer = 0; layer < kLayerCount; ++layer) {
-        header.reserved[2 + layer] = kLayerWidths[layer + 1];
+        header.reserved[2 + layer] = layers_[layer].outputWidth;
     }
 
     out.write(reinterpret_cast<const char*>(&header), sizeof(header));
@@ -614,8 +672,8 @@ float DensePerceptronEngine::trainFullBackprop(const InputSignal& input, const O
     return loss / kOutputWidth;
 }
 
-AIEngine::AIEngine(Schema schema, uint32_t seed)
-    : schema_(std::move(schema)), network_(seed)
+AIEngine::AIEngine(Schema schema, uint32_t seed, int inputWidth)
+    : schema_(std::move(schema)), network_(seed, inputWidth)
 {
 }
 
@@ -664,7 +722,7 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
                 << " eval_loss=" << report.loss
                 << " accuracy=" << std::setprecision(1) << report.accuracy * 100.0f << "%\n";
         }
-        if (report.accuracy >= 0.90f && epoch >= 20) {
+        if (report.accuracy >= 0.98f && epoch >= 20) {
             out << schema_.name << " early stop at epoch " << epoch
                 << " accuracy=" << std::setprecision(1) << report.accuracy * 100.0f << "%\n";
             break;
@@ -673,10 +731,10 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
     return report;
 }
 
-StrategyEngine::StrategyEngine() : AIEngine(makeStrategySchema(), 11) {}
-TacticsEngine::TacticsEngine() : AIEngine(makeTacticsSchema(), 22) {}
-ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33) {}
-EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44) {}
+StrategyEngine::StrategyEngine() : AIEngine(makeStrategySchema(), 11, AI_PLAYER_INPUT_WIDTH) {}
+TacticsEngine::TacticsEngine() : AIEngine(makeTacticsSchema(), 22, AI_PLAYER_BASE_INPUT_WIDTH) {}
+ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33, AI_PLAYER_BASE_INPUT_WIDTH) {}
+EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44, AI_PLAYER_BASE_INPUT_WIDTH) {}
 
 Schema makeStrategySchema()
 {
@@ -686,11 +744,13 @@ Schema makeStrategySchema()
     addField(schema.input, 480, 959, "objects[4..7] military_force_weight[4][120]", "records",
              "four force centers without ids: relation, x/y center, land/naval strength, mobility, wounded ratio, border pressure, siege pressure, reserve");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
-             "own civilization metrics, map knowledge, economy, technology pressure, diplomacy pressure, expansion pressure; slots 1,2,4,14,15 and 20..23 carry city, total unit, military, settler, worker counts; slots 24..40 carry city/settler-neighborhood terrain, resource, coverage, and anchor statistics for research choice");
+             "own civilization metrics, map knowledge, economy, technology pressure, diplomacy pressure, expansion pressure; slots 1,2,4,14,15 and 20..23 carry city, total unit, military, settler, worker counts; slots 24..40 carry city/settler-neighborhood terrain, resource, coverage, and anchor statistics for research choice; slot 41 carries money account clamped to 0..50 for science budget control");
+    addField(schema.input, 1024, 3523, "birdsview[50][50]", "FP32",
+             "compact strategic world map scaled from any world size to 50x50; each cell combines controller civ id, local military weight, average landscape height, and up to four local resources from the system birdsview map");
     addField(schema.output, 0, 63, "object_command[8][8]", "records",
              "per-object strategy output: slots 0..3 are focus_x, focus_y, military_priority, defense_priority; slots 4..7 are command scores");
     addField(schema.output, 64, 71, "general_decision[8]", "records",
-             "general strategic decisions; slots 64..67 are production demand percentages for settlers, worker, explorer, military; slots 68..71 are technology priorities for Mining, Animal Husbandry, Masonry, Irrigation");
+             "general strategic decisions; slots 64..66 are production demand percentages for settlers, worker, explorer; slot 67 is science funding ratio; slots 68..71 are technology priorities for Mining, Animal Husbandry, Masonry, Irrigation");
     return schema;
 }
 
@@ -712,7 +772,7 @@ Schema makeActionSchema()
 {
     Schema schema{EngineKind::Action, "action", {}, {}};
     addField(schema.input, 0, 959, "units[8][120]", "records",
-             "own unit status without ids: type, state, x/y, hp, moves, relation, task, immediate action signal in slot 8, terrain/resource/fresh-water/city score, age, city distance, 9x9 local tile features in slots 16..96, forwarded relative strategy focus in slots 97..100");
+             "own unit status without ids: type, state, x/y, hp, moves, relation, task, immediate action signal in slot 8, terrain/resource/fresh-water/city score, age, city distance, 9x9 local tile features in slots 16..96, forwarded relative strategy focus in slots 97..100 for military records or worker-support focus for worker records; slot 101 is nearby worker density");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
              "owner metrics, map knowledge, economy, science, visible resources, idle counts, tactical pressure");
     addField(schema.output, 0, 63, "unit_command[8][8]", "records",
@@ -728,7 +788,7 @@ Schema makeEconomicsSchema()
     addField(schema.input, 0, 959, "cities[8][120]", "records",
              "city status without ids: x/y, population, food, production, money, storage, consumption, growth, frontier, seaside, garrison, 9x9 tile food/production/money and landscape features, production legality in slots 97..100");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
-             "global economics metrics: money, income, science rate, city counts, unit counts, map knowledge, visible resources; slots 1,2,5,6,14,15 carry city/free-city/military/enemy/idle/worker counts, slot 16 carries opened technology rate, and slots 20..23 carry Strategy production demand percentages for settlers, worker, explorer, military");
+             "global economics metrics: money, income, science rate, city counts, unit counts, map knowledge, visible resources; slots 1,2,5,6,14,15 carry city/free-city/military/enemy/idle/worker counts, slot 16 carries opened technology rate, slots 20..23 carry Strategy production demand percentages, slots 24..26 carry money state, slots 27..34 are explicit Worker-improvement technology flags, slots 35..42 are matching available-plot counts, and slots 43..50 are actionable technology-times-plot signals");
     addField(schema.output, 0, 63, "city_command[8][8]", "records",
              "eight production decisions corresponding to the eight input cities in order");
     addField(schema.output, 64, 71, "general_decision[8]", "records",
@@ -827,6 +887,13 @@ std::vector<TrainingExample> makeStrategyExamples()
         ex.input[objectBase + 9] = static_cast<float>(cls + 1) / 4.0f;
         ex.input[objectBase + 16 + (cls % 100)] = 0.6f;
         ex.input[AI_PLAYER_SITUATION_BASE + (cls % 12)] = 0.5f;
+        setBirdsviewCell(ex, 8 + (i % 12), 12 + (i % 8), 0.0f, 4.0f, 0.12f, 0.0f,
+                         "friendly explored land around the current strategic focus");
+        if (cls == 2 || cls == 3) {
+            setBirdsviewCell(ex, 32 + (object % 6), 28 + (i % 6), 1.0f, cls == 2 ? 18.0f : 10.0f,
+                             cls == 2 ? 0.45f : 0.18f, 0.0f,
+                             "enemy controlled pressure area that should create attack or defense focus output");
+        }
 
         ex.comments.push_back("Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.");
         ex.comments.push_back("Output focus fields: output[" + std::to_string(outputBase + 0) + "]=target x, output[" + std::to_string(outputBase + 1) + "]=target y, output[" + std::to_string(outputBase + 2) + "]=military attack priority, output[" + std::to_string(outputBase + 3) + "]=defense priority.");
@@ -882,8 +949,14 @@ std::vector<TrainingExample> makeStrategyDemandExamples()
         ex.input = zeroInputSignal();
         ex.target = zeroOutputSignal();
         ex.explanation = std::string("strategy production demand case: ") + c.title;
-        ex.decisionSlots = slotRange(64, 4);
-        ex.correctSlot = 64 + c.strongest;
+        ex.decisionSlots = slotRange(64, 3);
+        int strongestProductionSlot = 0;
+        for (int k = 1; k < 3; ++k) {
+            if (c.demand[k] > c.demand[strongestProductionSlot]) {
+                strongestProductionSlot = k;
+            }
+        }
+        ex.correctSlot = 64 + strongestProductionSlot;
         ex.input[AI_PLAYER_SITUATION_BASE + 1] = c.cities;
         ex.input[AI_PLAYER_SITUATION_BASE + 2] = c.units;
         ex.input[AI_PLAYER_SITUATION_BASE + 3] = c.knownMap;
@@ -896,12 +969,18 @@ std::vector<TrainingExample> makeStrategyDemandExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 21] = c.workers;
         ex.input[AI_PLAYER_SITUATION_BASE + 22] = c.military;
         ex.input[AI_PLAYER_SITUATION_BASE + 23] = c.cities;
-        for (int k = 0; k < 4; ++k) {
+        setBirdsviewCell(ex, 12 + (repeat % 5), 14 + (repeat % 4), 0.0f, c.military * 100.0f,
+                         0.14f, 0.0f, "owned core land used with city and unit counts to estimate production demand");
+        if (c.enemyMilitary > c.military) {
+            setBirdsviewCell(ex, 34, 30 + (repeat % 4), 1.0f, c.enemyMilitary * 100.0f,
+                             0.20f, 0.0f, "visible enemy military mass; Strategy should increase military production demand");
+        }
+        for (int k = 0; k < 3; ++k) {
             ex.target[64 + k] = c.demand[k];
         }
-        ex.comments.push_back("Purpose: teach Strategy general outputs 64..67 as city production demand percentages.");
+        ex.comments.push_back("Purpose: teach Strategy general outputs 64..66 as city production demand percentages.");
         ex.comments.push_back("General inputs: input[961]=city count, input[962]=total unit count, input[964]=own military, input[965]=enemy military, input[974]=settlers, input[975]=workers, input[980..983]=settlers/workers/military/cities again as explicit demand counters.");
-        ex.comments.push_back("General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand, output[67]=military demand.");
+        ex.comments.push_back("General outputs: output[64]=settlers demand, output[65]=worker demand, output[66]=explorer demand. Military demand is decoded by the browser as the remaining production pressure after those three demands.");
         ex.comments.push_back(std::string("Decision meaning: ") + c.decision + ".");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 14, c.settlers, "current settler count normalized by 8");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 15, c.workers, "current worker count normalized by 8");
@@ -911,7 +990,6 @@ std::vector<TrainingExample> makeStrategyDemandExamples()
         addSignalComment(ex.comments, "target", 64, c.demand[0], "settlers production percentage demand");
         addSignalComment(ex.comments, "target", 65, c.demand[1], "worker production percentage demand");
         addSignalComment(ex.comments, "target", 66, c.demand[2], "explorer production percentage demand");
-        addSignalComment(ex.comments, "target", 67, c.demand[3], "military production percentage demand");
         examples.push_back(ex);
     }
     return examples;
@@ -992,6 +1070,19 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 38] = c.stoneResources > 0.40f ? c.stoneResources * 0.5f : 0.0f;
         ex.input[AI_PLAYER_SITUATION_BASE + 39] = c.cityAnchor >= 0.0f ? c.cityAnchor : (repeat % 3 == 0 ? 1.0f : 0.0f);
         ex.input[AI_PLAYER_SITUATION_BASE + 40] = c.settlerAnchor >= 0.0f ? c.settlerAnchor : (repeat % 3 == 0 ? 0.0f : 1.0f);
+        const float forestSignal = c.forest >= 0.0f ? c.forest : (c.grass > 0.60f && c.water < 0.10f ? 0.10f : 0.02f);
+        setBirdsviewCell(ex, 20, 20, 0.0f, 0.0f, c.hills * 0.50f + c.mountains * 0.80f
+                         + c.grass * 0.12f + forestSignal * 0.28f - c.water * 0.75f,
+                         c.stoneResources > 0.20f ? 9.0f : (c.animalResources > 0.20f ? 8.0f : (c.cropResources > 0.20f ? 10.0f : 0.0f)),
+                         "main owned or settler-visible region summarized for technology choice");
+        if (c.hills > 0.20f || c.mountains > 0.20f) {
+            setBirdsviewCell(ex, 21, 20, 0.0f, 0.0f, 0.62f, c.stoneResources > 0.20f ? 9.0f : 0.0f,
+                             "nearby high ground visible on birdsview map; supports Mining or Masonry decisions");
+        }
+        if (c.water > 0.15f || c.cropResources > 0.20f) {
+            setBirdsviewCell(ex, 19, 21, 0.0f, 0.0f, -0.05f, c.cropResources > 0.20f ? 10.0f : 0.0f,
+                             "wet crop field pressure visible on birdsview map; supports Irrigation decisions");
+        }
         setOneHot(ex.target, 68, 4, c.strongest);
         ex.comments.push_back("Purpose: teach Strategy general outputs 68..71 as specific technology priorities.");
         ex.comments.push_back("General inputs: input[984]=hills, [985]=mountains, [986]=grass, [987]=water, [988]=animal resources, [989]=stone resources, [990]=crop resources, [991]=opened technology rate.");
@@ -1012,6 +1103,218 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         addSignalComment(ex.comments, "target", 69, ex.target[69], "Animal Husbandry priority");
         addSignalComment(ex.comments, "target", 70, ex.target[70], "Masonry priority");
         addSignalComment(ex.comments, "target", 71, ex.target[71], "Irrigation priority");
+        examples.push_back(ex);
+    }
+    return examples;
+}
+
+std::vector<TrainingExample> makeStrategyLandscapeExamples()
+{
+    struct Case {
+        const char* title;
+        float hills;
+        float mountains;
+        float grass;
+        float water;
+        float animals;
+        float stone;
+        float crops;
+        float minerals;
+        float forest;
+        float freshWater;
+        float openedTechRate;
+        int technology;
+        const char* reason;
+    };
+    // Technology output order: Mining, Animal Husbandry, Masonry, Irrigation.
+    // Every positive cue has nearby negative cases where that cue is explicitly
+    // zero while visible context remains 1.0, preventing default-to-Mining bias.
+    const std::vector<Case> cases = {
+        { "bare hills support Mining", 0.72f, 0.08f, 0.20f, 0.00f, 0.00f, 0.00f, 0.00f, 0.10f, 0.02f, 0.00f, 0.00f, 0, "visible hills provide mine jobs even without a revealed resource" },
+        { "mountain basin supports Mining", 0.12f, 0.68f, 0.15f, 0.02f, 0.00f, 0.05f, 0.00f, 0.35f, 0.02f, 0.00f, 0.00f, 0, "mountains and minerals make Mining useful" },
+        { "mineral hills support Mining", 0.42f, 0.18f, 0.25f, 0.02f, 0.00f, 0.05f, 0.00f, 0.85f, 0.05f, 0.00f, 0.00f, 0, "revealed mineral resources reinforce mining terrain" },
+        { "small mining region beats dry grass", 0.38f, 0.16f, 0.35f, 0.00f, 0.00f, 0.00f, 0.00f, 0.25f, 0.04f, 0.00f, 0.00f, 0, "substantial high ground is positive Mining evidence" },
+
+        { "cattle plain supports Animal Husbandry", 0.00f, 0.00f, 0.82f, 0.06f, 0.90f, 0.00f, 0.02f, 0.00f, 0.04f, 0.04f, 0.00f, 1, "animal resources on flat land need pasture technology" },
+        { "forest deer supports Animal Husbandry", 0.00f, 0.00f, 0.78f, 0.02f, 0.82f, 0.00f, 0.00f, 0.00f, 0.72f, 0.02f, 0.00f, 1, "forest animals need camps rather than mines" },
+        { "sheep with minor hills supports Animal Husbandry", 0.12f, 0.00f, 0.70f, 0.04f, 0.78f, 0.00f, 0.00f, 0.00f, 0.08f, 0.02f, 0.00f, 1, "strong animal evidence outweighs minor hill noise" },
+        { "jungle animals reject Mining", 0.00f, 0.00f, 0.90f, 0.00f, 0.72f, 0.00f, 0.00f, 0.00f, 0.88f, 0.00f, 0.00f, 1, "zero hills and minerals are negative Mining evidence" },
+
+        { "stone hills after Mining support Masonry", 0.35f, 0.12f, 0.32f, 0.02f, 0.00f, 0.88f, 0.00f, 0.18f, 0.04f, 0.00f, 0.10f, 2, "stone resources and early technology progress justify Masonry" },
+        { "marble mountains after Mining support Masonry", 0.20f, 0.30f, 0.25f, 0.00f, 0.00f, 0.82f, 0.00f, 0.20f, 0.02f, 0.00f, 0.12f, 2, "quarry resources make Masonry the next production technology" },
+        { "stone city with opened technology path supports Masonry", 0.18f, 0.08f, 0.55f, 0.02f, 0.00f, 0.92f, 0.00f, 0.10f, 0.05f, 0.00f, 0.18f, 2, "strong stone evidence plus progress rejects unrelated technologies" },
+        { "quarry resources outweigh sparse crops", 0.28f, 0.10f, 0.42f, 0.03f, 0.00f, 0.75f, 0.08f, 0.12f, 0.05f, 0.01f, 0.12f, 2, "stone is specific evidence for Masonry" },
+
+        { "fresh crop plain supports Irrigation", 0.00f, 0.00f, 0.86f, 0.30f, 0.00f, 0.00f, 0.85f, 0.00f, 0.02f, 0.42f, 0.00f, 3, "crops and fresh water require the irrigation path" },
+        { "river grass without resources supports Irrigation", 0.00f, 0.00f, 0.88f, 0.38f, 0.00f, 0.00f, 0.00f, 0.00f, 0.02f, 0.46f, 0.00f, 3, "fresh-water grass offers farm jobs and no Mining evidence" },
+        { "flat forest without resources rejects Mining", 0.00f, 0.00f, 0.92f, 0.02f, 0.00f, 0.00f, 0.00f, 0.00f, 0.88f, 0.02f, 0.00f, 3, "visible forest with zero hills, mountains, minerals, and stone must not select Mining" },
+        { "pure jungle without resources rejects Mining", 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 3, "a fully visible jungle start has explicit negative Mining evidence" },
+        { "open grass without resources rejects Mining", 0.00f, 0.00f, 0.94f, 0.04f, 0.00f, 0.00f, 0.00f, 0.00f, 0.02f, 0.04f, 0.00f, 3, "flat land with no resources should follow growth technology" },
+        { "crop plain with tiny hill noise rejects Mining", 0.04f, 0.00f, 0.86f, 0.18f, 0.00f, 0.00f, 0.70f, 0.00f, 0.03f, 0.24f, 0.00f, 3, "tiny high-ground noise must not outweigh crops and water" },
+        { "forest with tiny mountain noise rejects Mining", 0.00f, 0.03f, 0.90f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.86f, 0.00f, 0.00f, 3, "tiny mountain noise and no minerals are insufficient for Mining" },
+        { "wet coast without stone rejects Masonry and Mining", 0.00f, 0.00f, 0.62f, 0.55f, 0.00f, 0.00f, 0.18f, 0.00f, 0.02f, 0.38f, 0.00f, 3, "water and workable land favor growth rather than production extraction" },
+    };
+
+    std::vector<TrainingExample> examples;
+    examples.reserve(240);
+    for (int repeat = 0; repeat < 240; ++repeat) {
+        const Case& c = cases[repeat % cases.size()];
+        TrainingExample ex;
+        ex.input = zeroInputSignal();
+        ex.target = zeroOutputSignal();
+        ex.explanation = std::string("strategy landscape/resource contrast: ") + c.title;
+        ex.decisionSlots = slotRange(68, 4);
+        ex.correctSlot = 68 + c.technology;
+        ex.input[AI_PLAYER_SITUATION_BASE + 24] = c.hills;
+        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.mountains;
+        ex.input[AI_PLAYER_SITUATION_BASE + 26] = c.grass;
+        ex.input[AI_PLAYER_SITUATION_BASE + 27] = c.water;
+        ex.input[AI_PLAYER_SITUATION_BASE + 28] = c.animals;
+        ex.input[AI_PLAYER_SITUATION_BASE + 29] = c.stone;
+        ex.input[AI_PLAYER_SITUATION_BASE + 30] = c.crops;
+        ex.input[AI_PLAYER_SITUATION_BASE + 31] = c.openedTechRate;
+        ex.input[AI_PLAYER_SITUATION_BASE + 32] = 1.0f;
+        ex.input[AI_PLAYER_SITUATION_BASE + 33] = std::max(0.0f, c.grass - c.hills - c.mountains);
+        ex.input[AI_PLAYER_SITUATION_BASE + 34] = c.freshWater;
+        ex.input[AI_PLAYER_SITUATION_BASE + 35] = c.forest;
+        ex.input[AI_PLAYER_SITUATION_BASE + 37] = std::max({ c.animals, c.stone, c.crops, c.minerals });
+        ex.input[AI_PLAYER_SITUATION_BASE + 38] = c.minerals;
+        ex.input[AI_PLAYER_SITUATION_BASE + 39] = repeat % 2 == 0 ? 1.0f : 0.0f;
+        ex.input[AI_PLAYER_SITUATION_BASE + 40] = repeat % 2 == 0 ? 0.0f : 1.0f;
+        setOneHot(ex.target, 68, 4, c.technology);
+        ex.comments.push_back("Purpose: balance positive and negative landscape/resource evidence for Strategy technology selection.");
+        ex.comments.push_back("A visible context value of 1.0 makes zero hills, zero mountains, zero minerals, and zero resources meaningful negative observations rather than missing data.");
+        ex.comments.push_back(std::string("Decision: ") + c.reason + ".");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 24, c.hills, "visible hills share around owned cities or settlers");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.mountains, "visible mountain share around owned cities or settlers");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 28, c.animals, "visible animal-resource share");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 29, c.stone, "visible stone/quarry-resource share");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 30, c.crops, "visible crop-resource share");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 32, 1.0f, "known context coverage; zero terrain/resource values are observed negatives");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 34, c.freshWater, "fresh-water share");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 35, c.forest, "forest/jungle share");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 38, c.minerals, "visible mineral-resource share");
+        addSignalComment(ex.comments, "target", 68 + c.technology, 0.9f, "selected technology priority");
+        examples.push_back(ex);
+    }
+    return examples;
+}
+
+std::vector<TrainingExample> makeStrategyBudgetExamples()
+{
+    std::vector<TrainingExample> examples;
+    struct Case {
+        const char* title;
+        float funds;
+        float accountDelta;
+        float upkeep;
+    };
+    const std::vector<Case> cases = {
+        { "zero funds sets zero science", 0.0f, -0.30f, 0.60f },
+        { "five funds sets ten percent science", 5.0f, -0.20f, 0.55f },
+        { "ten funds sets twenty percent science", 10.0f, -0.15f, 0.50f },
+        { "fifteen funds sets thirty percent science", 15.0f, -0.10f, 0.45f },
+        { "twenty five funds sets half science", 25.0f, 0.00f, 0.40f },
+        { "thirty five funds sets seventy percent science", 35.0f, 0.05f, 0.35f },
+        { "forty five funds sets ninety percent science", 45.0f, 0.10f, 0.30f },
+        { "fifty funds sets full science", 50.0f, 0.15f, 0.25f },
+        { "large reserve keeps full science", 90.0f, 0.20f, 0.20f },
+    };
+
+    for (int repeat = 0; repeat < 108; ++repeat) {
+        const Case& c = cases[repeat % cases.size()];
+        const float clampedFunds = std::max(0.0f, std::min(50.0f, c.funds));
+        const float scienceRatio = clampedFunds / 50.0f;
+        TrainingExample ex;
+        ex.input = zeroInputSignal();
+        ex.target = zeroOutputSignal();
+        ex.explanation = std::string("strategy budget case: ") + c.title;
+        ex.decisionSlots = { 67 };
+        ex.correctSlot = 67;
+        ex.input[AI_PLAYER_SITUATION_BASE + 6] = std::max(-1.0f, std::min(1.0f, c.funds / 200.0f));
+        ex.input[AI_PLAYER_SITUATION_BASE + 41] = scienceRatio;
+        ex.input[AI_PLAYER_SITUATION_BASE + 42] = c.accountDelta;
+        ex.input[AI_PLAYER_SITUATION_BASE + 43] = c.upkeep;
+        ex.target[67] = scienceRatio;
+        ex.comments.push_back("Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.");
+        ex.comments.push_back("Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.");
+        ex.comments.push_back("Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 6, ex.input[AI_PLAYER_SITUATION_BASE + 6],
+                         "legacy money account normalized by 200");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 41, ex.input[AI_PLAYER_SITUATION_BASE + 41],
+                         "money account clamped to 0..50 and normalized to 0..1; this is the primary budget input");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 42, ex.input[AI_PLAYER_SITUATION_BASE + 42],
+                         "recent account delta after income, upkeep, and technology expense");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 43, ex.input[AI_PLAYER_SITUATION_BASE + 43],
+                         "upkeep burden signal");
+        addSignalComment(ex.comments, "target", 67, ex.target[67],
+                         "science funding ratio recommended by Strategy");
+        examples.push_back(ex);
+    }
+    return examples;
+}
+
+std::vector<TrainingExample> makeStrategyWorkerExamples()
+{
+    std::vector<TrainingExample> examples;
+    struct Case {
+        const char* title;
+        float x;
+        float y;
+        float cityCount;
+        float workerCount;
+        float idleWorkers;
+        float smallestPopulation;
+        float workersAtSmallest;
+        float priority;
+    };
+    const std::vector<Case> cases = {
+        { "three cities smallest size one has no workers", -0.55f, -0.30f, 0.25f, 0.38f, 0.25f, 0.04f, 0.00f, 0.92f },
+        { "frontier new city has no worker support", 0.48f, -0.44f, 0.30f, 0.50f, 0.38f, 0.06f, 0.00f, 0.90f },
+        { "small coastal city needs an unused worker", -0.18f, 0.52f, 0.22f, 0.44f, 0.25f, 0.08f, 0.05f, 0.86f },
+        { "capital already has workers but new city is weak", 0.34f, 0.22f, 0.36f, 0.62f, 0.50f, 0.05f, 0.06f, 0.94f },
+        { "two city empire should send spare worker to smaller city", -0.62f, 0.18f, 0.14f, 0.30f, 0.18f, 0.07f, 0.00f, 0.84f },
+        { "many workers and a size two border city", 0.62f, 0.08f, 0.42f, 0.75f, 0.62f, 0.10f, 0.10f, 0.88f },
+    };
+
+    for (int repeat = 0; repeat < 96; ++repeat) {
+        const Case& c = cases[repeat % cases.size()];
+        TrainingExample ex;
+        ex.input = zeroInputSignal();
+        ex.target = zeroOutputSignal();
+        ex.explanation = std::string("strategy worker city support case: ") + c.title;
+        ex.decisionSlots = { 0, 1, 2, 3 };
+        ex.correctSlot = 3;
+
+        ex.input[14] = c.x;
+        ex.input[15] = c.y;
+        ex.input[16] = c.smallestPopulation;
+        ex.input[17] = c.idleWorkers;
+        ex.input[18] = c.workersAtSmallest;
+        ex.input[19] = 1.0f;
+        ex.input[AI_PLAYER_SITUATION_BASE + 1] = c.cityCount;
+        ex.input[AI_PLAYER_SITUATION_BASE + 15] = c.workerCount;
+        ex.input[AI_PLAYER_SITUATION_BASE + 21] = c.workerCount;
+        setBirdsviewCell(ex, 12 + (repeat % 8), 18 + (repeat % 8), 0.0f, 0.0f,
+                         0.10f, 0.0f, "owned city region; smallest city coordinates are carried in the own-civilization object record");
+
+        ex.target[0] = c.x;
+        ex.target[1] = c.y;
+        ex.target[2] = -0.60f;
+        ex.target[3] = c.priority;
+
+        ex.comments.push_back("Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.");
+        ex.comments.push_back("Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.");
+        ex.comments.push_back("Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.");
+        ex.comments.push_back("Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.");
+        addSignalComment(ex.comments, "input", 14, ex.input[14], "smallest own city x coordinate normalized to [-1,1]");
+        addSignalComment(ex.comments, "input", 15, ex.input[15], "smallest own city y coordinate normalized to [-1,1]");
+        addSignalComment(ex.comments, "input", 16, ex.input[16], "smallest own city population normalized by 24");
+        addSignalComment(ex.comments, "input", 17, ex.input[17], "idle worker count normalized by 8");
+        addSignalComment(ex.comments, "input", 18, ex.input[18], "worker presence near the smallest city normalized by 4");
+        addSignalComment(ex.comments, "target", 0, ex.target[0], "worker-support target x");
+        addSignalComment(ex.comments, "target", 1, ex.target[1], "worker-support target y");
+        addSignalComment(ex.comments, "target", 3, ex.target[3], "worker-support priority for the own-civilization focus record");
         examples.push_back(ex);
     }
     return examples;
@@ -1451,12 +1754,24 @@ std::vector<TrainingExample> makeActionSettlerExamples()
         examples.push_back(ex);
     }
 
-    examples.push_back(makeActionUnitSituation(labels, "settler", "settler inside forwarded military focus runs away",
-                                               1.0f / 32.0f, 0, 0.25f, 0.00f, 0.20f, 0.00f, 0.58f, 0.80f, 0.10f,
-                                               55, 0.25f,
-                                               "center tile is acceptable grass, but strategy focus marks this area as dangerous",
-                                               "goto because civilian settler should run out of high military-priority coordinates before building",
-                                               0.00f, 0.00f, 0.90f, 0.15f));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "aged settler on hills still moves to nearby grass",
+                                               1.0f / 32.0f, 0, 0.50f, 0.00f, 0.30f, 0.00f, 0.50f, 0.95f, 1.00f,
+                                               54, 0.47f,
+                                               "west local tile is a better grass/water candidate while center is hills",
+                                               "goto because even an aged settler should not found directly on hills"));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "aged settler on hills with food nearby still moves",
+                                               1.0f / 32.0f, 0, 0.50f, 0.00f, 0.38f, 0.00f, 0.50f, 0.95f, 1.00f,
+                                               56, 0.80f,
+                                               "east local tile is a grass food candidate while center is hills",
+                                               "goto because hills should support a nearby grass city rather than host the city center"));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "first city aged pressure does not accept hills",
+                                               1.0f / 32.0f, 0, 0.50f, 0.00f, 0.35f, 0.00f, 0.53f, 1.00f, 1.00f,
+                                               56, 0.47f,
+                                               "east local tile is a better grass/water candidate while center is hills",
+                                               "goto because first-city pressure and age pressure do not make hills a valid city center"));
 
     for (float age : {0.10f, 0.50f, 0.90f}) {
         examples.push_back(makeActionUnitSituation(labels, "settler",
@@ -1472,6 +1787,24 @@ std::vector<TrainingExample> makeActionSettlerExamples()
                                                55, 0.47f,
                                                "center tile is grass with cattle-like food resource and A-bit water source",
                                                "build city because direct food, fresh water, and score 0.82 are a strong settlement"));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "grass cattle water settlement regression builds",
+                                               1.0f / 32.0f, 2, 0.25f, 0.80f, 0.45f, 1.00f, 0.82f, 0.88f, 0.00f,
+                                               54, 0.10f,
+                                               "west local tile is visible water beside a grass cattle center",
+                                               "build city because water adjacency plus direct food resource is better than wandering"));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "grass food water settlement with nearby support builds",
+                                               1.0f / 32.0f, 2, 0.25f, 0.80f, 0.45f, 1.00f, 0.82f, 0.88f, 0.20f,
+                                               55, 0.47f,
+                                               "center tile is the same high-score fresh grass food site after two turns",
+                                               "build city because an already strong settlement site should become more attractive with age"));
+    examples.push_back(makeActionUnitSituation(labels, "settler",
+                                               "grass food water first city builds immediately",
+                                               1.0f / 32.0f, 2, 0.25f, 0.80f, 0.45f, 1.00f, 0.82f, 1.00f, 0.00f,
+                                               55, 0.47f,
+                                               "center tile is a first-city candidate with food, fresh water, and strong score",
+                                               "build city because the first city should not walk away from strong food and water"));
     examples.push_back(makeActionUnitSituation(labels, "settler",
                                                "aged grass water resource settlement test builds",
                                                1.0f / 32.0f, 2, 0.25f, 0.80f, 0.45f, 1.00f, 0.82f, 0.88f, 0.50f,
@@ -1616,12 +1949,170 @@ std::vector<TrainingExample> makeActionWorkerExamples()
                                                    c.slot, c.cue, c.cueText, c.decision,
                                                    0.0f, 0.0f, 0.0f, 0.0f, c.workerSignal));
     }
-    examples.push_back(makeActionUnitSituation(labels, "worker", "worker inside forwarded military focus retreats",
-                                               worker, 0, 0.25f, 0.00f, 0.15f, 0.00f, 0.0f, 0.55f, 0.0f,
-                                               55, 0.25f,
-                                               "center tile is workable grass but strategy focus marks nearby danger",
-                                               "goto because civilian worker should run out of high military-priority coordinates instead of starting a build",
-                                               0.10f, -0.10f, 0.85f, 0.20f));
+
+    struct CityJobCase {
+        const char* title;
+        float nearbyJob;
+        float targetCue;
+        const char* job;
+    };
+    const std::vector<CityJobCase> cityJobCases = {
+        { "worker in city sees adjacent empty hill mine", 0.70f, 0.50f, "mine" },
+        { "worker in city sees adjacent copper hill mine", 0.82f, 0.72f, "mine on copper" },
+        { "worker in city sees adjacent irrigable grass", 0.72f, 0.47f, "irrigation" },
+        { "worker in city sees adjacent cattle pasture", 0.84f, 0.68f, "pasture" },
+        { "worker in city sees adjacent forest chop", 0.68f, 0.75f, "forest chop" },
+        { "worker in city sees adjacent empty grass cottage", 0.62f, 0.25f, "cottage" },
+        { "worker in city sees adjacent stone quarry", 0.78f, 0.70f, "quarry" },
+        { "worker in city sees nearby workshop plot", 0.58f, 0.31f, "workshop" },
+    };
+    for (int repeat = 0; repeat < 64; ++repeat) {
+        const CityJobCase& c = cityJobCases[repeat % cityJobCases.size()];
+        const int cueSlot = 56 + (repeat % 2); // One or two tiles east in the local window.
+        const std::string decision = std::string("goto because Workers cannot improve the city tile and should move to the nearby ") + c.job;
+        TrainingExample ex = makeActionUnitSituation(labels, "worker", c.title,
+                                                     worker, 0, 0.25f, 0.0f, c.nearbyJob, 0.0f,
+                                                     0.35f, 0.0f, 0.0f, cueSlot, c.targetCue,
+                                                     "center is an owned city and the nearby local tile is a legal Worker job",
+                                                     decision);
+        ex.explanation = "action worker city-to-job case: " + std::string(c.title);
+        ex.input[16 + 40] = 0.40f; // Grass plus friendly city/unit center signal from ai.js.
+        ex.comments.push_back("Worker city departure: input[15]=0 means the Worker is on its own city; local center input[56]=0.40 combines grass and friendly city/unit presence.");
+        ex.comments.push_back("Worker input[11] is the normalized score of the strongest currently legal nearby job, including non-resource terrain jobs such as an empty-hill mine.");
+        addSignalComment(ex.comments, "input", 11, ex.input[11], "best legal nearby Worker job score normalized by the browser adapter");
+        addSignalComment(ex.comments, "input", 15, ex.input[15], "zero distance to friendly city because Worker starts on the city tile");
+        examples.push_back(ex);
+    }
+
+    struct CityJobArrivalCase {
+        const char* title;
+        int command;
+        float terrain;
+        float resource;
+        float immediateSignal;
+        float cue;
+        const char* job;
+    };
+    const std::vector<CityJobArrivalCase> cityJobArrivalCases = {
+        { "worker arrived from city on empty hill mine", 6, 0.50f, 0.00f, 0.80f, 0.50f, "mine" },
+        { "worker arrived from city on copper hill mine", 6, 0.50f, 0.60f, 0.80f, 0.72f, "mine on copper" },
+        { "worker arrived from city on irrigable grass", 4, 0.25f, 0.00f, 0.60f, 0.47f, "irrigation" },
+        { "worker arrived from city on cattle pasture", 6, 0.25f, 0.80f, 0.80f, 0.68f, "pasture" },
+        { "worker arrived from city on forest chop", 5, 0.75f, 0.00f, 0.45f, 0.75f, "forest chop" },
+        { "worker arrived from city on empty grass cottage", 6, 0.25f, 0.00f, 0.80f, 0.25f, "cottage" },
+        { "worker arrived from city on stone quarry", 6, 0.50f, 0.60f, 0.80f, 0.70f, "quarry" },
+        { "worker arrived from city on workshop plot", 6, 0.13f, 0.00f, 0.80f, 0.31f, "workshop" },
+    };
+    for (int repeat = 0; repeat < 64; ++repeat) {
+        const CityJobArrivalCase& c = cityJobArrivalCases[repeat % cityJobArrivalCases.size()];
+        const float cityDistance = 0.01f + 0.01f * static_cast<float>(repeat % 3);
+        const float agePressure = 0.25f + 0.05f * static_cast<float>(repeat % 3);
+        TrainingExample ex = makeActionUnitSituation(
+            labels, "worker", c.title, worker, c.command, c.terrain, c.resource,
+            0.0f, c.command == 4 ? 1.0f : 0.0f, 0.28f, cityDistance,
+            agePressure, 55, c.cue,
+            "center tile is the legal improvement site reached from an adjacent owned city",
+            std::string(c.command == 4 ? "irrigate" : c.command == 5 ? "chop forest" : "build improvement")
+                + " because the Worker has arrived and must complete " + c.job,
+            0.0f, 0.0f, 0.0f, 0.0f, c.immediateSignal);
+        ex.explanation = "action worker city-job arrival case: " + std::string(c.title);
+        ex.comments.push_back("Worker arrival phase: input[8] identifies the legal immediate build, while input[15] remains small because the job is adjacent to the owned city.");
+        addSignalComment(ex.comments, "input", 8, ex.input[8], "immediate Worker build selected by game legality rules at the destination tile");
+        addSignalComment(ex.comments, "input", 15, ex.input[15], "small normalized distance to the adjacent owned city after movement");
+        examples.push_back(ex);
+    }
+
+    struct BusyCase {
+        const char* title;
+        const char* state;
+        int cmd;
+        float terrain;
+        float res;
+        float nearby;
+        float fresh;
+        float cityScore;
+        float cityDistance;
+        float agePressure;
+        float workerSignal;
+        float cue;
+        const char* decision;
+    };
+    const std::vector<BusyCase> busyCases = {
+        { "busy worker keeps irrigating fresh grass", "irrigate", 4, 0.25f, 0.00f, 0.08f, 1.00f, 0.42f, 0.20f, 0.35f, 0.60f, 0.47f, "irrigate because input[1] says this worker is already irrigating and input[7] says it has an active task" },
+        { "busy worker keeps irrigating grasswater", "irrigate", 4, 0.88f, 0.00f, 0.10f, 1.00f, 0.44f, 0.24f, 0.45f, 0.60f, 0.88f, "irrigate because mixed grass-water irrigation has already started and should continue" },
+        { "busy worker keeps irrigating city grass", "irrigate", 4, 0.25f, 0.00f, 0.12f, 1.00f, 0.46f, 0.12f, 0.50f, 0.60f, 0.50f, "irrigate because adjacent city irrigation work should not be changed before completion" },
+        { "busy worker keeps irrigating despite generic improvement signal", "irrigate", 4, 0.25f, 0.00f, 0.08f, 1.00f, 0.42f, 0.20f, 0.45f, 0.80f, 0.47f, "irrigate because state irrigate with active task must beat a generic improvement signal" },
+        { "busy worker keeps chopping forest", "chop_forest", 5, 0.75f, 0.00f, 0.08f, 0.00f, 0.28f, 0.25f, 0.45f, 0.45f, 0.78f, "chop forest because an active chop task should not be replaced by road, wait, or goto before completion" },
+        { "busy worker keeps chopping wet forest", "chop_forest", 5, 0.75f, 0.00f, 0.10f, 1.00f, 0.30f, 0.28f, 0.55f, 0.45f, 0.80f, "chop forest because fresh-water context must not interrupt an active chop task" },
+        { "busy worker keeps chopping remote forest", "chop_forest", 5, 0.75f, 0.00f, 0.02f, 0.00f, 0.10f, 0.70f, 0.50f, 0.45f, 0.74f, "chop forest because distance from city must not change a started chop into movement" },
+        { "busy worker keeps chopping city forest", "chop_forest", 5, 0.75f, 0.00f, 0.12f, 0.00f, 0.36f, 0.16f, 0.45f, 0.45f, 0.76f, "chop forest because a nearby city should receive the completed chop production" },
+        { "busy worker keeps chopping flat forest", "chop_forest", 5, 0.75f, 0.00f, 0.04f, 0.00f, 0.22f, 0.42f, 0.60f, 0.45f, 0.72f, "chop forest because active task state and task flag are stronger than generic tile-improvement cues" },
+        { "busy worker keeps chopping forest even with generic worker signal", "chop_forest", 5, 0.75f, 0.00f, 0.06f, 0.00f, 0.25f, 0.32f, 0.45f, 0.80f, 0.77f, "chop forest because state chop_forest with task flag must beat a generic improvement signal" },
+        { "busy worker keeps building current road", "road", 3, 0.25f, 0.00f, 0.00f, 0.00f, 0.18f, 0.30f, 0.40f, 0.30f, 0.25f, "road to because current road construction is the active worker order and should continue" },
+        { "busy worker keeps road on hill", "road", 3, 0.50f, 0.00f, 0.00f, 0.00f, 0.12f, 0.48f, 0.45f, 0.30f, 0.42f, "road to because current road construction should continue even on a hill that could later be mined" },
+        { "busy worker keeps road near city", "road", 3, 0.25f, 0.00f, 0.00f, 0.00f, 0.26f, 0.18f, 0.40f, 0.30f, 0.35f, "road to because a started road beside a city should not be replaced by a tile improvement" },
+        { "busy worker keeps road despite chop-like forest", "road", 3, 0.75f, 0.00f, 0.00f, 0.00f, 0.10f, 0.52f, 0.45f, 0.30f, 0.70f, "road to because state road with active task must beat forest chopping cues" },
+        { "busy worker keeps road-to route", "road_to", 3, 0.25f, 0.00f, 0.00f, 0.00f, 0.25f, 0.22f, 0.30f, 0.20f, 0.35f, "road to because the worker is already assigned to build roads along a route" },
+        { "busy worker keeps pasture build", "pasture", 6, 0.25f, 0.80f, 0.12f, 0.00f, 0.52f, 0.36f, 0.35f, 0.80f, 0.58f, "build improvement because pasture is already under construction and should not be changed" },
+        { "busy worker keeps farm build", "farm", 6, 0.25f, 0.80f, 0.18f, 1.00f, 0.56f, 0.24f, 0.35f, 0.80f, 0.46f, "build improvement because farm is already under construction and should continue" },
+        { "busy worker keeps plantation build", "plantation", 6, 0.25f, 0.50f, 0.11f, 0.00f, 0.43f, 0.34f, 0.35f, 0.80f, 0.52f, "build improvement because plantation is already under construction and should continue" },
+        { "busy worker keeps camp build", "camp", 6, 0.75f, 0.80f, 0.16f, 0.00f, 0.36f, 0.38f, 0.35f, 0.80f, 0.84f, "build improvement because camp is already under construction and should not switch to chop forest" },
+        { "busy worker keeps fishing boats build", "fishing_boats", 6, 0.00f, 0.80f, 0.12f, 0.00f, 0.34f, 0.28f, 0.35f, 0.80f, 0.18f, "build improvement because fishing boats are already under construction and should continue" },
+        { "busy worker keeps quarry build", "quarry", 6, 0.50f, 0.60f, 0.08f, 0.00f, 0.28f, 0.50f, 0.35f, 0.80f, 0.68f, "build improvement because quarry is already under construction and should continue" },
+        { "busy worker keeps winery build", "winery", 6, 0.25f, 0.50f, 0.12f, 0.00f, 0.44f, 0.42f, 0.35f, 0.80f, 0.56f, "build improvement because winery is already under construction and should continue" },
+        { "busy worker keeps cottage build", "cottage", 6, 0.25f, 0.00f, 0.04f, 0.00f, 0.42f, 0.20f, 0.35f, 0.80f, 0.25f, "build improvement because cottage is already under construction and should not be replaced by road or goto" },
+        { "busy worker keeps workshop build", "workshop", 6, 0.25f, 0.00f, 0.02f, 0.00f, 0.18f, 0.55f, 0.35f, 0.80f, 0.31f, "build improvement because workshop is already under construction and should continue" },
+        { "busy worker keeps mine build", "mine", 6, 0.50f, 0.60f, 0.12f, 0.00f, 0.22f, 0.48f, 0.35f, 0.80f, 0.64f, "build improvement because mine is already under construction and should continue" },
+        { "busy worker keeps fortification build", "fortification", 6, 0.50f, 0.00f, 0.00f, 0.00f, 0.08f, 0.85f, 0.35f, 0.80f, 0.48f, "build improvement because fortification is already under construction and should continue" },
+    };
+    for (const BusyCase& c : busyCases) {
+        TrainingExample ex = makeActionUnitSituation(labels, "worker", c.title, worker, c.cmd, c.terrain, c.res, c.nearby,
+                                                     c.fresh, c.cityScore, c.cityDistance, c.agePressure,
+                                                     55, c.cue,
+                                                     "center tile plus state/task fields represent a worker already executing a multi-turn order",
+                                                     c.decision,
+                                                     0.0f, 0.0f, 0.0f, 0.0f, c.workerSignal);
+        ex.explanation = "action worker busy-task case: " + std::string(c.title);
+        ex.input[1] = actionStateSignal(c.state);
+        ex.input[7] = 1.0f;
+        ex.comments.push_back(std::string("Busy-worker preservation rule: input[1]=") + std::to_string(ex.input[1])
+                              + " encodes state '" + std::string(c.state)
+                              + "' and input[7]=1.0 encodes an active task, so the model must repeat the matching worker command instead of selecting a new one.");
+        addSignalComment(ex.comments, "input", 1, ex.input[1],
+                         std::string("current worker state '") + c.state + "' normalized by ai.js unitStateCode order");
+        addSignalComment(ex.comments, "input", 7, ex.input[7],
+                         "active task flag; this is the signal that the current build order must be preserved");
+        examples.push_back(ex);
+    }
+
+    auto addWorkerSupportCase = [&](const char* title, int cmd, float terrain, float workerSignal,
+                                    float nearbyWorkers, const char* decision) {
+        TrainingExample ex = makeActionUnitSituation(labels, "worker", title,
+                                                     worker, cmd, terrain, 0.0f, 0.05f, 0.0f,
+                                                     cmd == 0 ? 0.10f : 0.42f,
+                                                     cmd == 0 ? 0.65f : 0.16f,
+                                                     0.0f, 55, terrain,
+                                                     "center tile plus worker-support focus from Strategy",
+                                                     decision,
+                                                     0.75f, -0.25f, 0.0f, 0.88f, workerSignal);
+        ex.input[101] = nearbyWorkers;
+        ex.comments.push_back("Worker-support recheck: input[97..98] is the Strategy suggested city direction, input[100] is worker-support priority, and input[101] is nearby friendly worker count normalized so 1.0 means two or more workers are visible in the 9x9 window.");
+        addSignalComment(ex.comments, "input", 101, ex.input[101],
+                         "nearby friendly worker density; below 1.0 means this worker should keep improving the local city area instead of relocating");
+        examples.push_back(ex);
+    };
+    addWorkerSupportCase("worker with two nearby workers follows smallest-city support suggestion",
+                         0, 0.13f, 0.00f, 1.00f,
+                         "goto because the local area already has two workers visible, so the Strategy smallest-city support suggestion can be accepted");
+    addWorkerSupportCase("worker alone ignores smallest-city support and builds local cottage",
+                         6, 0.25f, 0.80f, 0.00f,
+                         "build improvement because the worker does not see two nearby workers and must improve the current city area before relocating");
+    addWorkerSupportCase("worker with one helper still improves local grass",
+                         6, 0.25f, 0.80f, 0.50f,
+                         "build improvement because one nearby worker is not enough local coverage to leave for another city");
+    addWorkerSupportCase("worker with two nearby workers can leave weak desert tile",
+                         0, 0.13f, 0.00f, 1.00f,
+                         "goto because a weak current tile plus two visible local workers makes the Strategy city-support order acceptable");
     return examples;
 }
 
@@ -1761,7 +2252,7 @@ std::vector<TrainingExample> makeEconomicsExamples()
         "produce Slinger",
         "produce Archor",
         "produce Spearman",
-        "produce Horseman"
+        "produce None"
     };
     return makeObjectCommandExamples("economics", labels, 100);
 }
@@ -1776,7 +2267,7 @@ std::vector<TrainingExample> makeEconomicsStrategyExamples()
         "produce Slinger",
         "produce Archor",
         "produce Spearman",
-        "produce Horseman"
+        "produce None"
     };
     std::vector<TrainingExample> examples;
     examples.reserve(160);
@@ -1799,6 +2290,9 @@ std::vector<TrainingExample> makeEconomicsStrategyExamples()
         std::array<float, 4> demand;
         float openedTechRate;
         const char* decision;
+        float account = 0.10f;
+        float accountDelta = 0.05f;
+        float upkeep = 0.10f;
     };
     const std::vector<Case> cases = {
         { "high settler demand uses high food city", 0, 0.06f, 0.13f, 0.12f, 0.10f, 0.00f, 0.18f, 0.25f, 0.75f, 0.35f, 0.30f, 1.00f, 0.00f, 0.20f, {0.80f, 0.10f, 0.05f, 0.05f}, 0.15f, "produce Settlers because Strategy wants expansion and the city has food" },
@@ -1824,6 +2318,10 @@ std::vector<TrainingExample> makeEconomicsStrategyExamples()
         { "balanced empire improves production city after worker tech", 2, 0.18f, 0.13f, 0.12f, 0.18f, 0.08f, 0.18f, 0.20f, 0.40f, 0.75f, 0.30f, 0.30f, 0.00f, 0.35f, {0.20f, 0.45f, 0.10f, 0.25f}, 0.18f, "produce Worker because worker priority is largest and worker technologies are available" },
         { "safe unknown map makes explorer", 1, 0.13f, 0.13f, 0.25f, 0.08f, 0.00f, 0.18f, 0.18f, 0.45f, 0.35f, 0.55f, 0.60f, 0.00f, 0.20f, {0.20f, 0.20f, 0.50f, 0.10f}, 0.10f, "produce Explorer because exploration priority is largest and workers already exist" },
         { "war priority in weak city makes warrior", 3, 0.06f, 0.13f, 0.12f, 0.00f, 0.35f, 0.18f, 0.12f, 0.30f, 0.30f, 0.20f, 0.80f, 0.00f, 0.00f, {0.10f, 0.10f, 0.05f, 0.75f}, 0.05f, "produce Warrior because it is the basic military response from a weak city" },
+        { "negative account delta stops new units", 7, 0.13f, 0.13f, 0.12f, 0.10f, 0.00f, 0.18f, 0.20f, 0.45f, 0.70f, 0.30f, 0.50f, 0.00f, 0.20f, {0.40f, 0.20f, 0.10f, 0.30f}, 0.12f, "produce None because account delta is negative and new units would increase upkeep", 0.10f, -0.25f, 0.55f },
+        { "negative treasury stops all city production", 7, 0.18f, 0.13f, 0.25f, 0.20f, 0.00f, 0.18f, 0.25f, 0.55f, 0.80f, 0.35f, 0.40f, 0.00f, 0.35f, {0.20f, 0.35f, 0.10f, 0.35f}, 0.20f, "produce None because the money account is already below zero", -0.30f, -0.10f, 0.60f },
+        { "high upkeep and negative delta keeps productive city idle", 7, 0.25f, 0.13f, 0.35f, 0.25f, 0.10f, 0.18f, 0.28f, 0.60f, 0.90f, 0.40f, 0.20f, 0.00f, 0.45f, {0.10f, 0.30f, 0.05f, 0.55f}, 0.30f, "produce None because upkeep exceeds income even though the city is productive", 0.02f, -0.35f, 0.80f },
+        { "explorer demand ignored while account shrinks", 7, 0.13f, 0.13f, 0.18f, 0.12f, 0.00f, 0.18f, 0.18f, 0.45f, 0.35f, 0.65f, 0.60f, 0.00f, 0.20f, {0.10f, 0.10f, 0.75f, 0.05f}, 0.10f, "produce None because exploration demand cannot override negative account delta", 0.08f, -0.20f, 0.50f },
     };
 
     for (size_t caseIndex = 0; caseIndex < cases.size(); ++caseIndex) {
@@ -1857,8 +2355,19 @@ std::vector<TrainingExample> makeEconomicsStrategyExamples()
 	        ex.input[AI_PLAYER_SITUATION_BASE + 14] = c.idleUnits;
 	        ex.input[AI_PLAYER_SITUATION_BASE + 15] = c.workers;
 	        ex.input[AI_PLAYER_SITUATION_BASE + 16] = c.openedTechRate;
+	        ex.input[AI_PLAYER_SITUATION_BASE + 24] = c.account;
+	        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.accountDelta;
+	        ex.input[AI_PLAYER_SITUATION_BASE + 26] = c.upkeep;
+	        if (c.command == 2) {
+	            // Legacy Worker-demand examples now explicitly contain both a
+	            // usable technology and a matching plot; the aggregate opened
+	            // technology rate alone is intentionally insufficient.
+	            ex.input[AI_PLAYER_SITUATION_BASE + 27 + 4] = 1.0f; // Mining.
+	            ex.input[AI_PLAYER_SITUATION_BASE + 35 + 4] = 0.50f; // Mineable hills/rocks.
+	            ex.input[AI_PLAYER_SITUATION_BASE + 43 + 4] = 0.50f; // Open Mining x mineable plot.
+	        }
 	        ex.comments.push_back("Purpose: teach Economics to convert Strategy production demand percentages into concrete city production.");
-	        ex.comments.push_back("Economics general inputs: input[961]=city count, input[962]=free city count, input[965]=own military count, input[966]=enemy military count, input[974]=idle movable units, input[975]=worker count, input[976]=opened technology rate, input[980]=settlers demand, input[981]=worker demand, input[982]=explorer demand, input[983]=military demand.");
+	        ex.comments.push_back("Economics general inputs: input[961]=city count, input[962]=free city count, input[965]=own military count, input[966]=enemy military count, input[974]=idle movable units, input[975]=worker count, input[976]=opened technology rate, input[980]=settlers demand, input[981]=worker demand, input[982]=explorer demand, input[983]=military demand, input[984]=money account, input[985]=account delta, input[986]=upkeep.");
         ex.comments.push_back("City fields used: population, food income, production income, money income, frontier flag, seaside flag, and garrison strength.");
         ex.comments.push_back(std::string("Decision meaning: ") + c.decision + ".");
         addClassificationTargetComments(ex, outputBase, labels, c.command);
@@ -1868,7 +2377,101 @@ std::vector<TrainingExample> makeEconomicsStrategyExamples()
 	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 23, c.demand[3], "Strategy military production demand percentage");
 	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 15, c.workers, "current worker count normalized by 8");
 	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 16, c.openedTechRate, "opened technology rate; zero means beginning game where workers have no useful improvement technology yet");
+	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 24, c.account, "current money account normalized; negative values mean treasury is below zero");
+	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.accountDelta, "last money delta after income and upkeep; negative values mean the economy is shrinking");
+	        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 26, c.upkeep, "last upkeep burden normalized");
 	        examples.push_back(ex);
+        }
+    }
+    return examples;
+}
+
+std::vector<TrainingExample> makeEconomicsWorkerExamples()
+{
+    const std::vector<std::string> labels = {
+        "produce Settlers", "produce Explorer", "produce Worker", "produce Warrior",
+        "produce Slinger", "produce Archor", "produce Spearman", "produce None"
+    };
+    const std::array<const char*, 8> technologyNames = {
+        "Wheel", "Bronze Working", "Irrigation", "Animal Husbandry",
+        "Mining", "Masonry", "Pottery", "Construction"
+    };
+    const std::array<const char*, 8> opportunityNames = {
+        "road-ready land", "choppable forest", "irrigable grass",
+        "opened animal resource", "mineable hills or mountains",
+        "cottage or quarry plot", "plantation or winery resource",
+        "workshop or fortification plot"
+    };
+    std::vector<TrainingExample> examples;
+    examples.reserve(256);
+
+    for (int technology = 0; technology < 8; ++technology) {
+        for (int variant = 0; variant < 4; ++variant) {
+            for (int record = 0; record < AI_PLAYER_OBJECT_COUNT; ++record) {
+                const int objectBase = record * AI_PLAYER_OBJECT_FLOATS;
+                const int outputBase = record * AI_PLAYER_COMMAND_FLOATS;
+                const bool matchingTechnology = variant == 0 || variant == 2;
+                const bool matchingPlot = variant == 0 || variant == 1;
+                const int command = matchingTechnology && matchingPlot ? 2 : 3;
+                TrainingExample ex;
+                ex.input = zeroInputSignal();
+                ex.target = zeroOutputSignal();
+                ex.decisionSlots = slotRange(outputBase, AI_PLAYER_COMMAND_FLOATS);
+                ex.correctSlot = outputBase + command;
+                setOneHot(ex.target, outputBase, AI_PLAYER_COMMAND_FLOATS, command);
+
+                ex.input[objectBase + 2] = 0.22f;
+                ex.input[objectBase + 3] = 0.48f;
+                ex.input[objectBase + 4] = 0.68f;
+                ex.input[objectBase + 5] = 0.30f;
+                ex.input[objectBase + 10] = 0.30f;
+                ex.input[objectBase + 12] = 0.45f;
+                ex.input[objectBase + 13] = 1.0f;
+                ex.input[objectBase + 14] = 1.0f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 1] = 0.06f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 2] = 0.13f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 5] = 0.25f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 15] = 0.0f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 16] = matchingTechnology ? 0.10f : 0.0f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 20] = 0.05f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 21] = 0.85f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 22] = 0.03f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 23] = 0.07f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 24] = 0.40f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 25] = 0.15f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 26] = 0.10f;
+
+                if (matchingTechnology) {
+                    ex.input[AI_PLAYER_SITUATION_BASE + 27 + technology] = 1.0f;
+                } else if (variant == 3) {
+                    ex.input[AI_PLAYER_SITUATION_BASE + 27 + ((technology + 1) % 8)] = 1.0f;
+                }
+                if (matchingPlot) {
+                    ex.input[AI_PLAYER_SITUATION_BASE + 35 + technology] = 0.50f;
+                } else if (variant == 3) {
+                    ex.input[AI_PLAYER_SITUATION_BASE + 35 + ((technology + 2) % 8)] = 0.50f;
+                }
+                ex.input[AI_PLAYER_SITUATION_BASE + 43 + technology]
+                    = ex.input[AI_PLAYER_SITUATION_BASE + 27 + technology]
+                    * ex.input[AI_PLAYER_SITUATION_BASE + 35 + technology];
+
+                const std::string condition = variant == 0 ? "matching technology and plot"
+                    : (variant == 1 ? "matching plot but technology closed"
+                    : (variant == 2 ? "technology open but no matching plot"
+                    : "unrelated technology and unrelated plot"));
+                ex.explanation = std::string("economics Worker usefulness: ") + technologyNames[technology]
+                    + " / " + opportunityNames[technology] + " / " + condition;
+                ex.comments.push_back("Purpose: produce a Worker only when an individually encoded improvement technology and its corresponding useful plot are both present.");
+                ex.comments.push_back(std::string("Technology signal: general_situation[")
+                    + std::to_string(27 + technology) + "] is " + technologyNames[technology] + ".");
+                ex.comments.push_back(std::string("Plot signal: general_situation[")
+                    + std::to_string(35 + technology) + "] counts " + opportunityNames[technology] + " around owned cities.");
+                ex.comments.push_back(command == 2
+                    ? "Decision: produce Worker because it has an immediately applicable improvement job."
+                    : "Decision: produce Warrior; high Worker demand alone is insufficient when either half of the technology/plot pair is absent.");
+                addClassificationTargetComments(ex, outputBase, labels, command);
+                examples.push_back(ex);
+            }
         }
     }
     return examples;

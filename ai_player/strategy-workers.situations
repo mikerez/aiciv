@@ -1,0 +1,1539 @@
+# AI Civ training situations v1
+# Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
+# Comment blocks explain the game meaning of each slot used by the following machine row.
+# situation 0: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,1936:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 1: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,1987:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 2: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2038:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 3: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2089:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 4: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2140:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 5: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2191:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 6: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2242:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 7: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2293:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 8: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,1936:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 9: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,1987:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 10: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2038:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 11: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2089:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 12: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2140:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 13: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2191:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 14: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2242:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 15: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2293:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 16: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,1936:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 17: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,1987:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 18: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2038:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 19: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2089:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 20: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2140:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 21: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2191:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 22: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2242:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 23: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2293:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 24: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,1936:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 25: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,1987:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 26: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2038:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 27: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2089:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 28: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2140:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 29: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2191:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 30: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2242:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 31: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2293:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 32: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,1936:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 33: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,1987:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 34: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2038:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 35: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2089:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 36: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2140:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 37: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2191:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 38: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2242:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 39: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2293:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 40: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,1936:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 41: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,1987:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 42: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2038:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 43: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2089:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 44: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2140:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 45: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2191:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 46: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2242:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 47: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2293:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 48: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,1936:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 49: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,1987:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 50: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2038:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 51: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2089:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 52: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2140:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 53: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2191:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 54: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2242:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 55: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2293:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 56: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,1936:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 57: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,1987:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 58: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2038:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 59: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2089:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 60: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2140:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 61: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2191:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 62: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2242:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 63: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2293:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 64: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,1936:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 65: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,1987:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 66: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2038:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 67: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2089:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 68: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2140:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 69: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2191:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 70: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2242:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 71: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2293:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 72: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,1936:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 73: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,1987:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 74: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2038:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 75: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2089:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 76: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2140:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 77: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2191:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 78: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2242:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 79: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2293:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 80: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,1936:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 81: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,1987:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 82: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2038:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 83: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2089:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 84: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2140:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 85: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2191:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 86: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2242:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 87: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2293:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 88: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (12,18) is Strategy input[1936]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,1936:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 89: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (13,19) is Strategy input[1987]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,1987:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city
+# situation 90: strategy worker city support case: three cities smallest size one has no workers
+# Birdsview cell (14,20) is Strategy input[2038]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.550000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.300000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.040000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.550000 means worker-support target x.
+# target[1] = -0.300000 means worker-support target y.
+# target[3] = 0.920000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.550000,15:-0.300000,16:0.040000,17:0.250000,19:1.000000,961:0.250000,975:0.380000,981:0.380000,2038:0.071250|0:-0.550000,1:-0.300000,2:-0.600000,3:0.920000|strategy worker city support case: three cities smallest size one has no workers
+# situation 91: strategy worker city support case: frontier new city has no worker support
+# Birdsview cell (15,21) is Strategy input[2089]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.480000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = -0.440000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.060000 means smallest own city population normalized by 24.
+# input[17] = 0.380000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.480000 means worker-support target x.
+# target[1] = -0.440000 means worker-support target y.
+# target[3] = 0.900000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.480000,15:-0.440000,16:0.060000,17:0.380000,19:1.000000,961:0.300000,975:0.500000,981:0.500000,2089:0.071250|0:0.480000,1:-0.440000,2:-0.600000,3:0.900000|strategy worker city support case: frontier new city has no worker support
+# situation 92: strategy worker city support case: small coastal city needs an unused worker
+# Birdsview cell (16,22) is Strategy input[2140]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.180000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.520000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.080000 means smallest own city population normalized by 24.
+# input[17] = 0.250000 means idle worker count normalized by 8.
+# input[18] = 0.050000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.180000 means worker-support target x.
+# target[1] = 0.520000 means worker-support target y.
+# target[3] = 0.860000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.180000,15:0.520000,16:0.080000,17:0.250000,18:0.050000,19:1.000000,961:0.220000,975:0.440000,981:0.440000,2140:0.071250|0:-0.180000,1:0.520000,2:-0.600000,3:0.860000|strategy worker city support case: small coastal city needs an unused worker
+# situation 93: strategy worker city support case: capital already has workers but new city is weak
+# Birdsview cell (17,23) is Strategy input[2191]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.340000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.220000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.050000 means smallest own city population normalized by 24.
+# input[17] = 0.500000 means idle worker count normalized by 8.
+# input[18] = 0.060000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.340000 means worker-support target x.
+# target[1] = 0.220000 means worker-support target y.
+# target[3] = 0.940000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.340000,15:0.220000,16:0.050000,17:0.500000,18:0.060000,19:1.000000,961:0.360000,975:0.620000,981:0.620000,2191:0.071250|0:0.340000,1:0.220000,2:-0.600000,3:0.940000|strategy worker city support case: capital already has workers but new city is weak
+# situation 94: strategy worker city support case: two city empire should send spare worker to smaller city
+# Birdsview cell (18,24) is Strategy input[2242]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = -0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.180000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.070000 means smallest own city population normalized by 24.
+# input[17] = 0.180000 means idle worker count normalized by 8.
+# input[18] = 0.000000 means worker presence near the smallest city normalized by 4.
+# target[0] = -0.620000 means worker-support target x.
+# target[1] = 0.180000 means worker-support target y.
+# target[3] = 0.840000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:-0.620000,15:0.180000,16:0.070000,17:0.180000,19:1.000000,961:0.140000,975:0.300000,981:0.300000,2242:0.071250|0:-0.620000,1:0.180000,2:-0.600000,3:0.840000|strategy worker city support case: two city empire should send spare worker to smaller city
+# situation 95: strategy worker city support case: many workers and a size two border city
+# Birdsview cell (19,25) is Strategy input[2293]. Compact value 0.071250 is derived from civ=0.000000, military=0.000000, landscape_height=0.100000, resource_id=0.000000. owned city region; smallest city coordinates are carried in the own-civilization object record.
+# Purpose: teach Strategy to use the own-civilization object focus as a worker-support suggestion for the smallest own city.
+# Input object record 0 is the current civilization. input[14]=smallest own city x, input[15]=smallest own city y, input[16]=smallest city population, input[17]=idle worker count, input[18]=workers already at or near that city.
+# Output object record 0 carries the suggested worker target: output[0]=target x, output[1]=target y, output[2]=low military priority, output[3]=worker-support priority.
+# Action receives this as a suggestion only. Worker Action situations must still reject moving away when local worker density is below two workers in the visible 9x9 window.
+# input[14] = 0.620000 means smallest own city x coordinate normalized to [-1,1].
+# input[15] = 0.080000 means smallest own city y coordinate normalized to [-1,1].
+# input[16] = 0.100000 means smallest own city population normalized by 24.
+# input[17] = 0.620000 means idle worker count normalized by 8.
+# input[18] = 0.100000 means worker presence near the smallest city normalized by 4.
+# target[0] = 0.620000 means worker-support target x.
+# target[1] = 0.080000 means worker-support target y.
+# target[3] = 0.880000 means worker-support priority for the own-civilization focus record.
+# Machine row below repeats the same situation in parser format.
+3|0,1,2,3|14:0.620000,15:0.080000,16:0.100000,17:0.620000,18:0.100000,19:1.000000,961:0.420000,975:0.750000,981:0.750000,2293:0.071250|0:0.620000,1:0.080000,2:-0.600000,3:0.880000|strategy worker city support case: many workers and a size two border city

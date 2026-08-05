@@ -4,9 +4,9 @@
 # situation 0: action slinger case: slinger sees enemy adjacent
 # Purpose: teach Action engine slinger behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: east local tile is alien unit adjacent.
 # Decision meaning: attack because adjacent target is already in danger range.
 # Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
@@ -14,6 +14,8 @@
 # Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
 # Training target: output[7] is set to +0.900000, every other legal candidate output is set to -0.900000.
 # input[0] = 0.156250 means unit type normalized as unitTypeIndex/32.
+# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
+# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
 # input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
 # input[8] = 0.700000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
 # input[57] = -0.150000 means main local 9x9 cue driving this action.
@@ -23,9 +25,9 @@
 # situation 1: action slinger case: slinger sees enemy far and hill nearby
 # Purpose: teach Action engine slinger behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: north-east local tile is hills between slinger and enemy.
 # Decision meaning: goto hill because ranged units want high defensive firing positions.
 # Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
@@ -33,6 +35,8 @@
 # Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
 # Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
 # input[0] = 0.156250 means unit type normalized as unitTypeIndex/32.
+# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
+# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
 # input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
 # input[48] = 0.500000 means main local 9x9 cue driving this action.
 # input[99] = 0.000000 means forwarded strategy military attack priority.
@@ -41,9 +45,9 @@
 # situation 2: action slinger case: slinger on hill sees enemy
 # Purpose: teach Action engine slinger behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: far enemy is visible while current tile is hills.
 # Decision meaning: wait as fortify/hold because hill firing position is already good.
 # Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
@@ -51,6 +55,8 @@
 # Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
 # Training target: output[1] is set to +0.900000, every other legal candidate output is set to -0.900000.
 # input[0] = 0.156250 means unit type normalized as unitTypeIndex/32.
+# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
+# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
 # input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
 # input[8] = 0.500000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
 # input[58] = -0.150000 means main local 9x9 cue driving this action.
@@ -60,9 +66,9 @@
 # situation 3: action slinger case: slinger sees dark flank
 # Purpose: teach Action engine slinger behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense priority. dx/dy are normalized by the 9x9 window radius of 4 tiles.
+# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: west local tile is fog on the flank.
 # Decision meaning: goto carefully because ranged screen should reveal nearby fog.
 # Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
@@ -70,6 +76,8 @@
 # Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
 # Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
 # input[0] = 0.156250 means unit type normalized as unitTypeIndex/32.
+# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
+# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
 # input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
 # input[55] = -0.200000 means main local 9x9 cue driving this action.
 # input[99] = 0.000000 means forwarded strategy military attack priority.

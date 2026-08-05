@@ -1,0 +1,39 @@
+# Strategy budget tests.
+# Format:
+# scenario NAME
+# budget funds=N delta=N upkeep=N
+# expect science_rate=N tolerance=N
+# end
+#
+# funds below 50 should set Strategy output[67] to funds/50.
+# funds at or above 50 should set Strategy output[67] to 1.0.
+
+scenario zero_funds_zero_science
+budget funds=0 delta=-0.30 upkeep=0.60
+expect science_rate=0.00 tolerance=0.16
+end
+
+scenario ten_funds_twenty_percent_science
+budget funds=10 delta=-0.15 upkeep=0.50
+expect science_rate=0.20 tolerance=0.16
+end
+
+scenario twenty_five_funds_half_science
+budget funds=25 delta=0.00 upkeep=0.40
+expect science_rate=0.50 tolerance=0.16
+end
+
+scenario forty_funds_eighty_percent_science
+budget funds=40 delta=0.08 upkeep=0.32
+expect science_rate=0.80 tolerance=0.16
+end
+
+scenario fifty_funds_full_science
+budget funds=50 delta=0.12 upkeep=0.25
+expect science_rate=1.00 tolerance=0.16
+end
+
+scenario high_funds_full_science
+budget funds=100 delta=0.20 upkeep=0.20
+expect science_rate=1.00 tolerance=0.16
+end

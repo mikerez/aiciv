@@ -5,7 +5,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[0] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[0] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -19,7 +19,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[8] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[8] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -33,7 +33,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[16] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[16] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -47,7 +47,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[24] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[24] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -61,7 +61,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[32] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[32] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -75,7 +75,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[40] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[40] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -89,7 +89,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[48] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[48] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -103,7 +103,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[56] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[56] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -117,7 +117,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[1] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[1] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -131,7 +131,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[9] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[9] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -145,7 +145,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[17] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[17] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -159,7 +159,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[25] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[25] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -173,7 +173,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[33] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[33] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -187,7 +187,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[41] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[41] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -201,7 +201,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[49] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[49] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -215,7 +215,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[57] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[57] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -229,7 +229,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[2] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[2] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -243,7 +243,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[10] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[10] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -257,7 +257,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[18] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[18] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -271,7 +271,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[26] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[26] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -285,7 +285,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[34] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[34] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -299,7 +299,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[42] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[42] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -313,7 +313,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[50] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[50] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -327,7 +327,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[58] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[58] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -341,7 +341,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[3] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[3] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -355,7 +355,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[11] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[11] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -369,7 +369,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[19] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[19] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -383,7 +383,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[27] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[27] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -397,7 +397,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[35] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[35] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -411,7 +411,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[43] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[43] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -425,7 +425,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[51] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[51] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -439,7 +439,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[59] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[59] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -453,7 +453,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[4] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -467,7 +467,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[12] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -481,7 +481,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[20] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -495,7 +495,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[28] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -509,7 +509,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[36] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[36] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -523,7 +523,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[44] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[44] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -537,7 +537,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[52] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[52] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -551,7 +551,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[60] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[60] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -565,7 +565,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[5] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[5] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -579,7 +579,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[13] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[13] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -593,7 +593,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[21] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[21] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -607,7 +607,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[29] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[29] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -621,7 +621,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[37] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[37] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -635,7 +635,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[45] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[45] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -649,7 +649,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[53] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[53] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -663,7 +663,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 5; intended reading is "produce Archor".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[61] = produce Archor.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[61] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -677,7 +677,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[6] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[6] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -691,7 +691,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[14] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[14] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -705,7 +705,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[22] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[22] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -719,7 +719,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[30] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[30] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -733,7 +733,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[38] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[38] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -747,7 +747,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[46] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[46] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -761,7 +761,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[54] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[54] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -775,7 +775,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 6; intended reading is "produce Spearman".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[62] = produce Spearman.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[62] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -785,12 +785,12 @@
 # input[966] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
 62|56,57,58,59,60,61,62,63|846:1.000000,848:1.000000,849:0.875000,862:0.600000,966:0.500000|56:-0.900000,57:-0.900000,58:-0.900000,59:-0.900000,60:-0.900000,61:-0.900000,62:0.900000,63:-0.900000|economics object case 55: object=7 command=6 -> produce Spearman
-# situation 56: economics object case 56: object=0 command=7 -> produce Horseman
+# situation 56: economics object case 56: object=0 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
-# Situation facts: object record 0 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
-# Correct answer: choose output[7] = produce Horseman.
+# Situation facts: object record 0 has command cue 7; intended reading is "produce None".
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
+# Correct answer: choose output[7] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[7] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[7] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -798,13 +798,13 @@
 # input[23] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-7|0,1,2,3,4,5,6,7|7:1.000000,8:0.125000,9:1.000000,23:0.600000,967:0.500000|0:-0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|economics object case 56: object=0 command=7 -> produce Horseman
-# situation 57: economics object case 57: object=1 command=7 -> produce Horseman
+7|0,1,2,3,4,5,6,7|7:1.000000,8:0.125000,9:1.000000,23:0.600000,967:0.500000|0:-0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|economics object case 56: object=0 command=7 -> produce None
+# situation 57: economics object case 57: object=1 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
-# Situation facts: object record 1 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
-# Correct answer: choose output[15] = produce Horseman.
+# Situation facts: object record 1 has command cue 7; intended reading is "produce None".
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
+# Correct answer: choose output[15] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[15] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[127] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -812,13 +812,13 @@
 # input[143] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-15|8,9,10,11,12,13,14,15|127:1.000000,128:0.250000,129:1.000000,143:0.600000,967:0.500000|8:-0.900000,9:-0.900000,10:-0.900000,11:-0.900000,12:-0.900000,13:-0.900000,14:-0.900000,15:0.900000|economics object case 57: object=1 command=7 -> produce Horseman
-# situation 58: economics object case 58: object=2 command=7 -> produce Horseman
+15|8,9,10,11,12,13,14,15|127:1.000000,128:0.250000,129:1.000000,143:0.600000,967:0.500000|8:-0.900000,9:-0.900000,10:-0.900000,11:-0.900000,12:-0.900000,13:-0.900000,14:-0.900000,15:0.900000|economics object case 57: object=1 command=7 -> produce None
+# situation 58: economics object case 58: object=2 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
-# Situation facts: object record 2 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
-# Correct answer: choose output[23] = produce Horseman.
+# Situation facts: object record 2 has command cue 7; intended reading is "produce None".
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
+# Correct answer: choose output[23] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[23] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[247] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -826,13 +826,13 @@
 # input[263] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-23|16,17,18,19,20,21,22,23|247:1.000000,248:0.375000,249:1.000000,263:0.600000,967:0.500000|16:-0.900000,17:-0.900000,18:-0.900000,19:-0.900000,20:-0.900000,21:-0.900000,22:-0.900000,23:0.900000|economics object case 58: object=2 command=7 -> produce Horseman
-# situation 59: economics object case 59: object=3 command=7 -> produce Horseman
+23|16,17,18,19,20,21,22,23|247:1.000000,248:0.375000,249:1.000000,263:0.600000,967:0.500000|16:-0.900000,17:-0.900000,18:-0.900000,19:-0.900000,20:-0.900000,21:-0.900000,22:-0.900000,23:0.900000|economics object case 58: object=2 command=7 -> produce None
+# situation 59: economics object case 59: object=3 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
-# Situation facts: object record 3 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
-# Correct answer: choose output[31] = produce Horseman.
+# Situation facts: object record 3 has command cue 7; intended reading is "produce None".
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
+# Correct answer: choose output[31] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[31] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[367] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -840,13 +840,13 @@
 # input[383] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-31|24,25,26,27,28,29,30,31|367:1.000000,368:0.500000,369:1.000000,383:0.600000,967:0.500000|24:-0.900000,25:-0.900000,26:-0.900000,27:-0.900000,28:-0.900000,29:-0.900000,30:-0.900000,31:0.900000|economics object case 59: object=3 command=7 -> produce Horseman
-# situation 60: economics object case 60: object=4 command=7 -> produce Horseman
+31|24,25,26,27,28,29,30,31|367:1.000000,368:0.500000,369:1.000000,383:0.600000,967:0.500000|24:-0.900000,25:-0.900000,26:-0.900000,27:-0.900000,28:-0.900000,29:-0.900000,30:-0.900000,31:0.900000|economics object case 59: object=3 command=7 -> produce None
+# situation 60: economics object case 60: object=4 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
-# Situation facts: object record 4 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
-# Correct answer: choose output[39] = produce Horseman.
+# Situation facts: object record 4 has command cue 7; intended reading is "produce None".
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
+# Correct answer: choose output[39] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[39] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[487] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -854,13 +854,13 @@
 # input[503] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-39|32,33,34,35,36,37,38,39|487:1.000000,488:0.625000,489:1.000000,503:0.600000,967:0.500000|32:-0.900000,33:-0.900000,34:-0.900000,35:-0.900000,36:-0.900000,37:-0.900000,38:-0.900000,39:0.900000|economics object case 60: object=4 command=7 -> produce Horseman
-# situation 61: economics object case 61: object=5 command=7 -> produce Horseman
+39|32,33,34,35,36,37,38,39|487:1.000000,488:0.625000,489:1.000000,503:0.600000,967:0.500000|32:-0.900000,33:-0.900000,34:-0.900000,35:-0.900000,36:-0.900000,37:-0.900000,38:-0.900000,39:0.900000|economics object case 60: object=4 command=7 -> produce None
+# situation 61: economics object case 61: object=5 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
-# Situation facts: object record 5 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
-# Correct answer: choose output[47] = produce Horseman.
+# Situation facts: object record 5 has command cue 7; intended reading is "produce None".
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
+# Correct answer: choose output[47] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[47] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[607] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -868,13 +868,13 @@
 # input[623] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-47|40,41,42,43,44,45,46,47|607:1.000000,608:0.750000,609:1.000000,623:0.600000,967:0.500000|40:-0.900000,41:-0.900000,42:-0.900000,43:-0.900000,44:-0.900000,45:-0.900000,46:-0.900000,47:0.900000|economics object case 61: object=5 command=7 -> produce Horseman
-# situation 62: economics object case 62: object=6 command=7 -> produce Horseman
+47|40,41,42,43,44,45,46,47|607:1.000000,608:0.750000,609:1.000000,623:0.600000,967:0.500000|40:-0.900000,41:-0.900000,42:-0.900000,43:-0.900000,44:-0.900000,45:-0.900000,46:-0.900000,47:0.900000|economics object case 61: object=5 command=7 -> produce None
+# situation 62: economics object case 62: object=6 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
-# Situation facts: object record 6 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
-# Correct answer: choose output[55] = produce Horseman.
+# Situation facts: object record 6 has command cue 7; intended reading is "produce None".
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
+# Correct answer: choose output[55] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[55] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[727] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -882,13 +882,13 @@
 # input[743] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-55|48,49,50,51,52,53,54,55|727:1.000000,728:0.875000,729:1.000000,743:0.600000,967:0.500000|48:-0.900000,49:-0.900000,50:-0.900000,51:-0.900000,52:-0.900000,53:-0.900000,54:-0.900000,55:0.900000|economics object case 62: object=6 command=7 -> produce Horseman
-# situation 63: economics object case 63: object=7 command=7 -> produce Horseman
+55|48,49,50,51,52,53,54,55|727:1.000000,728:0.875000,729:1.000000,743:0.600000,967:0.500000|48:-0.900000,49:-0.900000,50:-0.900000,51:-0.900000,52:-0.900000,53:-0.900000,54:-0.900000,55:0.900000|economics object case 62: object=6 command=7 -> produce None
+# situation 63: economics object case 63: object=7 command=7 -> produce None
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
-# Situation facts: object record 7 has command cue 7; intended reading is "produce Horseman".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
-# Correct answer: choose output[63] = produce Horseman.
+# Situation facts: object record 7 has command cue 7; intended reading is "produce None".
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
+# Correct answer: choose output[63] = produce None.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[63] is set to +0.900000, every other candidate output is set to -0.900000.
 # input[847] = 1.000000 means object-local command cue field inside the 120-float object record.
@@ -896,12 +896,12 @@
 # input[863] = 0.600000 means local 9x9 window or object-detail feature supporting the command.
 # input[967] = 0.500000 means generic situation field supporting the same command class.
 # Machine row below repeats the same situation in parser format.
-63|56,57,58,59,60,61,62,63|847:1.000000,848:1.000000,849:1.000000,863:0.600000,967:0.500000|56:-0.900000,57:-0.900000,58:-0.900000,59:-0.900000,60:-0.900000,61:-0.900000,62:-0.900000,63:0.900000|economics object case 63: object=7 command=7 -> produce Horseman
+63|56,57,58,59,60,61,62,63|847:1.000000,848:1.000000,849:1.000000,863:0.600000,967:0.500000|56:-0.900000,57:-0.900000,58:-0.900000,59:-0.900000,60:-0.900000,61:-0.900000,62:-0.900000,63:0.900000|economics object case 63: object=7 command=7 -> produce None
 # situation 64: economics object case 64: object=0 command=0 -> produce Settlers
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[0] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[0] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -915,7 +915,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[8] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[8] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -929,7 +929,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[16] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[16] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -943,7 +943,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[24] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[24] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -957,7 +957,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[32] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[32] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -971,7 +971,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[40] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[40] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -985,7 +985,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[48] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[48] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -999,7 +999,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 0; intended reading is "produce Settlers".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[56] = produce Settlers.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[56] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1013,7 +1013,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[1] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[1] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1027,7 +1027,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[9] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[9] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1041,7 +1041,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[17] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[17] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1055,7 +1055,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[25] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[25] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1069,7 +1069,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[33] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[33] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1083,7 +1083,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[41] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[41] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1097,7 +1097,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[49] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[49] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1111,7 +1111,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 1; intended reading is "produce Explorer".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[57] = produce Explorer.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[57] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1125,7 +1125,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[2] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[2] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1139,7 +1139,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[10] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[10] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1153,7 +1153,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[18] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[18] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1167,7 +1167,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[26] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[26] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1181,7 +1181,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[34] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[34] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1195,7 +1195,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[42] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[42] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1209,7 +1209,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[50] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[50] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1223,7 +1223,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 2; intended reading is "produce Worker".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[58] = produce Worker.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[58] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1237,7 +1237,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[3] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[3] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1251,7 +1251,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[11] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[11] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1265,7 +1265,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[19] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[19] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1279,7 +1279,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[27] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[27] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1293,7 +1293,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 4 back to input object 4.
 # Situation facts: object record 4 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce Horseman.
+# Output candidates: output[32] = produce Settlers; output[33] = produce Explorer; output[34] = produce Worker; output[35] = produce Warrior; output[36] = produce Slinger; output[37] = produce Archor; output[38] = produce Spearman; output[39] = produce None.
 # Correct answer: choose output[35] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[35] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1307,7 +1307,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 5 back to input object 5.
 # Situation facts: object record 5 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce Horseman.
+# Output candidates: output[40] = produce Settlers; output[41] = produce Explorer; output[42] = produce Worker; output[43] = produce Warrior; output[44] = produce Slinger; output[45] = produce Archor; output[46] = produce Spearman; output[47] = produce None.
 # Correct answer: choose output[43] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[43] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1321,7 +1321,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 6 back to input object 6.
 # Situation facts: object record 6 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce Horseman.
+# Output candidates: output[48] = produce Settlers; output[49] = produce Explorer; output[50] = produce Worker; output[51] = produce Warrior; output[52] = produce Slinger; output[53] = produce Archor; output[54] = produce Spearman; output[55] = produce None.
 # Correct answer: choose output[51] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[51] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1335,7 +1335,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 7 back to input object 7.
 # Situation facts: object record 7 has command cue 3; intended reading is "produce Warrior".
-# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce Horseman.
+# Output candidates: output[56] = produce Settlers; output[57] = produce Explorer; output[58] = produce Worker; output[59] = produce Warrior; output[60] = produce Slinger; output[61] = produce Archor; output[62] = produce Spearman; output[63] = produce None.
 # Correct answer: choose output[59] = produce Warrior.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[59] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1349,7 +1349,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 0 back to input object 0.
 # Situation facts: object record 0 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce Horseman.
+# Output candidates: output[0] = produce Settlers; output[1] = produce Explorer; output[2] = produce Worker; output[3] = produce Warrior; output[4] = produce Slinger; output[5] = produce Archor; output[6] = produce Spearman; output[7] = produce None.
 # Correct answer: choose output[4] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[4] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1363,7 +1363,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 1 back to input object 1.
 # Situation facts: object record 1 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce Horseman.
+# Output candidates: output[8] = produce Settlers; output[9] = produce Explorer; output[10] = produce Worker; output[11] = produce Warrior; output[12] = produce Slinger; output[13] = produce Archor; output[14] = produce Spearman; output[15] = produce None.
 # Correct answer: choose output[12] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[12] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1377,7 +1377,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 2 back to input object 2.
 # Situation facts: object record 2 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce Horseman.
+# Output candidates: output[16] = produce Settlers; output[17] = produce Explorer; output[18] = produce Worker; output[19] = produce Warrior; output[20] = produce Slinger; output[21] = produce Archor; output[22] = produce Spearman; output[23] = produce None.
 # Correct answer: choose output[20] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[20] is set to +0.900000, every other candidate output is set to -0.900000.
@@ -1391,7 +1391,7 @@
 # Purpose: train the economics engine to choose one 8-float command for one object record.
 # Object ids are not encoded. The game keeps ids in a side array and maps output command record 3 back to input object 3.
 # Situation facts: object record 3 has command cue 4; intended reading is "produce Slinger".
-# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce Horseman.
+# Output candidates: output[24] = produce Settlers; output[25] = produce Explorer; output[26] = produce Worker; output[27] = produce Warrior; output[28] = produce Slinger; output[29] = produce Archor; output[30] = produce Spearman; output[31] = produce None.
 # Correct answer: choose output[28] = produce Slinger.
 # Evaluation rule: after inference, compare only those candidate outputs; the highest value is the predicted answer.
 # Training target: output[28] is set to +0.900000, every other candidate output is set to -0.900000.

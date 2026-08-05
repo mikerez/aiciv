@@ -1,0 +1,131 @@
+# Strategy landscape/resource contrast tests.
+# context visible=1 means zero terrain/resource fields are observed negatives,
+# not unknown data. Inputs match ai.js strategyCityContextStats() slots 24..40.
+
+scenario high_hills_without_resources_choose_mining
+terrain hills=0.72 mountains=0.08 grass=0.20 water=0.00
+resources animals=0.00 stone=0.00 crops=0.00
+context visible=1.00 flat=0.00 fresh=0.00 forest=0.02 resources=0.00 minerals=0.10 city=1 settler=0
+tech opened=0.00
+expect technology Mining
+end
+
+scenario mountains_and_minerals_choose_mining
+terrain hills=0.12 mountains=0.68 grass=0.15 water=0.02
+resources animals=0.00 stone=0.05 crops=0.00
+context visible=1.00 flat=0.00 fresh=0.00 forest=0.02 resources=0.35 minerals=0.35 city=0 settler=1
+tech opened=0.00
+expect technology Mining
+end
+
+scenario jungle_without_hills_or_resources_rejects_mining
+terrain hills=0.00 mountains=0.00 grass=1.00 water=0.00
+resources animals=0.00 stone=0.00 crops=0.00
+context visible=1.00 flat=1.00 fresh=0.00 forest=1.00 resources=0.00 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario forest_settler_without_hills_rejects_mining
+terrain hills=0.00 mountains=0.00 grass=0.92 water=0.02
+resources animals=0.00 stone=0.00 crops=0.00
+context visible=1.00 flat=0.92 fresh=0.02 forest=0.88 resources=0.00 minerals=0.00 city=0 settler=1
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario open_grass_without_resources_rejects_mining
+terrain hills=0.00 mountains=0.00 grass=0.94 water=0.04
+resources animals=0.00 stone=0.00 crops=0.00
+context visible=1.00 flat=0.94 fresh=0.04 forest=0.02 resources=0.00 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario tiny_hill_noise_without_minerals_rejects_mining
+terrain hills=0.04 mountains=0.00 grass=0.86 water=0.18
+resources animals=0.00 stone=0.00 crops=0.70
+context visible=1.00 flat=0.82 fresh=0.24 forest=0.03 resources=0.70 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario cattle_on_plain_choose_animal_husbandry
+terrain hills=0.00 mountains=0.00 grass=0.82 water=0.06
+resources animals=0.90 stone=0.00 crops=0.02
+context visible=1.00 flat=0.82 fresh=0.04 forest=0.04 resources=0.90 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Animal_Husbandry
+end
+
+scenario deer_in_forest_choose_animal_husbandry
+terrain hills=0.00 mountains=0.00 grass=0.78 water=0.02
+resources animals=0.82 stone=0.00 crops=0.00
+context visible=1.00 flat=0.78 fresh=0.02 forest=0.72 resources=0.82 minerals=0.00 city=0 settler=1
+tech opened=0.00
+expect technology Animal_Husbandry
+end
+
+scenario no_animals_wet_plain_rejects_animal_husbandry
+terrain hills=0.00 mountains=0.00 grass=0.88 water=0.38
+resources animals=0.00 stone=0.00 crops=0.20
+context visible=1.00 flat=0.88 fresh=0.46 forest=0.02 resources=0.20 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario stone_after_technology_progress_choose_masonry
+terrain hills=0.35 mountains=0.12 grass=0.32 water=0.02
+resources animals=0.00 stone=0.88 crops=0.00
+context visible=1.00 flat=0.20 fresh=0.00 forest=0.04 resources=0.88 minerals=0.18 city=1 settler=0
+tech opened=0.10
+expect technology Masonry
+end
+
+scenario marble_after_technology_progress_choose_masonry
+terrain hills=0.20 mountains=0.30 grass=0.25 water=0.00
+resources animals=0.00 stone=0.82 crops=0.00
+context visible=1.00 flat=0.12 fresh=0.00 forest=0.02 resources=0.82 minerals=0.20 city=0 settler=1
+tech opened=0.12
+expect technology Masonry
+end
+
+scenario no_stone_flat_land_rejects_masonry
+terrain hills=0.00 mountains=0.00 grass=0.90 water=0.10
+resources animals=0.05 stone=0.00 crops=0.35
+context visible=1.00 flat=0.90 fresh=0.18 forest=0.04 resources=0.35 minerals=0.00 city=1 settler=0
+tech opened=0.12
+expect technology Irrigation
+end
+
+scenario crop_and_fresh_water_choose_irrigation
+terrain hills=0.00 mountains=0.00 grass=0.86 water=0.30
+resources animals=0.00 stone=0.00 crops=0.85
+context visible=1.00 flat=0.86 fresh=0.42 forest=0.02 resources=0.85 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario river_grass_without_resources_choose_irrigation
+terrain hills=0.00 mountains=0.00 grass=0.88 water=0.38
+resources animals=0.00 stone=0.00 crops=0.00
+context visible=1.00 flat=0.88 fresh=0.46 forest=0.02 resources=0.00 minerals=0.00 city=0 settler=1
+tech opened=0.00
+expect technology Irrigation
+end
+
+scenario dry_rocky_land_rejects_irrigation
+terrain hills=0.58 mountains=0.25 grass=0.10 water=0.00
+resources animals=0.00 stone=0.05 crops=0.00
+context visible=1.00 flat=0.02 fresh=0.00 forest=0.00 resources=0.05 minerals=0.30 city=1 settler=0
+tech opened=0.00
+expect technology Mining
+end
+
+scenario animals_with_minor_hills_reject_mining
+terrain hills=0.10 mountains=0.00 grass=0.72 water=0.04
+resources animals=0.78 stone=0.00 crops=0.00
+context visible=1.00 flat=0.62 fresh=0.02 forest=0.08 resources=0.78 minerals=0.00 city=1 settler=0
+tech opened=0.00
+expect technology Animal_Husbandry
+end

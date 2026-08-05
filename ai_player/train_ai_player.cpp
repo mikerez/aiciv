@@ -171,6 +171,9 @@ void exportDefaultSituations()
     saveTrainingExamples("ai_player/strategy.situations", makeStrategyExamples());
     saveTrainingExamples("ai_player/strategy-demands.situations", makeStrategyDemandExamples());
     saveTrainingExamples("ai_player/strategy-technology.situations", makeStrategyTechnologyExamples());
+    saveTrainingExamples("ai_player/strategy-landscape.situations", makeStrategyLandscapeExamples());
+    saveTrainingExamples("ai_player/strategy-budget.situations", makeStrategyBudgetExamples());
+    saveTrainingExamples("ai_player/strategy-workers.situations", makeStrategyWorkerExamples());
     saveTrainingExamples("ai_player/tactics.situations", makeTacticsExamples());
     saveTrainingExamples("ai_player/action-bootstrap.situations", makeActionBootstrapExamples());
     saveTrainingExamples("ai_player/action-settlers.situations", makeActionSettlerExamples());
@@ -182,13 +185,17 @@ void exportDefaultSituations()
     saveTrainingExamples("ai_player/action-horseman.situations", makeActionHorsemanExamples());
     saveTrainingExamples("ai_player/economics.situations", makeEconomicsExamples());
     saveTrainingExamples("ai_player/economics-strategy.situations", makeEconomicsStrategyExamples());
+    saveTrainingExamples("ai_player/economics-workers.situations", makeEconomicsWorkerExamples());
     std::cout << "Exported ai_player/strategy.situations, ai_player/tactics.situations, "
               << "ai_player/strategy-demands.situations, ai_player/strategy-technology.situations, "
+              << "ai_player/strategy-landscape.situations, "
+              << "ai_player/strategy-budget.situations, ai_player/strategy-workers.situations, "
               << "ai_player/action-bootstrap.situations, ai_player/action-settlers.situations, "
               << "ai_player/action-worker.situations, ai_player/action-explorer.situations, "
               << "ai_player/action-warrior.situations, ai_player/action-slinger.situations, "
               << "ai_player/action-archer.situations, ai_player/action-horseman.situations, "
-              << "ai_player/economics.situations, ai_player/economics-strategy.situations\n";
+              << "ai_player/economics.situations, ai_player/economics-strategy.situations, "
+              << "ai_player/economics-workers.situations\n";
 }
 
 std::string modelPathBesideSituations(const std::string& situationPath, const std::string& modelName)
@@ -234,18 +241,21 @@ int main(int argc, char** argv)
     std::string actionPath;
     std::string economicsPath;
     std::vector<TrainingExample> strategyExamples =
-        loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations" },
+        loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations", "strategy-landscape.situations", "strategy-budget.situations", "strategy-workers.situations" },
                               "strategy.situations", strategyPath);
     std::vector<TrainingExample> tacticsExamples =
         loadWithRootFallback("ai_player/tactics.situations", "tactics.situations", tacticsPath);
     std::vector<TrainingExample> actionExamples = loadActionSituationSet(actionPath);
     std::vector<TrainingExample> economicsExamples =
-        loadSplitSituationSet({ "economics-strategy.situations" }, "economics-strategy.situations", economicsPath);
+        loadSplitSituationSet({ "economics-strategy.situations", "economics-workers.situations" }, "economics-strategy.situations", economicsPath);
 
     if (engineFilter == "all" || engineFilter == "strategy") {
         runEngine(strategy, strategyExamples, strategyPath, modelPathBesideSituations(strategyPath, "strategy"), epochs, learningRate);
         const StrategyTestSummary strategyTests = runStrategyTests(strategy, {
             "ai_player/strategy-technology.test",
+            "ai_player/strategy-landscape.test",
+            "ai_player/strategy-budget.test",
+            "ai_player/strategy-workers.test",
         }, std::cout);
         if (strategyTests.passed != strategyTests.total) {
             return 4;
@@ -273,6 +283,7 @@ int main(int argc, char** argv)
         runEngine(economics, economicsExamples, economicsPath, modelPathBesideSituations(economicsPath, "economics"), epochs, learningRate);
         const EconomicsTestSummary economicsTests = runEconomicsTests(economics, {
             "ai_player/economics-strategy.test",
+            "ai_player/economics-workers.test",
         }, std::cout);
         if (economicsTests.passed != economicsTests.total) {
             return 3;

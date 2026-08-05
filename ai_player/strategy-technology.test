@@ -4,6 +4,10 @@
 # terrain hills=N mountains=N grass=N water=N
 # resources animals=N stone=N crops=N
 # context visible=N flat=N fresh=N forest=N desert_snow=N resources=N minerals=N city=N settler=N
+# birdsview x=N y=N civ=N military=N height=N resource=N
+#   x/y are cells in the 50x50 strategic map. height is the compact landscape signal:
+#   negative sea/water, near zero flat land, positive hills/mountains/forests.
+#   resource is the primary resource id in that birdsview cell, using the game_prehistory.js resource table.
 # tech opened=N
 # expect technology Mining|Animal_Husbandry|Masonry|Irrigation
 # end
@@ -11,6 +15,7 @@
 scenario hills_choose_mining
 terrain hills=0.70 mountains=0.10 grass=0.30 water=0.05
 resources animals=0.05 stone=0.05 crops=0.10
+birdsview x=20 y=20 civ=0 military=0 height=0.62 resource=0
 tech opened=0.00
 expect technology Mining
 end
@@ -25,6 +30,7 @@ end
 scenario animals_choose_animal_husbandry
 terrain hills=0.20 mountains=0.05 grass=0.60 water=0.05
 resources animals=0.75 stone=0.05 crops=0.05
+birdsview x=20 y=20 civ=0 military=0 height=0.14 resource=8
 tech opened=0.00
 expect technology Animal_Husbandry
 end
@@ -32,6 +38,7 @@ end
 scenario stone_after_mining_choose_masonry
 terrain hills=0.35 mountains=0.15 grass=0.35 water=0.05
 resources animals=0.05 stone=0.80 crops=0.05
+birdsview x=21 y=20 civ=0 military=0 height=0.70 resource=9
 tech opened=0.08
 expect technology Masonry
 end
@@ -63,6 +70,7 @@ scenario flat_wet_settler_start_choose_irrigation
 terrain hills=0.00 mountains=0.00 grass=0.85 water=0.40
 resources animals=0.05 stone=0.05 crops=0.15
 context visible=1.00 flat=0.85 fresh=0.40 forest=0.02 desert_snow=0.00 resources=0.15 minerals=0.00 city=0.00 settler=1.00
+birdsview x=19 y=21 civ=0 military=0 height=-0.05 resource=10
 tech opened=0.00
 expect technology Irrigation
 end
