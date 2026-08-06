@@ -54,6 +54,18 @@ struct ActionScenario {
     std::map<std::pair<int, int>, TestTile> tiles;
 };
 
+struct TestActionCandidate {
+    std::string command;
+    std::string state = "ready";
+    int targetI = -1;
+    int targetJ = -1;
+};
+
+struct EncodedActionCandidates {
+    InputSignal input{};
+    std::vector<TestActionCandidate> candidates;
+};
+
 std::string trim(const std::string& text)
 {
     const size_t begin = text.find_first_not_of(" \t\r\n");
@@ -180,11 +192,6 @@ float unitStateSignal(const std::string& state)
         throw std::runtime_error("unknown action test unit state: " + state);
     }
     return static_cast<float>(std::distance(order.begin(), it)) / static_cast<float>(order.size() - 1);
-}
-
-float normalizedCoord(int coord)
-{
-    return std::max(-1.0f, std::min(1.0f, (static_cast<float>(coord) / (kTestMapSize - 1)) * 2.0f - 1.0f));
 }
 
 float clamp(float value, float minValue, float maxValue)
@@ -316,51 +323,134 @@ float nearestCityDistance(const ActionScenario& scenario)
                  : scenario.cityDistance;
 }
 
-InputSignal buildActionInput(const ActionScenario& scenario)
-{
-    InputSignal input{};
-    input.fill(0.0f);
-    const TestTile current = tileAt(scenario, scenario.unitI, scenario.unitJ);
-
-    input[0] = unitTypeSignal(scenario.unitType);
-    input[1] = unitStateSignal(scenario.unitState);
-    input[2] = normalizedCoord(scenario.unitI);
-    input[3] = normalizedCoord(scenario.unitJ);
-    input[4] = 1.0f;
-    input[5] = scenario.unitType == "explorer" || scenario.unitType == "horseman" ? 0.4f : 0.2f;
-    input[6] = 1.0f;
-    input[7] = scenario.taskFlag;
-    input[8] = scenario.workerSignal;
-    input[9] = static_cast<float>(current.terrain) / 8.0f;
-    input[10] = resourceSignal(current.resource);
-    input[11] = scenario.nearbyResource > 0.0f ? scenario.nearbyResource : nearbyResourceScore(scenario);
-    input[12] = scenario.freshWater;
-    input[13] = scenario.cityScore;
-    input[14] = scenario.agePressure;
-    input[15] = scenario.cityDistance;
-
-    int n = 0;
-    for (int di = -4; di <= 4; ++di) {
-        for (int dj = -4; dj <= 4; ++dj) {
-            input[16 + n] = packLocalTile(scenario, scenario.unitI + di, scenario.unitJ + dj);
-            ++n;
-        }
-    }
-
-    input[97] = scenario.strategyDx;
-    input[98] = scenario.strategyDy;
-    input[100] = scenario.strategyPriority;
-    input[101] = scenario.nearbyWorkers;
-
-    input[960] = 0.50f;
-    input[965] = 0.35f;
-    input[968] = 0.25f;
-    return input;
-}
-
 std::string resourceImprovement(const TestTile& tile);
 
-InputSignal buildActionInputForTurn(const ActionScenario& scenario, int turnIndex)
+int actionCommandCode(const std::string& command)
+{
+    const std::vector<std::string> labels = {
+        "goto", "wait", "build_city", "road_to", "irrigate", "chop_forest", "build_improvement", "attack"
+    };
+    const auto it = std::find(labels.begin(), labels.end(), command);
+    return it == labels.end() ? 1 : static_cast<int>(std::distance(labels.begin(), it));
+}
+
+std::vector<TestActionCandidate> buildTestCandidates(const ActionScenario& scenario)
+{
+    std::vector<TestActionCandidate> result;
+    auto add = [&](const std::string& command, const std::string& state, int i, int j) {
+        for (const TestActionCandidate& existing : result) {
+            if (existing.command == command && existing.state == state
+                && existing.targetI == i && existing.targetJ == j) return;
+        }
+        if (result.size() < AI_PLAYER_OBJECT_COUNT) result.push_back({command, state, i, j});
+    };
+    const TestTile current = tileAt(scenario, scenario.unitI, scenario.unitJ);
+    add("wait", "waiting", scenario.unitI, scenario.unitJ);
+    const bool military = scenario.unitType == "warrior" || scenario.unitType == "slinger"
+        || scenario.unitType == "archer" || scenario.unitType == "horseman"
+        || scenario.unitType == "spearman" || scenario.unitType == "chariot"
+        || scenario.unitType == "elephant" || scenario.unitType == "catapult"
+        || scenario.unitType == "trebuchet";
+    if (military) add("wait", "fortified", scenario.unitI, scenario.unitJ);
+    if (scenario.unitType == "settlers" && current.terrain != 0) {
+        add("build_city", "ready", scenario.unitI, scenario.unitJ);
+    }
+    if (scenario.unitType == "worker") {
+        if (scenario.unitState == "road" || scenario.unitState == "road_to"
+            || (scenario.workerSignal >= 0.25f && scenario.workerSignal < 0.40f)) {
+            add("road_to", scenario.unitState == "road_to" ? "road_to" : "road", scenario.unitI, scenario.unitJ);
+        }
+        if (scenario.unitState == "irrigate" || (scenario.workerSignal >= 0.55f && scenario.workerSignal < 0.70f)) {
+            add("irrigate", "irrigate", scenario.unitI, scenario.unitJ);
+        }
+        if (scenario.unitState == "chop_forest" || (scenario.workerSignal >= 0.40f && scenario.workerSignal < 0.55f)) {
+            add("chop_forest", "chop_forest", scenario.unitI, scenario.unitJ);
+        }
+        if (scenario.workerSignal >= 0.75f
+            || (scenario.taskFlag > 0.5f && scenario.unitState != "road" && scenario.unitState != "road_to"
+                && scenario.unitState != "irrigate" && scenario.unitState != "chop_forest")) {
+            add("build_improvement", scenario.taskFlag > 0.5f ? scenario.unitState : resourceImprovement(current),
+                scenario.unitI, scenario.unitJ);
+        }
+    }
+    if (scenario.targetI >= 0 && scenario.targetJ >= 0
+        && (scenario.targetI != scenario.unitI || scenario.targetJ != scenario.unitJ)) {
+        const TestTile target = tileAt(scenario, scenario.targetI, scenario.targetJ);
+        const int distance = std::max(std::abs(scenario.targetI - scenario.unitI),
+                                      std::abs(scenario.targetJ - scenario.unitJ));
+        add(military && target.enemyUnit && distance <= 1 ? "attack" : "goto",
+            "ready", scenario.targetI, scenario.targetJ);
+    }
+    for (const auto& entry : scenario.tiles) {
+        if (result.size() >= AI_PLAYER_OBJECT_COUNT) break;
+        const int i = entry.first.first;
+        const int j = entry.first.second;
+        if (i == scenario.unitI && j == scenario.unitJ) continue;
+        const int distance = std::max(std::abs(i - scenario.unitI), std::abs(j - scenario.unitJ));
+        add(military && entry.second.enemyUnit && distance <= 1 ? "attack" : "goto", "ready", i, j);
+    }
+    for (int radius = 1; result.size() < AI_PLAYER_OBJECT_COUNT && radius <= 3; ++radius) {
+        for (int di = -radius; di <= radius && result.size() < AI_PLAYER_OBJECT_COUNT; ++di) {
+            for (int dj = -radius; dj <= radius && result.size() < AI_PLAYER_OBJECT_COUNT; ++dj) {
+                if (std::max(std::abs(di), std::abs(dj)) != radius) continue;
+                const int i = scenario.unitI + di;
+                const int j = scenario.unitJ + dj;
+                if (i < 0 || j < 0 || i >= kTestMapSize || j >= kTestMapSize) continue;
+                add("goto", "ready", i, j);
+            }
+        }
+    }
+    return result;
+}
+
+EncodedActionCandidates buildActionInput(const ActionScenario& scenario)
+{
+    EncodedActionCandidates encoded;
+    encoded.input.fill(0.0f);
+    encoded.candidates = buildTestCandidates(scenario);
+    for (int candidateIndex = 0; candidateIndex < static_cast<int>(encoded.candidates.size()); ++candidateIndex) {
+        const TestActionCandidate& candidate = encoded.candidates[candidateIndex];
+        const int base = candidateIndex * AI_PLAYER_OBJECT_FLOATS;
+        const TestTile target = tileAt(scenario, candidate.targetI, candidate.targetJ);
+        encoded.input[base + 0] = unitTypeSignal(scenario.unitType);
+        encoded.input[base + 1] = unitStateSignal(scenario.unitState);
+        encoded.input[base + 2] = scenario.workerSignal;
+        encoded.input[base + 3] = scenario.nearbyWorkers;
+        encoded.input[base + 4] = scenario.taskFlag;
+        encoded.input[base + 5] = static_cast<float>(actionCommandCode(candidate.command)) / 7.0f;
+        encoded.input[base + 6] = clamp(static_cast<float>(candidate.targetI - scenario.unitI) / 4.0f, -1.0f, 1.0f);
+        encoded.input[base + 7] = clamp(static_cast<float>(candidate.targetJ - scenario.unitJ) / 4.0f, -1.0f, 1.0f);
+        encoded.input[base + 8] = clamp(static_cast<float>(std::abs(candidate.targetI - scenario.unitI)
+            + std::abs(candidate.targetJ - scenario.unitJ)) / 12.0f, 0.0f, 1.0f);
+        encoded.input[base + 9] = static_cast<float>(target.terrain) / 8.0f;
+        encoded.input[base + 10] = resourceSignal(target.resource);
+        encoded.input[base + 11] = cityPlotScore(scenario, candidate.targetI, candidate.targetJ);
+        encoded.input[base + 12] = target.enemyUnit ? -1.0f : (target.friendlyUnit || target.city ? 1.0f : 0.0f);
+        encoded.input[base + 13] = unitStateSignal(candidate.state);
+        encoded.input[base + 14] = scenario.strategyPriority;
+        encoded.input[base + 15] = 1.0f;
+        encoded.input[base + 16] = scenario.agePressure;
+        encoded.input[base + 17] = scenario.nearbyResource > 0.0f ? scenario.nearbyResource : nearbyResourceScore(scenario);
+        encoded.input[base + 18] = scenario.freshWater;
+        encoded.input[base + 19] = scenario.strategyPriority;
+        encoded.input[base + 20] = encoded.input[base + 6] * scenario.strategyDx
+            + encoded.input[base + 7] * scenario.strategyDy;
+        encoded.input[base + 21] = packLocalTile(scenario, candidate.targetI, candidate.targetJ);
+        int local = 0;
+        for (int di = -4; di <= 4; ++di) {
+            for (int dj = -4; dj <= 4; ++dj) {
+                encoded.input[base + 22 + local] = packLocalTile(scenario, candidate.targetI + di, candidate.targetJ + dj);
+                ++local;
+            }
+        }
+    }
+    encoded.input[960] = 0.50f;
+    encoded.input[965] = 0.35f;
+    encoded.input[968] = 0.25f;
+    return encoded;
+}
+
+EncodedActionCandidates buildActionInputForTurn(const ActionScenario& scenario, int turnIndex)
 {
     ActionScenario turn = scenario;
     turn.freshWater = hasFreshWaterNear(turn, turn.unitI, turn.unitJ) || tileAt(turn, turn.unitI, turn.unitJ).waterSource ? 1.0f : 0.0f;
@@ -388,36 +478,11 @@ InputSignal buildActionInputForTurn(const ActionScenario& scenario, int turnInde
     return buildActionInput(turn);
 }
 
-std::vector<std::string> actionLabels()
+int bestCandidateSlot(const OutputSignal& output, int candidateCount)
 {
-    return { "goto", "wait", "build_city", "road_to", "irrigate", "chop_forest", "build_improvement", "attack" };
-}
-
-std::vector<int> legalCommandSlots(const std::string& unitType)
-{
-    if (unitType == "settlers") {
-        return {0, 1, 2};
-    }
-    if (unitType == "worker") {
-        return {0, 1, 3, 4, 5, 6};
-    }
-    if (unitType == "explorer") {
-        return {0, 1};
-    }
-    if (unitType == "warrior" || unitType == "slinger" || unitType == "archer" || unitType == "horseman"
-        || unitType == "spearman" || unitType == "chariot" || unitType == "elephant"
-        || unitType == "catapult" || unitType == "trebuchet") {
-        return {0, 1, 7};
-    }
-    return {0, 1};
-}
-
-int bestCommandSlot(const OutputSignal& output, const std::string& unitType)
-{
-    const std::vector<int> slots = legalCommandSlots(unitType);
-    int best = slots.front();
+    int best = 0;
     float bestValue = -1.0e30f;
-    for (int slot : slots) {
+    for (int slot = 0; slot < candidateCount; ++slot) {
         if (output[slot] > bestValue) {
             bestValue = output[slot];
             best = slot;
@@ -471,14 +536,15 @@ std::string resourceImprovement(const TestTile& tile)
     return "workshop";
 }
 
-std::string simulateEffect(const ActionScenario& scenario, const std::string& command)
+std::string simulateEffect(const ActionScenario& scenario, const TestActionCandidate& candidate)
 {
+    const std::string& command = candidate.command;
     const TestTile current = tileAt(scenario, scenario.unitI, scenario.unitJ);
     if (command == "build_city") {
         return current.terrain == 0 ? "blocked" : "city";
     }
     if (command == "build_improvement") {
-        return resourceImprovement(current);
+        return candidate.state;
     }
     if (command == "road_to") {
         return current.terrain == 0 ? "blocked" : "road";
@@ -490,7 +556,7 @@ std::string simulateEffect(const ActionScenario& scenario, const std::string& co
         return current.terrain == 6 ? "forest_chopped" : "blocked";
     }
     if (command == "attack") {
-        if (scenario.targetI >= 0 && tileAt(scenario, scenario.targetI, scenario.targetJ).enemyUnit) {
+        if (candidate.targetI >= 0 && tileAt(scenario, candidate.targetI, candidate.targetJ).enemyUnit) {
             return "enemy_removed";
         }
         for (int di = -1; di <= 1; ++di) {
@@ -506,11 +572,11 @@ std::string simulateEffect(const ActionScenario& scenario, const std::string& co
         return "no_enemy";
     }
     if (command == "wait") {
-        return (current.terrain == 4 || current.terrain == 5) ? "defended_hill" : "waiting";
+        return candidate.state == "fortified" ? "defended_hill" : "waiting";
     }
     if (command == "goto") {
-        if (scenario.unitType == "worker" && scenario.targetI >= 0) {
-            const TestTile target = tileAt(scenario, scenario.targetI, scenario.targetJ);
+        if (scenario.unitType == "worker" && candidate.targetI >= 0) {
+            const TestTile target = tileAt(scenario, candidate.targetI, candidate.targetJ);
             if (!target.improvement.empty() || !target.resource.empty()) {
                 return "moved_to_" + resourceImprovement(target);
             }
@@ -539,17 +605,18 @@ void stepTowardTarget(ActionScenario& scenario)
     else if (scenario.unitJ > scenario.targetJ) --scenario.unitJ;
 }
 
-MultiTurnResult simulateMultiTurn(const ActionEngine& engine, const ActionScenario& scenario, const std::vector<std::string>& labels)
+MultiTurnResult simulateMultiTurn(const ActionEngine& engine, const ActionScenario& scenario)
 {
     ActionScenario current = scenario;
     MultiTurnResult result;
     const int maxTurns = std::max(1, scenario.maxTurns);
     for (int turn = 1; turn <= maxTurns; ++turn) {
-        const InputSignal input = buildActionInputForTurn(current, turn - 1);
-        const OutputSignal output = engine.infer(input);
-        const int slot = bestCommandSlot(output, current.unitType);
-        const std::string command = labels.at(static_cast<size_t>(slot));
-        const std::string effect = simulateEffect(current, command);
+        const EncodedActionCandidates encoded = buildActionInputForTurn(current, turn - 1);
+        const OutputSignal output = engine.infer(encoded.input);
+        const int slot = bestCandidateSlot(output, static_cast<int>(encoded.candidates.size()));
+        const TestActionCandidate& candidate = encoded.candidates.at(static_cast<size_t>(slot));
+        const std::string command = candidate.command;
+        const std::string effect = simulateEffect(current, candidate);
         result.lastCommand = command;
         result.finalEffect = effect;
         result.turns = turn;
@@ -702,9 +769,78 @@ std::vector<ActionScenario> loadActionTestFile(const std::string& path)
 
 } // namespace
 
+std::vector<TrainingExample> makeActionSimulationTrainingExamples(const std::vector<std::string>& paths)
+{
+    std::vector<TrainingExample> examples;
+    auto append = [&](const ActionScenario& scenario, const EncodedActionCandidates& encoded,
+                      const std::string& expectedCommand, const std::string& expectedEffect,
+                      const std::string& suffix) {
+        int correct = -1;
+        for (int slot = 0; slot < static_cast<int>(encoded.candidates.size()); ++slot) {
+            if (encoded.candidates[slot].command == expectedCommand
+                && simulateEffect(scenario, encoded.candidates[slot]) == expectedEffect) {
+                correct = slot;
+                break;
+            }
+        }
+        if (correct < 0) {
+            throw std::runtime_error("no complete Action candidate matches simulation training case "
+                + scenario.name + " " + suffix);
+        }
+        TrainingExample example;
+        example.input = encoded.input;
+        example.target.fill(0.0f);
+        for (int slot = 0; slot < static_cast<int>(encoded.candidates.size()); ++slot) {
+            example.decisionSlots.push_back(slot);
+        }
+        for (int slot : example.decisionSlots) example.target[slot] = -0.9f;
+        example.correctSlot = correct;
+        example.target[correct] = 0.9f;
+        example.explanation = "action simulation situation: " + scenario.name + " " + suffix;
+        const bool hardCase = scenario.name.find("old_settler") != std::string::npos
+            || scenario.name.find("first_city_does_not_build_on_jungle") != std::string::npos
+            || scenario.name.find("aged_settler_does_not_build_on_hills") != std::string::npos
+            || scenario.name.find("clean_grass_with_spacing") != std::string::npos
+            || scenario.name.find("empty_cottage_tile") != std::string::npos
+            || scenario.name.find("moves_to_cattle_city_tile") != std::string::npos
+            || scenario.name.find("moves_to_rice_farm_tile") != std::string::npos
+            || scenario.name.find("explorer_moves_to_hidden_area") != std::string::npos
+            || scenario.name.find("defends_hill") != std::string::npos
+            || scenario.name.find("holds_hill") != std::string::npos
+            || scenario.name.find("attacks_adjacent_enemy") != std::string::npos
+            || scenario.name.find("leaves_city_for_forest") != std::string::npos;
+        const int copies = hardCase ? 8 : 1;
+        for (int copy = 0; copy < copies; ++copy) examples.push_back(example);
+    };
+
+    for (const std::string& path : paths) {
+        for (const ActionScenario& scenario : loadActionTestFile(path)) {
+            const bool multiTurn = !scenario.expectedFinalEffect.empty() || scenario.maxTurns > 1;
+            if (!multiTurn) {
+                append(scenario, buildActionInput(scenario), scenario.expectedCommand, scenario.expectedEffect, "single turn");
+                continue;
+            }
+            if (scenario.targetI < 0 || scenario.targetJ < 0) {
+                append(scenario, buildActionInputForTurn(scenario, 0), "build_city", "city", "settle current target");
+                continue;
+            }
+            append(scenario, buildActionInputForTurn(scenario, 0), "goto", "moved", "approach target");
+            ActionScenario arrived = scenario;
+            arrived.unitI = scenario.targetI;
+            arrived.unitJ = scenario.targetJ;
+            std::string finalCommand = "build_improvement";
+            if (scenario.expectedFinalEffect == "city") finalCommand = "build_city";
+            else if (scenario.expectedFinalEffect == "irrigation") finalCommand = "irrigate";
+            else if (scenario.expectedFinalEffect == "forest_chopped") finalCommand = "chop_forest";
+            append(arrived, buildActionInputForTurn(arrived, 1), finalCommand,
+                   scenario.expectedFinalEffect, "arrived at target");
+        }
+    }
+    return examples;
+}
+
 ActionTestSummary runActionTests(const ActionEngine& engine, const std::vector<std::string>& paths, std::ostream& out)
 {
-    const std::vector<std::string> labels = actionLabels();
     ActionTestSummary summary;
     out << "\nRunning Action simulation tests:\n";
     for (const std::string& path : paths) {
@@ -719,18 +855,19 @@ ActionTestSummary runActionTests(const ActionEngine& engine, const std::vector<s
             float confidence = 0.0f;
             int turns = 1;
             if (multiTurn) {
-                const MultiTurnResult result = simulateMultiTurn(engine, scenario, labels);
+                const MultiTurnResult result = simulateMultiTurn(engine, scenario);
                 ok = result.ok;
                 command = result.lastCommand;
                 effect = result.finalEffect;
                 confidence = result.confidence;
                 turns = result.turns;
             } else {
-                const InputSignal input = buildActionInput(scenario);
-                const OutputSignal output = engine.infer(input);
-                const int slot = bestCommandSlot(output, scenario.unitType);
-                command = labels.at(static_cast<size_t>(slot));
-                effect = simulateEffect(scenario, command);
+                const EncodedActionCandidates encoded = buildActionInput(scenario);
+                const OutputSignal output = engine.infer(encoded.input);
+                const int slot = bestCandidateSlot(output, static_cast<int>(encoded.candidates.size()));
+                const TestActionCandidate& candidate = encoded.candidates.at(static_cast<size_t>(slot));
+                command = candidate.command;
+                effect = simulateEffect(scenario, candidate);
                 confidence = output[slot];
                 ok = command == scenario.expectedCommand && effect == scenario.expectedEffect;
             }

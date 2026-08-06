@@ -121,3 +121,57 @@ plots animals=0.50
 demand settlers=0.05 worker=0.85 explorer=0.03 military=0.07
 expect production warrior
 end
+
+scenario all_technologies_no_workers_produce_worker
+city record=0 population=0.22 food=0.48 production=0.70 money=0.30 frontier=0.40 garrison=0.40 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=0.00 military=0.18 enemy_military=0.08 idle=0.25 account=0.40 delta=0.15 upkeep=0.10
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.10 worker=0.70 explorer=0.05 military=0.15
+expect production worker
+end
+
+scenario all_technologies_many_workers_follow_settler_demand
+city record=0 population=0.30 food=0.85 production=0.40 money=0.40 frontier=1.00 garrison=0.35 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=1.00 military=0.25 enemy_military=0.05 idle=0.25 account=0.40 delta=0.15 upkeep=0.20
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.75 worker=0.05 explorer=0.05 military=0.15
+expect production settlers
+end
+
+scenario all_technologies_many_workers_follow_explorer_demand
+city record=0 population=0.20 food=0.45 production=0.35 money=0.75 frontier=0.45 garrison=0.30 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=1.00 military=0.25 enemy_military=0.05 idle=0.25 account=0.40 delta=0.15 upkeep=0.20
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.10 worker=0.05 explorer=0.75 military=0.10
+expect production explorer
+end
+
+scenario all_technologies_many_workers_follow_military_demand
+city record=0 population=0.25 food=0.45 production=0.85 money=0.30 frontier=0.65 garrison=0.20 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=1.00 military=0.20 enemy_military=0.50 idle=0.25 account=0.40 delta=0.15 upkeep=0.25
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+expect production slinger
+end
+
+scenario all_technologies_many_workers_reject_stale_worker_demand
+city record=0 population=0.25 food=0.50 production=0.65 money=0.30 frontier=0.50 garrison=0.30 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=1.00 military=0.25 enemy_military=0.15 idle=0.25 account=0.40 delta=0.15 upkeep=0.20
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.20 worker=0.45 explorer=0.10 military=0.25
+expect production slinger
+end
+
+scenario all_technologies_many_workers_respect_shrinking_account
+city record=0 population=0.25 food=0.55 production=0.80 money=0.35 frontier=0.40 garrison=0.35 free=1 legal=1
+state cities=0.25 free_cities=0.13 workers=1.00 military=0.25 enemy_military=0.10 idle=0.25 account=0.05 delta=-0.30 upkeep=0.90
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=1 forest=1 irrigation=1 animals=1 mine=1 masonry=1 pottery=1 construction=1
+demand settlers=0.20 worker=0.20 explorer=0.10 military=0.50
+expect production none
+end

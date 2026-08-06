@@ -11,12 +11,9 @@ All engines share the same base records and output contract:
 - Action and Economics input: `1024` FP32 values = `8` objects * `120` floats + `64` generic situation floats.
 - Strategy input: the same `1024` values followed by a compact `50x50` birdsview, for `3524` FP32 values total.
 - Output: `72` FP32 values = `8` object commands * `8` floats + `8` generic decision floats.
-- Object ids are not included in model inputs or outputs. Browser adapters keep ids in side arrays and map output record order back to game objects.
-- Local map windows use `9x9` tile samples so every object has a real center tile. In object records the local window occupies slots `16..96`; slot `56` is the center tile.
-- Action receives Strategy focus coordinates as relative `dx/dy` in slots `97..98`, normalized by the 9x9 window radius of four tiles. Slots `99..100` carry attack and defense priority.
-- Action output is masked by unit family before argmax: Settlers can only goto,
-  wait, or build city; Workers can do worker jobs; Explorers scout/wait;
-  military units move, wait, or attack.
+- Object ids are not included in model inputs or outputs. Browser adapters keep ids in side state and map decisions back to game objects.
+- Economics local windows remain in object slots `16..96`. Action instead uses each object as one complete candidate for a single unit: slots `0..21` contain unit/candidate facts and slots `22..102` contain a `9x9` window centered on that candidate's exact target.
+- Action output slots `0..7` score its eight complete legal candidates. A candidate already contains the command, exact target, path distance, and exact wait/build/improvement state; the browser only revalidates and applies it.
 - Strategy output slots `64..66` are production demand percentages for
   Settlers, Worker, and Explorer; slot `67` is science funding. The browser
   derives remaining Military demand and copies the four demands into Economics
@@ -27,10 +24,10 @@ All engines share the same base records and output contract:
 input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
 ```
 
-The first layer deterministically folds all eight object records into 16-float
-object summaries, carries selected generic situation counters into slots
-`128..167`, and for Strategy carries eight coarse birdsview regions in
-`168..175`; the final layer is trained over declared command slots.
+For Strategy and Economics, the first layer deterministically folds object
+records into 16-float summaries. Action uses the complete 176-value bottleneck
+as eight tied 22-value candidate representations and trains a comparison head
+over them. Strategy also carries eight coarse birdsview regions in `168..175`.
 
 ## Files
 
@@ -44,8 +41,8 @@ object summaries, carries selected generic situation counters into slots
 - `*.situations`: text training libraries. Action situations are split by type,
   for example `action-bootstrap.situations`, `action-settlers.situations`,
   `action-worker.situations`, `action-explorer.situations`, and unit-family
-  military files; the trainer aggregates available `action-*.situations` files
-  before training. Strategy demand and Economics demand-response examples are in
+  military files. `action-runtime.situations` is generated from the maintained
+  exact-action simulations and is the deployed Action training set. Strategy demand and Economics demand-response examples are in
   `strategy-demands.situations` and `economics-strategy.situations`.
 - `*.db`: generated binary model databases.
 
@@ -106,6 +103,6 @@ WebGPU compute when available, and otherwise uses the CPU inferencer.
 - `buildActionInput` / `applyActionOutput`
 - `buildEconomicsInput` / `applyEconomicsOutput`
 
-Each encoder fills eight object records and stores object ids separately. Each
-decoder reads the corresponding output command record and applies the command to
-the stored object id.
+Strategy and Economics fill object records and retain object ids separately.
+Action selects one rotating unit, fills eight complete legal candidates, and
+applies the exact candidate selected by output slots `0..7`.

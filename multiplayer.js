@@ -311,6 +311,7 @@ const _multiplayer = new class
             lastStrategyProductionDemands: this.clonePlain(_ai_player.lastStrategyProductionDemands),
             lastActionUnitIndices: this.clonePlain(_ai_player.lastActionUnitIndices),
             lastActionRecordSummaries: this.clonePlain(_ai_player.lastActionRecordSummaries),
+            lastActionCandidates: this.clonePlain(_ai_player.lastActionCandidates),
             lastEconomicsCityIndices: this.clonePlain(_ai_player.lastEconomicsCityIndices),
         };
     }
@@ -400,7 +401,6 @@ const _multiplayer = new class
             _ai_player.applyEconomicsOutput(plan.economicsOutput, aiId);
             _ai_player.advanceSettlerTurnCounters(aiId);
             _ai_player.applyActionOutput(plan.actionOutput, aiId);
-            _ai_player.applyAiReasoningWorkarounds(aiId);
             return _server_game.captureTurn(aiId);
         });
         await _server_game.waitForHiddenActions();
