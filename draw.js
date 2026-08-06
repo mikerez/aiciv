@@ -12,6 +12,9 @@ const _draw = new class
 //        console.log("::: " + x + "," + y + " => " + " " + xy1toi(x,y) + ":" + xy1toj(x,y))
         ctx.clearRect(0, 0, canvas2D.width, canvas2D.height);
         this.drawTechnologyStatus(ctx);
+        if (typeof _birdsview !== 'undefined' && _birdsview.draw) {
+            _birdsview.draw(ctx);
+        }
         return ctx;
     }
 
@@ -21,7 +24,11 @@ const _draw = new class
             return '';
         }
         if (_game_state.researchStatusText) {
-            return _game_state.researchStatusText();
+            var text = _game_state.researchStatusText();
+            if (typeof _military !== 'undefined' && _military.relationStatusText) {
+                text += ' | ' + _military.relationStatusText(typeof _current_user === 'undefined' ? 0 : _current_user);
+            }
+            return text;
         }
         return '';
     }
@@ -32,23 +39,157 @@ const _draw = new class
             return;
         }
         const text = this.technologyStatusText();
-        if (!text) {
+        const message = (typeof _one_turn_message !== 'undefined' && _one_turn_message)
+            ? _one_turn_message
+            : (typeof _game_state !== 'undefined' && _game_state && _game_state.oneTurnMessage)
+            ? _game_state.oneTurnMessage
+            : '';
+        if (!text && !message) {
             return;
         }
         const mobile = document.body && document.body.classList && document.body.classList.contains('mobile-ui');
-        const fontSize = mobile ? 19 : 11;
-        const x = mobile ? 14 : 10;
-        const y = mobile ? 34 : 24;
+        const phone = document.body && document.body.classList && document.body.classList.contains('phone-ui');
+        const fontSize = phone ? 12 : (mobile ? 19 : 11);
+        const x = phone ? 10 : (mobile ? 14 : 10);
+        const phoneStatisticsY = phone
+            ? parseInt(getComputedStyle(document.documentElement).getPropertyValue('--phone-statistics-y'), 10)
+            : 0;
+        const y = phone ? (phoneStatisticsY || 57) : (mobile ? 19 : 12);
+        const lineGap = phone ? 15 : (mobile ? 23 : 15);
         ctx.save();
         ctx.font = 'bold ' + fontSize + 'px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
-        const height = fontSize + 14;
+        const height = y + fontSize + (message ? lineGap : 0);
         ctx.clearRect(0, 0, ctx.canvas.width, height + 8);
-        ctx.fillStyle = 'rgba(0,0,0,0.92)';
-        ctx.fillText(text, x + 2, y + 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.96)';
-        ctx.fillText(text, x, y);
+        if (text) {
+            ctx.fillStyle = 'rgba(0,0,0,0.92)';
+            ctx.fillText(text, x + 2, y + 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.96)';
+            ctx.fillText(text, x, y);
+        }
+        if (message) {
+            var messageY = y + lineGap;
+            ctx.fillStyle = 'rgba(0,0,0,0.92)';
+            ctx.fillText(message, x + 2, messageY + 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.96)';
+            ctx.fillText(message, x, messageY);
+        }
+        ctx.restore();
+    }
+
+    drawUnitOwnerLabels(ctx)
+    {
+        if (!ctx || typeof visibleUnitsForCurrentUser !== 'function') {
+            return;
+        }
+        var viewerId = typeof _current_user === 'undefined' ? 0 : _current_user;
+        var civilizations = typeof _server_game !== 'undefined'
+            && _server_game.civilizationsByPlayer
+            ? (_server_game.civilizationsByPlayer[viewerId] || []) : [];
+        var playerNames = {};
+        for (var c=0; c < civilizations.length; c++) {
+            playerNames[civilizations[c].player_id] = civilizations[c].player_name;
+        }
+
+        var units = visibleUnitsForCurrentUser();
+        var drawnOwners = {};
+        var labelsPerTile = {};
+        var mobile = document.body && document.body.classList
+            && document.body.classList.contains('mobile-ui');
+        var fontSize = mobile ? 11 : 9;
+        ctx.save();
+        ctx.font = fontSize + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        for (var k=0; k < units.length; k++) {
+            var unit = units[k];
+            if (!unit || !unit.coord) continue;
+            var ownerId = unit.team == undefined ? 0 : unit.team;
+            var ownerKey = unit.coord.i + ':' + unit.coord.j + ':' + ownerId;
+            if (drawnOwners[ownerKey]) continue;
+            drawnOwners[ownerKey] = true;
+
+            var label = playerNames[ownerId];
+            if (!label) {
+                label = ownerId == viewerId ? 'Player ' + ownerId : 'Player ' + ownerId;
+            }
+            var tileKey = unit.coord.i + ':' + unit.coord.j;
+            var line = labelsPerTile[tileKey] || 0;
+            labelsPerTile[tileKey] = line + 1;
+            var x = x1toX(ijtox1(unit.coord.i, unit.coord.j));
+            var y = y1toY(ijtoy1(unit.coord.i, unit.coord.j))
+                - Math.max(42, 92/_screenZoom) - line*(fontSize + 3);
+            var maxWidth = Math.max(88, 190/_screenZoom);
+            ctx.fillStyle = 'rgba(0,0,0,0.82)';
+            ctx.fillText(label, x + 1, y + 1, maxWidth);
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.fillText(label, x, y, maxWidth);
+        }
+        ctx.restore();
+    }
+
+    drawUnitStatusLines(ctx)
+    {
+        if (!ctx || typeof visibleUnitsForCurrentUser !== 'function') {
+            return;
+        }
+
+        var units = visibleUnitsForCurrentUser();
+        var zoom = Math.max(0.01, Number(_screenZoom) || 1);
+        var fullWidth = Math.max(12, Math.round(200/zoom));
+        var mobile = document.body && document.body.classList
+            && document.body.classList.contains('mobile-ui');
+        var fontSize = mobile ? 11 : 9;
+        var ownerLineByKey = {};
+        var ownerLinesPerTile = {};
+        var unitLinesPerOwner = {};
+        for (var ownerIndex=0; ownerIndex < units.length; ownerIndex++) {
+            var ownerUnit = units[ownerIndex];
+            if (!ownerUnit || !ownerUnit.coord) continue;
+            var ownerId = ownerUnit.team == undefined ? 0 : ownerUnit.team;
+            var ownerKey = ownerUnit.coord.i + ':' + ownerUnit.coord.j + ':' + ownerId;
+            if (Object.prototype.hasOwnProperty.call(ownerLineByKey, ownerKey)) continue;
+            var tileKey = ownerUnit.coord.i + ':' + ownerUnit.coord.j;
+            ownerLineByKey[ownerKey] = ownerLinesPerTile[tileKey] || 0;
+            ownerLinesPerTile[tileKey] = ownerLineByKey[ownerKey] + 1;
+        }
+        ctx.save();
+        for (var k=0; k < units.length; k++) {
+            var unit = units[k];
+            if (!unit || !unit.coord || !unit.can_move || unit.health === 0) {
+                continue;
+            }
+
+            var maxHealth = Math.max(1, Number(unit.maxHealth) || 100);
+            var healthRatio = Math.max(0, Math.min(1,
+                (unit.health == undefined ? maxHealth : Number(unit.health) || 0)/maxHealth));
+            var experienceRatio = Math.max(0, Math.min(1,
+                (unit.experience == undefined ? 1 : Number(unit.experience) || 0)/2));
+            var unitOwnerId = unit.team == undefined ? 0 : unit.team;
+            var unitOwnerKey = unit.coord.i + ':' + unit.coord.j + ':' + unitOwnerId;
+            var ownerLine = ownerLineByKey[unitOwnerKey] || 0;
+            var unitLine = unitLinesPerOwner[unitOwnerKey] || 0;
+            unitLinesPerOwner[unitOwnerKey] = unitLine + 1;
+            var x = Math.round(x1toX(ijtox1(unit.coord.i, unit.coord.j)) - fullWidth/2);
+            var labelY = y1toY(ijtoy1(unit.coord.i, unit.coord.j))
+                - Math.max(42, 92/zoom) - ownerLine*(fontSize + 3);
+            var y = Math.round(labelY + 2 + unitLine*5);
+            var healthWidth = healthRatio > 0 ? Math.max(1, Math.round(fullWidth*healthRatio)) : 0;
+            var experienceWidth = experienceRatio > 0
+                ? Math.max(1, Math.round(fullWidth*experienceRatio)) : 0;
+
+            if (healthWidth) {
+                ctx.fillStyle = healthRatio > 0.5 ? '#00b83e'
+                    : (healthRatio > 0.1 ? '#ffd400' : '#e02020');
+                ctx.fillRect(x, y, healthWidth, 2);
+            }
+            if (experienceWidth) {
+                ctx.fillStyle = experienceRatio < 0.6 ? '#1687ff' : '#9b36d6';
+                ctx.fillRect(x, y + 2, experienceWidth, 2);
+            }
+        }
         ctx.restore();
     }
 

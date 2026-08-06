@@ -7,9 +7,11 @@ This folder contains four standalone AI-player engines:
 - `action`: concrete unit commands.
 - `economics`: city production decisions.
 
-All engines now share one signal contract:
+All engines share one base signal contract, and Strategy extends it with a world
+birdsview:
 
-- Input: `1024` FP32 values = `8` objects * `120` floats + `64` generic situation floats.
+- Tactics, Action, Economics input: `1024` FP32 values = `8` objects * `120` floats + `64` generic situation floats.
+- Strategy input: `3524` FP32 values = the same `1024` base values plus `2500` birdsview values for a fixed `50x50` strategic map.
 - Output: `72` FP32 values = `8` object commands * `8` floats + `8` generic decision floats.
 - Object ids are not included in model inputs or outputs. Browser adapters keep ids in side arrays and map output record order back to game objects.
 - Local map windows use `9x9` tile samples so every object has a real center tile. In object records the local window occupies slots `16..96`; slot `56` is the center tile.
@@ -23,7 +25,8 @@ All engines now share one signal contract:
 - The network has `8` fully connected tanh layers with widths:
 
 ```text
-1024 -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 160 -> 72
+Strategy: 3524 -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 160 -> 72
+Others:   1024 -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 160 -> 72
 ```
 
 The first layer deterministically folds all eight object records into 16-float
@@ -81,11 +84,11 @@ Each `.db` starts with a 72-byte little-endian header:
 
 - `magic[8]`: `AICIVAI\0`
 - `version`: `2`
-- `width`: `1024`
+- `width`: input width, currently `3524` for Strategy and `1024` for other engines
 - `layer_count`: `8`
 - `activation`: `1` for tanh
 - `weight_layout`: `1` for row-major `[out][in]`
-- `reserved[0]`: input width, `1024`
+- `reserved[0]`: input width
 - `reserved[1]`: output width, `72`
 - `reserved[2..9]`: output width of each layer: `888, 752, 616, 480, 344, 208, 160, 72`
 

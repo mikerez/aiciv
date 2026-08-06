@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Civilization Login</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #18211b; color: #172018; font: 15px Arial, sans-serif; }
+        main { width: min(420px, calc(100vw - 32px)); background: rgba(255,255,255,.94); border: 1px solid rgba(0,0,0,.35); border-radius: 8px; padding: 28px; }
+        h1 { margin: 0 0 22px; font-size: 24px; letter-spacing: 0; }
+        label { display: block; margin: 14px 0 6px; font-weight: bold; }
+        input:not([type="checkbox"]) { width: 100%; min-height: 42px; padding: 9px 10px; border: 1px solid #788279; border-radius: 4px; font: inherit; }
+        .remember-row { display: flex; align-items: center; gap: 9px; margin: 14px 0 0; font-weight: normal; cursor: pointer; }
+        .remember-row input { width: 18px; height: 18px; margin: 0; accent-color: #28643a; }
+        button { width: 100%; min-height: 44px; margin-top: 20px; border: 1px solid #1d4629; border-radius: 4px; background: #28643a; color: white; font: bold 15px Arial, sans-serif; cursor: pointer; }
+        button:disabled { opacity: .6; cursor: wait; }
+        #message { min-height: 20px; margin: 14px 0 0; color: #9b1c1c; }
+        nav { margin-top: 14px; text-align: center; }
+        a { color: #1c5630; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>AI Civilization</h1>
+    <form id="loginForm">
+        <label for="login">Login or email</label>
+        <input id="login" name="login" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <label class="remember-row" for="rememberMe">
+            <input id="rememberMe" name="remember_me" type="checkbox">
+            <span>Remember me</span>
+        </label>
+        <button id="submitButton" type="submit">Login</button>
+        <p id="message" role="alert"></p>
+    </form>
+    <nav><a href="register.html">Register a new player</a></nav>
+</main>
+<script src="login.js?v=20260805c"></script>
+</body>
+</html>

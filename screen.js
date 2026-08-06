@@ -305,8 +305,53 @@ function drawSelectionStroke()
     ctx.restore();
 }
 
+function isUnitVisibleToCurrentUser(unit)
+{
+    if (!unit || unit.hiddenOnMap || !unit.coord) {
+        return false;
+    }
+    var team = unit.team || 0;
+    if (typeof _current_user == 'undefined' || team == _current_user) {
+        return true;
+    }
+    if (unit.serverVisibilityByUser
+        && Object.prototype.hasOwnProperty.call(unit.serverVisibilityByUser, _current_user)
+        && !unit.serverVisibilityByUser[_current_user]) {
+        return false;
+    }
+    if (typeof _ai_player !== 'undefined' && _ai_player.isTileFullyVisibleByUser) {
+        return _ai_player.isTileFullyVisibleByUser(unit.coord.i, unit.coord.j, _current_user);
+    }
+    if (typeof _map_terrain_bit == 'undefined' || !_map_terrain_bit[unit.coord.i]) {
+        return false;
+    }
+    return (_map_terrain_bit[unit.coord.i][unit.coord.j] & 0x0400) != 0;
+}
+
+function visibleUnitsForCurrentUser()
+{
+    if (typeof _units_by_user == 'undefined') {
+        return _units || [];
+    }
+    var result = [];
+    for (var userId in _units_by_user) {
+        var list = _units_by_user[userId] || [];
+        for (var k=0; k < list.length; k++) {
+            if (isUnitVisibleToCurrentUser(list[k])) {
+                result.push(list[k]);
+            }
+        }
+    }
+    return result;
+}
+
 function drawScene(loop)
 {
+    if (typeof _multiplayer != 'undefined' && _multiplayer.isHiddenSnapshotActive
+        && _multiplayer.isHiddenSnapshotActive()) {
+        if (loop) setTimeout(drawScene, 50, 1);
+        return;
+    }
     const startTime = performance.now();
     if (loop && !_fulldraw) {
         drawSelectionStroke();
@@ -403,17 +448,31 @@ function drawScene(loop)
             _city_economy.drawCitizenTilesMap(start_i, start_j, height_i, width_j);
         }
 
-        for (var k=0; k < _units.length; k++) {
-            _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
-                               _units[k].texture, _screenZoom);
-            var teamTexture = _team_color_textures[_units[k].team % _team_color_textures.length];
-            _screen.drawSprite(ijtox1(_units[k].coord.i,_units[k].coord.j), ijtoy1(_units[k].coord.i,_units[k].coord.j),
+        var visibleUnits = visibleUnitsForCurrentUser();
+        for (var k=0; k < visibleUnits.length; k++) {
+            var unit = visibleUnits[k];
+            _screen.drawSprite(ijtox1(unit.coord.i, unit.coord.j), ijtoy1(unit.coord.i, unit.coord.j),
+                               unit.texture, _screenZoom);
+            var teamTexture = _team_color_textures[(unit.team || 0) % _team_color_textures.length];
+            _screen.drawSprite(ijtox1(unit.coord.i, unit.coord.j), ijtoy1(unit.coord.i, unit.coord.j),
                                teamTexture, _screenZoom);
+        }
+    }
+    var labelCanvas = document.getElementById('canvasOwnerLabels');
+    if (labelCanvas && typeof _draw !== 'undefined' && _draw.drawUnitOwnerLabels) {
+        var labelContext = labelCanvas.getContext('2d');
+        labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
+        _draw.drawUnitOwnerLabels(labelContext);
+        if (_draw.drawUnitStatusLines) {
+            _draw.drawUnitStatusLines(labelContext);
         }
     }
     var ctx2D = document.getElementById("canvas2D").getContext("2d");
     if (typeof _draw !== 'undefined' && _draw.drawTechnologyStatus) {
         _draw.drawTechnologyStatus(ctx2D);
+    }
+    if (typeof _birdsview !== 'undefined' && _birdsview.draw) {
+        _birdsview.draw(ctx2D);
     }
     if (typeof _current_game !== 'undefined' && _current_game.drawUnitStateLetters) {
         _current_game.drawUnitStateLetters(ctx2D);

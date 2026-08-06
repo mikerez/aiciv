@@ -102,24 +102,83 @@ const _control = new class
 //console.log(":::" + i + ":" + j)
 //                    _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), 514+arrow_num, _screenZoom);
             path.push(new Coord(ni, nj));
-            if (arrow_num == 2 || arrow_num == 6) {
-                return;
-            }
-            var ix = arrow_num==0?10:arrow_num==1?5:arrow_num==2?0:arrow_num==3?-5:arrow_num==4?-10:arrow_num==5?-5:arrow_num==6?0:(5);
-            var iy = arrow_num==0?0:arrow_num==1?5:arrow_num==2?10:arrow_num==3?5:arrow_num==4?0:arrow_num==5?-5:arrow_num==6?-10:(-5);
-            _draw.drawArrow(ctx, x1toX(ijtox1(i,j))+5-ix, y1toY(ijtoy1(i,j))+5-iy, x1toX(ijtox1(i,j))+5+ix, y1toY(ijtoy1(i,j))+5+iy);
+            _control.drawMovementArrow(ctx, i, j, arrow_num);
         }, k, 30)
         _units[k].gotoPath = path;
         _units[k].gotoCoord = path.length ? path[path.length - 1] : null;
+        _units[k].pendingServerPath = [];
+        if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
     }
 
-    click(x, y, coord, preferCity)
+    drawMovementArrow(ctx, i, j, arrow_num)
     {
-        _selection = -1;
+        if (arrow_num == 2 || arrow_num == 6) return;
+        var ix = arrow_num==0?10:arrow_num==1?5:arrow_num==2?0:arrow_num==3?-5:arrow_num==4?-10:arrow_num==5?-5:arrow_num==6?0:5;
+        var iy = arrow_num==0?0:arrow_num==1?5:arrow_num==2?10:arrow_num==3?5:arrow_num==4?0:arrow_num==5?-5:arrow_num==6?-10:-5;
+        _draw.drawArrow(
+            ctx,
+            x1toX(ijtox1(i,j))+5-ix,
+            y1toY(ijtoy1(i,j))+5-iy,
+            x1toX(ijtox1(i,j))+5+ix,
+            y1toY(ijtoy1(i,j))+5+iy
+        );
+    }
+
+    drawMovementOrders(ctx)
+    {
+        if (!ctx || typeof _units === 'undefined') return;
+        for (var k=0; k < _units.length; k++) {
+            var unit = _units[k];
+            this.drawMovementOrder(ctx, unit, k);
+        }
+    }
+
+    drawMovementOrder(ctx, unit, k)
+    {
+        if (!ctx || !unit || !unit.coord) return false;
+        var path = unit.gotoPath && unit.gotoPath.length
+            ? unit.gotoPath : unit.pendingServerPath;
+        if (path && path.length) {
+            var from = unit.coord;
+            for (var n=0; n < path.length; n++) {
+                var to = path[n];
+                this.drawMovementArrow(ctx, from.i, from.j, this.arrowNum(to.i - from.i, to.j - from.j));
+                from = to;
+            }
+            return true;
+        }
+        if (!unit.gotoCoord) return false;
+        this.mapLine(unit.coord.i, unit.coord.j, unit.gotoCoord.i, unit.gotoCoord.j,
+            function(i, j, ni, nj, arrowNum) {
+                _control.drawMovementArrow(ctx, i, j, arrowNum);
+            }, k, 30);
+        return true;
+    }
+
+    forceDrawSelectedMovementOrder()
+    {
+        if (_selection == -1 || !_units[_selection]) return false;
+        var unit = _units[_selection];
+        var hasDestination = (unit.gotoPath && unit.gotoPath.length)
+            || (unit.pendingServerPath && unit.pendingServerPath.length) || unit.gotoCoord;
+        if (!hasDestination) return false;
+        if (typeof _game !== 'undefined' && _game.redrawControlZones) {
+            _game.redrawControlZones();
+        }
+        else {
+            this.drawMovementOrder(_draw.clear(), unit, _selection);
+        }
+        return true;
+    }
+
+    click(x, y, coord, preferCity, deferredStackPoint)
+    {
+        var previousSelection = _selection;
         var topHit = -1;
         var cityHit = -1;
         var tileI = coord ? Math.round(coord.i) : null;
         var tileJ = coord ? Math.round(coord.j) : null;
+        var tileUnits = [];
         for (var k=_units.length - 1; k >= 0; k--) {
             var unitX = ijtox1(_units[k].coord.i, _units[k].coord.j);
             var unitY = ijtoy1(_units[k].coord.i, _units[k].coord.j);
@@ -128,6 +187,7 @@ const _control = new class
             var spriteHit = x >= unitX - unitHalfWidth && x <= unitX + unitHalfWidth
              && y >= unitY - unitHalfHeight && y <= unitY + unitHalfHeight;
             var tileHit = coord && _units[k].coord.i == tileI && _units[k].coord.j == tileJ;
+            if (tileHit) tileUnits.push(k);
             if (spriteHit || tileHit) {
                 if (_units[k].type == 3 && cityHit == -1) {
                     cityHit = k;
@@ -140,7 +200,19 @@ const _control = new class
                 }
             }
         }
-        _selection = preferCity && cityHit != -1 ? cityHit : topHit;
-        return _selection != -1;
+        if (topHit != -1) {
+            _selection = preferCity && cityHit != -1 ? cityHit : topHit;
+        }
+        else {
+            _selection = previousSelection;
+        }
+        if (typeof _unit_stack_menu != 'undefined') {
+            if (tileUnits.length > 1 && deferredStackPoint && _unit_stack_menu.deferPhoneTap) {
+                _unit_stack_menu.deferPhoneTap(tileUnits, { i: tileI, j: tileJ }, deferredStackPoint);
+            }
+            else if (tileUnits.length > 1) _unit_stack_menu.show(tileUnits, { i: tileI, j: tileJ });
+            else _unit_stack_menu.hide();
+        }
+        return topHit != -1;
     }
 }

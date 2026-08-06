@@ -1,0 +1,322 @@
+const _economics = new class
+{
+    constructor()
+    {
+        this.terrainImprovementTextures = {
+            road: 850,
+            irrigation: 851,
+            pasture: 852,
+            fortification: 853,
+            cottage: 854,
+            workshop: 855,
+            mine: 856,
+            farm: 857,
+            plantation: 858,
+            camp: 859,
+            fishing_boats: 866,
+            quarry: 867,
+            winery: 868,
+        };
+    }
+
+    ensureState(gameState)
+    {
+        if (!gameState) {
+            return;
+        }
+        gameState.money = gameState.money || 0;
+        gameState.lastGrossMoneyIncome = gameState.lastGrossMoneyIncome || 0;
+        gameState.lastMaintenance = gameState.lastMaintenance || 0;
+        gameState.lastTechnologyExpense = gameState.lastTechnologyExpense || 0;
+        gameState.lastAvailableMoney = gameState.lastAvailableMoney || 0;
+        gameState.lastAccountIncome = gameState.lastAccountIncome || 0;
+        gameState.lastScienceIncome = gameState.lastScienceIncome || 0;
+    }
+
+    terrainImprovementUnitId(modifier, i, j)
+    {
+        return 'terrain_' + modifier + '_' + i + '_' + j;
+    }
+
+    findTerrainImprovementUnit(modifier, i, j, team)
+    {
+        if (typeof _units_by_user == 'undefined') {
+            return null;
+        }
+        var list = _units_by_user[team] || [];
+        var id = this.terrainImprovementUnitId(modifier, i, j);
+        for (var k=0; k < list.length; k++) {
+            if (list[k] && list[k].economicId == id) {
+                return list[k];
+            }
+        }
+        return null;
+    }
+
+    registerTerrainImprovement(modifier, i, j, team)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || !modifier) {
+            return null;
+        }
+        team = team == undefined ? (typeof _current_user == 'undefined' ? 0 : _current_user) : team;
+        if (typeof _units_by_user != 'undefined' && _units_by_user[team] == undefined) {
+            _units_by_user[team] = [];
+        }
+        if (this.findTerrainImprovementUnit(modifier, i, j, team)) {
+            return null;
+        }
+        var unit = new Unit(4, this.terrainImprovementTextures[modifier] || 0, new Coord(i, j));
+        unit.unitTypeId = 'building_' + modifier;
+        unit.name = modifier.replace(/_/g, ' ');
+        unit.can_move = false;
+        unit.team = team;
+        unit.economicClass = 'terrain_improvement';
+        unit.improvementType = modifier;
+        unit.economicId = this.terrainImprovementUnitId(modifier, i, j);
+        unit.hiddenOnMap = true;
+        unit.noControlZone = true;
+        unit.noFogReveal = true;
+        unit.maintenanceCost = 1;
+        if (typeof _units_by_user != 'undefined') {
+            _units_by_user[team].push(unit);
+            if (typeof _current_user != 'undefined' && team == _current_user) {
+                _units = _units_by_user[team];
+            }
+        }
+        else if (typeof _units != 'undefined') {
+            _units.push(unit);
+        }
+        return unit;
+    }
+
+    syncTerrainImprovementUnits(team)
+    {
+        if (typeof _map_terrain_mod == 'undefined' || typeof _units_by_user == 'undefined') {
+            return;
+        }
+        team = team == undefined ? (typeof _current_user == 'undefined' ? 0 : _current_user) : team;
+        var modifiers = Object.keys(this.terrainImprovementTextures);
+        for (var i=0; i < _map_size; i++) {
+            for (var j=0; j < _map_size; j++) {
+                var mod = _map_terrain_mod[i][j];
+                if (!mod) {
+                    continue;
+                }
+                for (var m=0; m < modifiers.length; m++) {
+                    if (mod[modifiers[m]]) {
+                        this.registerTerrainImprovement(modifiers[m], i, j, team);
+                    }
+                }
+            }
+        }
+    }
+
+    maintenanceCost(unit)
+    {
+        if (!unit || unit.noMaintenance) {
+            return 0;
+        }
+        if (unit.economicClass == 'terrain_improvement'
+            && unit.coord
+            && this.isCityTile(unit.coord.i, unit.coord.j, unit.team || 0)) {
+            return 0;
+        }
+        if (unit.maintenanceCost != undefined) {
+            return Math.max(0, unit.maintenanceCost);
+        }
+        if (unit.type == 3 || unit.economicClass == 'terrain_improvement') {
+            return 1;
+        }
+        if (unit.unitTypeId != undefined || unit.type == 0 || unit.type == 1 || unit.type == 2) {
+            return 1;
+        }
+        return 0;
+    }
+
+    isCityTile(i, j, team)
+    {
+        var lists = [];
+        if (typeof _units_by_user != 'undefined') {
+            if (_units_by_user[team] != undefined) {
+                lists.push(_units_by_user[team]);
+            }
+        }
+        else if (typeof _units != 'undefined') {
+            lists.push(_units);
+        }
+        for (var n=0; n < lists.length; n++) {
+            var list = lists[n] || [];
+            for (var k=0; k < list.length; k++) {
+                var unit = list[k];
+                if (unit && unit.type == 3 && unit.coord && unit.coord.i == i && unit.coord.j == j) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    countMaintenance(units)
+    {
+        var total = 0;
+        units = units || [];
+        for (var k=0; k < units.length; k++) {
+            total += this.maintenanceCost(units[k]);
+        }
+        return total;
+    }
+
+    processTurn(grossMoney, gameState, units)
+    {
+        gameState = gameState || (typeof _game_state == 'undefined' ? null : _game_state);
+        units = units || (typeof _units == 'undefined' ? [] : _units);
+        var result = this.processTurnIncome(gameState, grossMoney, this.countMaintenance(units));
+        this.applyNegativeBudgetPenalty(gameState, units);
+        return result;
+    }
+
+    processTurnIncome(gameState, grossMoney, maintenance)
+    {
+        if (!gameState) {
+            return null;
+        }
+        this.ensureState(gameState);
+        grossMoney = Math.max(0, Math.floor(grossMoney || 0));
+        maintenance = Math.max(0, Math.floor(maintenance || 0));
+        var preview = this.previewTurnIncome(gameState, grossMoney, maintenance);
+
+        gameState.lastGrossMoneyIncome = grossMoney;
+        gameState.lastMaintenance = maintenance;
+        gameState.lastTechnologyExpense = preview.technology;
+        gameState.lastAvailableMoney = preview.available;
+        gameState.lastScienceIncome = preview.science;
+        gameState.lastAccountIncome = preview.account;
+        gameState.lastMoneyIncome = preview.available;
+        gameState.money += preview.account;
+        gameState.addScience(preview.science);
+        return {
+            grossMoney: grossMoney,
+            maintenance: maintenance,
+            technology: preview.technology,
+            available: preview.available,
+            science: preview.science,
+            account: preview.account,
+        };
+    }
+
+    applyNegativeBudgetPenalty(gameState, units)
+    {
+        if (!gameState || gameState.money >= 0) {
+            return null;
+        }
+        units = units || (typeof _units == 'undefined' ? [] : _units);
+        var index = this.findBudgetPenaltyUnitIndex(units);
+        if (index == -1) {
+            return null;
+        }
+        var unit = units[index];
+        var label = this.unitLabel(unit);
+        this.removeUnitFromList(units, index);
+        var message = 'Unit "' + label + '" is destroyed due to lack of funds.';
+        gameState.oneTurnMessage = message;
+        if (typeof _one_turn_message !== 'undefined') {
+            _one_turn_message = message;
+        }
+        if (typeof appendConsoleLog === 'function') {
+            appendConsoleLog(message);
+        }
+        if (typeof _fulldraw !== 'undefined') {
+            _fulldraw = 1;
+        }
+        return unit;
+    }
+
+    findBudgetPenaltyUnitIndex(units)
+    {
+        if (!units || !units.length) {
+            return -1;
+        }
+        var fallback = -1;
+        for (var k=0; k < units.length; k++) {
+            if (!units[k] || this.maintenanceCost(units[k]) <= 0) {
+                continue;
+            }
+            if (fallback == -1) {
+                fallback = k;
+            }
+            if (units[k].type != 3 && !units[k].hiddenOnMap) {
+                return k;
+            }
+        }
+        return fallback;
+    }
+
+    unitLabel(unit)
+    {
+        if (!unit) {
+            return 'unknown';
+        }
+        var name = unit.name || unit.unitTypeId || ('type ' + unit.type);
+        if (unit.coord) {
+            name += ' at (' + unit.coord.i + ',' + unit.coord.j + ')';
+        }
+        return name;
+    }
+
+    removeUnitFromList(units, index)
+    {
+        if (!units || index < 0 || index >= units.length) {
+            return;
+        }
+        if (typeof _game !== 'undefined' && _game && _game.del_unit && units === _units) {
+            _game.del_unit(index);
+            return;
+        }
+        units.splice(index, 1);
+        if (typeof _selection !== 'undefined' && units === _units) {
+            if (_selection == index) {
+                _selection = -1;
+            }
+            else if (_selection > index) {
+                --_selection;
+            }
+        }
+    }
+
+    previewTurnIncome(gameState, grossMoney, maintenance)
+    {
+        if (!gameState) {
+            return { grossMoney: 0, maintenance: 0, technology: 0, available: 0, science: 0, account: 0 };
+        }
+        this.ensureState(gameState);
+        grossMoney = Math.max(0, Math.floor(grossMoney == undefined ? gameState.lastGrossMoneyIncome : grossMoney));
+        maintenance = Math.max(0, Math.floor(maintenance == undefined ? gameState.lastMaintenance : maintenance));
+        var rate = Math.max(0, Math.min(100, Math.round(gameState.scienceRate || 0)));
+        var technologyExpense = Math.floor(grossMoney * rate / 100);
+        var available = grossMoney - maintenance - technologyExpense;
+        return {
+            grossMoney: grossMoney,
+            maintenance: maintenance,
+            technology: technologyExpense,
+            available: available,
+            science: technologyExpense,
+            account: available,
+        };
+    }
+
+    accountStatusText(gameState)
+    {
+        gameState = gameState || (typeof _game_state == 'undefined' ? null : _game_state);
+        if (!gameState) {
+            return '';
+        }
+        this.ensureState(gameState);
+        var preview = this.previewTurnIncome(gameState);
+        var delta = preview.account || 0;
+        var deltaText = delta >= 0 ? '+' + delta : '' + delta;
+        return 'Money: ' + gameState.money
+            + ' (' + deltaText + '/turn, income ' + preview.grossMoney
+            + ', upkeep ' + preview.maintenance
+            + ', technology ' + preview.technology + ')';
+    }
+};

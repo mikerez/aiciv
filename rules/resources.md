@@ -69,6 +69,7 @@ Resources are base map properties stored separately from terrain.
 | Aluminum | hills, rocks | Strategic metal for advanced units and construction. |
 | Uranium | hills, rocks, sand | Strategic late-game energy and weapon resource. |
 | Gold | hills, rocks, sand | Commerce and trade value. |
+| Gems | hills, rocks | Valuable minerals for luxury and trade. |
 
 ## Generation
 
@@ -78,6 +79,7 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-GEN-004`: Generated resources are prepared into a full-map sprite list for faster drawing.
 - `RESOURCE-GEN-005`: Resource generation uses sparse probabilities so resources remain rare on the map.
 - `RESOURCE-GEN-006`: Duplicate resource names in design input are represented once in `_resource_types`.
+- `RESOURCE-GEN-007`: Server migration 8 seeds Gems once on eligible empty hill and rock tiles in existing worlds without replacing terrain or existing resources.
 
 ## Visibility
 
@@ -128,3 +130,4 @@ Resources are base map properties stored separately from terrain.
 | Horses | Pasture |
 | Iron | Mine |
 | Gold | Mine |
+| Gems | Mine |

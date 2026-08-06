@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebGL 2D Sprite Example</title>
-    <link rel="preload" href="ai_player/strategy.db.gz?v=20260630c" as="fetch" crossorigin="anonymous">
+    <title>AI Civilization</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script>
+        if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
+            window.location.replace('login.html');
+        }
+    </script>
+    <link rel="preload" href="ai_player/strategy.db.gz?v=20260712a" as="fetch" crossorigin="anonymous">
     <link rel="preload" href="ai_player/tactics.db.gz?v=20260625k" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/action.db.gz?v=20260704d" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/economics.db.gz?v=20260704a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/action.db.gz?v=20260804a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/economics.db.gz?v=20260711b" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -14,14 +21,30 @@
         #canvas3D {
             display: block;
         }
+        #turnControls {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        #turnControls > button {
+            position: static !important;
+            inset: auto !important;
+            transform: none !important;
+            flex: 0 0 auto;
+        }
         body.mobile-ui button,
         body.mobile-ui [data-menu-command],
         body.mobile-ui a {
             min-height: 40px;
             font-size: 28px !important;
         }
-        body.mobile-ui #endTurnButton {
-            top: 72px !important;
+        body.mobile-ui #endTurnButton,
+        body.mobile-ui #logoutButton {
             padding: 16px 24px !important;
             font-size: 28px !important;
             border-radius: 12px !important;
@@ -44,18 +67,167 @@
         body.mobile-ui #console_menu button {
             font-size: 19px !important;
         }
+
+        body.phone-ui {
+            width: var(--phone-vw);
+            height: var(--phone-vh);
+            overflow: hidden;
+        }
+        body.phone-ui #turnControls {
+            top: env(safe-area-inset-top, 0px) !important;
+            left: auto !important;
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            transform: none !important;
+        }
+        body.phone-ui button,
+        body.phone-ui [data-menu-command],
+        body.phone-ui a {
+            min-height: 28px;
+            font-size: var(--phone-font-size) !important;
+        }
+        body.phone-ui #main_menu_buttons {
+            top: calc(env(safe-area-inset-top, 0px) + 6px) !important;
+            left: calc(env(safe-area-inset-left, 0px) + 10px) !important;
+            right: calc(env(safe-area-inset-right, 0px) + 10px) !important;
+            width: auto !important;
+            transform: none !important;
+            justify-content: center;
+            gap: var(--phone-button-gap) !important;
+        }
+        body.phone-ui #main_menu_buttons button {
+            width: var(--phone-button-size) !important;
+            height: var(--phone-button-size) !important;
+            min-width: var(--phone-button-size) !important;
+            min-height: var(--phone-button-size) !important;
+            flex: 0 0 var(--phone-button-size);
+            border-radius: 5px !important;
+        }
+        body.phone-ui #main_menu_buttons svg {
+            width: calc(var(--phone-button-size) - 9px) !important;
+            height: calc(var(--phone-button-size) - 9px) !important;
+        }
+        body.phone-ui #endTurnButton,
+        body.phone-ui #logoutButton {
+            max-width: calc((var(--phone-vw) - 24px) / 2);
+            min-height: 30px !important;
+            padding: 5px 9px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: var(--phone-font-size) !important;
+            border-radius: 6px !important;
+        }
+        body.phone-ui #foreground {
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 50px) !important;
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            bottom: auto !important;
+            width: min(220px, calc(var(--phone-vw) * 0.58)) !important;
+            height: var(--phone-action-menu-height) !important;
+            max-height: var(--phone-action-menu-height) !important;
+            padding-right: 2px;
+            font-size: var(--phone-font-size) !important;
+            overscroll-behavior: contain;
+        }
+        body.phone-ui #foreground [data-menu-command] {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1.15;
+        }
+        body.phone-ui [data-main-menu] {
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 50px) !important;
+            left: calc(env(safe-area-inset-left, 0px) + 8px) !important;
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+            padding: 8px !important;
+            border-radius: 7px !important;
+            z-index: 9 !important;
+            font-size: var(--phone-font-size) !important;
+        }
+        body.phone-ui [data-main-menu] > div:first-child {
+            font-size: 16px !important;
+        }
+        body.phone-ui #technology_menu > div:nth-child(2) {
+            flex-wrap: wrap;
+            gap: 5px !important;
+            font-size: 12px !important;
+        }
+        body.phone-ui #technology_science_rate {
+            width: min(150px, calc(var(--phone-vw) - 46px)) !important;
+        }
+        body.phone-ui #console_log,
+        body.phone-ui #console_status,
+        body.phone-ui #console_menu button {
+            font-size: 12px !important;
+        }
+        body.phone-ui #unit_stack_menu {
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-unit-stack-y) + 40px) !important;
+            left: calc(env(safe-area-inset-left, 0px) + 8px) !important;
+            right: auto !important;
+            bottom: auto !important;
+            width: min(240px, calc(var(--phone-vw) * 0.5)) !important;
+            height: var(--phone-unit-stack-height) !important;
+            min-height: 120px !important;
+            max-height: var(--phone-unit-stack-height) !important;
+            padding: 10px !important;
+            overscroll-behavior: contain;
+            font-size: var(--phone-font-size) !important;
+        }
+        body.phone-ui #unit_stack_menu > button {
+            grid-template-columns: 44px minmax(0, 1fr) 42px !important;
+            gap: 10px !important;
+            min-height: 46px !important;
+            padding: 9px !important;
+        }
+        body.phone-ui #unitStackButton {
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-unit-stack-y)) !important;
+            left: calc(env(safe-area-inset-left, 0px) + 8px) !important;
+            bottom: auto !important;
+        }
+        body.phone-ui #civilizationsButton {
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+        }
+        body.phone-ui #civilizations_menu {
+            top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+            left: calc(env(safe-area-inset-left, 0px) + 8px) !important;
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 56px) !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            padding: 12px !important;
+            overscroll-behavior: contain;
+            font-size: var(--phone-font-size) !important;
+        }
+        body.phone-ui #civilizations_menu > div:not(:first-child) {
+            grid-template-columns: 52px minmax(0, 1fr) !important;
+            gap: 12px !important;
+            padding: 12px 4px !important;
+            line-height: 1.35;
+        }
+        body.phone-ui #civilizations_menu > div:not(:first-child) > div:first-child {
+            width: 46px !important;
+            height: 54px !important;
+            font-size: 20px !important;
+        }
     </style>
 </head>
 <body>
                           <!-- width="400" height="300" style="width:400px;height:300px;" -->
     <canvas id="canvas3D" width="1500" height="1000" style="touch-action: none;"></canvas>
     <canvas id="canvas2D" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 2;touch-action: none;"></canvas>
+    <canvas id="canvasOwnerLabels" width="1500" height="1000" style="position:absolute;top:0;left:0;background:transparent;z-index:2;pointer-events:none;"></canvas>
     <canvas id="canvasSelection" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 3;pointer-events: none;mix-blend-mode: difference;"></canvas>
+    <canvas id="canvasEvents" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 4;pointer-events: none;"></canvas>
     <div class="container">
         <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 5;overflow-y: scroll; height:400px;">
         </div>
     </div>
-    <button id="endTurnButton" style="position: fixed;left: 50%;top: 42px;transform: translateX(-50%);z-index: 6;background: rgba(255,255,255,0.75);border: 1px solid rgba(0,0,0,0.35);border-radius: 8px;padding: 8px 12px;font: bold 14px Arial;">End Turn</button>
+    <div id="turnControls">
+        <button id="endTurnButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">End Turn (6s)</button>
+        <button id="logoutButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Log Out</button>
+    </div>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -78,30 +250,46 @@
         function ijtox(i,j) { return i*_cell_height+j*_cell_width; }
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
-    <script src="menu_unit.js?v=20260526a"></script>
-    <script src="draw.js?v=20260625b"></script>
-    <script src="control.js?v=20260525b"></script>
-    <script src="ai.js?v=20260704d"></script>
+    <script src="mobile_ui.js?v=20260805i"></script>
+    <script src="menu_unit.js?v=20260805c"></script>
+    <script src="draw.js?v=20260806b"></script>
+    <script src="control.js?v=20260805g"></script>
+    <script src="birdsview.js?v=20260805a"></script>
+    <script src="ai.js?v=20260805c"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
-            _ai_player.ensureDefaultModelsLoaded(false).catch(function(error) {
+            _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
                 if (typeof console !== 'undefined' && console.error) {
                     console.error('AI background model load failed', error);
                 }
             });
+            if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
+                _ai_player.ensureDefaultModelsLoaded(false).catch(function(error) {
+                    if (typeof console !== 'undefined' && console.error) console.error(error);
+                });
+            }
         }
     </script>
-    <script src="game.js?v=20260625c"></script>
-    <script src="multiplayer.js?v=20260625a"></script>
-    <script src="city.js?v=20260625e"></script>
-    <script src="menu_technology.js?v=20260625a"></script>
-    <script src="menu_politics.js?v=20260522f"></script>
-    <script src="menu_finance.js?v=20260522f"></script>
-    <script src="menu_trade.js?v=20260522f"></script>
-    <script src="menu_console.js?v=20260625b"></script>
-    <script src="menu_main.js?v=20260625a"></script>
-    <script src="map.js?v=20260526b"></script>
-    <script src="screen.js?v=20260625a"></script>
+    <script src="game.js?v=20260805d"></script>
+    <script src="military.js?v=20260806a"></script>
+    <script src="economics.js?v=20260709a"></script>
+    <script src="multiplayer.js?v=20260806b"></script>
+    <script src="server_game.js?v=20260806i"></script>
+    <script src="city.js?v=20260806d"></script>
+    <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
+    <!--
+    <script src="menu_technology.js"></script>
+    <script src="menu_politics.js"></script>
+    <script src="menu_finance.js"></script>
+    <script src="menu_trade.js"></script>
+    <script src="menu_console.js"></script>
+    <script src="menu_main.js"></script>
+    -->
+    <script src="game_events.js?v=20260805b"></script>
+    <script src="menu_stack.js?v=20260805d"></script>
+    <script src="menu_civilizations.js?v=20260805a"></script>
+    <script src="map.js?v=20260706a"></script>
+    <script src="screen.js?v=20260806a"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -204,14 +392,14 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260630a"></script>
+    <script src="game_prehistory.js?v=20260806f"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
-            _screen.loadTexture(_resource_types[resourceId].sprite, _resource_types[resourceId].texture);
+            _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
         }
 
         _map.init();
-        _map.gen();
+        // _map.gen(); // Terrain and resources are generated once by PHP when the server map is empty.
         if (typeof _multiplayer !== 'undefined') {
             _multiplayer.initMapVisibility();
         }
@@ -223,6 +411,8 @@
         var _panning_map = 0;
         var _last_pointer_point = null;
         var _last_hover_coord = null;
+        var _pending_phone_action_tap = null;
+        var _pending_phone_map_command_tap = null;
         var _turn_in_progress = 0;
         var _step = 0;
         var _in_drawing = 0;
@@ -238,8 +428,15 @@
         if (_is_mobile_browser) {
             document.body.classList.add('mobile-ui');
         }
-        if (typeof _multiplayer !== 'undefined') {
-            _multiplayer.prepareInitialAiTurn();
+        if (typeof _phone_ui !== 'undefined') {
+            _phone_ui.apply();
+        }
+        if (typeof _server_game !== 'undefined') {
+            _server_game.initializePlayer(_current_user).then(function() {
+                _server_game.startTurnTimer(_current_user, false);
+            }).catch(function(error) {
+                _server_game.log('Initial server load failed: ' + error.message);
+            });
         }
 
         function isGameInputTarget(target)
@@ -247,9 +444,17 @@
             return target == _canvas || target == document.getElementById('canvas2D') || target == document.body || target == window;
         }
 
-        async function endTurn()
+        async function endTurn(forcedByTimeout)
         {
+            if (typeof _server_game !== 'undefined' && _server_game.isAwaitingResolution(_current_user)) {
+                _server_game.updateWaitingUi(_current_user);
+                return;
+            }
             if (_turn_in_progress) {
+                return;
+            }
+            if (!forcedByTimeout && _current_game.canEndTurnWithCurrentSelection
+                && !_current_game.canEndTurnWithCurrentSelection()) {
                 return;
             }
             _turn_in_progress = 1;
@@ -257,11 +462,38 @@
             if (endTurnButton) {
                 endTurnButton.disabled = true;
             }
+            var serverSubmission = typeof _server_game !== 'undefined'
+                ? _server_game.captureTurn(_current_user) : null;
+            if (typeof _server_game !== 'undefined') {
+                _server_game.stopTurnTimer(true);
+            }
+            if (typeof _game !== 'undefined' && _game.redrawControlZones) {
+                _game.redrawControlZones();
+            }
             try {
-                var processed = _current_game.makeTurnAnimated
-                    ? await _current_game.makeTurnAnimated()
-                    : _current_game.makeTurn();
-                if (processed !== false && typeof _multiplayer !== 'undefined') {
+                // Registered multiplayer is server-authoritative. Moving locally before
+                // make_turn is accepted causes visible rollback when this client is stale.
+                var processed = true;
+                if (_authenticated_player_id == null) {
+                    processed = _current_game.makeTurnAnimated
+                        ? await _current_game.makeTurnAnimated(!!forcedByTimeout)
+                        : _current_game.makeTurn(!!forcedByTimeout);
+                }
+                if (serverSubmission && (processed !== false || forcedByTimeout)) {
+                    try {
+                        if (_authenticated_player_id != null && typeof _multiplayer !== 'undefined') {
+                            await _multiplayer.submitHumanAndHiddenAiTurn(serverSubmission);
+                        }
+                        else {
+                            await _server_game.submitTurn(serverSubmission);
+                        }
+                    }
+                    catch (serverError) {
+                        if (typeof console !== 'undefined' && console.error) console.error(serverError);
+                    }
+                }
+                if ((processed !== false || forcedByTimeout) && typeof _multiplayer !== 'undefined'
+                    && _authenticated_player_id == null) {
                     if (typeof _game !== 'undefined' && _game.sleep) {
                         await _game.sleep(220);
                     }
@@ -272,16 +504,32 @@
             }
             finally {
                 _turn_in_progress = 0;
-                if (endTurnButton) {
-                    endTurnButton.disabled = false;
+                var awaitingServer = typeof _server_game !== 'undefined'
+                    && _server_game.isAwaitingResolution(_current_user);
+                if (endTurnButton) endTurnButton.disabled = awaitingServer;
+                if (typeof _server_game !== 'undefined' && !_server_game.timerId && !awaitingServer) {
+                    _server_game.startTurnTimer(_current_user, false);
+                }
+                else if (awaitingServer) {
+                    _server_game.updateWaitingUi(_current_user);
                 }
             }
+        }
+
+        if (typeof _server_game !== 'undefined') {
+            _server_game.setEndTurnCallback(endTurn);
         }
 
         document.getElementById('endTurnButton').onclick = function(event) {
             event.preventDefault();
             event.stopPropagation();
             endTurn();
+        };
+
+        document.getElementById('logoutButton').onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            _server_game.logout(this);
         };
 
         function primaryInput(event)
@@ -311,6 +559,26 @@
                 _fulldraw = 1;
                 drawScene(0);
                 _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                if (_current_game.dismissActionMenu) {
+                    _current_game.dismissActionMenu();
+                }
+                return;
+            }
+            var deferPhoneMapCommand = event.type === 'touchstart'
+                && document.body.classList.contains('phone-ui')
+                && _current_game.hasPendingMapCommand
+                && _current_game.hasPendingMapCommand();
+            if (deferPhoneMapCommand) {
+                _pending_phone_map_command_tap = {
+                    x: point.x,
+                    y: point.y,
+                    coord: coord,
+                    moved: false
+                };
+                _mousedown = 1;
+                _last_pointer_point = point;
+                _dragging_unit_path = 0;
+                _panning_map = 0;
                 return;
             }
             if (_current_game.handleMapClick(coord)) {
@@ -318,12 +586,36 @@
                 drawScene(0);
                 return;
             }
-            _control.click(Xtox1(point.x), Ytoy1(point.y), coord, event.detail >= 2);
-            _current_game.applyMenuRules();
+            var deferPhoneStack = event.type === 'touchstart'
+                && document.body.classList.contains('phone-ui');
+            var unitSelected = _control.click(
+                Xtox1(point.x), Ytoy1(point.y), coord, event.detail >= 2,
+                deferPhoneStack ? point : null
+            );
+            if (deferPhoneStack) {
+                if (_current_game.dismissActionMenu) {
+                    _current_game.dismissActionMenu();
+                }
+                _pending_phone_action_tap = unitSelected ? {
+                    x: point.x,
+                    y: point.y,
+                    startedAt: Date.now(),
+                    moved: false
+                } : null;
+            }
+            else if (unitSelected && _current_game.showActionMenuForSelection) {
+                _current_game.showActionMenuForSelection();
+            }
+            else {
+                _current_game.applyMenuRules();
+            }
             drawScene(0);
+            if (unitSelected && _control.forceDrawSelectedMovementOrder) {
+                _control.forceDrawSelectedMovementOrder();
+            }
             _mousedown = 1;
             _last_pointer_point = point;
-            _dragging_unit_path = (_selection != -1 && _units[_selection].can_move) ? 1 : 0;
+            _dragging_unit_path = (unitSelected && _selection != -1 && _units[_selection].can_move) ? 1 : 0;
             _panning_map = _dragging_unit_path ? 0 : 1;
         }
 
@@ -350,6 +642,32 @@
             const point = eventToCanvas(input);
             const coord = eventToMapCoord(input);
             _last_hover_coord = coord;
+            if (_pending_phone_map_command_tap) {
+                var commandCanvasRect = _canvas.getBoundingClientRect();
+                var commandDragThreshold = 12*_canvas.width/Math.max(1, commandCanvasRect.width);
+                var commandDx = point.x - _pending_phone_map_command_tap.x;
+                var commandDy = point.y - _pending_phone_map_command_tap.y;
+                if (commandDx*commandDx + commandDy*commandDy >= commandDragThreshold*commandDragThreshold) {
+                    _pending_phone_map_command_tap.moved = true;
+                }
+                else {
+                    _pending_phone_map_command_tap.coord = coord;
+                }
+                event.preventDefault();
+                return;
+            }
+            if (typeof _unit_stack_menu !== 'undefined' && _unit_stack_menu.updateDeferredPhoneTap) {
+                var canvasRect = _canvas.getBoundingClientRect();
+                var dragThreshold = 12*_canvas.width/Math.max(1, canvasRect.width);
+                _unit_stack_menu.updateDeferredPhoneTap(point, dragThreshold);
+                if (_pending_phone_action_tap) {
+                    var actionDx = point.x - _pending_phone_action_tap.x;
+                    var actionDy = point.y - _pending_phone_action_tap.y;
+                    if (actionDx*actionDx + actionDy*actionDy >= dragThreshold*dragThreshold) {
+                        _pending_phone_action_tap.moved = true;
+                    }
+                }
+            }
             if (_current_game.previewMapCommand(coord)) {
                 event.preventDefault();
                 return;
@@ -363,6 +681,9 @@
                     _current_game.prepareManualMovement(_selection);
                 }
                 _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                if (_current_game.dismissActionMenu) {
+                    _current_game.dismissActionMenu();
+                }
                 return;
             }
             if (_panning_map) {
@@ -375,6 +696,34 @@
                 return;
             }
             event.preventDefault();
+            var mapCommandTap = _pending_phone_map_command_tap;
+            _pending_phone_map_command_tap = null;
+            if (mapCommandTap) {
+                if (event.type === 'touchend' && !mapCommandTap.moved) {
+                    var commandInput = primaryInput(event);
+                    var commandCoord = commandInput ? eventToMapCoord(commandInput) : mapCommandTap.coord;
+                    if (_current_game.handleMapClick(commandCoord)) {
+                        _current_game.applyMenuRules();
+                    }
+                }
+                _mousedown = 0;
+                _dragging_unit_path = 0;
+                _panning_map = 0;
+                _last_pointer_point = null;
+                _fulldraw = 1;
+                drawScene(0);
+                return;
+            }
+            if (typeof _unit_stack_menu !== 'undefined' && _unit_stack_menu.finishDeferredPhoneTap) {
+                _unit_stack_menu.finishDeferredPhoneTap(event.type === 'touchend');
+            }
+            var actionTap = _pending_phone_action_tap;
+            _pending_phone_action_tap = null;
+            if (actionTap && event.type === 'touchend' && !actionTap.moved
+                && Date.now() - actionTap.startedAt <= 500
+                && _current_game.showActionMenuForSelection) {
+                _current_game.showActionMenuForSelection();
+            }
             _mousedown = 0;
             _dragging_unit_path = 0;
             _panning_map = 0;
@@ -418,12 +767,14 @@
             }
             if (event.code === 'KeyG') {
                 _current_game.doCommand('goto');
+                if (_current_game.dismissActionMenu) _current_game.dismissActionMenu();
                 _fulldraw = 1;
                 drawScene(0);
                 return;
             }
             if (event.code === 'KeyB') {
                 _current_game.doCommand('build_city');
+                if (_current_game.dismissActionMenu) _current_game.dismissActionMenu();
                 _fulldraw = 1;
                 drawScene(0);
             }
