@@ -56,6 +56,8 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-GAME-005B`: When a player with no living movable units submits `make_turn`, PHP respawns one Settler and three Explorers at a new randomized start before storing the submitted turn. Cities, buildings, and terrain improvements do not count as surviving units for this check. This also restores an eliminated hidden AI player on its next automatic End Turn.
 
+`SERVER-GAME-012`: PHP does not run or persist background AI inference. The browser computes AI locally and submits its current-turn atomic orders and batched actions. Strategic intentions that have not yet become a submitted turn action remain client-owned and may be lost on reload.
+
 `SERVER-GAME-006`: The browser initializes empty terrain arrays, loads its visible landscape and unit state from PHP, and treats server values as authoritative. The authenticated player id comes from the `aiciv_player_id` cookie written by the login page.
 
 ## Synchronous Turns

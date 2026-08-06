@@ -70,7 +70,6 @@ const _ai_player = {
     decodeStrategyOutput() {
         return {focuses: [], maxMilitaryFocus: {}, maxWorkerFocus: {}, productionDemands: {military: 1}};
     },
-    buildTacticsInput() { this.lastTacticsGroupIds = [0]; return new Float32Array(4); },
     buildEconomicsInput() { this.lastEconomicsCityIndices = []; return new Float32Array(4); },
     buildActionInput() { this.lastActionUnitIndices = [0]; return new Float32Array(4); },
     advanceSettlerTurnCounters() {},
@@ -79,7 +78,7 @@ const _ai_player = {
         await new Promise(resolve => setTimeout(resolve, 5));
         return new Float32Array(72);
     },
-    log() {}, applyStrategyOutput() {}, applyTacticsOutput() {}, applyEconomicsOutput() {},
+    log() {}, applyStrategyOutput() {}, applyEconomicsOutput() {},
     applyActionOutput(output, playerId) {
         if (_current_user !== playerId) throw new Error('AI output applied outside AI context');
         _units[0].gotoPath = [{i: 1, j: 1}];
@@ -113,7 +112,7 @@ vm.runInContext(multiplayerSource, sandbox, {filename: 'multiplayer.js'});
     assert.equal(sandbox.submitted.options.hidden, true);
     assert.equal(sandbox.submitted.options.deferUpdates, true);
     assert.equal(sandbox.submitted.options.deferPolling, true);
-    assert.equal(Array.from(sandbox.workerCalls).join(','), 'strategy,tactics,economics,action');
+    assert.equal(Array.from(sandbox.workerCalls).join(','), 'strategy,economics,action');
     assert.equal(vm.runInContext('_current_user', sandbox), 7);
     assert.equal(vm.runInContext('_selection', sandbox), 0);
     assert.equal(vm.runInContext('_units_by_user', sandbox), sandbox.__humanUnitsReference);

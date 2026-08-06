@@ -2,8 +2,9 @@ const _ai_player = new class
 {
     constructor()
     {
-        this.width = 1024;
+        this.baseInputWidth = 1024;
         this.strategyInputWidth = 3524;
+        this.width = this.baseInputWidth;
         this.outputWidth = 72;
         this.layerCount = 8;
         this.headerBytes = 72;
@@ -14,10 +15,9 @@ const _ai_player = new class
         this.gpuReady = false;
         this.statusCallback = null;
         this.defaultModelUrls = {
-            strategy: 'ai_player/strategy.db.gz?v=20260712a',
-            tactics: 'ai_player/tactics.db.gz?v=20260625k',
-            action: 'ai_player/action.db.gz?v=20260804a',
-            economics: 'ai_player/economics.db.gz?v=20260711b',
+            strategy: 'ai_player/strategy.db.gz?v=20260806a',
+            action: 'ai_player/action.db.gz?v=20260806a',
+            economics: 'ai_player/economics.db.gz?v=20260806a',
         };
         this.defaultModelsLoaded = false;
         this.defaultModelLoadPromise = null;
@@ -35,16 +35,6 @@ const _ai_player = new class
             'research_naval_technology',
             'focus_anti_mounted_units',
             'protect_expansion_point',
-        ];
-        this.tacticsCommandLabels = [
-            'attack',
-            'defend',
-            'flank',
-            'retreat',
-            'reinforce',
-            'siege',
-            'capture',
-            'hold',
         ];
         this.actionCommandLabels = [
             'goto',
@@ -64,18 +54,14 @@ const _ai_player = new class
             'slinger',
             'archer',
             'spearman',
-            'none',
-            'chariot',
-            'elephant',
-            'catapult',
-            'trebuchet',
-            'galley',
-            'galleon',
+            null,
         ];
         this.productionDemandLabels = ['settlers', 'worker', 'explorer', 'military'];
         this.lastActionUnitIndices = [];
         this.lastEconomicsCityIndices = [];
         this.lastStrategyProductionDemands = null;
+        this.batchSize = 8;
+        this.batchCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
         this.settlerBuildCityTurnLimit = 20;
         // Settlement gate used after the Action model says "build city".
@@ -164,6 +150,7 @@ const _ai_player = new class
                 { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
                 { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
                 { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+                { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
             ],
         });
         var shader = this.device.createShaderModule({ code: this.matmulShader() });
@@ -178,12 +165,16 @@ const _ai_player = new class
     matmulShader()
     {
         return `
-            const WIDTH: u32 = 1024u;
+            struct LayerParams {
+                input_width: u32,
+                output_width: u32,
+            };
 
             @group(0) @binding(0) var<storage, read> input_vector: array<f32>;
             @group(0) @binding(1) var<storage, read> weights: array<f32>;
             @group(0) @binding(2) var<storage, read> bias: array<f32>;
             @group(0) @binding(3) var<storage, read_write> output_vector: array<f32>;
+            @group(0) @binding(4) var<uniform> params: LayerParams;
 
             fn activate(x: f32) -> f32 {
                 let clipped = clamp(x, -10.0, 10.0);
@@ -194,13 +185,13 @@ const _ai_player = new class
             @compute @workgroup_size(64)
             fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 let row = global_id.x;
-                if (row >= WIDTH) {
+                if (row >= params.output_width) {
                     return;
                 }
 
                 var sum = bias[row];
-                for (var col: u32 = 0u; col < WIDTH; col = col + 1u) {
-                    sum = sum + weights[row * WIDTH + col] * input_vector[col];
+                for (var col: u32 = 0u; col < params.input_width; col = col + 1u) {
+                    sum = sum + weights[row * params.input_width + col] * input_vector[col];
                 }
                 output_vector[row] = activate(sum);
             }
@@ -217,12 +208,10 @@ const _ai_player = new class
         }
     }
 
-    async loadDefaultModels(useWebGPU = false)
+    async loadDefaultModels(useWebGPU = true)
     {
         this.setStatus('AI: loading strategy model');
         await this.loadModel('strategy', this.defaultModelUrls.strategy, useWebGPU);
-        this.setStatus('AI: loading tactics model');
-        await this.loadModel('tactics', this.defaultModelUrls.tactics, useWebGPU);
         this.setStatus('AI: loading action model');
         await this.loadModel('action', this.defaultModelUrls.action, useWebGPU);
         this.setStatus('AI: loading economics model');
@@ -232,7 +221,7 @@ const _ai_player = new class
         return true;
     }
 
-    async ensureDefaultModelsLoaded(useWebGPU = false)
+    async ensureDefaultModelsLoaded(useWebGPU = true)
     {
         if (this.defaultModelsLoaded) {
             return true;
@@ -315,7 +304,7 @@ const _ai_player = new class
         buffer = await this.decodeModelBuffer(kind, url, buffer);
         this.setStatus('AI: parsing ' + kind + ' model');
         var model = this.parseModel(kind, url, buffer);
-        if (false && useWebGPU && await this.initWebGPU()) {
+        if (useWebGPU && await this.initWebGPU()) {
             this.setStatus('AI: uploading ' + kind + ' model to GPU');
             this.uploadModelToGPU(model);
         }
@@ -423,13 +412,14 @@ const _ai_player = new class
         var layerCount = view.getUint32(16, true);
         var activation = view.getUint32(20, true);
         var weightLayout = view.getUint32(24, true);
-        if (version != 2 || layerCount != this.layerCount || activation != 1 || weightLayout != 1) {
+        var expectedInputWidth = kind == 'strategy' ? this.strategyInputWidth : this.baseInputWidth;
+        if (version != 2 || width != expectedInputWidth || layerCount != this.layerCount || activation != 1 || weightLayout != 1) {
             throw new Error('Unsupported AI model header in ' + url);
         }
 
         var inputWidth = view.getUint32(28, true);
         var outputWidth = view.getUint32(32, true);
-        if (width != inputWidth || outputWidth != this.outputWidth) {
+        if (inputWidth != expectedInputWidth || outputWidth != this.outputWidth) {
             throw new Error('Unsupported AI model dimensions in ' + url);
         }
         var layerWidths = [inputWidth];
@@ -461,7 +451,6 @@ const _ai_player = new class
             url: url,
             buffer: buffer,
             width: width,
-            inputWidth: inputWidth,
             outputWidth: outputWidth,
             layerWidths: layerWidths,
             layerCount: layerCount,
@@ -490,10 +479,16 @@ const _ai_player = new class
             });
             this.device.queue.writeBuffer(weightsBuffer, 0, layer.weights);
             this.device.queue.writeBuffer(biasBuffer, 0, layer.bias);
-            model.gpuLayers.push({ weights: weightsBuffer, bias: biasBuffer });
+            var paramsBuffer = this.device.createBuffer({
+                size: 8,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            });
+            this.device.queue.writeBuffer(paramsBuffer, 0, new Uint32Array([layer.inputWidth, layer.outputWidth]));
+            model.gpuLayers.push({ weights: weightsBuffer, bias: biasBuffer, params: paramsBuffer });
         }
 
-        var vectorBytes = this.width * 4;
+        var vectorWidth = Math.max.apply(null, model.layerWidths);
+        var vectorBytes = vectorWidth * 4;
         model.inputBuffers = [
             this.device.createBuffer({
                 size: vectorBytes,
@@ -505,7 +500,7 @@ const _ai_player = new class
             }),
         ];
         model.readBuffer = this.device.createBuffer({
-            size: vectorBytes,
+            size: model.outputWidth * 4,
             usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
 
@@ -520,15 +515,16 @@ const _ai_player = new class
                     { binding: 1, resource: { buffer: model.gpuLayers[layerIndex].weights } },
                     { binding: 2, resource: { buffer: model.gpuLayers[layerIndex].bias } },
                     { binding: 3, resource: { buffer: model.inputBuffers[outputIndex] } },
+                    { binding: 4, resource: { buffer: model.gpuLayers[layerIndex].params } },
                 ],
             }));
         }
         model.gpu = true;
     }
 
-    zeroInput(width = this.width)
+    zeroInput(kind = 'base')
     {
-        return new Float32Array(width);
+        return new Float32Array(kind == 'strategy' ? this.strategyInputWidth : this.baseInputWidth);
     }
 
     clamp(value, minValue, maxValue)
@@ -655,13 +651,7 @@ const _ai_player = new class
 
     relationToTeam(ownerTeam, otherTeam)
     {
-        if (ownerTeam == otherTeam) {
-            return 1;
-        }
-        if (typeof _military !== 'undefined' && _military.isAtWar) {
-            return _military.isAtWar(ownerTeam, otherTeam) ? -1 : 0.4;
-        }
-        return -1;
+        return ownerTeam == otherTeam ? 1 : -1;
     }
 
     argmax(values, begin, count)
@@ -732,6 +722,29 @@ const _ai_player = new class
         return result;
     }
 
+    rotatingBatch(records, kind, ownerTeam, limit = this.batchSize)
+    {
+        if (!records.length || records.length <= limit) {
+            this.batchCursors[kind + ':' + ownerTeam] = 0;
+            return records.slice(0, limit);
+        }
+        var key = kind + ':' + ownerTeam;
+        var start = (this.batchCursors[key] || 0) % records.length;
+        var selected = [];
+        for (var n = 0; n < limit; n++) {
+            selected.push(records[(start + n) % records.length]);
+        }
+        this.batchCursors[key] = (start + selected.length) % records.length;
+        return selected;
+    }
+
+    strategyTeamBatch(teams, ownerTeam)
+    {
+        var others = teams.filter(function(team) { return team != ownerTeam; });
+        var selected = [ownerTeam];
+        return selected.concat(this.rotatingBatch(others, 'strategy-teams', ownerTeam, 3));
+    }
+
     activeUserId()
     {
         return typeof _current_user != 'undefined' ? _current_user : 0;
@@ -760,18 +773,6 @@ const _ai_player = new class
         return !!(bits[i] && (bits[i][j] & 0x4000) != 0);
     }
 
-    isTileFullyVisibleByUser(i, j, userId = this.activeUserId())
-    {
-        if (i < 0 || j < 0 || typeof _map_size == 'undefined' || i >= _map_size || j >= _map_size) {
-            return false;
-        }
-        var bits = this.visibilityBitsForUser(userId);
-        if (!bits) {
-            return true;
-        }
-        return !!(bits[i] && (bits[i][j] & 0x0400) != 0);
-    }
-
     allUnitRecords(filter)
     {
         var result = [];
@@ -779,9 +780,6 @@ const _ai_player = new class
             for (var userId in _units_by_user) {
                 var list = _units_by_user[userId] || [];
                 for (var k = 0; k < list.length; k++) {
-                    if (list[k] && list[k].economicClass == 'terrain_improvement') {
-                        continue;
-                    }
                     if (!filter || filter(list[k], k, parseInt(userId, 10))) {
                         result.push({ unit: list[k], index: k, userId: parseInt(userId, 10) });
                     }
@@ -799,11 +797,7 @@ const _ai_player = new class
     {
         var self = this;
         return this.allUnitRecords(function(unit, index, userId) {
-            if (!unit || !unit.coord) {
-                return false;
-            }
-            if ((unit.team || 0) != viewerUserId
-                && !self.isTileFullyVisibleByUser(unit.coord.i, unit.coord.j, viewerUserId)) {
+            if (!unit || !unit.coord || !self.isTileSeenByUser(unit.coord.i, unit.coord.j, viewerUserId)) {
                 return false;
             }
             return !filter || filter(unit, index, userId);
@@ -846,8 +840,8 @@ const _ai_player = new class
     // IDs are stored separately in last* arrays and are never written into model input.
     buildStrategyInput(ownerTeam = 0)
     {
-        var input = this.zeroInput(this.strategyInputWidth);
-        var teams = this.teamSet(ownerTeam);
+        var input = this.zeroInput('strategy');
+        var teams = this.strategyTeamBatch(this.teamSet(ownerTeam), ownerTeam);
         var records = this.visibleUnitRecords(ownerTeam);
         var units = records.map(function(record) { return record.unit; });
         this.lastStrategyObjectIds = [];
@@ -888,17 +882,6 @@ const _ai_player = new class
             input[summaryBase + 11] = this.averageDistanceToTeam(ownerTeam, team);
             input[summaryBase + 12] = this.normalizeCount(military.filter(function(unit) { return unit.nature == 'water'; }).length, 16);
             input[summaryBase + 13] = team == ownerTeam ? this.knownMapRatioForUser(ownerTeam) : 0;
-            if (team == ownerTeam) {
-                var workerTarget = this.smallestOwnCityWorkerTarget(ownerTeam);
-                if (workerTarget) {
-                    input[summaryBase + 14] = this.normalizedCoord(workerTarget.coord.i);
-                    input[summaryBase + 15] = this.normalizedCoord(workerTarget.coord.j);
-                    input[summaryBase + 16] = this.normalizeCount(workerTarget.population, 24);
-                    input[summaryBase + 17] = this.normalizeCount(this.countIdleWorkers(ownerTeam), 8);
-                    input[summaryBase + 18] = this.normalizeCount(this.countFriendlyWorkersNear(workerTarget.coord, ownerTeam, 3), 4);
-                    input[summaryBase + 19] = 1;
-                }
-            }
         }
 
         for (var f = 0; f < Math.min(4, teams.length); f++) {
@@ -951,67 +934,90 @@ const _ai_player = new class
         input[960 + 39] = cityContext.cityAnchor;
         input[960 + 40] = cityContext.settlerAnchor;
         input[960 + 41] = this.clamp((typeof _game_state != 'undefined' ? _game_state.money : 0) / 50, 0, 1);
-        input[960 + 42] = this.normalizeCount(typeof _game_state != 'undefined' ? _game_state.lastAccountIncome : 0, 50);
-        input[960 + 43] = this.normalizeCount(typeof _game_state != 'undefined' ? _game_state.lastMaintenance : 0, 50);
-        this.fillStrategyBirdsviewInput(input);
+        input[960 + 42] = this.clamp((typeof _game_state != 'undefined' ? _game_state.lastMoneyIncome : 0) / 50, -1, 1);
+        input[960 + 43] = 0;
+        this.encodeStrategyBirdsview(input, ownerTeam);
         return input;
     }
 
-    fillStrategyBirdsviewInput(input)
+    strategyTerrainHeight(rawTerrain)
     {
-        if (!input || input.length < this.strategyInputWidth || typeof _birdsview == 'undefined' || !_birdsview.strategyInputValues) {
+        var type = rawTerrain & 0x0F;
+        var level = (rawTerrain >> 4) & 0x03;
+        if (type == 0) return -0.45 - level * 0.12;
+        if (type == 4) return 0.45 + level * 0.10;
+        if (type == 5) return 0.70 + level * 0.08;
+        if (type == 6) return 0.30 + level * 0.08;
+        return level * 0.06;
+    }
+
+    encodeStrategyBirdsview(input, ownerTeam)
+    {
+        if (input.length < this.strategyInputWidth || typeof _map_size == 'undefined'
+            || typeof _map_terrain_tex == 'undefined') {
             return;
         }
-        var birdsview = _birdsview.strategyInputValues();
-        for (var k = 0; k < Math.min(2500, birdsview.length); k++) {
-            input[1024 + k] = birdsview[k];
+        var size = 50;
+        var cellCount = size * size;
+        var height = new Float32Array(cellCount);
+        var resources = new Float32Array(cellCount);
+        var tiles = new Uint16Array(cellCount);
+        var controller = new Int16Array(cellCount);
+        var military = new Float32Array(cellCount);
+        controller.fill(-1);
+
+        for (var i = 0; i < _map_size; i++) {
+            for (var j = 0; j < _map_size; j++) {
+                if (!this.isTileSeenByUser(i, j, ownerTeam)) continue;
+                var x = Math.min(size - 1, Math.floor(i * size / _map_size));
+                var y = Math.min(size - 1, Math.floor(j * size / _map_size));
+                var cell = y * size + x;
+                height[cell] += this.strategyTerrainHeight(_map_terrain_tex[i][j]);
+                tiles[cell]++;
+                var state = typeof _map_resource != 'undefined' && _map_resource[i] ? _map_resource[i][j] : null;
+                if (state && state.type && this.isResourceVisible(i, j, ownerTeam)) {
+                    resources[cell] = Math.max(resources[cell], this.clamp(Number(state.type) / 48, 0, 1));
+                }
+            }
+        }
+
+        var records = this.visibleUnitRecords(ownerTeam);
+        for (var n = 0; n < records.length; n++) {
+            var unit = records[n].unit;
+            var ux = Math.min(size - 1, Math.floor(unit.coord.i * size / _map_size));
+            var uy = Math.min(size - 1, Math.floor(unit.coord.j * size / _map_size));
+            var unitCell = uy * size + ux;
+            var strength = unit.type == 2 ? Math.max(1, (unit.attack || 0) + (unit.defense || 0)) : 0;
+            if (controller[unitCell] < 0 || strength >= military[unitCell]) {
+                controller[unitCell] = unit.team || 0;
+            }
+            military[unitCell] += strength;
+        }
+
+        for (var cellIndex = 0; cellIndex < cellCount; cellIndex++) {
+            var averageHeight = tiles[cellIndex] ? height[cellIndex] / tiles[cellIndex] : 0;
+            var controlSignal = controller[cellIndex] >= 0 ? (controller[cellIndex] + 1) / 16 : 0;
+            var forceSignal = this.clamp(military[cellIndex] / 30, 0, 1);
+            var cellX = cellIndex % size;
+            var cellY = Math.floor(cellIndex / size);
+            var regionX = Math.min(1, Math.floor(cellX * 2 / size));
+            var regionY = Math.min(3, Math.floor(cellY * 4 / size));
+            var regionStartX = Math.floor(regionX * size / 2);
+            var regionEndX = Math.floor((regionX + 1) * size / 2);
+            var regionStartY = Math.floor(regionY * size / 4);
+            var regionEndY = Math.floor((regionY + 1) * size / 4);
+            var regionCells = (regionEndX - regionStartX) * (regionEndY - regionStartY);
+            input[1024 + cellIndex] = this.clamp(
+                averageHeight * 0.60 + controlSignal * 0.18 + forceSignal * 0.17 + resources[cellIndex] * 0.05,
+                -1, 1
+            ) / Math.max(1, regionCells);
         }
     }
 
-    buildTacticsInput(ownerTeam = 0, focusPoints = null)
-    {
-        var input = this.zeroInput();
-        var strategyFocus = this.strategyFocusForForwarding(focusPoints);
-        var troops = this.visibleUnitRecords(ownerTeam, function(unit) { return unit.type == 2; }).slice(0, 8);
-        this.lastTacticsGroupIds = [];
-        for (var n = 0; n < troops.length; n++) {
-            var unit = troops[n].unit;
-            var base = n * 120;
-            this.lastTacticsGroupIds[n] = { unitIndex: troops[n].index, team: unit.team || 0 };
-            input[base + 0] = this.relationToTeam(ownerTeam, unit.team || 0);
-            input[base + 1] = this.unitTypeIndex(unit) / 32;
-            input[base + 2] = 1 / 16;
-            input[base + 3] = this.normalizedCoord(unit.coord.i);
-            input[base + 4] = this.normalizedCoord(unit.coord.j);
-            input[base + 5] = unit.gotoPath && unit.gotoPath.length ? this.normalizedCoord(unit.gotoPath[0].i - unit.coord.i) : 0;
-            input[base + 6] = unit.gotoPath && unit.gotoPath.length ? this.normalizedCoord(unit.gotoPath[0].j - unit.coord.j) : 0;
-            input[base + 7] = 1;
-            input[base + 8] = this.normalizeCount(unit.attack || 0, 10);
-            input[base + 9] = this.normalizeCount(unit.defense || 0, 10);
-            input[base + 10] = this.normalizeCount(unit.speed || 0, 5);
-            input[base + 11] = this.normalizeCount(unit.viewRange || 0, 8);
-            input[base + 12] = this.terrainTypeAt(unit.coord.i, unit.coord.j) / 8;
-            input[base + 13] = typeof _map != 'undefined' && _map.hasRoad && _map.hasRoad(unit.coord.i, unit.coord.j) ? 1 : 0;
-            input[base + 14] = unit.team == ownerTeam ? 0 : this.normalizeCount((unit.attack || 0) + (unit.defense || 0), 20);
-            this.encodeLocalMapWindow(input, base + 16, unit.coord, ownerTeam);
-        }
-
-        this.fillGenericSituation(input, ownerTeam, 0);
-        input[960 + 20] = this.militaryBalance(ownerTeam);
-        input[960 + 21] = this.normalizeCount(this.countMilitary(ownerTeam), 64);
-        input[960 + 22] = this.normalizeCount(this.countEnemyMilitary(ownerTeam), 64);
-        input[960 + 23] = strategyFocus.x;
-        input[960 + 24] = strategyFocus.y;
-        input[960 + 25] = strategyFocus.militaryPriority;
-        input[960 + 26] = strategyFocus.defensePriority;
-        return input;
-    }
-
-    buildActionInput(ownerTeam = 0, strategyFocus = null, workerFocus = null)
+    buildActionInput(ownerTeam = 0, strategyFocus = null)
     {
         var input = this.zeroInput();
         var forwardedFocus = this.strategyFocusForForwarding(strategyFocus);
-        var forwardedWorkerFocus = this.strategyFocusForForwarding(workerFocus);
         var records = this.actionUnitRecords(ownerTeam);
         this.lastActionUnitIndices = [];
         this.lastActionRecordSummaries = [];
@@ -1031,29 +1037,17 @@ const _ai_player = new class
             input[base + 8] = this.actionImmediateSignal(records[n].index);
             input[base + 9] = this.terrainTypeAt(unit.coord.i, unit.coord.j) / 8;
             input[base + 10] = this.resourceSignalAt(unit.coord.i, unit.coord.j, ownerTeam);
-            input[base + 11] = unit.unitTypeId == 'worker'
-                ? this.nearbyWorkerJobSignal(records[n].index, ownerTeam)
-                : this.nearbyResourceScore(unit.coord, ownerTeam, 2);
+            input[base + 11] = this.nearbyResourceScore(unit.coord, ownerTeam, 2);
             input[base + 12] = this.hasFreshWaterNearTile(unit.coord.i, unit.coord.j) ? 1 : 0;
             input[base + 13] = this.cityPlotScore(unit.coord.i, unit.coord.j, ownerTeam);
             input[base + 14] = this.normalizeCount(unit.aiSettlerTurns || 0, this.settlerBuildCityTurnLimit);
             input[base + 15] = this.nearestFriendlyCityDistanceSignal(unit.coord, ownerTeam);
             this.encodeLocalMapWindow(input, base + 16, unit.coord, ownerTeam);
-            if (this.isMilitaryUnit(unit)) {
-                var relativeFocus = this.strategyFocusRelativeToCoord(forwardedFocus, unit.coord);
-                input[base + 97] = relativeFocus.x;
-                input[base + 98] = relativeFocus.y;
-                input[base + 99] = relativeFocus.militaryPriority;
-                input[base + 100] = relativeFocus.defensePriority;
-            }
-            else if (unit.unitTypeId == 'worker') {
-                var relativeWorkerFocus = this.strategyFocusRelativeToCoord(forwardedWorkerFocus, unit.coord);
-                input[base + 97] = relativeWorkerFocus.x;
-                input[base + 98] = relativeWorkerFocus.y;
-                input[base + 99] = 0;
-                input[base + 100] = relativeWorkerFocus.defensePriority;
-                input[base + 101] = this.normalizeCount(this.countFriendlyWorkersNear(unit.coord, ownerTeam, 4, unit), 2);
-            }
+            var relativeFocus = this.strategyFocusRelativeToCoord(forwardedFocus, unit.coord);
+            input[base + 97] = relativeFocus.x;
+            input[base + 98] = relativeFocus.y;
+            input[base + 99] = relativeFocus.militaryPriority;
+            input[base + 100] = relativeFocus.defensePriority;
         }
         this.fillGenericSituation(input, ownerTeam, 0);
         return input;
@@ -1069,7 +1063,7 @@ const _ai_player = new class
         var selected = [];
         var used = {};
         function addWhere(predicate) {
-            for (var n = 0; n < all.length && selected.length < 8; n++) {
+            for (var n = 0; n < all.length; n++) {
                 var record = all[n];
                 if (used[record.index] || !predicate(record.unit, record.index)) {
                     continue;
@@ -1089,12 +1083,19 @@ const _ai_player = new class
         addWhere(function(unit) { return !self.unitHasTask(unit); });
         addWhere(function(unit) { return unit.unitTypeId == 'worker'; });
         addWhere(function() { return true; });
-        return selected;
-    }
-
-    isMilitaryUnit(unit)
-    {
-        return unit && unit.type == 2;
+        selected.sort(function(a, b) {
+            function priority(unit) {
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'worker') return 0;
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'settlers') return 1;
+                if (!self.unitHasTask(unit) && unit.type == 2) return 2;
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'explorer') return 3;
+                if (!self.unitHasTask(unit)) return 4;
+                if (unit.unitTypeId == 'worker') return 5;
+                return 6;
+            }
+            return priority(a.unit) - priority(b.unit) || a.index - b.index;
+        });
+        return this.rotatingBatch(selected, 'action', ownerTeam);
     }
 
     strategyFocusForForwarding(strategyFocus = null)
@@ -1130,8 +1131,9 @@ const _ai_player = new class
     buildEconomicsInput(ownerTeam = 0, productionDemands = null)
     {
         var input = this.zeroInput();
-        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands || this.heuristicProductionDemands(ownerTeam));
-        var cities = this.freeCityRecords(ownerTeam).slice(-8);
+        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands);
+        var freeCities = this.freeCityRecords(ownerTeam);
+        var cities = this.rotatingBatch(freeCities, 'economics', ownerTeam);
         var allCities = this.sortedUnits(function(unit) {
             return (unit.team || 0) == ownerTeam && unit.type == 3;
         });
@@ -1172,7 +1174,7 @@ const _ai_player = new class
         }
         this.fillGenericSituation(input, ownerTeam, 0);
         input[960 + 1] = this.normalizeCount(allCities.length, 16);
-        input[960 + 2] = this.normalizeCount(cities.length, 8);
+        input[960 + 2] = this.normalizeCount(freeCities.length, 8);
         input[960 + 5] = this.normalizeCount(military, 32);
         input[960 + 6] = this.normalizeCount(enemyMilitary, 32);
         input[960 + 14] = this.normalizeCount(idleMovable, 16);
@@ -1182,109 +1184,55 @@ const _ai_player = new class
         input[960 + 21] = demands.worker;
         input[960 + 22] = demands.explorer;
         input[960 + 23] = demands.military;
-        input[960 + 24] = this.normalizeCount(typeof _game_state != 'undefined' ? _game_state.money : 0, 200);
-        input[960 + 25] = this.normalizeCount(typeof _game_state != 'undefined' ? _game_state.lastAccountIncome : 0, 50);
-        input[960 + 26] = this.normalizeCount(typeof _game_state != 'undefined' ? _game_state.lastMaintenance : 0, 50);
-        var workerEconomy = this.economicsWorkerSignals(ownerTeam, allCities);
-        for (var technologyIndex = 0; technologyIndex < workerEconomy.technologies.length; technologyIndex++) {
-            input[960 + 27 + technologyIndex] = workerEconomy.technologies[technologyIndex];
-            input[960 + 35 + technologyIndex] = workerEconomy.opportunities[technologyIndex];
-            input[960 + 43 + technologyIndex] = workerEconomy.technologies[technologyIndex]
-                * workerEconomy.opportunities[technologyIndex];
-        }
+        input[960 + 24] = this.clamp((typeof _game_state != 'undefined' ? _game_state.money : 0) / 200, -1, 1);
+        input[960 + 25] = this.clamp((typeof _game_state != 'undefined' ? _game_state.lastMoneyIncome : 0) / 50, -1, 1);
+        input[960 + 26] = this.normalizeCount(this.sortedUnits(function(unit) {
+            return (unit.team || 0) == ownerTeam && unit.type != 3;
+        }).length, 64);
+        this.encodeEconomicsWorkerSignals(input, ownerTeam, allCities);
         return input;
     }
 
-    economicsWorkerSignals(ownerTeam, cityRecords = null)
+    encodeEconomicsWorkerSignals(input, ownerTeam, cities)
     {
-        // Economics slots 27..34 are individual technology flags. Slots 35..42
-        // contain matching raw job opportunities, independent of technology, so
-        // the model must learn that both signals are required before a Worker is useful.
-        var technologies = [
-            'Wheel',
-            'Bronze Working',
-            'Irrigation',
-            'Animal Husbandry',
-            'Mining',
-            'Masonry',
-            'Pottery',
-            'Construction',
+        var technologyNames = [
+            'Wheel', 'Bronze Working', 'Irrigation', 'Animal Husbandry',
+            'Mining', 'Masonry', 'Pottery', 'Construction'
         ];
-        var result = {
-            technologies: new Array(technologies.length).fill(0),
-            opportunities: new Array(technologies.length).fill(0),
-        };
-        for (var technologyIndex = 0; technologyIndex < technologies.length; technologyIndex++) {
-            result.technologies[technologyIndex] = typeof _game_state != 'undefined'
-                && _game_state.isTechnologyOpen(technologies[technologyIndex]) ? 1 : 0;
-        }
-        var cities = cityRecords || this.sortedUnits(function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.type == 3;
+        var technology = technologyNames.map(function(name) {
+            return typeof _game_state != 'undefined' && _game_state.isTechnologyOpen(name) ? 1 : 0;
         });
-        var seenTiles = {};
-        var counts = new Array(technologies.length).fill(0);
-        for (var cityIndex = 0; cityIndex < cities.length; cityIndex++) {
-            var city = cities[cityIndex].unit || cities[cityIndex];
-            if (!city || !city.coord) {
-                continue;
-            }
+        var plots = new Array(8).fill(0);
+        var seen = {};
+        for (var c = 0; c < cities.length; c++) {
+            var city = cities[c].unit;
+            if (!city || !city.coord) continue;
             for (var di = -4; di <= 4; di++) {
                 for (var dj = -4; dj <= 4; dj++) {
                     var i = city.coord.i + di;
                     var j = city.coord.j + dj;
-                    var key = i + ',' + j;
-                    if (seenTiles[key] || i < 0 || j < 0 || i >= _map_size || j >= _map_size
-                        || !this.isTileSeenByUser(i, j, ownerTeam)) {
-                        continue;
-                    }
-                    seenTiles[key] = true;
-                    var tile = this.economicsWorkerOpportunityAt(i, j);
-                    for (var kind = 0; kind < counts.length; kind++) {
-                        if (tile[kind]) {
-                            counts[kind]++;
-                        }
-                    }
+                    var key = i + ':' + j;
+                    if (seen[key] || i < 0 || j < 0 || i >= _map_size || j >= _map_size
+                        || !this.isTileSeenByUser(i, j, ownerTeam)) continue;
+                    seen[key] = true;
+                    var terrain = this.terrainTypeAt(i, j);
+                    if (terrain != 0 && !(typeof _map != 'undefined' && _map.hasRoad && _map.hasRoad(i, j))) plots[0]++;
+                    if (terrain != 0 && this.isChoppableForestAt(i, j)) plots[1]++;
+                    if (terrain == 2 && this.hasLandWaterSourceAt(i, j)) plots[2]++;
+                    var resourceKind = this.strategyResourceKindAt(i, j, ownerTeam);
+                    if (resourceKind == 'animal') plots[3]++;
+                    if (terrain == 4 || terrain == 5) plots[4]++;
+                    if (terrain != 0 && (resourceKind == 'stone' || terrain == 2)) plots[5]++;
+                    if (terrain != 0 && (resourceKind == 'crop' || this.resourceSignalAt(i, j, ownerTeam) > 0)) plots[6]++;
+                    if (terrain != 0) plots[7]++;
                 }
             }
         }
-        for (var opportunityIndex = 0; opportunityIndex < counts.length; opportunityIndex++) {
-            result.opportunities[opportunityIndex] = this.normalizeCount(counts[opportunityIndex], 16);
+        for (var n = 0; n < 8; n++) {
+            input[960 + 27 + n] = technology[n];
+            input[960 + 35 + n] = this.normalizeCount(plots[n], 8);
+            input[960 + 43 + n] = technology[n] * input[960 + 35 + n];
         }
-        return result;
-    }
-
-    economicsWorkerOpportunityAt(i, j)
-    {
-        var result = new Array(8).fill(0);
-        if (typeof _current_game == 'undefined' || !_current_game || typeof _map == 'undefined' || !_map) {
-            return result;
-        }
-        var terrain = this.terrainTypeAt(i, j);
-        var isWater = terrain == 0;
-        var isCity = _current_game.isCityTile && _current_game.isCityTile(i, j);
-        if (isCity || isWater) {
-            return result;
-        }
-        var hasModifier = function(name) {
-            return _map.hasTerrainModifier && _map.hasTerrainModifier(i, j, name);
-        };
-        var resourceImprovement = _current_game.openedResourceImprovementForTile
-            ? _current_game.openedResourceImprovementForTile(i, j) : null;
-
-        result[0] = !_map.hasRoad || !_map.hasRoad(i, j); // Wheel -> road.
-        result[1] = _current_game.isChoppableForestTerrain
-            && _current_game.isChoppableForestTerrain(_map_terrain_tex[i][j]) ? 1 : 0; // Bronze Working -> chop.
-        result[2] = terrain == 2 && (!_map.hasIrrigation || !_map.hasIrrigation(i, j))
-            && _current_game.hasIrrigationSourceNear && _current_game.hasIrrigationSourceNear(i, j) ? 1 : 0;
-        result[3] = (resourceImprovement == 'pasture' && !hasModifier('pasture'))
-            || (resourceImprovement == 'camp' && !hasModifier('camp')) ? 1 : 0;
-        result[4] = (terrain == 4 || terrain == 5) && !hasModifier('mine') ? 1 : 0;
-        result[5] = (resourceImprovement == 'quarry' && !hasModifier('quarry'))
-            || (!resourceImprovement && !hasModifier('cottage')) ? 1 : 0;
-        result[6] = (resourceImprovement == 'plantation' && !hasModifier('plantation'))
-            || (resourceImprovement == 'winery' && !hasModifier('winery')) ? 1 : 0;
-        result[7] = !resourceImprovement && (!hasModifier('workshop') || !hasModifier('fortification')) ? 1 : 0;
-        return result;
     }
 
     freeCityRecords(ownerTeam)
@@ -1299,64 +1247,6 @@ const _ai_player = new class
         return this.sortedUnits(function(unit) {
             return (unit.team || 0) == ownerTeam && unit.unitTypeId == unitTypeId;
         }).length;
-    }
-
-    countIdleWorkers(ownerTeam)
-    {
-        var self = this;
-        return this.sortedUnits(function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.unitTypeId == 'worker' && !self.unitHasTask(unit);
-        }).length;
-    }
-
-    cityPopulationForAI(city)
-    {
-        if (!city) {
-            return 0;
-        }
-        if (typeof _city_economy != 'undefined') {
-            _city_economy.ensureCity(city);
-        }
-        return city.economy && city.economy.citizens ? city.economy.citizens.length : 1;
-    }
-
-    smallestOwnCityWorkerTarget(ownerTeam)
-    {
-        var cities = this.sortedUnits(function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.type == 3 && unit.coord;
-        });
-        var best = null;
-        for (var n = 0; n < cities.length; n++) {
-            var city = cities[n].unit;
-            var population = this.cityPopulationForAI(city);
-            var workerCount = this.countFriendlyWorkersNear(city.coord, ownerTeam, 3);
-            var score = population * 10 + workerCount * 3;
-            if (!best || score < best.score) {
-                best = { coord: city.coord, population: population, workers: workerCount, score: score };
-            }
-        }
-        return best;
-    }
-
-    countFriendlyWorkersNear(coord, ownerTeam, radius, excludeUnit = null)
-    {
-        if (!coord) {
-            return 0;
-        }
-        var count = 0;
-        var records = this.visibleUnitRecords(ownerTeam, function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.unitTypeId == 'worker' && unit.coord;
-        });
-        for (var n = 0; n < records.length; n++) {
-            var unit = records[n].unit;
-            if (excludeUnit && unit === excludeUnit) {
-                continue;
-            }
-            if (Math.max(Math.abs(unit.coord.i - coord.i), Math.abs(unit.coord.j - coord.j)) <= radius) {
-                count++;
-            }
-        }
-        return count;
     }
 
     knownMapRatioForUser(userId)
@@ -1502,15 +1392,13 @@ const _ai_player = new class
         }
     }
 
-    decodeStrategyOutput(output, ownerTeam = this.activeUserId())
+    decodeStrategyOutput(output)
     {
         var best = this.bestStrategyCommand(output);
         var focuses = this.decodeStrategyFocusOutputs(output);
         var maxMilitaryFocus = this.maxMilitaryStrategyFocus(focuses);
-        var maxWorkerFocus = this.maxWorkerStrategyFocus(focuses, ownerTeam);
         var productionDemands = this.strategyProductionDemandsFromOutput(output);
         var technologyPriorities = this.strategyTechnologyPrioritiesFromOutput(output);
-        var scienceRate = this.strategyScienceRateFromOutput(output);
         return {
             type: this.strategyDecisionLabels[best.index],
             slot: best.slot,
@@ -1519,10 +1407,9 @@ const _ai_player = new class
             confidence: best.value,
             focuses: focuses,
             maxMilitaryFocus: maxMilitaryFocus,
-            maxWorkerFocus: maxWorkerFocus,
             productionDemands: productionDemands,
+            scienceRate: this.clamp(output[67] || 0, 0, 1),
             technologyPriorities: technologyPriorities,
-            scienceRate: scienceRate,
             raw: best,
         };
     }
@@ -1532,18 +1419,12 @@ const _ai_player = new class
         var settlers = this.clamp(output[64] || 0, 0, 1);
         var worker = this.clamp(output[65] || 0, 0, 1);
         var explorer = this.clamp(output[66] || 0, 0, 1);
-        var military = this.clamp(1 - settlers - worker - explorer, 0, 1);
         return this.normalizedProductionDemands({
             settlers: settlers,
             worker: worker,
             explorer: explorer,
-            military: military,
+            military: Math.max(0, 1 - settlers - worker - explorer),
         });
-    }
-
-    strategyScienceRateFromOutput(output)
-    {
-        return this.clamp(output[67] || 0, 0, 1);
     }
 
     normalizedProductionDemands(demands)
@@ -1648,38 +1529,18 @@ const _ai_player = new class
         return best || { record: -1, civilizationId: null, x: 0, y: 0, militaryPriority: 0, defensePriority: 0 };
     }
 
-    maxWorkerStrategyFocus(focuses, ownerTeam = this.activeUserId())
-    {
-        var best = null;
-        for (var n = 0; n < focuses.length; n++) {
-            var object = this.lastStrategyObjectIds ? this.lastStrategyObjectIds[focuses[n].record] : null;
-            if (!object || object.kind != 'civilization' || object.team != ownerTeam) {
-                continue;
-            }
-            if (!best || focuses[n].defensePriority > best.defensePriority) {
-                best = focuses[n];
-            }
-        }
-        if (!best || best.defensePriority < 0.25) {
-            return { record: -1, civilizationId: ownerTeam, x: 0, y: 0, militaryPriority: 0, defensePriority: 0 };
-        }
-        return best;
-    }
-
     // Decoder 1/3: strategy output to game-state-level plan, research, and production focus.
     applyStrategyOutput(output, ownerTeam = 0)
     {
-        var decision = this.decodeStrategyOutput(output, ownerTeam);
+        var decision = this.decodeStrategyOutput(output);
         if (typeof _game_state == 'undefined') {
             return decision;
         }
         _game_state.aiStrategy = decision;
         _game_state.aiStrategyFocus = decision.maxMilitaryFocus;
-        _game_state.aiWorkerFocus = decision.maxWorkerFocus;
         _game_state.aiProductionDemands = decision.productionDemands;
         this.lastStrategyFocuses = decision.focuses;
         this.lastStrategyMilitaryFocus = decision.maxMilitaryFocus;
-        this.lastStrategyWorkerFocus = decision.maxWorkerFocus;
         this.lastStrategyProductionDemands = decision.productionDemands;
         var applied = [];
         this.log('U' + ownerTeam + ' Strategy parse: record ' + decision.record
@@ -1687,37 +1548,20 @@ const _ai_player = new class
             + ' -> ' + decision.type
             + ' confidence=' + this.fmt(decision.confidence)
             + '; ' + this.focusText(decision.maxMilitaryFocus)
-            + '; worker ' + this.focusText(decision.maxWorkerFocus)
             + '; ' + this.productionDemandText(decision.productionDemands)
-            + '; science rate=' + Math.round(decision.scienceRate * 100) + '%'
+            + '; science=' + this.fmt(decision.scienceRate)
             + '; ' + this.strategyContextText()
             + '; ' + this.technologyPriorityText(decision.technologyPriorities));
 
-        if (_game_state.setScienceRate) {
-            var modelScienceRate = Math.round(decision.scienceRate * 100);
-            if (_game_state.scienceRate != modelScienceRate) {
-                _game_state.setScienceRate(modelScienceRate);
-                applied.push('science funding model rate -> ' + modelScienceRate + '%');
-            }
-        }
-
         var researchApplied = false;
-        var currentResearchValid = _game_state.currentResearch
-            && _game_state.canResearch(_game_state.currentResearch);
-        var currentResearchProgress = currentResearchValid && _game_state.technologyProgressValue
-            ? _game_state.technologyProgressValue(_game_state.currentResearch) : 0;
-        if (!currentResearchValid || currentResearchProgress <= 0) {
-            // Replace only an unstarted target. This clears legacy/default Mining
-            // while preserving any technology that already has accumulated science.
-            var previousResearch = currentResearchValid ? _game_state.currentResearch : null;
-            _game_state.currentResearch = null;
-            if (this.setResearchFromStrategyTechnology(decision.technologyPriorities)) {
-                applied.push('research model technology priority -> ' + _game_state.currentResearch);
-                researchApplied = true;
-            }
-            else if (previousResearch) {
-                _game_state.currentResearch = previousResearch;
-            }
+        if (_game_state.setScienceRate) {
+            _game_state.setScienceRate(decision.scienceRate * 100);
+            applied.push('science funding -> ' + _game_state.scienceRate + '%');
+        }
+        if ((!_game_state.currentResearch || !_game_state.canResearch(_game_state.currentResearch))
+            && this.setResearchFromStrategyTechnology(decision.technologyPriorities)) {
+            applied.push('research model technology priority -> ' + _game_state.currentResearch);
+            researchApplied = true;
         }
 
         if (!researchApplied && decision.type == 'research_food_technology') {
@@ -1736,16 +1580,15 @@ const _ai_player = new class
             }
         }
         else if (decision.type == 'focus_anti_mounted_units') {
-            if (this.setProductionFocus(ownerTeam, ['spearman', 'warrior', 'archer'])) {
-                applied.push('city production focus -> spearman/warrior/archer');
-            }
+            _game_state.aiStrategy.military_unit_focus = 'anti_mounted';
+            applied.push('military unit focus -> anti_mounted');
         }
         else if (decision.type == 'protect_expansion_point') {
-            _game_state.aiStrategy.target = this.findExpansionTarget(ownerTeam);
+            _game_state.aiStrategy.target = new Coord(
+                this.denormalizedCoord(decision.maxMilitaryFocus.x),
+                this.denormalizedCoord(decision.maxMilitaryFocus.y)
+            );
             applied.push('expansion target -> ' + this.coordText(_game_state.aiStrategy.target));
-            if (this.setProductionFocus(ownerTeam, ['settlers', 'warrior', 'explorer'])) {
-                applied.push('city production focus -> settlers/warrior/explorer');
-            }
         }
         else if (decision.type == 'declare_war_on_weak_neighbor') {
             _game_state.aiStrategy.target_civ_id = this.weakestEnemyTeam(ownerTeam);
@@ -1760,64 +1603,6 @@ const _ai_player = new class
             applied.push('befriend civ -> ' + _game_state.aiStrategy.target_civ_id);
         }
         this.log('U' + ownerTeam + ' Strategy apply: ' + (applied.length ? applied.join('; ') : 'no direct game-state change'));
-        return decision;
-    }
-
-    decodeTacticsOutput(output)
-    {
-        var best = this.bestObjectCommand(output, this.tacticsCommandLabels);
-        return {
-            command: this.tacticsCommandLabels[best.index],
-            slot: best.slot,
-            record: best.record,
-            group: this.lastTacticsGroupIds ? this.lastTacticsGroupIds[best.record] : null,
-            confidence: best.value,
-            target: null,
-            raw: best,
-        };
-    }
-
-    // Decoder 2/3: tactics output to group-level movement/state orders for military units.
-    applyTacticsOutput(output, ownerTeam = 0)
-    {
-        var decision = this.decodeTacticsOutput(output);
-        if (typeof _game_state != 'undefined') {
-            _game_state.aiTactics = decision;
-        }
-        this.log('U' + ownerTeam + ' Tactics parse: record ' + decision.record
-            + ' slot ' + decision.slot
-            + ' -> ' + decision.command
-            + ' confidence=' + this.fmt(decision.confidence));
-        var units = this.sortedUnits(function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.type == 2 && unit.can_move;
-        });
-        var target = this.tacticsTargetForDecision(decision, ownerTeam);
-        var applied = [];
-        for (var n = 0; n < units.length; n++) {
-            var k = units[n].index;
-            if (this.unitHasTask(_units[k])) {
-                continue;
-            }
-            if (decision.command == 'hold' || decision.command == 'defend') {
-                if (_current_game && _current_game.setUnitState) {
-                    _current_game.setUnitState(k, decision.command == 'hold' ? 'waiting' : 'fortified');
-                    applied.push(this.unitSummary(k) + ' -> ' + _units[k].state);
-                }
-                continue;
-            }
-            if (decision.command == 'retreat') {
-                target = this.nearestFriendlyCityCoord(_units[k].coord, ownerTeam) || target;
-            }
-            if (target && _current_game && _current_game.buildPath && _current_game.assignPath) {
-                var path = _current_game.buildPath(k, target);
-                if (path.length) {
-                    _current_game.assignPath(k, path);
-                    applied.push(this.unitSummary(k) + ' path to ' + this.coordText(path[path.length - 1]) + ' steps=' + path.length);
-                }
-            }
-        }
-        this.log('U' + ownerTeam + ' Tactics apply: ' + (applied.length ? applied.join('; ') : 'no military orders applied'));
-        _fulldraw = 1;
         return decision;
     }
 
@@ -1954,26 +1739,6 @@ const _ai_player = new class
         return best;
     }
 
-    nearbyWorkerJobSignal(k, ownerTeam)
-    {
-        // Action input[11] for Workers summarizes the strongest legal job on a
-        // nearby tile. This includes empty-terrain jobs such as mines and cottages.
-        var target = this.workerGotoTarget(k, ownerTeam);
-        return target ? this.clamp((target.workerJobScore || 0) / 8, 0, 1) : 0;
-    }
-
-    workerStrategyTargetForUnit(unit, ownerTeam)
-    {
-        var focus = this.strategyFocusForForwarding(this.lastStrategyWorkerFocus);
-        if (!unit || unit.unitTypeId != 'worker' || focus.defensePriority < 0.25) {
-            return null;
-        }
-        var focusCoord = new Coord(this.denormalizedCoord(focus.x), this.denormalizedCoord(focus.y));
-        return this.nearestUnitCoord(focusCoord, function(candidate) {
-            return (candidate.team || 0) == ownerTeam && candidate.type == 3;
-        }, ownerTeam);
-    }
-
     workerTileJobScore(i, j, ownerTeam)
     {
         var terrain = this.terrainTypeAt(i, j);
@@ -2070,7 +1835,7 @@ const _ai_player = new class
         if (/crabs|fish|pearls|turtles|whales/.test(id)) return 'fishing_boats';
         if (/stone|gypsum|marble|salt/.test(id)) return 'quarry';
         if (/wine/.test(id)) return 'winery';
-        if (/copper|diamonds|silver|iron|gold|gems/.test(id)) return 'mine';
+        if (/copper|diamonds|silver|iron|gold/.test(id)) return 'mine';
         return null;
     }
 
@@ -2180,28 +1945,12 @@ const _ai_player = new class
             this.log(prefix + this.citySummary(decision.cityIndex)
                 + ' engine production=' + decision.unitTypeId
                 + ' confidence=' + this.fmt(decision.confidence));
-            if (decision.confidence < -0.95) {
-                this.log(prefix + 'skipped: confidence below -0.95');
-                continue;
-            }
             if (this.applyCityProductionDecision(decision, ownerTeam)) {
                 applied.push(decision);
                 this.log(prefix + 'applied production=' + decision.unitTypeId);
             }
             else {
                 this.log(prefix + 'not applied: ' + (decision.failureReason || 'city cannot use this production now'));
-            }
-        }
-        if (applied.length == 0) {
-            applied = this.applyEconomicsHeuristic(ownerTeam);
-            if (applied.length) {
-                for (var a = 0; a < applied.length; a++) {
-                    this.log('U' + ownerTeam + ' Economics heuristic: city#' + applied[a].cityIndex
-                        + ' -> ' + applied[a].unitTypeId);
-                }
-            }
-            else {
-                this.log('U' + ownerTeam + ' Economics heuristic: nothing applied');
             }
         }
         _fulldraw = 1;
@@ -2234,18 +1983,9 @@ const _ai_player = new class
                         : 'city is already producing ' + (_units[k].production ? _units[k].production.unitTypeId : 'something')));
             return false;
         }
-        var policyChoice = this.productionPolicyChoice(ownerTeam, decision.unitTypeId);
-        if (policyChoice && policyChoice != decision.unitTypeId) {
-            decision.policyOriginalUnitTypeId = decision.unitTypeId;
-            decision.unitTypeId = policyChoice;
-        }
-        if (decision.unitTypeId == 'none') {
-            _current_game.setCityProduction(k, 'none');
-            return _units[k].production == null;
-        }
-        if (typeof _game_state != 'undefined' && _game_state && _game_state.money < 0) {
-            decision.failureReason = 'negative money account blocks unit production';
-            return false;
+        if (decision.unitTypeId == null) {
+            decision.appliedState = 'idle';
+            return true;
         }
         var unitType = _current_game.unitTypesById ? _current_game.unitTypesById[decision.unitTypeId] : null;
         if (!unitType || (_current_game.canCityProduceUnit && !_current_game.canCityProduceUnit(_units[k], unitType))) {
@@ -2256,127 +1996,14 @@ const _ai_player = new class
         return _units[k].production != null;
     }
 
-    buildEconomicsHeuristicOutput(ownerTeam = 0, productionDemands = null)
-    {
-        var output = new Float32Array(this.outputWidth);
-        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands || this.heuristicProductionDemands(ownerTeam));
-        var cities = this.freeCityRecords(ownerTeam).slice(-8);
-        this.lastEconomicsCityIndices = [];
-        for (var n = 0; n < cities.length; n++) {
-            var city = cities[n].unit;
-            var base = n * 8;
-            this.lastEconomicsCityIndices[n] = cities[n].index;
-            for (var s = 0; s < Math.min(8, this.economicsProductionLabels.length); s++) {
-                output[base + s] = -0.5;
-            }
-            var choice = (typeof _game_state != 'undefined' && _game_state && _game_state.money < 0)
-                ? 'none'
-                : this.chooseCityProduction(city, ownerTeam, demands);
-            var labelIndex = this.economicsProductionLabels.indexOf(choice);
-            if (labelIndex >= 0 && labelIndex < 8) {
-                output[base + labelIndex] = 0.9;
-                output[64] = 0.8;
-            }
-        }
-        return output;
-    }
-
-    applyEconomicsHeuristic(ownerTeam = 0, productionDemands = null)
-    {
-        var output = this.buildEconomicsHeuristicOutput(ownerTeam, productionDemands);
-        var decisions = this.decodeEconomicsOutput(output);
-        var applied = [];
-        for (var n = 0; n < decisions.length; n++) {
-            if (this.applyCityProductionDecision(decisions[n], ownerTeam)) {
-                applied.push(decisions[n]);
-            }
-        }
-        if (typeof _game_state != 'undefined') {
-            _game_state.aiEconomicsHeuristic = applied;
-        }
-        return applied;
-    }
-
-    heuristicProductionDemands(ownerTeam)
-    {
-        var cityCount = this.sortedUnits(function(unit) { return (unit.team || 0) == ownerTeam && unit.type == 3; }).length;
-        var workerCount = this.countUnitsByType(ownerTeam, 'worker');
-        var explorerCount = this.countUnitsByType(ownerTeam, 'explorer');
-        var militaryCount = this.countMilitary(ownerTeam);
-        var enemyMilitary = this.countEnemyMilitary(ownerTeam);
-        var settlers = cityCount < 4 ? 0.45 : 0.15;
-        var worker = workerCount < Math.max(1, cityCount) ? 0.45 : 0.15;
-        var explorer = explorerCount < 1 && this.knownMapRatioForUser(ownerTeam) < 0.25
-            && workerCount >= Math.max(1, cityCount) && militaryCount >= Math.max(1, cityCount) ? 0.25 : 0.03;
-        var military = enemyMilitary > militaryCount || militaryCount < Math.max(1, cityCount) ? 0.65 : 0.30;
-        return this.normalizedProductionDemands({
-            settlers: settlers,
-            worker: worker,
-            explorer: explorer,
-            military: military,
-        });
-    }
-
-    chooseCityProduction(city, ownerTeam, productionDemands = null)
-    {
-        if (typeof _game_state != 'undefined' && _game_state && _game_state.money < 0) {
-            return 'none';
-        }
-        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands || this.heuristicProductionDemands(ownerTeam));
-        var cityCount = this.sortedUnits(function(unit) { return (unit.team || 0) == ownerTeam && unit.type == 3; }).length;
-        var workerCount = this.countUnitsByType(ownerTeam, 'worker');
-        var explorerCount = this.countUnitsByType(ownerTeam, 'explorer');
-        var militaryCount = this.countMilitary(ownerTeam);
-        var enemyMilitary = this.countEnemyMilitary(ownerTeam);
-        var candidates = [];
-
-        if (demands.worker >= 0.25 || workerCount < cityCount) {
-            candidates.push('worker');
-        }
-        if (demands.military >= 0.25 || enemyMilitary > militaryCount || militaryCount < Math.max(1, cityCount)) {
-            candidates.push('spearman', 'warrior', 'slinger');
-        }
-        if (demands.settlers >= 0.30 || cityCount < 3) {
-            candidates.push('settlers');
-        }
-        if (explorerCount < 1 && workerCount >= Math.max(1, cityCount) && militaryCount >= Math.max(1, cityCount)
-            && (demands.explorer >= 0.35 || this.knownMapRatioForUser(ownerTeam) < 0.25)) {
-            candidates.push('explorer');
-        }
-        var priorityOrder = [
-            { key: 'settlers', value: demands.settlers, ids: ['settlers'] },
-            { key: 'worker', value: demands.worker, ids: ['worker'] },
-            { key: 'explorer', value: demands.explorer, ids: ['explorer'] },
-            { key: 'military', value: demands.military, ids: ['warrior', 'slinger', 'archer', 'spearman'] },
-        ].sort(function(a, b) { return b.value - a.value; });
-        for (var p = 0; p < priorityOrder.length; p++) {
-            candidates = candidates.concat(priorityOrder[p].ids);
-        }
-        candidates.push('warrior', 'slinger', 'archer', 'worker', 'settlers');
-        for (var n = 0; n < candidates.length; n++) {
-            var unitType = _current_game && _current_game.unitTypesById ? _current_game.unitTypesById[candidates[n]] : null;
-            if (unitType && (!_current_game.canCityProduceUnit || _current_game.canCityProduceUnit(city, unitType))) {
-                return unitType.id;
-            }
-        }
-        return null;
-    }
-
-    productionPolicyChoice(ownerTeam, requestedUnitTypeId)
-    {
-        // The Economics model owns production policy. Runtime legality checks
-        // may reject a command, but must not silently replace one unit type with another.
-        return requestedUnitTypeId;
-    }
-
     async infer(kind, input)
     {
         var model = this.models[kind];
         if (!model) {
             throw new Error('AI model is not loaded: ' + kind);
         }
-        if (!(input instanceof Float32Array) || input.length != model.inputWidth) {
-            throw new Error('AI input for ' + kind + ' must be Float32Array(' + model.inputWidth + ')');
+        if (!(input instanceof Float32Array) || input.length != model.layerWidths[0]) {
+            throw new Error('AI input for ' + kind + ' must be Float32Array(' + model.layerWidths[0] + ')');
         }
         if (model.gpu && this.gpuReady) {
             return await this.inferGPU(model, input);
@@ -2392,39 +2019,22 @@ const _ai_player = new class
         return { input: input, output: output, decision: decision };
     }
 
-    async runTacticsAI(ownerTeam = 0, focusPoints = null)
-    {
-        var input = this.buildTacticsInput(ownerTeam, focusPoints);
-        var output = await this.infer('tactics', input);
-        var decision = this.applyTacticsOutput(output, ownerTeam);
-        return { input: input, output: output, decision: decision };
-    }
-
     async runActionAI(ownerTeam = 0)
     {
         this.advanceSettlerTurnCounters(ownerTeam);
-        var input = this.buildActionInput(ownerTeam, this.lastStrategyMilitaryFocus, this.lastStrategyWorkerFocus);
+        var input = this.buildActionInput(ownerTeam, this.lastStrategyMilitaryFocus);
         var output = await this.infer('action', input);
         var commands = this.applyActionOutput(output, ownerTeam);
-        var workaroundCommands = this.applyAiReasoningWorkarounds(ownerTeam);
-        return { input: input, output: output, commands: commands, workaroundCommands: workaroundCommands };
+        return { input: input, output: output, commands: commands };
     }
 
     async runEconomicsAI(ownerTeam = 0, productionDemands = null)
     {
-        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands || this.heuristicProductionDemands(ownerTeam));
+        var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands);
         var input = this.buildEconomicsInput(ownerTeam, demands);
-        var output = null;
-        var usedModel = false;
-        if (this.models.economics) {
-            output = await this.infer('economics', input);
-            usedModel = true;
-        }
-        else {
-            output = this.buildEconomicsHeuristicOutput(ownerTeam, demands);
-        }
+        var output = await this.infer('economics', input);
         var decisions = this.applyEconomicsOutput(output, ownerTeam);
-        return { input: input, output: output, decisions: decisions, usedModel: usedModel };
+        return { input: input, output: output, decisions: decisions, usedModel: true };
     }
 
     async runFullTurnAI(ownerTeam = this.activeUserId())
@@ -2441,36 +2051,27 @@ const _ai_player = new class
                 }
             }
         }
-        await this.ensureDefaultModelsLoaded(false);
+        await this.ensureDefaultModelsLoaded(true);
         this.log('U' + ownerTeam + ' AI turn analysis started');
 
         var strategyInput = this.buildStrategyInput(ownerTeam);
         var strategyOutput = await this.infer('strategy', strategyInput);
         var strategyDecision = this.applyStrategyOutput(strategyOutput, ownerTeam);
 
-        var tacticsInput = this.buildTacticsInput(ownerTeam, strategyDecision.maxMilitaryFocus);
-        var tacticsOutput = await this.infer('tactics', tacticsInput);
-        var tacticsDecision = this.applyTacticsOutput(tacticsOutput, ownerTeam);
-
         var economicsInput = this.buildEconomicsInput(ownerTeam, strategyDecision.productionDemands);
-        var economicsOutput = this.models.economics
-            ? await this.infer('economics', economicsInput)
-            : this.buildEconomicsHeuristicOutput(ownerTeam, strategyDecision.productionDemands);
+        var economicsOutput = await this.infer('economics', economicsInput);
         var economicsDecisions = this.applyEconomicsOutput(economicsOutput, ownerTeam);
 
         this.advanceSettlerTurnCounters(ownerTeam);
-        var actionInput = this.buildActionInput(ownerTeam, strategyDecision.maxMilitaryFocus, strategyDecision.maxWorkerFocus);
+        var actionInput = this.buildActionInput(ownerTeam, strategyDecision.maxMilitaryFocus);
         var actionOutput = await this.infer('action', actionInput);
         var actionCommands = this.applyActionOutput(actionOutput, ownerTeam);
-        var fallbackCommands = this.applyAiReasoningWorkarounds(ownerTeam);
 
         var result = {
             ownerTeam: ownerTeam,
             strategy: { input: strategyInput, output: strategyOutput, decision: strategyDecision },
-            tactics: { input: tacticsInput, output: tacticsOutput, decision: tacticsDecision },
-            economics: { input: economicsInput, output: economicsOutput, decisions: economicsDecisions, usedModel: !!this.models.economics },
+            economics: { input: economicsInput, output: economicsOutput, decisions: economicsDecisions, usedModel: true },
             action: { input: actionInput, output: actionOutput, commands: actionCommands },
-            fallbackCommands: fallbackCommands,
         };
         if (typeof _game_state != 'undefined') {
             _game_state.aiLastTurn = result;
@@ -2868,16 +2469,16 @@ const _ai_player = new class
         pass.setPipeline(this.pipeline);
         for (var layer = 0; layer < model.layerCount; layer++) {
             pass.setBindGroup(0, model.gpuBindGroups[layer]);
-            pass.dispatchWorkgroups(16);
+            pass.dispatchWorkgroups(Math.ceil(model.layers[layer].outputWidth / 64));
         }
         pass.end();
         var finalBuffer = model.inputBuffers[model.layerCount % 2];
-        encoder.copyBufferToBuffer(finalBuffer, 0, model.readBuffer, 0, this.width * 4);
+        encoder.copyBufferToBuffer(finalBuffer, 0, model.readBuffer, 0, model.outputWidth * 4);
         this.device.queue.submit([encoder.finish()]);
 
         await model.readBuffer.mapAsync(GPUMapMode.READ);
         var mapped = model.readBuffer.getMappedRange();
-        var output = new Float32Array(mapped).slice();
+        var output = new Float32Array(mapped).slice(0, model.outputWidth);
         model.readBuffer.unmap();
         return output;
     }
@@ -3326,82 +2927,6 @@ const _ai_player = new class
         return strength;
     }
 
-    defaultFocusPoints(ownerTeam)
-    {
-        var points = [];
-        var enemyCity = this.nearestEnemyCityCoord(this.averageOwnCoord(ownerTeam), ownerTeam);
-        var enemyUnit = this.nearestEnemyCoord(this.averageOwnCoord(ownerTeam), ownerTeam);
-        var ownCity = this.nearestFriendlyCityCoord(this.averageOwnCoord(ownerTeam), ownerTeam);
-        if (enemyCity) points.push(enemyCity);
-        if (enemyUnit) points.push(enemyUnit);
-        if (ownCity) points.push(ownCity);
-        while (points.length < 3) {
-            points.push(this.averageOwnCoord(ownerTeam) || new Coord(Math.floor(_map_size / 2), Math.floor(_map_size / 2)));
-        }
-        return points;
-    }
-
-    encodeTacticsFocusPoint(input, base, point, ownerTeam)
-    {
-        input[base + 0] = this.normalizedCoord(point.i);
-        input[base + 1] = this.normalizedCoord(point.j);
-        var terrainCounts = new Array(8).fill(0);
-        var total = 0;
-        var roads = 0;
-        var rivers = 0;
-        var enemy = 0;
-        var friendly = 0;
-        for (var di = -5; di < 5; di++) {
-            for (var dj = -5; dj < 5; dj++) {
-                var i = point.i + di;
-                var j = point.j + dj;
-                if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) {
-                    continue;
-                }
-                total++;
-                if (!this.isSeen(i, j, ownerTeam)) {
-                    continue;
-                }
-                var terrain = this.terrainTypeAt(i, j);
-                terrainCounts[terrain] = (terrainCounts[terrain] || 0) + 1;
-                if (terrain == 7) rivers++;
-                if (typeof _map != 'undefined' && _map.hasRoad && _map.hasRoad(i, j)) roads++;
-            }
-        }
-        for (var t = 0; t < 8; t++) {
-            input[base + 2 + t] = terrainCounts[t] / Math.max(1, total);
-        }
-        input[base + 10] = roads / Math.max(1, total);
-        input[base + 11] = rivers / Math.max(1, total);
-        input[base + 12] = input[base + 2 + 4];
-        input[base + 13] = input[base + 2 + 6];
-        var records = this.visibleUnitRecords(ownerTeam);
-        for (var k = 0; k < records.length; k++) {
-            var unit = records[k].unit;
-            if (Math.abs(unit.coord.i - point.i) <= 5 && Math.abs(unit.coord.j - point.j) <= 5) {
-                if ((unit.team || 0) == ownerTeam) friendly++; else enemy++;
-            }
-        }
-        input[base + 15] = this.normalizeCount(enemy, 20);
-        input[base + 16] = this.normalizeCount(friendly, 20);
-    }
-
-    militaryBalance(ownerTeam)
-    {
-        var own = 0;
-        var enemy = 0;
-        var records = this.visibleUnitRecords(ownerTeam, function(unit) { return unit.type == 2; });
-        for (var k = 0; k < records.length; k++) {
-            var unit = records[k].unit;
-            if (unit.type != 2) {
-                continue;
-            }
-            var strength = (unit.attack || 0) + (unit.defense || 0);
-            if ((unit.team || 0) == ownerTeam) own += strength; else enemy += strength;
-        }
-        return this.clamp((own - enemy) / Math.max(1, own + enemy), -1, 1);
-    }
-
     encodeLocalMapWindow(input, base, coord, ownerTeam)
     {
         var n = 0;
@@ -3768,21 +3293,6 @@ const _ai_player = new class
         return bestTeam;
     }
 
-    tacticsTargetForDecision(decision, ownerTeam)
-    {
-        if (decision.target && (decision.target.i != Math.round((_map_size - 1) / 2) || decision.target.j != Math.round((_map_size - 1) / 2))) {
-            return decision.target;
-        }
-        var origin = this.averageOwnCoord(ownerTeam);
-        if (decision.command == 'capture' || decision.command == 'siege') {
-            return this.nearestEnemyCityCoord(origin, ownerTeam);
-        }
-        if (decision.command == 'retreat' || decision.command == 'reinforce') {
-            return this.nearestFriendlyCityCoord(origin, ownerTeam);
-        }
-        return this.nearestEnemyCoord(origin, ownerTeam);
-    }
-
     averageOwnCoord(ownerTeam)
     {
         var sumI = 0;
@@ -3803,16 +3313,6 @@ const _ai_player = new class
     nearestEnemyCoord(origin, ownerTeam)
     {
         return this.nearestUnitCoord(origin, function(unit) { return (unit.team || 0) != ownerTeam && unit.type != 3; }, ownerTeam);
-    }
-
-    foreignOwnerAtCoord(coord, ownerTeam)
-    {
-        if (!coord) return null;
-        var records = this.visibleUnitRecords(ownerTeam, function(unit) {
-            return (unit.team || 0) != ownerTeam && unit.coord
-                && unit.coord.i == coord.i && unit.coord.j == coord.j;
-        });
-        return records.length ? (records[0].unit.team || 0) : null;
     }
 
     nearestEnemyCityCoord(origin, ownerTeam)
@@ -3955,20 +3455,10 @@ const _ai_player = new class
         if ((command.command == 'goto' || command.command == 'road_to' || command.command == 'attack') && unit.can_move) {
             var target = command.target;
             if (!target && command.command == 'goto') {
-                if (unit.unitTypeId == 'worker') {
-                    // A Worker goto follows the local job encoded in input[11]
-                    // before considering a Strategy city-relocation suggestion.
-                    target = this.workerGotoTarget(k, unit.team || 0)
-                        || this.workerStrategyTargetForUnit(unit, unit.team || 0);
-                }
-                else if (unit.unitTypeId == 'settlers') {
-                    target = this.civilianRetreatTargetFromStrategyFocus(unit, unit.team || 0)
-                        || this.bestSettlementTargetForSettler(k, unit.team || 0)
-                        || this.nearbyHiddenExploreTarget(unit, unit.team || 0);
-                }
-                else {
-                    target = this.fallbackExploreTarget(unit, unit.team || 0);
-                }
+                target = this.civilianRetreatTargetFromStrategyFocus(unit, unit.team || 0)
+                    || (unit.unitTypeId == 'settlers' ? this.bestSettlementTargetForSettler(k, unit.team || 0) : null)
+                    || (unit.unitTypeId == 'worker' ? this.workerGotoTarget(k, unit.team || 0) : null)
+                    || this.fallbackExploreTarget(unit, unit.team || 0);
             }
             if (!target && command.command == 'road_to') {
                 target = this.nearestOtherFriendlyCityCoord(unit.coord, unit.team || 0)
@@ -3976,7 +3466,6 @@ const _ai_player = new class
             }
             if (command.command == 'attack') {
                 target = this.nearestEnemyCoord(unit.coord, unit.team || 0) || target;
-                unit.attackTargetOwnerId = this.foreignOwnerAtCoord(target, unit.team || 0);
             }
             command.selectedTarget = target;
             if (target && _current_game.buildPath && _current_game.assignPath) {

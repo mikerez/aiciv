@@ -9,10 +9,9 @@
             window.location.replace('login.html');
         }
     </script>
-    <link rel="preload" href="ai_player/strategy.db.gz?v=20260712a" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/tactics.db.gz?v=20260625k" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/action.db.gz?v=20260804a" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/economics.db.gz?v=20260711b" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/strategy.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/action.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/economics.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -255,7 +254,7 @@
     <script src="draw.js?v=20260806b"></script>
     <script src="control.js?v=20260805g"></script>
     <script src="birdsview.js?v=20260805a"></script>
-    <script src="ai.js?v=20260805c"></script>
+    <script src="ai.js?v=20260806a"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -263,11 +262,6 @@
                     console.error('AI background model load failed', error);
                 }
             });
-            if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
-                _ai_player.ensureDefaultModelsLoaded(false).catch(function(error) {
-                    if (typeof console !== 'undefined' && console.error) console.error(error);
-                });
-            }
         }
     </script>
     <script src="game.js?v=20260805d"></script>

@@ -615,7 +615,7 @@
 # Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.
 # A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[57] is the visible cue in this example; input[56] is the center tile under this settler.
-# Cue meaning: local window includes weak land but no resource support; tactical pressure is implied by generic fields.
+# Cue meaning: local window includes weak land but no resource support; military pressure is implied by generic fields.
 # Decision meaning: goto because mediocre land without support should keep searching.
 # Legal output candidates: output[0] = goto; output[1] = wait; output[2] = build city.
 # Correct answer: choose output[0] = goto.
@@ -1011,7 +1011,7 @@
 # situation 53: action settler case: aged settler on hills still moves to nearby grass
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: west local tile is a better grass/water candidate while center is hills.
@@ -1031,7 +1031,7 @@
 # situation 54: action settler case: aged settler on hills with food nearby still moves
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: east local tile is a grass food candidate while center is hills.
@@ -1051,7 +1051,7 @@
 # situation 55: action settler case: first city aged pressure does not accept hills
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: east local tile is a better grass/water candidate while center is hills.
@@ -1071,7 +1071,7 @@
 # situation 56: action settler case: first-city plain grass runtime score builds after wandering age 0.100000
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
@@ -1091,7 +1091,7 @@
 # situation 57: action settler case: first-city plain grass runtime score builds after wandering age 0.500000
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
@@ -1111,7 +1111,7 @@
 # situation 58: action settler case: first-city plain grass runtime score builds after wandering age 0.900000
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is ordinary grass with no city nearby and no special resource.
@@ -1131,7 +1131,7 @@
 # situation 59: action settler case: exact grass water resource settlement test builds
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is grass with cattle-like food resource and A-bit water source.
@@ -1151,7 +1151,7 @@
 # situation 60: action settler case: grass cattle water settlement regression builds
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: west local tile is visible water beside a grass cattle center.
@@ -1171,7 +1171,7 @@
 # situation 61: action settler case: grass food water settlement with nearby support builds
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is the same high-score fresh grass food site after two turns.
@@ -1191,7 +1191,7 @@
 # situation 62: action settler case: grass food water first city builds immediately
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is a first-city candidate with food, fresh water, and strong score.
@@ -1211,7 +1211,7 @@
 # situation 63: action settler case: aged grass water resource settlement test builds
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile remains a strong grass food resource site after several turns.
@@ -1231,7 +1231,7 @@
 # situation 64: action settler case: settler on fresh grass must not irrigate
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile looks like a worker irrigation target.
@@ -1251,7 +1251,7 @@
 # situation 65: action settler case: settler on grasswater must not irrigate
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is mixed grass-water but settler is not a worker.
@@ -1271,7 +1271,7 @@
 # situation 66: action settler case: settler on forest must not chop
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is forest but chopping is worker-only.
@@ -1291,7 +1291,7 @@
 # situation 67: action settler case: settler on forest resource must not improve
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile has resource/forest improvement cue but settler cannot build improvements.
@@ -1311,7 +1311,7 @@
 # situation 68: action settler case: settler on hills resource must not mine
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is hills with mine-like production cue.
@@ -1331,7 +1331,7 @@
 # situation 69: action settler case: settler on rocks resource must not mine
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is rocky production terrain but mining is worker-only.
@@ -1351,7 +1351,7 @@
 # situation 70: action settler case: settler between cities must not road-to
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: east local tile suggests road connection but settler cannot build roads.
@@ -1371,7 +1371,7 @@
 # situation 71: action settler case: settler on water resource must not build boats
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is water resource but settler should seek land.
@@ -1391,7 +1391,7 @@
 # situation 72: action settler case: settler near strong resource must move instead of improve
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: nearby local tile has strong resource improvement cue.
@@ -1411,7 +1411,7 @@
 # situation 73: action settler case: settler on weak desert must not do worker task
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is weak desert and has no settlement support.
@@ -1431,7 +1431,7 @@
 # situation 74: action settler case: settler on weak snow must not do worker task
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: center tile is weak snow and should be left.
@@ -1451,7 +1451,7 @@
 # situation 75: action settler case: settler too close to city must move not improve
 # Purpose: teach Action engine settler behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
 # Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
+# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
 # Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
 # Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
 # Cue meaning: good local tile is invalid because spacing to friendly city is too small.

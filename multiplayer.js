@@ -308,9 +308,7 @@ const _multiplayer = new class
             lastStrategyContext: this.clonePlain(_ai_player.lastStrategyContext),
             lastStrategyFocuses: this.clonePlain(_ai_player.lastStrategyFocuses),
             lastStrategyMilitaryFocus: this.clonePlain(_ai_player.lastStrategyMilitaryFocus),
-            lastStrategyWorkerFocus: this.clonePlain(_ai_player.lastStrategyWorkerFocus),
             lastStrategyProductionDemands: this.clonePlain(_ai_player.lastStrategyProductionDemands),
-            lastTacticsGroupIds: this.clonePlain(_ai_player.lastTacticsGroupIds),
             lastActionUnitIndices: this.clonePlain(_ai_player.lastActionUnitIndices),
             lastActionRecordSummaries: this.clonePlain(_ai_player.lastActionRecordSummaries),
             lastEconomicsCityIndices: this.clonePlain(_ai_player.lastEconomicsCityIndices),
@@ -365,26 +363,18 @@ const _multiplayer = new class
             var strategyDecision = _ai_player.decodeStrategyOutput(strategyOutput, aiId);
             _ai_player.lastStrategyFocuses = strategyDecision.focuses;
             _ai_player.lastStrategyMilitaryFocus = strategyDecision.maxMilitaryFocus;
-            _ai_player.lastStrategyWorkerFocus = strategyDecision.maxWorkerFocus;
             _ai_player.lastStrategyProductionDemands = strategyDecision.productionDemands;
-            var tacticsInput = _ai_player.buildTacticsInput(aiId, strategyDecision.maxMilitaryFocus);
             var economicsInput = _ai_player.buildEconomicsInput(aiId, strategyDecision.productionDemands);
             _ai_player.advanceSettlerTurnCounters(aiId);
-            var actionInput = _ai_player.buildActionInput(
-                aiId,
-                strategyDecision.maxMilitaryFocus,
-                strategyDecision.maxWorkerFocus
-            );
+            var actionInput = _ai_player.buildActionInput(aiId, strategyDecision.maxMilitaryFocus);
             return {
                 strategyDecision: strategyDecision,
-                tacticsInput: tacticsInput,
                 economicsInput: economicsInput,
                 actionInput: actionInput,
                 adapter: _multiplayer.captureAiAdapterState(),
             };
         });
         var outputs = await Promise.all([
-            _ai_player.inferBackground('tactics', inputStage.tacticsInput),
             _ai_player.inferBackground('economics', inputStage.economicsInput),
             _ai_player.inferBackground('action', inputStage.actionInput),
         ]);
@@ -394,9 +384,8 @@ const _multiplayer = new class
             snapshot: snapshot,
             adapter: inputStage.adapter,
             strategyOutput: strategyOutput,
-            tacticsOutput: outputs[0],
-            economicsOutput: outputs[1],
-            actionOutput: outputs[2],
+            economicsOutput: outputs[0],
+            actionOutput: outputs[1],
         };
     }
 
@@ -408,7 +397,6 @@ const _multiplayer = new class
             _multiplayer.restoreAiAdapterState(plan.adapter);
             _ai_player.log('U' + aiId + ' background AI turn applying worker results');
             _ai_player.applyStrategyOutput(plan.strategyOutput, aiId);
-            _ai_player.applyTacticsOutput(plan.tacticsOutput, aiId);
             _ai_player.applyEconomicsOutput(plan.economicsOutput, aiId);
             _ai_player.advanceSettlerTurnCounters(aiId);
             _ai_player.applyActionOutput(plan.actionOutput, aiId);
