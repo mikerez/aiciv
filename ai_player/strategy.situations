@@ -5,7 +5,7 @@
 # Birdsview cell (8,12) is Strategy input[1632]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -21,7 +21,7 @@
 # Birdsview cell (9,13) is Strategy input[1683]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -37,7 +37,7 @@
 # Birdsview cell (10,14) is Strategy input[1734]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -53,7 +53,7 @@
 # Birdsview cell (11,15) is Strategy input[1785]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -69,7 +69,7 @@
 # Birdsview cell (12,16) is Strategy input[1836]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -85,7 +85,7 @@
 # Birdsview cell (13,17) is Strategy input[1887]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -101,7 +101,7 @@
 # Birdsview cell (14,18) is Strategy input[1938]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -117,7 +117,7 @@
 # Birdsview cell (15,19) is Strategy input[1989]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -133,7 +133,7 @@
 # Birdsview cell (16,12) is Strategy input[1640]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -149,7 +149,7 @@
 # Birdsview cell (17,13) is Strategy input[1691]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -165,7 +165,7 @@
 # Birdsview cell (18,14) is Strategy input[1742]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -181,7 +181,7 @@
 # Birdsview cell (19,15) is Strategy input[1793]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -197,7 +197,7 @@
 # Birdsview cell (8,16) is Strategy input[1832]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -213,7 +213,7 @@
 # Birdsview cell (9,17) is Strategy input[1883]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -229,7 +229,7 @@
 # Birdsview cell (10,18) is Strategy input[1934]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -245,7 +245,7 @@
 # Birdsview cell (11,19) is Strategy input[1985]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -262,7 +262,7 @@
 # Birdsview cell (32,32) is Strategy input[2656]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -279,7 +279,7 @@
 # Birdsview cell (33,33) is Strategy input[2707]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -296,7 +296,7 @@
 # Birdsview cell (34,28) is Strategy input[2458]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -313,7 +313,7 @@
 # Birdsview cell (35,29) is Strategy input[2509]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -330,7 +330,7 @@
 # Birdsview cell (36,30) is Strategy input[2560]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -347,7 +347,7 @@
 # Birdsview cell (37,31) is Strategy input[2611]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -364,7 +364,7 @@
 # Birdsview cell (32,32) is Strategy input[2656]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -381,7 +381,7 @@
 # Birdsview cell (33,33) is Strategy input[2707]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -398,7 +398,7 @@
 # Birdsview cell (32,28) is Strategy input[2456]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -415,7 +415,7 @@
 # Birdsview cell (33,29) is Strategy input[2507]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -432,7 +432,7 @@
 # Birdsview cell (34,30) is Strategy input[2558]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -449,7 +449,7 @@
 # Birdsview cell (35,31) is Strategy input[2609]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -466,7 +466,7 @@
 # Birdsview cell (36,32) is Strategy input[2660]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -483,7 +483,7 @@
 # Birdsview cell (37,33) is Strategy input[2711]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -500,7 +500,7 @@
 # Birdsview cell (32,28) is Strategy input[2456]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -517,7 +517,7 @@
 # Birdsview cell (33,29) is Strategy input[2507]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -533,7 +533,7 @@
 # Birdsview cell (16,12) is Strategy input[1640]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -549,7 +549,7 @@
 # Birdsview cell (17,13) is Strategy input[1691]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -565,7 +565,7 @@
 # Birdsview cell (18,14) is Strategy input[1742]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -581,7 +581,7 @@
 # Birdsview cell (19,15) is Strategy input[1793]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -597,7 +597,7 @@
 # Birdsview cell (8,16) is Strategy input[1832]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -613,7 +613,7 @@
 # Birdsview cell (9,17) is Strategy input[1883]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -629,7 +629,7 @@
 # Birdsview cell (10,18) is Strategy input[1934]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -645,7 +645,7 @@
 # Birdsview cell (11,19) is Strategy input[1985]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -661,7 +661,7 @@
 # Birdsview cell (12,12) is Strategy input[1636]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -677,7 +677,7 @@
 # Birdsview cell (13,13) is Strategy input[1687]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -693,7 +693,7 @@
 # Birdsview cell (14,14) is Strategy input[1738]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -709,7 +709,7 @@
 # Birdsview cell (15,15) is Strategy input[1789]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -725,7 +725,7 @@
 # Birdsview cell (16,16) is Strategy input[1840]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -741,7 +741,7 @@
 # Birdsview cell (17,17) is Strategy input[1891]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -757,7 +757,7 @@
 # Birdsview cell (18,18) is Strategy input[1942]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -773,7 +773,7 @@
 # Birdsview cell (19,19) is Strategy input[1993]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -790,7 +790,7 @@
 # Birdsview cell (32,28) is Strategy input[2456]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -807,7 +807,7 @@
 # Birdsview cell (33,29) is Strategy input[2507]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -824,7 +824,7 @@
 # Birdsview cell (34,30) is Strategy input[2558]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -841,7 +841,7 @@
 # Birdsview cell (35,31) is Strategy input[2609]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -858,7 +858,7 @@
 # Birdsview cell (36,32) is Strategy input[2660]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -875,7 +875,7 @@
 # Birdsview cell (37,33) is Strategy input[2711]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -892,7 +892,7 @@
 # Birdsview cell (32,28) is Strategy input[2456]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -909,7 +909,7 @@
 # Birdsview cell (33,29) is Strategy input[2507]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -926,7 +926,7 @@
 # Birdsview cell (32,30) is Strategy input[2556]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -943,7 +943,7 @@
 # Birdsview cell (33,31) is Strategy input[2607]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -960,7 +960,7 @@
 # Birdsview cell (34,32) is Strategy input[2658]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -977,7 +977,7 @@
 # Birdsview cell (35,33) is Strategy input[2709]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -994,7 +994,7 @@
 # Birdsview cell (36,28) is Strategy input[2460]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -1011,7 +1011,7 @@
 # Birdsview cell (37,29) is Strategy input[2511]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -1028,7 +1028,7 @@
 # Birdsview cell (32,30) is Strategy input[2556]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -1045,7 +1045,7 @@
 # Birdsview cell (33,31) is Strategy input[2607]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -1061,7 +1061,7 @@
 # Birdsview cell (12,12) is Strategy input[1636]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -1077,7 +1077,7 @@
 # Birdsview cell (13,13) is Strategy input[1687]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -1093,7 +1093,7 @@
 # Birdsview cell (14,14) is Strategy input[1738]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -1109,7 +1109,7 @@
 # Birdsview cell (15,15) is Strategy input[1789]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -1125,7 +1125,7 @@
 # Birdsview cell (16,16) is Strategy input[1840]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -1141,7 +1141,7 @@
 # Birdsview cell (17,17) is Strategy input[1891]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -1157,7 +1157,7 @@
 # Birdsview cell (18,18) is Strategy input[1942]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -1173,7 +1173,7 @@
 # Birdsview cell (19,19) is Strategy input[1993]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -1189,7 +1189,7 @@
 # Birdsview cell (8,12) is Strategy input[1632]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -1205,7 +1205,7 @@
 # Birdsview cell (9,13) is Strategy input[1683]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -1221,7 +1221,7 @@
 # Birdsview cell (10,14) is Strategy input[1734]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -1237,7 +1237,7 @@
 # Birdsview cell (11,15) is Strategy input[1785]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -1253,7 +1253,7 @@
 # Birdsview cell (12,16) is Strategy input[1836]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -1269,7 +1269,7 @@
 # Birdsview cell (13,17) is Strategy input[1887]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -1285,7 +1285,7 @@
 # Birdsview cell (14,18) is Strategy input[1938]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -1301,7 +1301,7 @@
 # Birdsview cell (15,19) is Strategy input[1989]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -1318,7 +1318,7 @@
 # Birdsview cell (32,30) is Strategy input[2556]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -1335,7 +1335,7 @@
 # Birdsview cell (33,31) is Strategy input[2607]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -1352,7 +1352,7 @@
 # Birdsview cell (34,32) is Strategy input[2658]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -1369,7 +1369,7 @@
 # Birdsview cell (35,33) is Strategy input[2709]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -1386,7 +1386,7 @@
 # Birdsview cell (36,28) is Strategy input[2460]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -1403,7 +1403,7 @@
 # Birdsview cell (37,29) is Strategy input[2511]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -1420,7 +1420,7 @@
 # Birdsview cell (32,30) is Strategy input[2556]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -1437,7 +1437,7 @@
 # Birdsview cell (33,31) is Strategy input[2607]. Compact value 0.394500 is derived from civ=1.000000, military=18.000000, landscape_height=0.450000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -1454,7 +1454,7 @@
 # Birdsview cell (32,32) is Strategy input[2656]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -1471,7 +1471,7 @@
 # Birdsview cell (33,33) is Strategy input[2707]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -1488,7 +1488,7 @@
 # Birdsview cell (34,28) is Strategy input[2458]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -1505,7 +1505,7 @@
 # Birdsview cell (35,29) is Strategy input[2509]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.
@@ -1522,7 +1522,7 @@
 # Birdsview cell (36,30) is Strategy input[2560]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[32]=target x, output[33]=target y, output[34]=military attack priority, output[35]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 36..39; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[36] = research production technology; output[37] = research naval technology; output[38] = focus anti-mounted units; output[39] = protect expansion point.
@@ -1539,7 +1539,7 @@
 # Birdsview cell (37,31) is Strategy input[2611]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[40]=target x, output[41]=target y, output[42]=military attack priority, output[43]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 44..47; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[44] = research production technology; output[45] = research naval technology; output[46] = focus anti-mounted units; output[47] = protect expansion point.
@@ -1556,7 +1556,7 @@
 # Birdsview cell (32,32) is Strategy input[2656]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[48]=target x, output[49]=target y, output[50]=military attack priority, output[51]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 52..55; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[52] = research production technology; output[53] = research naval technology; output[54] = focus anti-mounted units; output[55] = protect expansion point.
@@ -1573,7 +1573,7 @@
 # Birdsview cell (33,33) is Strategy input[2707]. Compact value 0.187167 is derived from civ=1.000000, military=10.000000, landscape_height=0.180000, resource_id=0.000000. enemy controlled pressure area that should create attack or defense focus output.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[56]=target x, output[57]=target y, output[58]=military attack priority, output[59]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 60..63; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[60] = research production technology; output[61] = research naval technology; output[62] = focus anti-mounted units; output[63] = protect expansion point.
@@ -1589,7 +1589,7 @@
 # Birdsview cell (8,12) is Strategy input[1632]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[0]=target x, output[1]=target y, output[2]=military attack priority, output[3]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 4..7; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[4] = research production technology; output[5] = research naval technology; output[6] = focus anti-mounted units; output[7] = protect expansion point.
@@ -1605,7 +1605,7 @@
 # Birdsview cell (9,13) is Strategy input[1683]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[8]=target x, output[9]=target y, output[10]=military attack priority, output[11]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 12..15; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[12] = research production technology; output[13] = research naval technology; output[14] = focus anti-mounted units; output[15] = protect expansion point.
@@ -1621,7 +1621,7 @@
 # Birdsview cell (10,14) is Strategy input[1734]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[16]=target x, output[17]=target y, output[18]=military attack priority, output[19]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 20..23; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[20] = research production technology; output[21] = research naval technology; output[22] = focus anti-mounted units; output[23] = protect expansion point.
@@ -1637,7 +1637,7 @@
 # Birdsview cell (11,15) is Strategy input[1785]. Compact value 0.105917 is derived from civ=0.000000, military=4.000000, landscape_height=0.120000, resource_id=0.000000. friendly explored land around the current strategic focus.
 # Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.
 # Output focus fields: output[24]=target x, output[25]=target y, output[26]=military attack priority, output[27]=defense priority.
-# The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
+# The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.
 # Strategy command candidates for this object are only output slots 28..31; first four floats are never selected as commands.
 # Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.
 # Output candidates: output[28] = research production technology; output[29] = research naval technology; output[30] = focus anti-mounted units; output[31] = protect expansion point.

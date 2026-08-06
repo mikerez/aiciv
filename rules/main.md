@@ -18,7 +18,7 @@
 - `MAIN-MENU-005`: All main menus are hidden by default.
 - `MAIN-MENU-006`: Pressing `Escape` hides all open main menus.
 - `MAIN-MENU-007`: Main menu panels can be opened directly by game events, such as technology discovery.
-- `MAIN-MENU-008`: The Console menu shows verbose AI parsing and application logs for Strategy, Tactics, Action, and Economics decisions.
+- `MAIN-MENU-008`: The Console menu shows verbose AI parsing and application logs for Strategy, Action, and Economics decisions.
 - `MAIN-MENU-009`: Phone UI mode is enabled only for a coarse-pointer or mobile-user-agent device whose physical screen has a short side no larger than `600` CSS pixels and a long side no larger than `1200` CSS pixels. It records the screen and live viewport dimensions, scales the former mobile controls to approximately one half size, and arranges controls within the live viewport; desktop layout remains unchanged.
 - `MAIN-MENU-010`: On phones, the unit action menu occupies half of the vertical space available below the toolbar and scrolls internally; rotation recalculates this height.
 - `MAIN-MOBILE-002`: The white account, economy, and relations statistics lines are drawn below the phone controls and retain their black visibility offset.
@@ -56,14 +56,13 @@
 
 ## AI Player Rules
 
-- `MAIN-AI-001`: AI engine input starts with a shared base of `8` object records of `120` FP32 values each plus `64` FP32 values describing the generic situation. Tactics, Action, and Economics use only this `1024` FP32 base input.
+- `MAIN-AI-001`: AI engine input starts with a shared base of `8` object records of `120` FP32 values each plus `64` FP32 values describing the generic situation. Action and Economics use only this `1024` FP32 base input.
 - `MAIN-AI-002`: AI engine output is unified as `8` object command records of `8` FP32 values each plus `8` FP32 values for generic decisions, for a total output width of `72`.
 - `MAIN-AI-003`: Game object ids are not encoded in neural input or output. Adapters keep ids in side arrays, preserving object order, and map output command record `n` back to input object `n`.
 - `MAIN-AI-004`: Strategy input uses four civilization-status objects and four military-force-weight objects.
 - `MAIN-AI-004A`: Strategy generic inputs `[24..40]` describe visible terrain and resources around owned cities, or around owned settlers when no city exists. They include hills, mountains, grass, water, animals, stone, crops, opened technology rate, visible context coverage, flat land, fresh water, forest, desert/snow, resource coverage, mineral resources, and whether the context anchor is a city or settler.
 - `MAIN-AI-004B`: Strategy appends a `50x50` birdsview projection in slots `1024..3523`. The birdsview is scaled from any world map size and compactly represents local controller civ id, military weight, landscape height, and resources.
 - `MAIN-AI-004C`: Strategy technology decisions use visible landscape and resources as positive and negative evidence. Mining requires substantial hills, mountains, or mineral evidence; a fully observed city/settler context with none of those signals must select a technology supported by the actual terrain or resources instead.
-- `MAIN-AI-005`: Tactics input uses eight friendly/enemy military group objects with group state and movement direction.
 - `MAIN-AI-006`: Action input uses eight own unit objects with unit state and a 9x9 local tile feature window centered on the unit.
 - `MAIN-AI-006A`: Worker Action input field `[11]` summarizes the strongest legal nearby improvement job, including resource-free terrain enhancements. When Action selects Goto, the adapter targets that local job before a Strategy relocation suggestion.
 - `MAIN-AI-007`: Economics input uses eight city objects with city state and a 9x9 local tile window centered on the city and describing landscape and food, production, and money sources.

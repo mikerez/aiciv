@@ -36,6 +36,8 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-GAME-007`: Every server-game request and response is written as one structured JSON line in `.server_game_requests.log`, with rotation to `.server_game_requests.log.1`. Secrets and credentials are redacted. Turn requests additionally record order lookup, path validation, resolution timing, collision calculations, and authoritative unit coordinates before and after resolution.
 
+`SERVER-GAME-008`: PHP does not run or persist background AI tasks or a general client-command queue. The browser computes AI locally and sends movement and other atomic actions to PHP. Consequently, a reload can discard client-only global intentions that have not yet been translated into authoritative atomic requests; persistent global-command recovery is a separate future feature.
+
 `SERVER-GAME-005`: Registration provisions the account's player row, initial state with 500 money, one Settler, and three Explorers. All four units start on the same valid grass or freshwater land tile. New players are placed within Explorer view of the first player. Schema migration 5 brings existing registered players to the same minimum of three living Explorers; normal repeated login does not recreate later losses. A player without surviving units is inactive for synchronous turn completion.
 
 `SERVER-GAME-006`: The browser initializes empty terrain arrays, loads its visible landscape and unit state from PHP, and treats server values as authoritative. The authenticated player id comes from the `aiciv_player_id` cookie written by the login page.

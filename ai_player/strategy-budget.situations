@@ -84,11 +84,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 8: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -183,11 +183,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 17: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -282,11 +282,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 26: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -381,11 +381,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 35: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -480,11 +480,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 44: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -579,11 +579,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 53: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -678,11 +678,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 62: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -777,11 +777,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 71: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -876,11 +876,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 80: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -975,11 +975,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 89: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -1074,11 +1074,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 98: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.
@@ -1173,11 +1173,11 @@
 # Browser application: output[67] is converted to GameState.scienceRate percentage by multiplying by 100.
 # input[966] = 0.250000 means legacy money account normalized by 200.
 # input[1001] = 1.000000 means money account clamped to 0..50 and normalized to 0..1; this is the primary budget input.
-# input[1002] = 0.150000 means recent account delta after income, upkeep, and technology expense.
+# input[1002] = 0.120000 means recent account delta after income, upkeep, and technology expense.
 # input[1003] = 0.250000 means upkeep burden signal.
 # target[67] = 1.000000 means science funding ratio recommended by Strategy.
 # Machine row below repeats the same situation in parser format.
-67|67|966:0.250000,1001:1.000000,1002:0.150000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
+67|67|966:0.250000,1001:1.000000,1002:0.120000,1003:0.250000|67:1.000000|strategy budget case: fifty funds sets full science
 # situation 107: strategy budget case: large reserve keeps full science
 # Purpose: teach Strategy output[67] as science funding ratio, not as military production demand.
 # Budget rule: when funds are below 50, science funding should be proportional to funds/50; at 50 or more funds, science funding should be 1.0.

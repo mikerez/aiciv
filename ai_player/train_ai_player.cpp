@@ -174,7 +174,6 @@ void exportDefaultSituations()
     saveTrainingExamples("ai_player/strategy-landscape.situations", makeStrategyLandscapeExamples());
     saveTrainingExamples("ai_player/strategy-budget.situations", makeStrategyBudgetExamples());
     saveTrainingExamples("ai_player/strategy-workers.situations", makeStrategyWorkerExamples());
-    saveTrainingExamples("ai_player/tactics.situations", makeTacticsExamples());
     saveTrainingExamples("ai_player/action-bootstrap.situations", makeActionBootstrapExamples());
     saveTrainingExamples("ai_player/action-settlers.situations", makeActionSettlerExamples());
     saveTrainingExamples("ai_player/action-worker.situations", makeActionWorkerExamples());
@@ -186,7 +185,7 @@ void exportDefaultSituations()
     saveTrainingExamples("ai_player/economics.situations", makeEconomicsExamples());
     saveTrainingExamples("ai_player/economics-strategy.situations", makeEconomicsStrategyExamples());
     saveTrainingExamples("ai_player/economics-workers.situations", makeEconomicsWorkerExamples());
-    std::cout << "Exported ai_player/strategy.situations, ai_player/tactics.situations, "
+    std::cout << "Exported ai_player/strategy.situations, "
               << "ai_player/strategy-demands.situations, ai_player/strategy-technology.situations, "
               << "ai_player/strategy-landscape.situations, "
               << "ai_player/strategy-budget.situations, ai_player/strategy-workers.situations, "
@@ -218,7 +217,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    int epochs = 60;
+    int epochs = 240;
     float learningRate = 0.08f;
     if (argc > 1) {
         epochs = std::max(1, std::atoi(argv[1]));
@@ -232,19 +231,15 @@ int main(int argc, char** argv)
     }
 
     StrategyEngine strategy;
-    TacticsEngine tactics;
     ActionEngine action;
     EconomicsEngine economics;
 
     std::string strategyPath;
-    std::string tacticsPath;
     std::string actionPath;
     std::string economicsPath;
     std::vector<TrainingExample> strategyExamples =
         loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations", "strategy-landscape.situations", "strategy-budget.situations", "strategy-workers.situations" },
                               "strategy.situations", strategyPath);
-    std::vector<TrainingExample> tacticsExamples =
-        loadWithRootFallback("ai_player/tactics.situations", "tactics.situations", tacticsPath);
     std::vector<TrainingExample> actionExamples = loadActionSituationSet(actionPath);
     std::vector<TrainingExample> economicsExamples =
         loadSplitSituationSet({ "economics-strategy.situations", "economics-workers.situations" }, "economics-strategy.situations", economicsPath);
@@ -260,9 +255,6 @@ int main(int argc, char** argv)
         if (strategyTests.passed != strategyTests.total) {
             return 4;
         }
-    }
-    if (engineFilter == "all" || engineFilter == "tactics") {
-        runEngine(tactics, tacticsExamples, tacticsPath, modelPathBesideSituations(tacticsPath, "tactics"), epochs, learningRate);
     }
     if (engineFilter == "all" || engineFilter == "action") {
         runEngine(action, actionExamples, actionPath, modelPathBesideSituations(actionPath, "action"), epochs, learningRate);

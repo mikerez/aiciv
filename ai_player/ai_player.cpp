@@ -381,7 +381,7 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
 
     ex.comments.push_back("Purpose: teach Action engine " + family + " behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.");
     ex.comments.push_back("Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.");
-    ex.comments.push_back("Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or tactical usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.");
+    ex.comments.push_back("Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.");
     ex.comments.push_back("Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.");
     ex.comments.push_back("Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.");
     ex.comments.push_back("Cue meaning: " + cueMeaning + ".");
@@ -439,6 +439,20 @@ DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth)
             };
             for (int field = 0; field < static_cast<int>(genericSlots.size()); ++field) {
                 layers_[layer].weights[(128 + field) * inWidth + AI_PLAYER_SITUATION_BASE + genericSlots[field]] = 1.0f;
+            }
+            if (inputWidth >= AI_PLAYER_INPUT_WIDTH) {
+                // Preserve a coarse 2x4 strategic map through the 176-value
+                // bottleneck. Browser inputs contribute region-normalized cell
+                // values; sparse training/test cells remain directly visible.
+                for (int y = 0; y < AI_PLAYER_BIRDSVIEW_SIZE; ++y) {
+                    for (int x = 0; x < AI_PLAYER_BIRDSVIEW_SIZE; ++x) {
+                        const int regionX = std::min(1, x * 2 / AI_PLAYER_BIRDSVIEW_SIZE);
+                        const int regionY = std::min(3, y * 4 / AI_PLAYER_BIRDSVIEW_SIZE);
+                        const int summaryOutput = 168 + regionY * 2 + regionX;
+                        const int inputSlot = AI_PLAYER_BIRDSVIEW_BASE + y * AI_PLAYER_BIRDSVIEW_SIZE + x;
+                        layers_[layer].weights[summaryOutput * inWidth + inputSlot] = 1.0f;
+                    }
+                }
             }
         }
         else if (layer == kLayerCount - 1) {
@@ -732,7 +746,6 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
 }
 
 StrategyEngine::StrategyEngine() : AIEngine(makeStrategySchema(), 11, AI_PLAYER_INPUT_WIDTH) {}
-TacticsEngine::TacticsEngine() : AIEngine(makeTacticsSchema(), 22, AI_PLAYER_BASE_INPUT_WIDTH) {}
 ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33, AI_PLAYER_BASE_INPUT_WIDTH) {}
 EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44, AI_PLAYER_BASE_INPUT_WIDTH) {}
 
@@ -754,27 +767,13 @@ Schema makeStrategySchema()
     return schema;
 }
 
-Schema makeTacticsSchema()
-{
-    Schema schema{EngineKind::Tactics, "tactics", {}, {}};
-    addField(schema.input, 0, 959, "military_groups[8][120]", "records",
-             "friendly and enemy military group state without ids: relation, type mix, count, center, movement direction, hp, attack, defense, speed, range, terrain, roads, threat");
-    addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
-             "battle balance, focus point data, fog risk, city pressure, reinforcement availability, strategic priority; slots 23..26 carry forwarded strategy focus x/y/attack/defense priority");
-    addField(schema.output, 0, 63, "group_command[8][8]", "records",
-             "eight tactical commands corresponding to the eight military groups in input order");
-    addField(schema.output, 64, 71, "general_decision[8]", "records",
-             "general battle posture and unused reserved tactical decisions");
-    return schema;
-}
-
 Schema makeActionSchema()
 {
     Schema schema{EngineKind::Action, "action", {}, {}};
     addField(schema.input, 0, 959, "units[8][120]", "records",
              "own unit status without ids: type, state, x/y, hp, moves, relation, task, immediate action signal in slot 8, terrain/resource/fresh-water/city score, age, city distance, 9x9 local tile features in slots 16..96, forwarded relative strategy focus in slots 97..100 for military records or worker-support focus for worker records; slot 101 is nearby worker density");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
-             "owner metrics, map knowledge, economy, science, visible resources, idle counts, tactical pressure");
+             "owner metrics, map knowledge, economy, science, visible resources, idle counts, military pressure");
     addField(schema.output, 0, 63, "unit_command[8][8]", "records",
              "eight unit commands corresponding to the eight input units in order");
     addField(schema.output, 64, 71, "general_decision[8]", "records",
@@ -897,7 +896,7 @@ std::vector<TrainingExample> makeStrategyExamples()
 
         ex.comments.push_back("Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.");
         ex.comments.push_back("Output focus fields: output[" + std::to_string(outputBase + 0) + "]=target x, output[" + std::to_string(outputBase + 1) + "]=target y, output[" + std::to_string(outputBase + 2) + "]=military attack priority, output[" + std::to_string(outputBase + 3) + "]=defense priority.");
-        ex.comments.push_back("The browser forwards the record with maximum military attack priority to Tactics general_situation[23..26] and converts it to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.");
+        ex.comments.push_back("The browser converts the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.");
         ex.comments.push_back("Strategy command candidates for this object are only output slots " + std::to_string(outputBase + 4) + ".." + std::to_string(outputBase + 7) + "; first four floats are never selected as commands.");
         ex.comments.push_back("Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.");
         addClassificationTargetComments(ex, outputBase + 4, labels, cls);
@@ -1217,7 +1216,7 @@ std::vector<TrainingExample> makeStrategyBudgetExamples()
         { "twenty five funds sets half science", 25.0f, 0.00f, 0.40f },
         { "thirty five funds sets seventy percent science", 35.0f, 0.05f, 0.35f },
         { "forty five funds sets ninety percent science", 45.0f, 0.10f, 0.30f },
-        { "fifty funds sets full science", 50.0f, 0.15f, 0.25f },
+        { "fifty funds sets full science", 50.0f, 0.12f, 0.25f },
         { "large reserve keeps full science", 90.0f, 0.20f, 0.20f },
     };
 
@@ -1318,21 +1317,6 @@ std::vector<TrainingExample> makeStrategyWorkerExamples()
         examples.push_back(ex);
     }
     return examples;
-}
-
-std::vector<TrainingExample> makeTacticsExamples()
-{
-    const std::vector<std::string> labels = {
-        "attack",
-        "defend",
-        "flank",
-        "retreat",
-        "reinforce",
-        "siege",
-        "capture",
-        "hold"
-    };
-    return makeObjectCommandExamples("tactics", labels, 100);
 }
 
 std::vector<TrainingExample> makeActionExamples()
@@ -1576,7 +1560,7 @@ std::vector<TrainingExample> makeActionSettlerExamples()
         {
             "settler on mediocre grass beside enemy pressure should continue",
             0, 0.25f, 0.00f, 0.05f, 0.00f, 0.38f, 0.78f, 56, 0.10f,
-            "local window includes weak land but no resource support; tactical pressure is implied by generic fields",
+            "local window includes weak land but no resource support; military pressure is implied by generic fields",
             "goto because mediocre land without support should keep searching"
         },
         {
