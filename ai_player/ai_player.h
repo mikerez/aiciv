@@ -19,12 +19,11 @@ constexpr int kLayerCount = 8;
 using InputSignal = std::array<float, kInputWidth>;
 using OutputSignal = std::array<float, kOutputWidth>;
 constexpr std::array<int, kLayerCount + 1> kLayerWidths = {
-    kInputWidth, 888, 752, 616, 480, 344, 208, 160, kOutputWidth
+    kInputWidth, 888, 752, 616, 480, 344, 208, 176, kOutputWidth
 };
 
 enum class EngineKind {
     Strategy,
-    Tactics,
     Action,
     Economics
 };
@@ -113,11 +112,6 @@ public:
     StrategyEngine();
 };
 
-class TacticsEngine final : public AIEngine {
-public:
-    TacticsEngine();
-};
-
 class ActionEngine final : public AIEngine {
 public:
     ActionEngine();
@@ -129,7 +123,6 @@ public:
 };
 
 Schema makeStrategySchema();
-Schema makeTacticsSchema();
 Schema makeActionSchema();
 Schema makeEconomicsSchema();
 
@@ -139,7 +132,6 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples();
 std::vector<TrainingExample> makeStrategyLandscapeExamples();
 std::vector<TrainingExample> makeStrategyBudgetExamples();
 std::vector<TrainingExample> makeStrategyWorkerExamples();
-std::vector<TrainingExample> makeTacticsExamples();
 std::vector<TrainingExample> makeActionBootstrapExamples();
 std::vector<TrainingExample> makeActionSettlerExamples();
 std::vector<TrainingExample> makeActionWorkerExamples();

@@ -6,7 +6,8 @@ City economy is implemented by `city.js`.
 
 - `CITY-STATE-001`: Each city has an economy state with citizens, worked tile coordinates, stored food, stored money, last income, and turns to the next citizen.
 - `CITY-STATE-002`: A new city starts with one citizen assigned to the best available nearby land tile.
-- `CITY-STATE-003`: When food storage reaches the current growth cost, a new citizen is created and assigned to the best available nearby land tile.
+- `CITY-STATE-003`: When food storage reaches `20 + population * 10`, a server game sends `grow_city`; PHP checks the threshold against authoritative population, adds one citizen, and resets food storage. Offline games apply the same threshold locally.
+- `CITY-STATE-004`: Server population remains authoritative even when the client cannot assign a distinct worked Tile to every citizen. Growth cost and food consumption use City population, never the shorter worked-Tile list.
 - `CITY-STATE-004`: Each citizen consumes one food per turn.
 - `CITY-STATE-005`: If stored food becomes negative, starvation removes one citizen and resets food storage to zero.
 - `CITY-STATE-006`: If a city with one citizen starves, the city collapses back into one Settler on the city tile.
@@ -17,6 +18,7 @@ City economy is implemented by `city.js`.
 - `CITY-INCOME-002`: Resource type increments terrain income when a worked tile contains a resource.
 - `CITY-INCOME-003`: Irrigation, pasture, farm, camp, fishing boats, and winery add food to a worked tile; road, cottage, plantation, fishing boats, and winery add money; camp, workshop, quarry, and mine add production.
 - `CITY-INCOME-004`: Resource income is cumulative with terrain modifiers; any opened food resource on an irrigated worked tile adds its food on top of irrigation.
+- `CITY-INCOME-004A`: Gems on a worked tile add three money and are improved by a Mine.
 - `CITY-INCOME-005`: Cottage gives 2 money before 10 turns, Hamlet gives 3 money from 10 turns, and Village gives 4 money from 20 turns.
 - `CITY-INCOME-006`: City-tile irrigation gives food only after worker-built neighboring irrigation activates the city irrigation food flag.
 - `CITY-INCOME-007`: A land tile with the terrain `A` bit set contains a local water source; it adds 1 food and 1 money, and if the terrain is hills or rocks/mountains it also adds 1 production.

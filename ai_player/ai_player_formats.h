@@ -4,7 +4,7 @@
 /*
  * Unified C-compatible FP32 signal layouts for AI-player engines.
  *
- * Tactics, Action, and Economics use the same base input shape:
+ * Action and Economics use the same base input shape:
  * - 8 object records, 120 FP32 values each: 960 floats.
  * - 64 generic situation values: 64 floats.
  * - Base input: 1024 FP32 values.
@@ -28,7 +28,7 @@
  * civilization record, target_x/target_y plus defense_priority are also used
  * as a worker-support suggestion toward the smallest own city.
  * object_command[n][4..7] remain command scores. The browser adapter forwards
- * the strongest military focus to tactics and military action inputs, and the
+ * the strongest military focus to military action inputs, and the
  * own-civilization worker-support focus to worker action inputs.
  *
  * Strategy general_decision[0..2] are production demand percentages:
@@ -123,25 +123,6 @@ typedef struct AIPlayerStrategyForceObject {
     float target_y;
     float reserved[108];
 } AIPlayerStrategyForceObject;
-
-typedef struct AIPlayerTacticsGroupObject {
-    float relation;
-    float unit_type_mix;
-    float count;
-    float center_x;
-    float center_y;
-    float move_dir_x;
-    float move_dir_y;
-    float hp;
-    float attack;
-    float defense;
-    float speed;
-    float range;
-    float terrain;
-    float road_access;
-    float threat;
-    float reserved[105];
-} AIPlayerTacticsGroupObject;
 
 typedef struct AIPlayerActionUnitObject {
     float type;
@@ -310,7 +291,6 @@ static_assert(sizeof(AIPlayerStrategyInput) == AI_PLAYER_INPUT_WIDTH * sizeof(fl
 static_assert(sizeof(AIPlayerUnifiedOutput) == AI_PLAYER_OUTPUT_WIDTH * sizeof(float), "AI output must be 72 floats");
 static_assert(sizeof(AIPlayerStrategyCivilizationObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy civ object must be 120 floats");
 static_assert(sizeof(AIPlayerStrategyForceObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy force object must be 120 floats");
-static_assert(sizeof(AIPlayerTacticsGroupObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "tactics group object must be 120 floats");
 static_assert(sizeof(AIPlayerActionUnitObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "action unit object must be 120 floats");
 static_assert(sizeof(AIPlayerEconomicsCityObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "economics city object must be 120 floats");
 static_assert(sizeof(AIPlayerEconomicsSituation) == AI_PLAYER_SITUATION_FLOATS * sizeof(float), "economics situation must be 64 floats");

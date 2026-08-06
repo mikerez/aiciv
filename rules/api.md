@@ -1,5 +1,11 @@
 # Game Web API
 
+## Client Error Reports
+
+`POST https://softmaximite.com/game/server_game.php` with action `report_cli_error` records a failed JS request before its popup is displayed. It requires `SECRET` and accepts `source_request_type`, `request_parameters`, `error_message`, `error_code`, `error_stack`, `response_error`, `player_id`, `unit_id`, `unsuccessful_action`, `destination_point`, and `client`. The response is HTTP 201 with `report_number` and `report_file`. Reports are sequential JSON documents stored as `reports/NNNNNNNN.rtp`; credentials are redacted and oversized diagnostic values are bounded.
+
+Both PHP APIs return monotonic execution time through `Server-Timing` and `X-Execution-Time-Ms`. Requests longer than 1 ms append one sanitized metadata line to `reports/performance.log`, which is capped with one 4 MiB rotated backup.
+
 ## Endpoint
 
 `POST https://softmaximite.com/game/api.php`
@@ -82,6 +88,10 @@ Relevant successful-login response fields:
 ```
 
 After five failed passwords, the account is locked for 15 minutes. Login failures use the same public error for unknown, inactive, locked, and wrong-password accounts.
+
+## Logout
+
+Send `action: "logout"`, the application `secret`, and the current session through the HttpOnly cookie, `access_token` field, or Bearer authorization header. The API revokes that session token, clears the game authentication cookies, and returns `authenticated: false`. When no other valid session remains, it also marks the human account and its assigned AI player offline. The browser game exposes this operation through the top-edge **Log Out** button and returns to `login.html` after confirmation.
 
 Registered-player requests to `server_game.php` must authenticate the current session in one of three equivalent ways: JSON field `access_token`, HTTP header `Authorization: Bearer <access_token>`, or the `aiciv_access_token` cookie. Every such request also sends `user_id`, which must equal the authenticated human account. `player_id` identifies the acting player: it may equal `user_id`, or it may identify an AI row whose `parent_id` equals `user_id`. All other combinations are rejected. Secret-only test players without a registered account remain available to the server test harness.
 

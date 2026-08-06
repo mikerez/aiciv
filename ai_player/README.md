@@ -1,15 +1,15 @@
 # AI Player Prototype
 
-This folder contains four standalone AI-player engines:
+This folder contains three standalone AI-player engines:
 
 - `strategy`: civilization and force-level strategic decisions.
-- `tactics`: military group decisions.
 - `action`: concrete unit commands.
 - `economics`: city production decisions.
 
-All engines now share one signal contract:
+All engines share the same base records and output contract:
 
-- Input: `1024` FP32 values = `8` objects * `120` floats + `64` generic situation floats.
+- Action and Economics input: `1024` FP32 values = `8` objects * `120` floats + `64` generic situation floats.
+- Strategy input: the same `1024` values followed by a compact `50x50` birdsview, for `3524` FP32 values total.
 - Output: `72` FP32 values = `8` object commands * `8` floats + `8` generic decision floats.
 - Object ids are not included in model inputs or outputs. Browser adapters keep ids in side arrays and map output record order back to game objects.
 - Local map windows use `9x9` tile samples so every object has a real center tile. In object records the local window occupies slots `16..96`; slot `56` is the center tile.
@@ -17,18 +17,20 @@ All engines now share one signal contract:
 - Action output is masked by unit family before argmax: Settlers can only goto,
   wait, or build city; Workers can do worker jobs; Explorers scout/wait;
   military units move, wait, or attack.
-- Strategy output slots `64..67` are production demand percentages for
-  Settlers, Worker, Explorer, and Military. The browser copies them into
-  Economics `general_situation[20..23]` before city production inference.
+- Strategy output slots `64..66` are production demand percentages for
+  Settlers, Worker, and Explorer; slot `67` is science funding. The browser
+  derives remaining Military demand and copies the four demands into Economics
+  `general_situation[20..23]` before city production inference.
 - The network has `8` fully connected tanh layers with widths:
 
 ```text
-1024 -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 160 -> 72
+input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
 ```
 
 The first layer deterministically folds all eight object records into 16-float
-object summaries and carries selected generic situation counters into slots
-`128..148`; the final layer is trained over declared command slots.
+object summaries, carries selected generic situation counters into slots
+`128..167`, and for Strategy carries eight coarse birdsview regions in
+`168..175`; the final layer is trained over declared command slots.
 
 ## Files
 
@@ -52,14 +54,13 @@ object summaries and carries selected generic situation counters into slots
 ```bash
 make -C ai_player
 ./ai_player/train_ai_player --export-situations
-./ai_player/train_ai_player 60 0.08
+./ai_player/train_ai_player
 ```
 
 Normal training writes:
 
 ```text
 ai_player/strategy.db
-ai_player/tactics.db
 ai_player/action.db
 ai_player/economics.db
 ```
@@ -81,28 +82,27 @@ Each `.db` starts with a 72-byte little-endian header:
 
 - `magic[8]`: `AICIVAI\0`
 - `version`: `2`
-- `width`: `1024`
+- `width`: the model input width (`3524` for Strategy, `1024` otherwise)
 - `layer_count`: `8`
 - `activation`: `1` for tanh
 - `weight_layout`: `1` for row-major `[out][in]`
-- `reserved[0]`: input width, `1024`
+- `reserved[0]`: model input width
 - `reserved[1]`: output width, `72`
-- `reserved[2..9]`: output width of each layer: `888, 752, 616, 480, 344, 208, 160, 72`
+- `reserved[2..9]`: output width of each layer: `888, 752, 616, 480, 344, 208, 176, 72`
 
 Each layer then stores:
 
 - `input_width * output_width` FP32 weights, row-major by output neuron.
 - `output_width` FP32 bias values.
 
-The browser loader in `../ai.js` reads version 2 directly and currently uses the
-CPU inferencer for variable-width layers.
+The browser loader in `../ai.js` reads version 2 directly, uses dimension-aware
+WebGPU compute when available, and otherwise uses the CPU inferencer.
 
 ## Browser Adapters
 
-`../ai.js` provides four encoder/decoder pairs:
+`../ai.js` provides three encoder/decoder pairs:
 
 - `buildStrategyInput` / `applyStrategyOutput`
-- `buildTacticsInput` / `applyTacticsOutput`
 - `buildActionInput` / `applyActionOutput`
 - `buildEconomicsInput` / `applyEconomicsOutput`
 

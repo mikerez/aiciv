@@ -202,6 +202,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         }
         _map_terrain_mod[i][j][modifier] = true;
         this.prepareTerrainModifierSprites();
+        if (typeof _economics !== 'undefined' && _economics.registerTerrainImprovement) {
+            _economics.registerTerrainImprovement(modifier, i, j);
+        }
         return true;
     }
 
@@ -220,6 +223,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         }
         _map_terrain_mod[i][j].road = true;
         this.prepareTerrainModifierSprites();
+        if (typeof _economics !== 'undefined' && _economics.registerTerrainImprovement) {
+            _economics.registerTerrainImprovement('road', i, j);
+        }
         return true;
     }
 
@@ -242,6 +248,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         _map_terrain_mod[i][j].irrigation = true;
         _map_terrain_mod[i][j].irrigationCityFood = enablesFood;
         this.prepareTerrainModifierSprites();
+        if (typeof _economics !== 'undefined' && _economics.registerTerrainImprovement) {
+            _economics.registerTerrainImprovement('irrigation', i, j);
+        }
         return true;
     }
 

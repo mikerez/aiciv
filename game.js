@@ -46,6 +46,9 @@ class Unit
         this.cityProperties = null;
         this.production = null;
         this.team = 0;
+        this.health = 100;
+        this.maxHealth = 100;
+        this.experience = 1;
     }
 
     setGoto(i, j)
@@ -123,10 +126,28 @@ class GameState
         this.currentResearch = null;
         this.technologyProgress = {};
         this.science = 0;
-        this.scienceRate = 100;
+        this.scienceRate = 0;
         this.lastScienceIncome = 0;
-        this.money = 0;
+        this.money = 500;
         this.lastMoneyIncome = 0;
+        this.lastGrossMoneyIncome = 0;
+        this.lastMaintenance = 0;
+        this.lastTechnologyExpense = 0;
+        this.lastAvailableMoney = 0;
+        this.lastAccountIncome = 0;
+        this.oneTurnMessage = '';
+        this.grantAllTechnologies();
+    }
+
+    grantAllTechnologies()
+    {
+        for (var name in _technology_table) {
+            this.openTechnologies[name] = true;
+        }
+        this.currentResearch = null;
+        this.scienceRate = 0;
+        this.lastScienceIncome = 0;
+        this.lastTechnologyExpense = 0;
     }
 
     openTechnology(name)
@@ -190,7 +211,7 @@ class GameState
 
     setScienceRate(rate)
     {
-        this.scienceRate = Math.max(0, Math.min(100, Math.round(rate || 0)));
+        this.scienceRate = 0;
         if (typeof updateTechnologyMenu === 'function') {
             updateTechnologyMenu();
         }
@@ -198,17 +219,10 @@ class GameState
 
     researchStatusText()
     {
-        if (this.currentResearch) {
-            var current = this.currentResearch;
-            return 'Research: ' + current + ' '
-                + this.technologyProgressValue(current) + '/' + this.technologyCost(current)
-                + ' +' + this.lastScienceIncome + '/turn'
-                + ' (' + this.scienceRate + '%)';
+        if (typeof _economics !== 'undefined' && _economics.accountStatusText) {
+            return _economics.accountStatusText(this);
         }
-        if (this.hasAvailableResearch()) {
-            return 'Research: choose technology. Science total: ' + this.science;
-        }
-        return 'Research: all available technologies discovered. Science total: ' + this.science;
+        return 'Account: ' + (this.money || 0);
     }
 
     hasAvailableResearch()
@@ -223,33 +237,17 @@ class GameState
 
     ensureResearchSelected()
     {
-        // TECHNOLOGY-RESEARCH-003, rules/technology.md: a turn cannot be processed while research is available but no target is selected.
-        if (this.currentResearch != null && this.canResearch(this.currentResearch)) {
-            return true;
-        }
+        // Technology discovery is temporarily disabled in this multiplayer version.
         this.currentResearch = null;
-        if (!this.hasAvailableResearch()) {
-            return true;
-        }
-        if (typeof _user_types !== 'undefined' && _user_types[_current_user] == 'ai') {
-            for (var name in _technology_table) {
-                if (this.setResearch(name)) {
-                    return true;
-                }
-            }
-        }
-        if (typeof showMainMenu === 'function') {
-            showMainMenu('technology');
-        }
-        if (typeof updateTechnologyMenu === 'function') {
-            updateTechnologyMenu();
-        }
-        return false;
+        return true;
     }
 
     processMoneyIncome(moneyIncome)
     {
         // TECHNOLOGY-MENU-005 and CITY-TURN-004, rules/technology.md and rules/city.md: science rate dedicates city money to research.
+        if (typeof _economics !== 'undefined' && _economics.processTurnIncome) {
+            return _economics.processTurnIncome(this, moneyIncome, this.lastMaintenance || 0);
+        }
         this.lastMoneyIncome = moneyIncome || 0;
         var scienceIncome = Math.floor(this.lastMoneyIncome * this.scienceRate / 100);
         this.lastScienceIncome = scienceIncome;
@@ -294,6 +292,8 @@ var _game_state = new GameState();
 
 var _game_state_by_user = { 0: _game_state };
 
+var _one_turn_message = '';
+
 const _team_colors = ['blue', 'green', 'yellow', 'magenta', 'orange'];
 const _team_color_textures = [900, 901, 902, 903, 904];
 const _team_color_strokes = [
@@ -309,6 +309,7 @@ const _game = new class
 
     add_unit(unit)
     {
+        this.ensureUnitState(unit);
         _units.push(unit);
         if (unit.type == 3 && typeof _city_economy !== 'undefined') {
             _city_economy.ensureCity(unit);
@@ -317,7 +318,19 @@ const _game = new class
 
     del_unit(k)
     {
+        if (k < 0 || k >= _units.length) {
+            return;
+        }
         _units.splice(k, 1);
+        if (_selection == k) {
+            _selection = -1;
+        }
+        else if (_selection > k) {
+            --_selection;
+        }
+        if (typeof _current_user !== 'undefined' && typeof _selection_by_user !== 'undefined') {
+            _selection_by_user[_current_user] = _selection;
+        }
     }
 
     make_unit(make_from, set_coord)
@@ -327,7 +340,24 @@ const _game = new class
         var coord = new Coord()
         Object.assign(coord, set_coord);
         unit.coord = coord;
+        this.ensureUnitState(unit);
         _units.push(unit);
+    }
+
+    ensureUnitState(unit)
+    {
+        if (!unit) {
+            return;
+        }
+        if (unit.maxHealth == undefined) {
+            unit.maxHealth = 100;
+        }
+        if (unit.health == undefined) {
+            unit.health = unit.maxHealth;
+        }
+        if (unit.experience == undefined) {
+            unit.experience = 1;
+        }
     }
 
     createUnit(unitType, coord, productionPoints = 0, team = 0)
@@ -395,6 +425,14 @@ const _game = new class
         return (_map_terrain_tex[i][j]&0x0F) != 0;
     }
 
+    resolveUnitCombat(k, fromCoord)
+    {
+        if (typeof _military === 'undefined' || !_military || !_military.resolveAttackOnTile || !_units[k]) {
+            return null;
+        }
+        return _military.resolveAttackOnTile(_units, k, fromCoord, _units[k].coord);
+    }
+
     sleep(ms)
     {
         return new Promise(function(resolve) {
@@ -414,13 +452,20 @@ const _game = new class
     async makeTurnAnimated(drawControlZones = true, stepDelayMs = 160)
     {
         for (var k=0; k < _units.length; k++) {
+            if (_units[k].noFogReveal) {
+                continue;
+            }
             _map.closeMap(_units[k].coord.i, _units[k].coord.j);
         }
 
         for (var k=0; k < _units.length; k++) {
+            if (_units[k].noFogReveal) {
+                continue;
+            }
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
                 var prev = _units[k].coord;
                 var steps = Math.max(1, _units[k].speed || 1);
+                var attackerRemoved = false;
                 for (var step=0; step < steps; step++) {
                     var stepPrev = _units[k].coord;
                     if (_units[k].gotoPath.length) {
@@ -439,6 +484,16 @@ const _game = new class
                             _units[k].coord = new Coord(ni, nj);
                         }, k, 1);
                     }
+                    var combatResult = _units[k] && _units[k].coord != stepPrev ? this.resolveUnitCombat(k, stepPrev) : null;
+                    if (combatResult && combatResult.combat) {
+                        _fulldraw = 1;
+                        if (combatResult.attackerRemoved) {
+                            attackerRemoved = true;
+                            break;
+                        }
+                        _units[k].gotoPath = [];
+                        _units[k].gotoCoord = null;
+                    }
                     if (_units[k].coord != stepPrev && typeof _current_game != "undefined" && _current_game && _current_game.afterUnitMoved) {
                         _current_game.afterUnitMoved(k, stepPrev, _units[k].coord);
                     }
@@ -449,6 +504,9 @@ const _game = new class
                         }
                         await this.drawTurnAnimationFrame(stepDelayMs);
                     }
+                    if (combatResult && combatResult.combat) {
+                        break;
+                    }
                     if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord != undefined
                         && _units[k].coord.i == _units[k].gotoCoord.i && _units[k].coord.j == _units[k].gotoCoord.j) {
                         _units[k].gotoCoord = null;
@@ -457,6 +515,10 @@ const _game = new class
                     if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord == undefined) {
                         break;
                     }
+                }
+                if (attackerRemoved) {
+                    k--;
+                    continue;
                 }
                 if (_units[k].coord != prev) {
                     _units[k].move_penalty = (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
@@ -488,14 +550,21 @@ const _game = new class
     makeTurn(drawControlZones = true)
     {
         for (var k=0; k < _units.length; k++) {
+            if (_units[k].noFogReveal) {
+                continue;
+            }
             _map.closeMap(_units[k].coord.i, _units[k].coord.j);
         }
 
         for (var k=0; k < _units.length; k++) {
+            if (_units[k].noFogReveal) {
+                continue;
+            }
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
 //console.log("goto: " + k + " (" + _units[k].coord.i + "," + _units[k].coord.j + ") to (" + _units[k].gotoCoord.i + "," + _units[k].gotoCoord.j + ")");
                 var prev = _units[k].coord;
                 var steps = Math.max(1, _units[k].speed || 1);
+                var attackerRemoved = false;
                 for (var step=0; step < steps; step++) {
                     var stepPrev = _units[k].coord;
                     if (_units[k].gotoPath.length) {
@@ -514,8 +583,21 @@ const _game = new class
                             _units[k].coord = new Coord(ni, nj);
                         }, k, 1);
                     }
+                    var combatResult = _units[k] && _units[k].coord != stepPrev ? this.resolveUnitCombat(k, stepPrev) : null;
+                    if (combatResult && combatResult.combat) {
+                        _fulldraw = 1;
+                        if (combatResult.attackerRemoved) {
+                            attackerRemoved = true;
+                            break;
+                        }
+                        _units[k].gotoPath = [];
+                        _units[k].gotoCoord = null;
+                    }
                     if (_units[k].coord != stepPrev && typeof _current_game != "undefined" && _current_game && _current_game.afterUnitMoved) {
                         _current_game.afterUnitMoved(k, stepPrev, _units[k].coord);
+                    }
+                    if (combatResult && combatResult.combat) {
+                        break;
                     }
                     if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord != undefined
                         && _units[k].coord.i == _units[k].gotoCoord.i && _units[k].coord.j == _units[k].gotoCoord.j) {
@@ -525,6 +607,10 @@ const _game = new class
                     if (_units[k].gotoPath.length == 0 && _units[k].gotoCoord == undefined) {
                         break;
                     }
+                }
+                if (attackerRemoved) {
+                    k--;
+                    continue;
                 }
                 if (_units[k].coord != prev) {
                     _units[k].move_penalty = (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
@@ -557,6 +643,9 @@ const _game = new class
     {
         var ctx = _draw.clear();
         for (var k=0; k < _units.length; k++) {
+            if (_units[k].noControlZone) {
+                continue;
+            }
             var strokeStyle = _team_color_strokes[_units[k].team % _team_color_strokes.length];
             _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark, strokeStyle);
             _draw.drawStroke(ctx, _units[k].coord.i+1, _units[k].coord.j, _mark, strokeStyle);
@@ -567,7 +656,17 @@ const _game = new class
             _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
             _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
         }
+        if (typeof _control !== 'undefined' && _control.drawMovementOrders) {
+            _control.drawMovementOrders(ctx);
+        }
         ++_mark;
+    }
+
+    redrawBirdsview()
+    {
+        if (typeof _birdsview != "undefined" && _birdsview && typeof _birdsview.build == "function") {
+            _birdsview.build();
+        }
     }
 
     processCityProduction(layer)
@@ -578,6 +677,9 @@ const _game = new class
         for (var k=0; k < _units.length; k++) {
             var city = _units[k];
             if (city.type != 3 || city.production == null) {
+                continue;
+            }
+            if (!this.canStartCityProduction(city, city.production.unitTypeId)) {
                 continue;
             }
             var unitType = layer.unitTypesById[city.production.unitTypeId];
@@ -599,20 +701,47 @@ const _game = new class
             if (city.production.productionPoints >= unitType.productionCost) {
                 var overflow = city.production.productionPoints - unitType.productionCost;
                 this.createUnit(unitType, city.coord, unitType.productionCost, city.team);
-                city.production = null;
-                city.cityProperties.productionStored += overflow;
+                city.productionDisabled = false;
+                if (Array.isArray(city.productionQueue) && city.productionQueue.length) {
+                    city.productionQueue.shift();
+                }
+                if (city.productionQueue && city.productionQueue.length) {
+                    city.production = new CityProductionState(city.productionQueue[0]);
+                    city.production.productionPoints = overflow;
+                }
+                else {
+                    city.production = null;
+                    city.cityProperties.productionStored += overflow;
+                }
                 _fulldraw = 1;
             }
         }
     }
 
-    applyTurnProcessingRules(layer)
+    canStartCityProduction(city, unitTypeId)
+    {
+        if (unitTypeId == null || unitTypeId == 'none') {
+            return true;
+        }
+        if (typeof _game_state !== 'undefined' && _game_state && _game_state.money < 0) {
+            return false;
+        }
+        return true;
+    }
+
+    applyTurnProcessingRules(layer, forceEndTurn = false)
     {
         if (typeof _game_state !== 'undefined' && !_game_state.ensureResearchSelected()) {
             return false;
         }
-        if (layer && layer.canEndTurnWithCurrentSelection && !layer.canEndTurnWithCurrentSelection()) {
+        if (!forceEndTurn && layer && layer.canEndTurnWithCurrentSelection && !layer.canEndTurnWithCurrentSelection()) {
             return false;
+        }
+        if (typeof _game_state !== 'undefined' && _game_state) {
+            _game_state.oneTurnMessage = '';
+        }
+        if (typeof _one_turn_message !== 'undefined') {
+            _one_turn_message = '';
         }
         if (!layer) {
             this.makeTurn(false);
@@ -635,13 +764,19 @@ const _game = new class
         }
 
         this.makeTurn(false);
+        var cityMoneyIncome = 0;
         if (typeof _city_economy !== 'undefined') {
-            _city_economy.processCities();
+            cityMoneyIncome = _city_economy.processCities();
+        }
+        if (typeof _economics !== 'undefined') {
+            _economics.processTurn(cityMoneyIncome, _game_state, _units);
         }
         if (typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
             _map.processTerrainModifierTurns();
         }
-        this.processCityProduction(layer);
+        if (typeof _server_game === 'undefined') {
+            this.processCityProduction(layer);
+        }
 
         if (layer.applyUnitStateRules) {
             layer.applyUnitStateRules();
@@ -658,17 +793,24 @@ const _game = new class
         if (layer.applyMenuRules) {
             layer.applyMenuRules();
         }
+        this.redrawBirdsview();
         this.redrawControlZones();
         return true;
     }
 
-    async applyTurnProcessingRulesAnimated(layer)
+    async applyTurnProcessingRulesAnimated(layer, forceEndTurn = false)
     {
         if (typeof _game_state !== 'undefined' && !_game_state.ensureResearchSelected()) {
             return false;
         }
-        if (layer && layer.canEndTurnWithCurrentSelection && !layer.canEndTurnWithCurrentSelection()) {
+        if (!forceEndTurn && layer && layer.canEndTurnWithCurrentSelection && !layer.canEndTurnWithCurrentSelection()) {
             return false;
+        }
+        if (typeof _game_state !== 'undefined' && _game_state) {
+            _game_state.oneTurnMessage = '';
+        }
+        if (typeof _one_turn_message !== 'undefined') {
+            _one_turn_message = '';
         }
         if (!layer) {
             await this.makeTurnAnimated(false);
@@ -682,13 +824,19 @@ const _game = new class
             layer.applyTerrainModifierRules();
         }
         await this.makeTurnAnimated(false);
+        var cityMoneyIncome = 0;
         if (typeof _city_economy !== 'undefined') {
-            _city_economy.processCities();
+            cityMoneyIncome = _city_economy.processCities();
+        }
+        if (typeof _economics !== 'undefined') {
+            _economics.processTurn(cityMoneyIncome, _game_state, _units);
         }
         if (typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
             _map.processTerrainModifierTurns();
         }
-        this.processCityProduction(layer);
+        if (typeof _server_game === 'undefined') {
+            this.processCityProduction(layer);
+        }
 
         if (layer.applyUnitStateRules) {
             layer.applyUnitStateRules();
@@ -699,6 +847,7 @@ const _game = new class
         if (layer.applyMenuRules) {
             layer.applyMenuRules();
         }
+        this.redrawBirdsview();
         this.redrawControlZones();
         await this.drawTurnAnimationFrame(120);
         return true;

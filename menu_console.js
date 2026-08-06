@@ -9,6 +9,9 @@ const _menu_console = new class
 
   fontSize()
   {
+    if (document.body && document.body.classList && document.body.classList.contains('phone-ui')) {
+      return 12;
+    }
     return document.body && document.body.classList && document.body.classList.contains('mobile-ui') ? 19 : 11;
   }
 

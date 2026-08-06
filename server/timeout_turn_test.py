@@ -2,7 +2,6 @@
 """Five-player timeout tests for authoritative incremental movement."""
 
 import argparse
-import datetime
 import os
 import pathlib
 import time
@@ -18,9 +17,6 @@ def run(api):
     starts = [(1, 1), (0, 0), (0, 2), (4, 0), (4, 4)]
     units = [unit(f"timeout-{player}", player, *starts[player]) for player in range(5)]
     fixture = bootstrap(units, players=range(5))
-    fixture["turn_started_at"] = (
-        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=14)
-    ).isoformat()
     status, first = api.call(
         "make_turn",
         game,

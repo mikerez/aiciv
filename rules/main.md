@@ -18,7 +18,7 @@
 - `MAIN-MENU-005`: All main menus are hidden by default.
 - `MAIN-MENU-006`: Pressing `Escape` hides all open main menus.
 - `MAIN-MENU-007`: Main menu panels can be opened directly by game events, such as technology discovery.
-- `MAIN-MENU-008`: The Console menu shows verbose AI parsing and application logs for Strategy, Tactics, Action, and Economics decisions.
+- `MAIN-MENU-008`: The Console menu shows verbose AI parsing and application logs for Strategy, Action, and Economics decisions.
 - `MAIN-MENU-009`: Phone UI mode is enabled only for a coarse-pointer or mobile-user-agent device whose physical screen has a short side no larger than `600` CSS pixels and a long side no larger than `1200` CSS pixels. It records the screen and live viewport dimensions, scales the former mobile controls to approximately one half size, and arranges controls within the live viewport; desktop layout remains unchanged.
 - `MAIN-MENU-010`: On phones, the unit action menu occupies half of the vertical space available below the toolbar and scrolls internally; rotation recalculates this height.
 - `MAIN-MOBILE-002`: The white account, economy, and relations statistics lines are drawn below the phone controls and retain their black visibility offset.
@@ -28,6 +28,12 @@
 - `MAIN-MENU-014`: On phones, the Civilizations list expands between the screen safe-area insets and the Civilizations button, using the available width and height with internal scrolling and enlarged player rows.
 - `MAIN-MENU-015`: On phones, a selected tile containing multiple units exposes a Units toggle directly below the white statistics and message lines. Its half-viewport-width selector starts below that toggle, uses a stable pixel height calculated from the live viewport, expands downward, scrolls internally, and retracts after a unit is selected.
 - `MAIN-MENU-016`: With the main toolbar disabled, the live turn countdown is part of the compact top-edge End Turn button. The two top-left status lines are raised approximately 15 pixels toward the screen corner.
+- `MAIN-MOBILE-003`: On phones, touching a Tile with multiple units selects its top unit immediately so a held drag can issue movement. The unit-stack panel opens only when the gesture ends as a tap within 500 milliseconds and without moving at least 12 CSS pixels.
+- `MAIN-MOBILE-004`: The phone unit action panel follows the same confirmed-tap rule as the unit-stack panel. It remains hidden during a held movement-path drag and opens after touch release only for a tap within 500 milliseconds and 12 CSS pixels.
+- `MAIN-MOBILE-005`: After Goto or Road-to is selected from the phone action panel, the next stationary map touch assigns its destination on touch release. Moving at least 12 CSS pixels cancels that destination tap without panning the map or leaving command targeting mode.
+- `MAIN-INPUT-001`: A left click or drag beginning on empty map keeps the current unit selection and all assigned commands unchanged and pans the map. Manual path drawing begins only when the press starts on a movable unit.
+- `MAIN-INPUT-002`: Selecting a unit with an existing Goto destination immediately repaints its movement arrows without changing the stored route. The Action panel shows its authoritative server unit ID for debugging.
+- `MAIN-INPUT-003`: JS owns and browser-persists each complete Goto route. End Turn sends PHP only the next speed-limited atomic movement segment; authoritative updates trim reached client steps but never replace the destination. A rejected atomic movement is shown immediately in a browser popup.
 
 ## Unit And City Structures
 
@@ -35,8 +41,10 @@
 - `MAIN-UNIT-002`: Every unit has a `team` number.
 - `MAIN-UNIT-003`: Team numbers map to team colors: `0` blue, `1` green, `2` yellow, `3` magenta, and `4` orange.
 - `MAIN-UNIT-004`: Each unit is drawn with its team color overlay sprite named `<color_name>.png`.
+- `MAIN-UNIT-005`: Every visible unit or City displays its owning username or AI player name above the sprite. A same-owner stack on one Tile uses one shared label. Labels use a dedicated transparent canvas and small regular-weight text so map-overlay refreshes cannot thicken or blink them.
+- `MAIN-UNIT-006`: One Tile holds at most five living movable units. Cities and terrain-improvement records do not consume this capacity, and military attacks remain legal against full foreign stacks.
 - `MAIN-CITY-001`: City units have `CityProperties`, including `productionPerTurn`.
-- `MAIN-CITY-002`: City production is stored as `CityProductionState(unitTypeId)` with accumulated `productionPoints`.
+- `MAIN-CITY-002`: City production is an ordered `productionQueue`; its first item is represented by `CityProductionState(unitTypeId)` with accumulated `productionPoints`.
 - `MAIN-CITY-003`: City properties include a stored production account used as overflow when a city produces more than the current task requires.
 - `MAIN-CITY-004`: A city can be set to no production; this is different from an unassigned production task.
 - `MAIN-BUILDING-001`: Cities and completed terrain improvements are represented in the unit list for economy accounting.
@@ -44,9 +52,11 @@
 - `MAIN-MILITARY-001`: Combat resolution is implemented by `military.js` and documented in `rules/military.md`.
 - `MAIN-TURN-001`: `_game.applyTurnProcessingRules(layer)` is the main end-turn function.
 - `MAIN-TURN-002`: Main turn processing delegates layer-specific movement, auto-routing, chopping, state, building, and menu rules through layer hooks.
-- `MAIN-TURN-003`: Main turn processing adds city production points each turn and creates the selected unit when accumulated production reaches the unit production cost.
-- `MAIN-TURN-004`: When accumulated city production exceeds the completed unit cost, excess production is saved in the city's stored production account for the next task.
-- `MAIN-TURN-005`: In multiplayer, PHP owns production accumulation and produced-unit creation. The browser displays the synchronized production state and does not create speculative production units locally.
+- `MAIN-TURN-003`: Main turn processing adds city production points to the first backlog item each turn. Completed items are removed in order and the next item becomes active.
+- `MAIN-TURN-004`: When accumulated city production exceeds a completed unit cost, the excess is applied to the next backlog item or saved in the City's stored production account when the backlog is empty.
+- `MAIN-TURN-005`: In multiplayer, PHP owns production accumulation and validates every completion. JS detects a ready City, sends `complete_production`, then applies the returned City and created-unit state.
+- `MAIN-CITY-005`: Clicking a City production choice appends it to the backlog; right-clicking a backlog row removes that item. Clearing production removes the complete backlog without discarding accumulated production.
+- `MAIN-CITY-006`: Ready production pauses without losing points while five movable units occupy the City Tile and retries after capacity can become available.
 - `MAIN-MARKUP-001`: `drawStroke()` control-zone markup is skipped during initial game setup.
 - `MAIN-MARKUP-002`: End-turn processing redraws control-zone markup once after layer hooks finish selection and recentering.
 - `MAIN-MARKUP-003`: Control-zone strokes use the same team color family as the unit team overlay.
@@ -56,14 +66,13 @@
 
 ## AI Player Rules
 
-- `MAIN-AI-001`: AI engine input starts with a shared base of `8` object records of `120` FP32 values each plus `64` FP32 values describing the generic situation. Tactics, Action, and Economics use only this `1024` FP32 base input.
+- `MAIN-AI-001`: AI engine input starts with a shared base of `8` object records of `120` FP32 values each plus `64` FP32 values describing the generic situation. Action and Economics use only this `1024` FP32 base input.
 - `MAIN-AI-002`: AI engine output is unified as `8` object command records of `8` FP32 values each plus `8` FP32 values for generic decisions, for a total output width of `72`.
 - `MAIN-AI-003`: Game object ids are not encoded in neural input or output. Adapters keep ids in side arrays, preserving object order, and map output command record `n` back to input object `n`.
 - `MAIN-AI-004`: Strategy input uses four civilization-status objects and four military-force-weight objects.
 - `MAIN-AI-004A`: Strategy generic inputs `[24..40]` describe visible terrain and resources around owned cities, or around owned settlers when no city exists. They include hills, mountains, grass, water, animals, stone, crops, opened technology rate, visible context coverage, flat land, fresh water, forest, desert/snow, resource coverage, mineral resources, and whether the context anchor is a city or settler.
 - `MAIN-AI-004B`: Strategy appends a `50x50` birdsview projection in slots `1024..3523`. The birdsview is scaled from any world map size and compactly represents local controller civ id, military weight, landscape height, and resources.
 - `MAIN-AI-004C`: Strategy technology decisions use visible landscape and resources as positive and negative evidence. Mining requires substantial hills, mountains, or mineral evidence; a fully observed city/settler context with none of those signals must select a technology supported by the actual terrain or resources instead.
-- `MAIN-AI-005`: Tactics input uses eight friendly/enemy military group objects with group state and movement direction.
 - `MAIN-AI-006`: Action input uses eight own unit objects with unit state and a 9x9 local tile feature window centered on the unit.
 - `MAIN-AI-006A`: Worker Action input field `[11]` summarizes the strongest legal nearby improvement job, including resource-free terrain enhancements. When Action selects Goto, the adapter targets that local job before a Strategy relocation suggestion.
 - `MAIN-AI-007`: Economics input uses eight city objects with city state and a 9x9 local tile window centered on the city and describing landscape and food, production, and money sources.
@@ -77,6 +86,8 @@
 
 ## Server Game Rules
 
-- `MAIN-SERVER-001`: The browser may execute and render speculative local turns, but the versioned server game state is authoritative. Players submit synchronous orders during a 5-second client turn; PHP allows one additional grace second before resolving missing submissions. Concurrent movement follows `rules/server_game.md`.
+- `MAIN-SERVER-001`: The browser may execute and render speculative local turns, but the versioned server game state is authoritative. Players submit synchronous orders during one 6-second turn. Concurrent movement follows `rules/server_game.md`.
 - `MAIN-SERVER-002`: PHP owns world generation and registered-player initialization. A client starts only after login, initializes empty render arrays, and loads its units, state, fog, and visible terrain from the server.
 - `MAIN-SERVER-003`: Authenticated page startup uses `load_full`; turn refreshes use `update_events` before unit and landscape deltas.
+- `MAIN-SERVER-004`: PHP never stores full or remaining movement paths. It validates every current-turn atomic movement before accepting `make_turn`, returning an explicit error instead of truncating, rerouting, or silently dropping an invalid movement.
+- `MAIN-SERVER-005`: Authoritative unit synchronization reconciles existing arrays in place. It never clears or replaces the global unit collection or a live displayed owner array before adding server records. Hidden-AI evaluation reuses those persistent arrays, preserves existing foreign objects, disables foreign pruning, and cannot render while its synchronous map context is active. Fog changes a per-viewer visibility flag on a foreign unit but does not remove and later recreate that object.

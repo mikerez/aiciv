@@ -6,8 +6,11 @@ function hereDoc(f) {
 
 var tennysonQuote = hereDoc(function() {/*!
 <div data-menu-option="city_production_status" style="display:none;color:darkblue;font:bold 15px 'Courier New';margin-bottom:8px;"></div>
+<div data-menu-option="city_production_queue" style="display:none;color:darkblue;font:14px 'Courier New';margin-bottom:8px;"></div>
 <div data-menu-option="city_production_options" style="display:none;color:darkblue;font:15px 'Courier New';margin-bottom:12px;"></div>
 <center><font size="5" color="darkblue" face="Courier New">Action options:</font></center>
+<div data-menu-option="unit_identity" style="display:none;color:darkblue;font:13px 'Courier New';margin:5px 0 4px 0;"></div>
+<div data-menu-option="unit_features" style="display:none;color:darkblue;font:bold 15px 'Courier New';margin:6px 0 8px 0;"></div>
 <font size="5" color="darkblue" face="Courier New">
 <span data-menu-option="goto"><a data-menu-command="goto" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">G</span> Goto</a><br></span>
 <span data-menu-option="fortificate"><a data-menu-command="fortificate" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">F</span> Fortificate</a><br></span>
@@ -33,15 +36,6 @@ var tennysonQuote = hereDoc(function() {/*!
 <span data-menu-option="patrol"><a data-menu-command="patrol" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">L</span> Patrol</a><br></span>
 <span data-menu-option="automate"><a data-menu-command="automate" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">A</span> Automate</a><br></span>
 </font>
-<div data-menu-option="buildings">
-<font size="3" color="white" face="Courier New" style="background-color: rgb(50,50,50)">Buildings:</font><br>
-<div data-menu-option="build_city_hall" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/city.png" width="100" style="vertical-align:middle"> <font size="4">City hall</text></div>
-<div data-menu-option="build_fabric" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/factory.png" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
-<div data-menu-option="build_tank" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/big.png" width="100" style="vertical-align:middle"> <font size="4">Tank!!!!</text></div>
-<div data-menu-option="build_city_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/city.png" width="100" style="vertical-align:middle"> <font size="4">City hall</text></div>
-<div data-menu-option="build_fabric_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/factory.png" width="100" style="vertical-align:middle"> <font size="4">Fabric</text></div>
-<div data-menu-option="build_tank_2" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><img src="images/big.png" width="100" style="vertical-align:middle"> <font size="4">Tank!!!!</text></div>
-</div>
 */});
 
 
@@ -63,6 +57,9 @@ foreground.addEventListener('click', function(event) {
   var command = commandElement ? commandElement.getAttribute('data-menu-command') : null;
   if (command && typeof _current_game !== 'undefined') {
     _current_game.doCommand(command);
+    if (_current_game.dismissActionMenu) {
+      _current_game.dismissActionMenu();
+    }
     if (typeof drawScene === 'function') {
       _fulldraw = 1;
       drawScene(0);

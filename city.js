@@ -70,6 +70,7 @@ const _city_economy = new class
             horses: { food: 0, production: 1, money: 1 },
             iron: { food: 0, production: 2, money: 0 },
             gold: { food: 0, production: 0, money: 3 },
+            gems: { food: 0, production: 0, money: 3 },
         };
     }
 
@@ -86,20 +87,31 @@ const _city_economy = new class
         if (city.economy == undefined || city.economy == null) {
             city.economy = new CityEconomyState();
         }
-        if (city.economy.citizens.length == 0) {
-            this.addCitizen(city);
+        if (city.cityFoodStored != undefined && !city.economy.foodLoadedFromServer) {
+            city.economy.foodStored = Math.max(0, Number(city.cityFoodStored) || 0);
+            city.economy.foodLoadedFromServer = true;
         }
+        var targetPopulation = Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
+        while (city.economy.citizens.length > targetPopulation) {
+            city.economy.citizens.pop();
+        }
+        while (city.economy.citizens.length < targetPopulation) {
+            if (!this.addCitizen(city)) break;
+        }
+        // The server population can exceed the number of locally assignable
+        // worked tiles. Never reduce authoritative population to fit this view.
+        city.cityPopulation = targetPopulation;
         this.updateIncome(city);
     }
 
     citizenGrowthCost(city)
     {
-        return 20 + city.economy.citizens.length*10;
+        return 20 + Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1)*10;
     }
 
     foodConsumption(city)
     {
-        return city.economy.citizens.length;
+        return Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
     }
 
     addCitizen(city)
@@ -109,6 +121,7 @@ const _city_economy = new class
             return false;
         }
         city.economy.citizens.push({ coord: coord, income: this.tileIncomeAt(coord.i, coord.j) });
+        city.cityPopulation = Math.max(Number(city.cityPopulation) || 1, city.economy.citizens.length);
         this.updateIncome(city);
         return true;
     }
@@ -261,7 +274,7 @@ const _city_economy = new class
         city.cityProperties.productionPerTurn = Math.max(1, total.production);
     }
 
-    processCities()
+    processCities(serverTurn)
     {
         var totalMoneyIncome = 0;
         for (var k=0; k < _units.length; k++) {
@@ -270,14 +283,24 @@ const _city_economy = new class
                 continue;
             }
             this.ensureCity(city);
+            if (serverTurn != undefined && city.lastEconomyServerTurn == serverTurn) {
+                totalMoneyIncome += city.economy.lastIncome.money;
+                continue;
+            }
+            if (serverTurn != undefined) city.lastEconomyServerTurn = serverTurn;
             city.economy.foodStored += city.economy.lastIncome.food;
-            while (city.economy.foodStored < 0 && city.economy.citizens.length > 1) {
+            if (serverTurn != undefined && city.economy.foodStored < 0) {
+                // Server multiplayer currently authorizes growth only; do not create a
+                // client-only starvation result that the next snapshot would undo.
+                city.economy.foodStored = 0;
+            }
+            while (serverTurn == undefined && city.economy.foodStored < 0 && city.economy.citizens.length > 1) {
                 city.economy.citizens.pop();
                 city.economy.foodStored = 0;
                 this.updateIncome(city);
                 _fulldraw = 1;
             }
-            if (city.economy.foodStored < 0) {
+            if (serverTurn == undefined && city.economy.foodStored < 0) {
                 if (this.cityStarvesToSettler(k, city)) {
                     k--;
                     _fulldraw = 1;
@@ -285,25 +308,34 @@ const _city_economy = new class
                 }
                 city.economy.foodStored = 0;
             }
-            // CITY-TURN-004, rules/city.md: city money is split by the main science slider.
-            var scienceMoney = 0;
-            if (typeof _game_state !== 'undefined') {
-                scienceMoney = Math.floor(city.economy.lastIncome.money * _game_state.scienceRate / 100);
-            }
-            city.economy.moneyStored += city.economy.lastIncome.money - scienceMoney;
+            // CITY-TURN-004, rules/city.md: city money is reported as gross income; economics.js applies upkeep and science split.
             totalMoneyIncome += city.economy.lastIncome.money;
-            while (city.economy.foodStored >= this.citizenGrowthCost(city)) {
+            if (city.economy.foodStored >= this.citizenGrowthCost(city) && city.serverId
+                && typeof _server_game != 'undefined') {
+                var foodForGrowth = city.economy.foodStored;
+                city.economy.foodStored = 0;
+                city.cityFoodStored = 0;
+                city.growthPending = true;
+                (function(growingCity, reportedFood) {
+                    _server_game.growCity(growingCity, reportedFood).then(function() {
+                        growingCity.growthPending = false;
+                    }).catch(function(error) {
+                        growingCity.economy.foodStored += reportedFood;
+                        growingCity.cityFoodStored = growingCity.economy.foodStored;
+                        growingCity.growthPending = false;
+                        if (_server_game && _server_game.log) _server_game.log('City growth rejected: ' + error.message);
+                    });
+                })(city, foodForGrowth);
+            }
+            else while (city.economy.foodStored >= this.citizenGrowthCost(city)) {
                 city.economy.foodStored -= this.citizenGrowthCost(city);
-                if (!this.addCitizen(city)) {
-                    break;
-                }
+                if (!this.addCitizen(city)) break;
                 _fulldraw = 1;
             }
+            city.cityFoodStored = city.economy.foodStored;
             this.updateIncome(city);
         }
-        if (typeof _game_state !== 'undefined') {
-            _game_state.processMoneyIncome(totalMoneyIncome);
-        }
+        return totalMoneyIncome;
     }
 
     cityStarvesToSettler(k, city)

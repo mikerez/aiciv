@@ -1,11 +1,13 @@
 # AI Player Signal Encoding
 
-All four engines use the same tensor shape.
-
-Input is always `1024` FP32 values:
+All three engines use the same base tensor shape. Action and Economics
+use exactly `1024` FP32 input values:
 
 - `objects[8][120]`, slots `0..959`.
 - `general_situation[64]`, slots `960..1023`.
+
+Strategy appends `birdsview[50][50]` in slots `1024..3523`, so its input width
+is `3524` FP32 values.
 
 Output is always `72` FP32 values:
 
@@ -13,7 +15,7 @@ Output is always `72` FP32 values:
 - `general_decision[8]`, slots `64..71`.
 
 Object ids are not encoded in neural input or output. The browser adapter stores
-unit ids, city ids, group references, and civilization/team ids in side arrays in
+unit ids, city ids, and civilization/team ids in side arrays in
 the same order as the eight object records. Output command record `n` is applied
 to the object id stored for input object record `n`.
 
@@ -22,10 +24,10 @@ unused values are `0.0`.
 
 ## Shared Output
 
-Tactics and Economics interpret `object_command[n][0..7]` as eight command
-scores for object `n`. The highest score is selected. Action uses the same eight
-slots, but the browser masks them by unit family before choosing the highest
-score, so settlers are never allowed to select worker-only commands.
+Economics interprets `object_command[n][0..7]` as eight command scores for
+object `n`. The highest score is selected. Action uses the same eight slots, but
+the browser masks them by unit family before choosing the highest score, so
+settlers are never allowed to select worker-only commands.
 
 Strategy uses a typed prefix in every object command record:
 
@@ -36,20 +38,18 @@ Strategy uses a typed prefix in every object command record:
 - `object_command[n][4..7]`: strategy command scores for object `n`.
 
 The browser adapter finds the Strategy record with maximum military attack
-priority and forwards its four focus fields to Tactics
-`general_situation[23..26]`. For Action, the same focus is converted per unit
-into relative `objects[n][97..100]` fields.
+priority and converts that focus per Action unit into relative
+`objects[n][97..100]` fields.
 
 - Strategy command scores in slots `4..7`: research production, research naval,
   focus anti-mounted units, protect expansion point. Slots `0..3` are focus
   values and are not command candidates.
-- Tactics: attack, defend, flank, retreat, reinforce, siege, capture, hold.
 - Action: goto, wait, build city, road-to, irrigate, chop forest, build
   improvement, attack. Legal masks are: Settlers use goto/wait/build city;
   Workers use goto/wait/road-to/irrigate/chop forest/build improvement;
   Explorers use goto/wait; military units use goto/wait/attack.
-- Economics: produce Settlers, Worker, Explorer, Warrior, Slinger, Archor,
-  Spearman, Galley.
+- Economics: produce Settlers, Explorer, Worker, Warrior, Slinger, Archer,
+  Spearman, or None.
 
 `general_decision[0..7]` is reserved for decisions that are not naturally tied to
 one object record.
@@ -82,6 +82,8 @@ Input:
   resource coverage, `[38]` metal/mineral resources, `[39]` city anchor present,
   and `[40]` settler anchor present. Slot `[32]` lets the model distinguish
   "no visible hills" from "no visible context was encoded."
+- `birdsview[50][50]`, input slots `1024..3523`: visible terrain height,
+  controller, military weight, and resources compacted into one value per cell.
 
 Output:
 
@@ -89,27 +91,15 @@ Output:
   priority, defense priority.
 - `object_command[n][4..7]`: command scores. The browser chooses the highest of
   these command scores, never the four focus fields.
-- `general_decision[0..3]`, output slots `64..67`: production demand
-  percentages for Settlers, Worker, Explorer, and Military. The browser forwards
-  these four values into Economics input slots `general_situation[20..23]`.
+- `general_decision[0..2]`, output slots `64..66`: production demand
+  percentages for Settlers, Worker, and Explorer. The browser derives Military
+  as the remaining demand and forwards all four values into Economics input
+  slots `general_situation[20..23]`.
+- `general_decision[3]`, output slot `67`: science funding ratio.
 - `general_decision[4..7]`, output slots `68..71`: specific technology
   priorities for Mining, Animal Husbandry, Masonry, and Irrigation. The browser
   selects the highest currently researchable technology from this list when an AI
   player has no active research target.
-
-## Tactics Engine
-
-Input:
-
-- `objects[0..7]`: military group records for visible friendly and enemy groups.
-  Fields include relation, unit type mix, count, center x/y, movement direction,
-  hp, attack, defense, speed, range, terrain, road access, and threat.
-- `objects[n][16..96]`: compact 9x9 local landscape window around that group.
-  Slot `objects[n][56]` is the center tile.
-- `general_situation[0..63]`: battle balance, own/enemy military counts, map
-  knowledge, economy, and tactical pressure.
-- `general_situation[23..26]`: forwarded Strategy focus fields in this order:
-  target x, target y, military attack priority, defense priority.
 
 ## Action Engine
 
@@ -158,6 +148,9 @@ Input:
 - `general_situation[20..23]`: Strategy production demand percentages in this
   order: Settlers, Worker, Explorer, Military. Economics uses these values to
   choose which free city should produce which unit type.
+- `general_situation[24..26]`: money account, recent delta, and upkeep pressure.
+- `general_situation[27..34]`, `[35..42]`, and `[43..50]`: Worker-improvement
+  technology flags, matching plot opportunities, and their actionable products.
 
 ## Model Shape
 
@@ -165,9 +158,11 @@ The `.db` network uses eight fully connected layers with tanh activation. Layer
 widths reduce from input to output:
 
 ```text
-1024 -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 160 -> 72
+input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
 ```
 
 The first layer folds all eight object records into compact 16-float summaries
-and carries selected generic situation counters into hidden slots `128..148`.
+and carries selected generic situation counters into hidden slots `128..167`.
+Strategy also pools its birdsview into eight coarse `2x4` regional summaries in
+hidden slots `168..175`.
 The last dense layer is trained over declared command slots.

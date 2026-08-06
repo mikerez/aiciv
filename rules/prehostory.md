@@ -47,13 +47,14 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 
 - `PREHISTORY-BUILD-001`: A selected settler can build a city with the `build_city` command or `B` key.
 - `PREHISTORY-BUILD-002`: Building a city consumes the settler. In a server game, `build_city` deletes the authoritative Settler and creates the City atomically.
-- `PREHISTORY-BUILD-003`: A selected city can choose a unit production option with command `produce_unit:<unitTypeId>`. A server game sends the choice immediately with `select_production` instead of waiting for End Turn.
-- `PREHISTORY-BUILD-004`: Cities show the current production item and remaining turns in the unit menu.
+- `PREHISTORY-BUILD-003`: A selected City appends a unit with `produce_unit:<unitTypeId>`. A server game sends the choice immediately with `select_production`; `produce_unit:none` clears the backlog.
+- `PREHISTORY-BUILD-004`: Cities show current production, remaining turns, and the ordered backlog. Right-clicking a backlog item sends `remove_production` for that position.
 - `PREHISTORY-BUILD-005`: A built city inherits the team number of the settler that built it.
 - `PREHISTORY-BUILD-006`: A produced unit inherits the team number of the city that produced it.
 - `PREHISTORY-BUILD-007`: Water-nature units can be produced only in seaside cities.
 - `PREHISTORY-BUILD-008`: Units with a technology requirement can be produced only after that technology is discovered.
 - `PREHISTORY-BUILD-009`: A built city starts with road and irrigation modifiers on its tile, but the city-created irrigation gives extra city-tile food only if fresh water is in a neighboring tile.
+- `PREHISTORY-BUILD-010`: A City with five movable units on its Tile pauses ready unit production without consuming points or advancing its backlog. It retries after a later turn when capacity may be available.
 
 ## Turn Processing Rules
 
@@ -66,6 +67,10 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-TURN-007`: End Turn selects and centers the view on the first city with no active production before movable unit prompts so the production status shows that it produces nothing.
 - `PREHISTORY-TURN-008`: End Turn is blocked while the current selected movable unit is idle and has no Goto path, route, target, or modified state task.
 - `PREHISTORY-TURN-009`: Expiration of the client turn timer forces End Turn even when the selected unit is idle and has no order; manual End Turn retains the idle-unit prompt.
+
+## Movement Capacity Rules
+
+- `PREHISTORY-MOVE-006`: At most five living movable units may occupy one Tile. Cities and terrain-improvement records do not consume unit-stack capacity. A military unit may still target a full Tile containing a visible foreign defender so the stack limit never prevents an attack.
 
 ## Menu Rules
 
@@ -85,6 +90,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 
 - `PREHISTORY-STATE-001`: Goto enters a map targeting mode, previews arrows until the next map click, and stores that preview path on the unit.
 - `PREHISTORY-STATE-002`: Fortificate changes the unit state to `fortified` and consumes the unit's next turn.
+- `PREHISTORY-WORKER-BUILDING-011`: A Worker may build the Fortification improvement after Construction is known. Fortification is persisted as a Tile modifier and contributes its defence bonus to every defending unit on that Tile.
 - `PREHISTORY-STATE-003`: Wait changes the unit state to `waiting`.
 - `PREHISTORY-STATE-004`: Road, Road-to, Irrigate, Chop forest, Pasture, Cottage, Workshop, Mine, and Fortification are worker-only unit states.
 - `PREHISTORY-STATE-005`: Explore, Patrol, and Automate are auto-routing unit states.
@@ -125,10 +131,11 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 ## Auto-Routing Rules
 
 - `PREHISTORY-AUTO-001`: Explore chooses a new route with 50% probability toward a nearby hidden/black land cell and 50% probability toward the nearest known city or settler; if the preferred target type is unavailable it falls back to the other, then to Automate routing.
-- `PREHISTORY-AUTO-002`: Patrol routes around a remembered patrol origin.
+- `PREHISTORY-AUTO-002`: Patrol attacks the nearest visible unit of a civilization already at war; when no visible enemy exists, it routes around a remembered patrol origin.
 - `PREHISTORY-AUTO-003`: Automate chooses a nearby available land route.
-- `PREHISTORY-AUTO-004`: Auto-routing runs during turn processing when a unit has an auto-routing state and no active route.
-- `PREHISTORY-AUTO-005`: If an Explore unit finishes or loses its route while keeping Explore state, it immediately receives a new Explore route for the next turn.
+- `PREHISTORY-AUTO-004`: Auto-routing runs before authoritative command capture when a unit has a persistent auto-routing mode and no active route.
+- `PREHISTORY-AUTO-005`: Explore, Patrol, and Automate keep their mode after a route ends and immediately calculate their next route.
+- `PREHISTORY-AUTO-006`: Worker Automate checks its current tile and then a 5x5 neighborhood for legal improvements, using the same terrain, resource, technology, and city-tile restrictions as manual commands.
 
 ## Road Building Rules
 
