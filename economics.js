@@ -2,6 +2,8 @@ const _economics = new class
 {
     constructor()
     {
+        this.hudHistory = [];
+        this.lastHudState = null;
         this.terrainImprovementTextures = {
             road: 850,
             irrigation: 851,
@@ -16,7 +18,92 @@ const _economics = new class
             fishing_boats: 866,
             quarry: 867,
             winery: 868,
+            network: 870,
         };
+    }
+
+    resourceImprovementRequirements()
+    {
+        // Mirrored by serverResourceImprovementRequirements() in server_game.php.
+        return {
+            bananas: 'plantation', cattle: 'pasture', copper: 'mine', crabs: 'fishing_boats',
+            deer: 'camp', fish: 'fishing_boats', rice: 'farm', sheep: 'pasture', stone: 'quarry',
+            wheat: 'farm', amber: 'camp', citrus: 'plantation', cotton: 'plantation',
+            dyes: 'plantation', diamonds: 'mine', furs: 'camp', gypsum: 'quarry', honey: 'camp',
+            incense: 'plantation', ivory: 'camp', marble: 'quarry', olives: 'plantation',
+            pearls: 'fishing_boats', salt: 'quarry', silk: 'plantation', silver: 'mine',
+            spices: 'plantation', sugar: 'plantation', tea: 'plantation', turtles: 'fishing_boats',
+            whales: 'fishing_boats', wine: 'winery', horses: 'pasture', iron: 'mine',
+            gold: 'mine', gems: 'mine',
+        };
+    }
+
+    improvementYieldMultipliers()
+    {
+        // Mirrored by serverImprovementYieldMultipliers() in server_game.php.
+        return {
+            road: { money: 1.25 },
+            irrigation: { food: 1.50 },
+            pasture: { food: 1.50, production: 1.25 },
+            farm: { food: 1.75 },
+            plantation: { food: 1.25 },
+            camp: { food: 1.25, production: 1.50 },
+            fishing_boats: { food: 1.50, money: 1.50 },
+            quarry: { production: 2.00 },
+            winery: { food: 1.25 },
+            cottage: { money: 2.00 },
+            workshop: {},
+            mine: { production: 2.00 },
+            fortification: {},
+            network: { food: 1.50 },
+        };
+    }
+
+    resourceYield(resourceId, modifiers)
+    {
+        var table = {
+            bananas:[2,0,0], cattle:[2,1,0], copper:[0,2,1], crabs:[2,0,1], deer:[1,1,0],
+            fish:[1,0,0], rice:[2,0,0], sheep:[1,1,0], stone:[0,2,0], wheat:[2,0,0],
+            amber:[0,0,1], citrus:[1,0,1], cotton:[0,0,1], dyes:[0,0,1], diamonds:[0,0,2],
+            furs:[0,1,1], gypsum:[0,2,0], honey:[1,0,1], incense:[0,0,1], ivory:[0,1,1],
+            marble:[0,2,1], olives:[1,0,1], pearls:[0,0,1], salt:[1,0,1], silk:[0,0,1],
+            silver:[0,0,1], spices:[1,0,1], sugar:[1,0,1], tea:[0,0,1], turtles:[1,0,1],
+            whales:[1,1,1], wine:[1,0,1], horses:[0,1,1], iron:[0,2,0], gold:[0,0,2], gems:[0,0,2]
+        };
+        var values = table[resourceId] || [0,0,0];
+        var result = { food: values[0], production: values[1], money: values[2] };
+        var required = this.resourceImprovementRequirements()[resourceId];
+        if ((required == 'plantation' || required == 'winery') && modifiers && modifiers[required]) {
+            result.money = 2;
+        }
+        return result;
+    }
+
+    applyImprovementYieldMultipliers(income, modifiers, isCityTile, terrainType, hasWaterSource)
+    {
+        modifiers = modifiers || {};
+        if (terrainType == 1 && modifiers.irrigation
+            && (!isCityTile || modifiers.irrigationCityFood)) {
+            income.food += hasWaterSource ? 2 : 1;
+        }
+        var table = this.improvementYieldMultipliers();
+        for (var improvement in table) {
+            if (!modifiers[improvement]) continue;
+            if (improvement == 'irrigation' && isCityTile && !modifiers.irrigationCityFood) continue;
+            if (improvement == 'irrigation' && terrainType == 1) continue;
+            var multipliers = table[improvement];
+            if (improvement == 'cottage') {
+                var age = modifiers.cottageAge || 0;
+                multipliers = { money: age >= 60 ? 4 : (age >= 30 ? 3 : 2) };
+            }
+            for (var field in multipliers) {
+                income[field] = Math.ceil((income[field] || 0) * multipliers[field]);
+            }
+            if (improvement == 'workshop') income.production = 4;
+        }
+        // Sand is intentionally barren. Irrigation creates one food, except a
+        // sand lake (A bit), which supplies two food or four when irrigated.
+        return income;
     }
 
     ensureState(gameState)
@@ -25,6 +112,7 @@ const _economics = new class
             return;
         }
         gameState.money = gameState.money || 0;
+        gameState.food = gameState.food == undefined ? 100 : gameState.food;
         gameState.lastGrossMoneyIncome = gameState.lastGrossMoneyIncome || 0;
         gameState.lastMaintenance = gameState.lastMaintenance || 0;
         gameState.lastTechnologyExpense = gameState.lastTechnologyExpense || 0;
@@ -119,6 +207,10 @@ const _economics = new class
         if (unit.economicClass == 'terrain_improvement'
             && unit.coord
             && this.isCityTile(unit.coord.i, unit.coord.j, unit.team || 0)) {
+            return 0;
+        }
+        if (unit.economicClass == 'terrain_improvement') {
+            // Workshop gold is charged through its parent City's signed income.
             return 0;
         }
         if (unit.maintenanceCost != undefined) {
@@ -318,5 +410,29 @@ const _economics = new class
             + ' (' + deltaText + '/turn, income ' + preview.grossMoney
             + ', upkeep ' + preview.maintenance
             + ', technology ' + preview.technology + ')';
+    }
+
+    updateCounters(gameState, playerId, source)
+    {
+        gameState = gameState || (typeof _game_state == 'undefined' ? null : _game_state);
+        if (!gameState || typeof document == 'undefined') return;
+        this.ensureState(gameState);
+        var food = document.getElementById('foodCounterValue');
+        var gold = document.getElementById('goldCounterValue');
+        var next = {
+            playerId: playerId == undefined ? (typeof _current_user == 'undefined' ? null : _current_user) : playerId,
+            food: Math.floor(gameState.food || 0),
+            gold: Math.floor(gameState.money || 0),
+            source: source || 'unspecified'
+        };
+        if (!this.lastHudState || this.lastHudState.playerId != next.playerId
+            || this.lastHudState.food != next.food || this.lastHudState.gold != next.gold) {
+            this.hudHistory.push(Object.assign({ time: Date.now() }, next));
+            if (this.hudHistory.length > 50) this.hudHistory.shift();
+            if (typeof console != 'undefined' && console.debug) console.debug('[economy HUD]', next);
+            this.lastHudState = next;
+        }
+        if (food) food.textContent = next.food;
+        if (gold) gold.textContent = next.gold;
     }
 };

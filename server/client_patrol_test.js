@@ -57,6 +57,7 @@ const sandbox = {
     },
 };
 vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync('economics.js', 'utf8') + '\nglobalThis.economics = _economics;', sandbox);
 vm.runInContext(fs.readFileSync('game_prehistory.js', 'utf8') + '\nglobalThis.layer = _game_prehistory;', sandbox);
 sandbox.layer.autoRoutePatrol(0);
 assert.ok(patrol.gotoPath.length > 0, 'Patrol must route to a visible enemy');

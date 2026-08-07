@@ -92,6 +92,8 @@ Resources are base map properties stored separately from terrain.
 
 - `RESOURCE-IMPROVEMENT-001`: A resource tile is enhanced by the terrain modifier listed for that resource after the resource has been opened.
 - `RESOURCE-IMPROVEMENT-002`: Farm requires `Irrigation`; Pasture and Camp require `Animal Husbandry`; Fishing Boats requires `Sailing`; Plantation and Winery require `Pottery`; Quarry requires `Masonry`; Mine requires `Mining`.
+- `RESOURCE-IMPROVEMENT-003`: JS and PHP use matching resource-to-improvement tables and reject an economic improvement that does not match the Tile resource.
+- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles; Knight requires both connected Horses and connected Iron.
 
 | Resource | Improvement |
 | --- | --- |

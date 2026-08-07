@@ -25,52 +25,14 @@ const _city_economy = new class
             money5: 865,
         };
         this.tileIncome = {
-            0: { food: 1, production: 0, money: 1 },
-            1: { food: 0, production: 1, money: 1 },
+            0: { food: 2, production: 0, money: 0 },
+            1: { food: 0, production: 1, money: 0 },
             2: { food: 2, production: 0, money: 0 },
             3: { food: 0, production: 1, money: 0 },
             4: { food: 1, production: 2, money: 0 },
             5: { food: 0, production: 3, money: 0 },
             6: { food: 1, production: 1, money: 0 },
             7: { food: 3, production: 0, money: 1 },
-        };
-        this.resourceIncome = {
-            bananas: { food: 2, production: 0, money: 0 },
-            cattle: { food: 2, production: 1, money: 0 },
-            copper: { food: 0, production: 2, money: 1 },
-            crabs: { food: 2, production: 0, money: 1 },
-            deer: { food: 1, production: 1, money: 0 },
-            fish: { food: 2, production: 0, money: 0 },
-            rice: { food: 2, production: 0, money: 0 },
-            sheep: { food: 1, production: 1, money: 0 },
-            stone: { food: 0, production: 2, money: 0 },
-            wheat: { food: 2, production: 0, money: 0 },
-            amber: { food: 0, production: 0, money: 2 },
-            citrus: { food: 1, production: 0, money: 1 },
-            cotton: { food: 0, production: 0, money: 2 },
-            dyes: { food: 0, production: 0, money: 2 },
-            diamonds: { food: 0, production: 0, money: 3 },
-            furs: { food: 0, production: 1, money: 1 },
-            gypsum: { food: 0, production: 2, money: 0 },
-            honey: { food: 1, production: 0, money: 1 },
-            incense: { food: 0, production: 0, money: 2 },
-            ivory: { food: 0, production: 1, money: 2 },
-            marble: { food: 0, production: 2, money: 1 },
-            olives: { food: 1, production: 0, money: 1 },
-            pearls: { food: 0, production: 0, money: 3 },
-            salt: { food: 1, production: 0, money: 1 },
-            silk: { food: 0, production: 0, money: 2 },
-            silver: { food: 0, production: 0, money: 2 },
-            spices: { food: 1, production: 0, money: 2 },
-            sugar: { food: 1, production: 0, money: 1 },
-            tea: { food: 0, production: 0, money: 2 },
-            turtles: { food: 1, production: 0, money: 2 },
-            whales: { food: 1, production: 1, money: 2 },
-            wine: { food: 1, production: 0, money: 2 },
-            horses: { food: 0, production: 1, money: 1 },
-            iron: { food: 0, production: 2, money: 0 },
-            gold: { food: 0, production: 0, money: 3 },
-            gems: { food: 0, production: 0, money: 3 },
         };
     }
 
@@ -102,6 +64,22 @@ const _city_economy = new class
         // worked tiles. Never reduce authoritative population to fit this view.
         city.cityPopulation = targetPopulation;
         this.updateIncome(city);
+        if (city.serverId && city.lastCityIncome) {
+            var authoritative = city.lastCityIncome;
+            city.economy.lastGrossIncome = {
+                food: Number(authoritative.grossFood) || 0,
+                production: Number(authoritative.grossProduction == undefined
+                    ? authoritative.production : authoritative.grossProduction) || 0,
+                money: Number(authoritative.grossMoney == undefined
+                    ? authoritative.money : authoritative.grossMoney) || 0,
+            };
+            city.economy.foodConsumption = Number(authoritative.foodConsumption) || targetPopulation;
+            city.economy.lastIncome = {
+                food: Number(authoritative.food) || 0,
+                production: Number(authoritative.production) || 0,
+                money: Number(authoritative.money) || 0,
+            };
+        }
     }
 
     citizenGrowthCost(city)
@@ -144,33 +122,65 @@ const _city_economy = new class
     findBestFreeTile(city)
     {
         var best = null;
-        var bestScore = -1;
-        for (var radius=0; radius <= 3; radius++) {
-            for (var di=-radius; di <= radius; di++) {
-                for (var dj=-radius; dj <= radius; dj++) {
-                    if (Math.max(Math.abs(di), Math.abs(dj)) != radius) {
-                        continue;
-                    }
-                    var coord = city.coord.add(di, dj);
-                    if (coord.i < 0 || coord.i >= _map_size || coord.j < 0 || coord.j >= _map_size || this.isWorked(city, coord)) {
-                        continue;
-                    }
-                    if ((_map_terrain_tex[coord.i][coord.j]&0x0F) == 0) {
-                        continue;
-                    }
-                    var income = this.tileIncomeAt(coord.i, coord.j);
-                    var score = income.food*4 + income.production*3 + income.money*2;
-                    if (score > bestScore) {
-                        best = coord;
-                        bestScore = score;
-                    }
-                }
+        var bestKey = '';
+        var bestScore = -Infinity;
+        var candidates = this.economicTileCandidates(city);
+        for (var k=0; k < candidates.length; k++) {
+            var coord = candidates[k];
+            if (this.isWorked(city, coord)) {
+                continue;
             }
-            if (best != null) {
-                return best;
+            var income = this.tileIncomeAt(coord.i, coord.j);
+            var score = income.food*4 + income.production*3 + income.money*2;
+            var key = coord.i + ':' + coord.j;
+            if (score > bestScore || (score == bestScore && (best == null || key < bestKey))) {
+                best = coord;
+                bestKey = key;
+                bestScore = score;
             }
         }
         return best;
+    }
+
+    hexDistance(di, dj)
+    {
+        return di*dj >= 0 ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
+    }
+
+    economicTileCandidates(city)
+    {
+        var found = {};
+        var result = [];
+        var add = function(i, j) {
+            if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
+            var key = i + ':' + j;
+            if (found[key]) return false;
+            found[key] = true;
+            result.push(new Coord(i, j));
+            return true;
+        };
+        var queue = [new Coord(city.coord.i, city.coord.j)];
+        var directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]];
+        var visited = {};
+        for (var cursor=0; cursor < queue.length; cursor++) {
+            var point = queue[cursor];
+            if (point.i < 0 || point.i >= _map_size || point.j < 0 || point.j >= _map_size) continue;
+            var pointKey = point.i + ':' + point.j;
+            if (visited[pointKey]) continue;
+            visited[pointKey] = true;
+            var origin = point.i == city.coord.i && point.j == city.coord.j;
+            if (!origin && (!_map_terrain_mod[point.i][point.j] || !_map_terrain_mod[point.i][point.j].road)) continue;
+            add(point.i, point.j);
+            for (var n=0; n < directions.length; n++) {
+                queue.push(new Coord(point.i + directions[n][0], point.j + directions[n][1]));
+            }
+        }
+        for (var di=-3; di <= 3; di++) {
+            for (var dj=-3; dj <= 3; dj++) {
+                if (this.hexDistance(di, dj) <= 3) add(city.coord.i + di, city.coord.j + dj);
+            }
+        }
+        return result;
     }
 
     addIncome(a, b)
@@ -180,66 +190,45 @@ const _city_economy = new class
         a.money += b.money || 0;
     }
 
-    tileIncomeAt(i, j)
+    baseTerrainIncomeAt(i, j)
     {
         var terrain = _map_terrain_tex[i][j];
         var terrainType = terrain&0x0F;
         var income = Object.assign({ food: 0, production: 0, money: 0 }, this.tileIncome[terrainType] || {});
+        if (terrainType == 0 && ((terrain>>4)&0x03) > 1) income.food = 1;
         // CITY-INCOME-007, rules/city.md: A-marked land terrain contains a local water source.
         if ((terrain&0x80) != 0 && terrainType != 0) {
-            income.food += 1;
-            income.money += 1;
+            if (terrainType == 1) income.food = 2;
+            else income.food += 1;
             if (terrainType == 4 || terrainType == 5) {
                 income.production += 1;
             }
         }
-        if (_map_terrain_mod[i][j].irrigation && (!this.isCityTile(i, j) || _map_terrain_mod[i][j].irrigationCityFood)) {
-            income.food += 1;
-        }
-        if (_map_terrain_mod[i][j].road) {
-            income.money += 1;
-        }
-        if (_map_terrain_mod[i][j].pasture) {
-            income.food += 1;
-        }
-        if (_map_terrain_mod[i][j].farm) {
-            income.food += 1;
-        }
-        if (_map_terrain_mod[i][j].plantation) {
-            income.food += 1;
-            income.money += 1;
-        }
-        if (_map_terrain_mod[i][j].camp) {
-            income.food += 1;
-            income.production += 1;
-        }
-        if (_map_terrain_mod[i][j].fishing_boats) {
-            income.food += 1;
-            income.money += 1;
-        }
-        if (_map_terrain_mod[i][j].quarry) {
-            income.production += 2;
-        }
-        if (_map_terrain_mod[i][j].winery) {
-            income.food += 1;
-            income.money += 2;
-        }
-        if (_map_terrain_mod[i][j].cottage) {
-            var cottageAge = _map_terrain_mod[i][j].cottageAge || 0;
-            income.money += cottageAge >= 20 ? 4 : (cottageAge >= 10 ? 3 : 2);
-        }
-        if (_map_terrain_mod[i][j].workshop) {
-            income.production += 2;
-        }
-        if (_map_terrain_mod[i][j].mine) {
-            income.production += 2;
-        }
+        return income;
+    }
+
+    tileIncomeForModifiers(i, j, modifiers)
+    {
+        var terrain = _map_terrain_tex[i][j];
+        var terrainType = terrain&0x0F;
+        var income = this.baseTerrainIncomeAt(i, j);
         var resourceState = _map_resource[i][j];
         if (resourceState && resourceState.type && _resource_types[resourceState.type]) {
             var resource = _resource_types[resourceState.type];
-            this.addIncome(income, this.resourceIncome[resource.id] || { food: 0, production: 0, money: 0 });
+            this.addIncome(income, _economics.resourceYield(resource.id, modifiers));
         }
-        return income;
+        return _economics.applyImprovementYieldMultipliers(
+            income,
+            modifiers,
+            this.isCityTile(i, j),
+            terrainType,
+            (terrain&0x80) != 0
+        );
+    }
+
+    tileIncomeAt(i, j)
+    {
+        return this.tileIncomeForModifiers(i, j, _map_terrain_mod[i][j]);
     }
 
     isCityTile(i, j)
@@ -252,6 +241,44 @@ const _city_economy = new class
         return false;
     }
 
+    parentCityForImprovement(improvement)
+    {
+        var best = null;
+        var bestDistance = Infinity;
+        for (var k=0; k < _units.length; k++) {
+            var city = _units[k];
+            if (!city || city.type != 3 || city.team != improvement.team || !city.coord) continue;
+            if (improvement.parentCityId && city.serverId == improvement.parentCityId) return city;
+            var distance = this.hexDistance(
+                city.coord.i - improvement.coord.i, city.coord.j - improvement.coord.j
+            );
+            var cityId = Number(city.serverId) || k;
+            var bestId = best ? (Number(best.serverId) || _units.indexOf(best)) : Infinity;
+            if (distance < bestDistance || (distance == bestDistance && cityId < bestId)) {
+                best = city;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
+    infrastructureCosts(city)
+    {
+        var costs = { roads: 0, workshops: 0 };
+        for (var k=0; k < _units.length; k++) {
+            var improvement = _units[k];
+            if (!improvement || improvement.type != 4 || !improvement.coord
+                || (improvement.health != undefined && improvement.health <= 0)) continue;
+            var type = improvement.improvementType
+                || String(improvement.unitTypeId || '').replace(/^building_/, '');
+            if (type != 'road' && type != 'workshop') continue;
+            if (this.parentCityForImprovement(improvement) !== city) continue;
+            if (type == 'road') costs.roads++;
+            else costs.workshops++;
+        }
+        return costs;
+    }
+
     updateIncome(city)
     {
         var total = { food: 0, production: 0, money: 0 };
@@ -260,18 +287,21 @@ const _city_economy = new class
             citizen.income = this.tileIncomeAt(citizen.coord.i, citizen.coord.j);
             this.addIncome(total, citizen.income);
         }
+        var infrastructure = this.infrastructureCosts(city);
         city.economy.lastGrossIncome = total;
-        city.economy.foodConsumption = this.foodConsumption(city);
+        city.economy.foodConsumption = this.foodConsumption(city) + infrastructure.workshops;
         city.economy.lastIncome = {
             food: total.food - city.economy.foodConsumption,
-            production: total.production,
-            money: total.money
+            production: Math.max(0, total.production - infrastructure.roads),
+            money: total.money - infrastructure.workshops
         };
         city.economy.turnsToNewCitizen = city.economy.lastIncome.food > 0 ? Math.ceil((this.citizenGrowthCost(city) - city.economy.foodStored)/city.economy.lastIncome.food) : 0;
         if (city.cityProperties == null) {
             city.cityProperties = new CityProperties();
         }
-        city.cityProperties.productionPerTurn = Math.max(1, total.production);
+        if (!city.serverId || city.cityProperties.productionPerTurn == undefined) {
+            city.cityProperties.productionPerTurn = city.economy.lastIncome.production;
+        }
     }
 
     processCities(serverTurn)
@@ -283,6 +313,23 @@ const _city_economy = new class
                 continue;
             }
             this.ensureCity(city);
+            if (serverTurn != undefined) {
+                city.lastEconomyServerTurn = serverTurn;
+                totalMoneyIncome += city.economy.lastIncome.money;
+                if (city.economy.foodStored >= this.citizenGrowthCost(city) && city.serverId
+                    && typeof _server_game != 'undefined' && !city.growthPending) {
+                    city.growthPending = true;
+                    (function(growingCity) {
+                        _server_game.growCity(growingCity, growingCity.economy.foodStored).then(function() {
+                            growingCity.growthPending = false;
+                        }).catch(function(error) {
+                            growingCity.growthPending = false;
+                            if (_server_game && _server_game.log) _server_game.log('City growth rejected: ' + error.message);
+                        });
+                    })(city);
+                }
+                continue;
+            }
             if (serverTurn != undefined && city.lastEconomyServerTurn == serverTurn) {
                 totalMoneyIncome += city.economy.lastIncome.money;
                 continue;
@@ -301,8 +348,7 @@ const _city_economy = new class
                 _fulldraw = 1;
             }
             if (serverTurn == undefined && city.economy.foodStored < 0) {
-                if (this.cityStarvesToSettler(k, city)) {
-                    k--;
+                if (this.cityStarvesToDestroyedCity(city)) {
                     _fulldraw = 1;
                     continue;
                 }
@@ -338,23 +384,31 @@ const _city_economy = new class
         return totalMoneyIncome;
     }
 
-    cityStarvesToSettler(k, city)
+    cityStarvesToDestroyedCity(city)
     {
-        if (typeof _current_game === 'undefined' || !_current_game.unitTypesById || !_current_game.unitTypesById['settlers']) {
-            return false;
-        }
-        var coord = new Coord(city.coord.i, city.coord.j);
-        var team = city.team || 0;
-        _game.del_unit(k);
-        var settler = _game.createUnit(_current_game.unitTypesById['settlers'], coord, 0, team);
-        if (settler) {
-            settler.state = 'ready';
-        }
-        if (_selection == k) {
-            _selection = _units.length - 1;
-        }
-        else if (_selection > k) {
-            _selection--;
+        if (!city || !city.coord) return false;
+        city.type = 4;
+        city.unitTypeId = 'destroyed_city';
+        city.name = 'Destroyed City';
+        city.texture = 869;
+        city.can_move = false;
+        city.attack = 0;
+        city.defense = 0;
+        city.speed = 0;
+        city.viewRange = 0;
+        city.state = 'destroyed';
+        city.destroyedCity = true;
+        city.noControlZone = true;
+        city.noFogReveal = true;
+        city.production = null;
+        city.productionQueue = [];
+        city.economy = null;
+        if (_map_terrain_mod[city.coord.i] && _map_terrain_mod[city.coord.i][city.coord.j]) {
+            var modifiers = _map_terrain_mod[city.coord.i][city.coord.j];
+            for (var key in modifiers) {
+                modifiers[key] = key == 'cottageAge' ? 0 : false;
+            }
+            _map.prepareTerrainModifierSprites();
         }
         return true;
     }

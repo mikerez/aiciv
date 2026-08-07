@@ -14,13 +14,19 @@ const city = {
     can_move: false, health: 100, maxHealth: 100, state: "ready", coord: {i: 3, j: 3},
     economy: {foodStored: 5},
 };
+const warrior = {
+    serverId: 13, serverClientKey: "warrior-13", team: 7, type: 2, unitTypeId: "warrior",
+    can_move: true, speed: 1, health: 100, maxHealth: 100, state: "ready", coord: {i: 3, j: 3},
+    gotoPath: [{i: 4, j: 3}], gotoCoord: {i: 4, j: 3},
+    interactionIntent: "coexist", interactionTargetOwnerId: 8,
+};
 const context = {
     console, Date, JSON, Math, Promise,
     setTimeout, clearTimeout, setInterval, clearInterval,
     document: {getElementById() { return null; }},
-    window: {location: {replace() {}}},
-    _units_by_user: {7: [worker, city]},
-    _units: [worker, city],
+    window: {location: {replace() {}}, alerts: [], alert(message) { this.alerts.push(message); }},
+    _units_by_user: {7: [worker, city, warrior]},
+    _units: [worker, city, warrior],
     _current_user: 7,
     _game_state_by_user: {7: {money: 100}},
     _city_economy: {processCities() {}},
@@ -36,9 +42,13 @@ vm.runInContext(
 
 (async function() {
     const game = context.serverGame;
+    game.setRelationPreference(7, 8, "friend");
     await game.buildImprovement(worker, "cottage");
     await game.selectProduction(city, "warrior");
     const submission = game.captureTurn(7);
+    assert.equal(submission.relations[8], "friend");
+    assert.equal(submission.commands[2].payload.interaction_intent, "coexist");
+    assert.equal(submission.commands[2].payload.target_owner_id, 8);
     assert.deepEqual(
         Array.from(submission.actions, action => action.type),
         ["build", "select_production", "heal_units"],
@@ -64,6 +74,15 @@ vm.runInContext(
     assert.equal(requests[0].action, "make_turn");
     assert.equal(requests[0].body.actions.length, 3);
     assert.equal(worker.pendingImmediateBuild, false);
+    worker.state = "irrigate";
+    worker.pendingImmediateBuild = true;
+    game.applyTurnActionResults(7, [{client_action_id: 99, type: "build", worker_unit_id: 11}], [{
+        client_action_id: 99, type: "build", ok: true,
+        result: {status: "IMPOSSIBLE", reason: "water_not_connected"},
+    }]);
+    assert.equal(worker.state, "ready");
+    assert.equal(worker.pendingImmediateBuild, false);
+    assert.match(context.window.alerts[0], /IMPOSSIBLE: water not connected/);
     console.log("PASS frequent turn actions are aggregated into one make_turn request");
 })().catch(error => {
     console.error(error);

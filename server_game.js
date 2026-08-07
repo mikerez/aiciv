@@ -15,6 +15,8 @@ const _server_game = new class
         this.landscapeRevisionByPlayer = {};
         this.eventIdByPlayer = {};
         this.civilizationsByPlayer = {};
+        this.relationPreferencesByPlayer = {};
+        this.relationPreferencesDirtyByPlayer = {};
         this.initialized = false;
         this.clientUnitSequence = 1;
         this.deadlineAt = null;
@@ -359,6 +361,9 @@ const _server_game = new class
                 destination: unit.gotoCoord
                     ? { i: unit.gotoCoord.i, j: unit.gotoCoord.j }
                     : { i: unit.gotoPath[unit.gotoPath.length - 1].i, j: unit.gotoPath[unit.gotoPath.length - 1].j },
+                interaction_intent: unit.interactionIntent || null,
+                target_owner_id: unit.interactionTargetOwnerId == undefined
+                    ? null : unit.interactionTargetOwnerId,
             });
         }
         try {
@@ -376,6 +381,7 @@ const _server_game = new class
             name: true, texture: true, can_move: true, nature: true, attack: true, defense: true, speed: true,
             viewRange: true, state: true, health: true, maxHealth: true, experience: true, move_penalty: true,
             gotoPath: true, gotoCoord: true, pendingServerPath: true, pendingImmediateBuild: true,
+            interactionIntent: true, interactionTargetOwnerId: true, attackTargetOwnerId: true,
         };
         var result = {};
         for (var key in unit) {
@@ -444,9 +450,15 @@ const _server_game = new class
                     return { i: point.i, j: point.j };
                 });
                 command.payload.client_path_source = 'client_goto_path';
-                if (unit.attackTargetOwnerId != undefined && unit.attackTargetOwnerId != null) {
-                    command.payload.attack_owner_id = unit.attackTargetOwnerId;
-                    unit.attackTargetOwnerId = null;
+                if (unit.interactionIntent == 'attack' || unit.interactionIntent == 'coexist') {
+                    command.payload.interaction_intent = unit.interactionIntent;
+                    if (unit.interactionTargetOwnerId != undefined && unit.interactionTargetOwnerId != null) {
+                        command.payload.target_owner_id = unit.interactionTargetOwnerId;
+                    }
+                }
+                else if (unit.attackTargetOwnerId != undefined && unit.attackTargetOwnerId != null) {
+                    command.payload.interaction_intent = 'attack';
+                    command.payload.target_owner_id = unit.attackTargetOwnerId;
                 }
             }
             else if (unit.pendingImmediateBuild) {
@@ -463,10 +475,15 @@ const _server_game = new class
                     command.payload = { state: unit.state };
                 }
             }
-            if (unit.type == 3) {
-                command.payload.city_food_stored = unit.economy
-                    ? Math.max(0, Number(unit.economy.foodStored) || 0)
-                    : Math.max(0, Number(unit.cityFoodStored) || 0);
+            if (unit.type == 3 && unit.production && typeof _current_game != 'undefined') {
+                var producedType = _current_game.unitTypesById[unit.production.unitTypeId];
+                var currentPoints = Math.max(0, Number(unit.production.productionPoints) || 0);
+                var currentIncome = Math.max(0, Number(unit.cityProperties && unit.cityProperties.productionPerTurn) || 0);
+                if (producedType && currentPoints + currentIncome >= producedType.productionCost) {
+                    command.command = 'produce';
+                    command.payload.unit_type_id = producedType.id;
+                    command.payload.estimated_points_after_turn = currentPoints + currentIncome;
+                }
             }
             commands.push(command);
         }
@@ -479,6 +496,7 @@ const _server_game = new class
             actions: this.drainTurnActions(playerId),
             playerState: typeof _game_state_by_user != 'undefined' && _game_state_by_user[playerId]
                 ? JSON.parse(JSON.stringify(_game_state_by_user[playerId])) : {},
+            relations: this.captureRelations(playerId),
             // Production clients never bootstrap terrain or units. PHP owns both.
             bootstrap: null,
         };
@@ -547,6 +565,7 @@ const _server_game = new class
 
     activeWorkerModifier(unit)
     {
+        if (unit.unitTypeId == 'workboat' && unit.state == 'network') return 'network';
         if (unit.unitTypeId != 'worker') return null;
         if (unit.state == 'road') return 'road';
         if (unit.state == 'irrigate') return 'irrigation';
@@ -641,6 +660,7 @@ const _server_game = new class
             commands: submission.commands,
             actions: submission.actions || [],
             player_state: submission.playerState,
+            relations: submission.relations || {},
             since_unit_revision: this.unitRevisionByPlayer[submission.playerId] || 0,
             since_landscape_revision: this.landscapeRevisionByPlayer[submission.playerId] || 0,
             since_event_id: this.eventIdByPlayer[submission.playerId] || 0,
@@ -649,6 +669,7 @@ const _server_game = new class
         if (submission.bootstrap) body.bootstrap = submission.bootstrap;
         try {
             var result = await this.request('make_turn', body);
+            this.relationPreferencesDirtyByPlayer[submission.playerId] = {};
             this.initialized = true;
             this.applyUnitIdMap(result.unit_id_map);
             this.applyRejectedMovements(submission.playerId, result.rejected_movements || []);
@@ -703,6 +724,19 @@ const _server_game = new class
             if (action.type == 'build' && found) {
                 found.unit.pendingImmediateBuild = false;
                 if (result.ok) found.unit.state = 'ready';
+            }
+            var actionPayload = result.result || {};
+            if (action.type == 'build' && result.ok && actionPayload.status == 'IMPOSSIBLE') {
+                if (found) this.clearRejectedWorkerBuild(playerId, Number(unitId));
+                var impossibleMessage = 'IMPOSSIBLE: ' + String(actionPayload.reason || 'building_not_supported')
+                    .replaceAll('_', ' ');
+                this.log(impossibleMessage + ' for Worker #' + (unitId || '?'));
+                if (playerId == _current_user && !this.hiddenActions) {
+                    if (typeof _one_turn_message != 'undefined') _one_turn_message = impossibleMessage;
+                    if (typeof window != 'undefined' && typeof window.alert == 'function') {
+                        window.alert(impossibleMessage);
+                    }
+                }
             }
             if (action.type == 'build_city' && found) found.unit.serverActionPending = false;
             if (action.type == 'grow_city' && found) {
@@ -801,7 +835,6 @@ const _server_game = new class
             since_unit_revision: unitSince,
             since_landscape_revision: landscapeSince,
             since_event_id: this.eventIdByPlayer[playerId] || 0,
-            complete_ready_productions: true,
         });
         await this.applyCombinedUpdates(playerId, result, options);
         return result;
@@ -1033,14 +1066,52 @@ const _server_game = new class
         return true;
     }
 
+    setRelationPreference(viewerId, otherId, status)
+    {
+        viewerId = Number(viewerId);
+        otherId = Number(otherId);
+        status = String(status || 'neutral').toLowerCase();
+        if (viewerId == otherId || ['neutral', 'friend', 'enemy'].indexOf(status) == -1) return false;
+        if (!this.relationPreferencesByPlayer[viewerId]) this.relationPreferencesByPlayer[viewerId] = {};
+        if (!this.relationPreferencesDirtyByPlayer[viewerId]) this.relationPreferencesDirtyByPlayer[viewerId] = {};
+        this.relationPreferencesByPlayer[viewerId][otherId] = status;
+        this.relationPreferencesDirtyByPlayer[viewerId][otherId] = true;
+        if (typeof _military != 'undefined' && _military.setDirectionalRelation) {
+            _military.setDirectionalRelation(viewerId, otherId, status);
+        }
+        return true;
+    }
+
+    directionalRelation(viewerId, otherId)
+    {
+        viewerId = Number(viewerId);
+        otherId = Number(otherId);
+        if (viewerId == otherId) return 'self';
+        var preferences = this.relationPreferencesByPlayer[viewerId] || {};
+        return preferences[otherId] || 'neutral';
+    }
+
+    captureRelations(playerId)
+    {
+        return Object.assign({}, this.relationPreferencesByPlayer[Number(playerId)] || {});
+    }
+
     updateCivilizations(playerId, civilizations)
     {
         this.civilizationsByPlayer[playerId] = civilizations;
+        if (!this.relationPreferencesByPlayer[playerId]) this.relationPreferencesByPlayer[playerId] = {};
+        var dirty = this.relationPreferencesDirtyByPlayer[playerId] || {};
         if (typeof _military != 'undefined') {
             for (var n=0; n < civilizations.length; n++) {
                 var otherId = parseInt(civilizations[n].player_id, 10);
                 if (otherId == playerId) continue;
-                if (String(civilizations[n].relation).toLowerCase() == 'war') {
+                var directional = String(civilizations[n].relation || 'neutral').toLowerCase();
+                if (!dirty[otherId]) this.relationPreferencesByPlayer[playerId][otherId] = directional;
+                if (_military.setDirectionalRelation) {
+                    _military.setDirectionalRelation(playerId, otherId,
+                        this.relationPreferencesByPlayer[playerId][otherId] || directional);
+                }
+                if (String(civilizations[n].combat_relation).toLowerCase() == 'war') {
                     _military.setWar(playerId, otherId);
                 }
                 else if (_military.setNeutral) {
@@ -1073,6 +1144,27 @@ const _server_game = new class
         return null;
     }
 
+    selectionIdentity(unit)
+    {
+        return unit ? {
+            serverId: unit.serverId ? Number(unit.serverId) : null,
+            clientKey: unit.serverClientKey ? String(unit.serverClientKey) : null,
+            object: unit,
+        } : null;
+    }
+
+    selectionIndex(list, identity)
+    {
+        if (!identity) return -1;
+        for (var index=0; index < list.length; index++) {
+            var unit = list[index];
+            if ((identity.serverId && Number(unit.serverId) == identity.serverId)
+                || (identity.clientKey && unit.serverClientKey == identity.clientKey)
+                || (!identity.serverId && !identity.clientKey && unit === identity.object)) return index;
+        }
+        return -1;
+    }
+
     setUnitVisibilityForViewer(unit, viewerId, visible)
     {
         if (!unit) return;
@@ -1086,11 +1178,26 @@ const _server_game = new class
             pruneForeignUnits: true,
             preserveExistingForeignUnits: false,
         }, options || {});
+        var preserveSelection = typeof _current_user != 'undefined' && _current_user == viewerId;
+        var selectedIdentity = preserveSelection && _selection >= 0 && _units[_selection]
+            ? this.selectionIdentity(_units[_selection]) : null;
+        var groupIdentities = [];
+        if (preserveSelection && typeof _multi_selection != 'undefined') {
+            for (var selectedIndex=0; selectedIndex < _multi_selection.length; selectedIndex++) {
+                var selectedUnit = _units[_multi_selection[selectedIndex]];
+                if (selectedUnit) groupIdentities.push(this.selectionIdentity(selectedUnit));
+            }
+        }
         if (result.player_state && typeof _game_state_by_user != 'undefined') {
             if (!_game_state_by_user[viewerId]) _game_state_by_user[viewerId] = new GameState();
             Object.assign(_game_state_by_user[viewerId], result.player_state);
             _game_state_by_user[viewerId].grantAllTechnologies();
             if (_current_user == viewerId) _game_state = _game_state_by_user[viewerId];
+            var hiddenSnapshot = typeof _multiplayer != 'undefined'
+                && _multiplayer.isHiddenSnapshotActive && _multiplayer.isHiddenSnapshotActive();
+            if (_current_user == viewerId && !hiddenSnapshot && typeof _economics != 'undefined') {
+                _economics.updateCounters(_game_state, viewerId, 'server-unit-update');
+            }
         }
         var updates = result.units || [];
         if (!this.syncedPlayers[viewerId]) {
@@ -1147,6 +1254,10 @@ const _server_game = new class
                 ? new Coord(unit.coord.i, unit.coord.j)
                 : storedRoute && storedRoute.origin
                     ? new Coord(storedRoute.origin.i, storedRoute.origin.j) : null;
+            var localInteractionIntent = ownUnit && unit.interactionIntent
+                ? unit.interactionIntent : storedRoute ? storedRoute.interaction_intent : null;
+            var localInteractionTarget = ownUnit && unit.interactionTargetOwnerId != undefined
+                ? unit.interactionTargetOwnerId : storedRoute ? storedRoute.target_owner_id : null;
             unit.serverId = update.id;
             unit.serverClientKey = update.client_key || unit.serverClientKey;
             unit.team = update.owner_id;
@@ -1186,16 +1297,22 @@ const _server_game = new class
                 }
                 unit.gotoPath = originUnchanged ? localGotoPath : localGotoPath.slice(reachedIndex + 1);
                 unit.gotoCoord = unit.gotoPath.length ? localGotoCoord : null;
+                unit.interactionIntent = unit.gotoPath.length ? localInteractionIntent : null;
+                unit.interactionTargetOwnerId = unit.gotoPath.length ? localInteractionTarget : null;
                 unit.pendingServerPath = [];
                 if (!originUnchanged && reachedIndex < 0) {
                     unit.gotoPath = [];
                     unit.gotoCoord = null;
+                    unit.interactionIntent = null;
+                    unit.interactionTargetOwnerId = null;
                     this.log('Unit #' + update.id + ' route stopped because its server position left the client route.');
                 }
             }
             else if (ownUnit) {
                 unit.gotoPath = [];
                 unit.gotoCoord = null;
+                unit.interactionIntent = null;
+                unit.interactionTargetOwnerId = null;
                 unit.pendingServerPath = [];
             }
             else {
@@ -1252,7 +1369,21 @@ const _server_game = new class
         }
         if (typeof _current_user != 'undefined' && _current_user == viewerId) {
             _units = _units_by_user[viewerId];
-            if (_selection >= _units.length) _selection = -1;
+            _selection = this.selectionIndex(_units, selectedIdentity);
+            if (typeof _multi_selection != 'undefined') {
+                _multi_selection = [];
+                for (var groupIndex=0; groupIndex < groupIdentities.length; groupIndex++) {
+                    var liveGroupIndex = this.selectionIndex(_units, groupIdentities[groupIndex]);
+                    if (liveGroupIndex != -1 && _multi_selection.indexOf(liveGroupIndex) == -1) {
+                        _multi_selection.push(liveGroupIndex);
+                    }
+                }
+                if (_selection == -1 && _multi_selection.length) _selection = _multi_selection[0];
+            }
+            if (typeof _selection_by_user != 'undefined') _selection_by_user[viewerId] = _selection;
+            if (typeof _unit_stack_menu != 'undefined' && _unit_stack_menu.refresh) {
+                _unit_stack_menu.refresh();
+            }
         }
     }
 
