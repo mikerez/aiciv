@@ -19,7 +19,7 @@ constexpr int kLayerCount = 8;
 using InputSignal = std::array<float, kInputWidth>;
 using OutputSignal = std::array<float, kOutputWidth>;
 constexpr std::array<int, kLayerCount + 1> kLayerWidths = {
-    kInputWidth, 888, 752, 616, 480, 344, 208, 176, kOutputWidth
+    kInputWidth, 536, 448, 368, 288, 208, 176, 176, kOutputWidth
 };
 
 enum class EngineKind {

@@ -152,7 +152,7 @@ The `.db` network uses eight fully connected layers with tanh activation. Layer
 widths reduce from input to output:
 
 ```text
-input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
+input -> 536 -> 448 -> 368 -> 288 -> 208 -> 176 -> 176 -> 72
 ```
 
 Strategy and Economics fold object records into compact 16-float summaries and

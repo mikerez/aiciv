@@ -7,6 +7,7 @@ const _ai_player = new class
         this.width = this.baseInputWidth;
         this.outputWidth = 72;
         this.layerCount = 8;
+        this.hiddenLayerWidths = [536, 448, 368, 288, 208, 176, 176];
         this.headerBytes = 72;
         this.models = {};
         this.device = null;
@@ -15,9 +16,9 @@ const _ai_player = new class
         this.gpuReady = false;
         this.statusCallback = null;
         this.defaultModelUrls = {
-            strategy: 'ai_player/strategy.db.gz?v=20260806c',
-            action: 'ai_player/action.db.gz?v=20260806c',
-            economics: 'ai_player/economics.db.gz?v=20260806c',
+            strategy: 'ai_player/strategy.db.gz?v=20260807a',
+            action: 'ai_player/action.db.gz?v=20260807a',
+            economics: 'ai_player/economics.db.gz?v=20260807a',
         };
         this.defaultModelsLoaded = false;
         this.defaultModelLoadPromise = null;
@@ -239,7 +240,7 @@ const _ai_player = new class
 
         var self = this;
         this.backgroundWorkerLoadPromise = new Promise(function(resolve, reject) {
-            var worker = new Worker('ai_worker.js?v=20260805a');
+            var worker = new Worker('ai_worker.js?v=20260807a');
             self.backgroundWorker = worker;
             self.backgroundWorkerRequests.set(0, { resolve: resolve, reject: reject });
             worker.onmessage = function(event) {
@@ -425,6 +426,11 @@ const _ai_player = new class
         }
         if (layerWidths[layerWidths.length - 1] != outputWidth) {
             throw new Error('AI model output width mismatch in ' + url);
+        }
+        for (var hidden = 0; hidden < this.hiddenLayerWidths.length; hidden++) {
+            if (layerWidths[hidden + 1] != this.hiddenLayerWidths[hidden]) {
+                throw new Error('Unsupported AI model hidden layer widths in ' + url);
+            }
         }
 
         var offset = this.headerBytes;

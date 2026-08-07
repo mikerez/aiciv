@@ -473,9 +473,8 @@ DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth, bool
 {
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> small(-0.002f, 0.002f);
-    const std::array<int, kLayerCount + 1> layerWidths = {
-        inputWidth, 888, 752, 616, 480, 344, 208, 176, kOutputWidth
-    };
+    std::array<int, kLayerCount + 1> layerWidths = kLayerWidths;
+    layerWidths[0] = inputWidth;
     for (int layer = 0; layer < kLayerCount; ++layer) {
         const int inWidth = layerWidths[layer];
         const int outWidth = layerWidths[layer + 1];

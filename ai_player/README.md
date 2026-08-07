@@ -21,7 +21,7 @@ All engines share the same base records and output contract:
 - The network has `8` fully connected tanh layers with widths:
 
 ```text
-input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
+input -> 536 -> 448 -> 368 -> 288 -> 208 -> 176 -> 176 -> 72
 ```
 
 For Strategy and Economics, the first layer deterministically folds object
@@ -85,7 +85,7 @@ Each `.db` starts with a 72-byte little-endian header:
 - `weight_layout`: `1` for row-major `[out][in]`
 - `reserved[0]`: model input width
 - `reserved[1]`: output width, `72`
-- `reserved[2..9]`: output width of each layer: `888, 752, 616, 480, 344, 208, 176, 72`
+- `reserved[2..9]`: output width of each layer: `536, 448, 368, 288, 208, 176, 176, 72`
 
 Each layer then stores:
 

@@ -25,6 +25,7 @@ const arrayBuffer = modelBuffer.buffer.slice(modelBuffer.byteOffset, modelBuffer
 const model = vm.runInContext('parseModel', sandbox)('action', 'action.db', arrayBuffer);
 assert.equal(model.inputWidth, 1024);
 assert.equal(model.outputWidth, 72);
+assert.deepEqual(Array.from(model.layers, layer => layer.outputWidth), [536, 448, 368, 288, 208, 176, 176, 72]);
 const output = vm.runInContext('inferCPU', sandbox)(model, new Float32Array(1024));
 assert.equal(output.length, 72);
 for (const value of output) assert.ok(Number.isFinite(value));

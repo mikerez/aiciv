@@ -47,7 +47,7 @@ visible player snapshot
 - `AI-MODEL-001`: Action and Economics input is `1024` FP32 values: `8 * 120` object values followed by `64` general-situation values.
 - `AI-MODEL-002`: Strategy input is `3524` FP32 values: the same `1024`-value base plus `2500` compact birdsview values in slots `1024..3523`.
 - `AI-MODEL-003`: Every output is `72` FP32 values. Economics uses eight 8-value city records; Strategy uses typed focus/command records; Action uses slots `0..7` as complete-candidate scores and reserves slots `8..71`.
-- `AI-MODEL-004`: The eight tanh layer widths are `input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72`. Binary `.db` files use version 2, row-major FP32 weights, and a 72-byte little-endian header.
+- `AI-MODEL-004`: The eight tanh layer widths are `input -> 536 -> 448 -> 368 -> 288 -> 208 -> 176 -> 176 -> 72`. Binary `.db` files use version 2, row-major FP32 weights, and a 72-byte little-endian header.
 - `AI-MODEL-005`: Browser loading validates each model's own input width. Strategy must not be rejected as a base-width model, and base engines must not receive a Strategy-sized tensor.
 
 ## Training And Verification
