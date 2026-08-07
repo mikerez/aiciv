@@ -312,6 +312,34 @@ float actionStateSignal(const std::string& state)
     return static_cast<float>(std::distance(order.begin(), it)) / static_cast<float>(order.size() - 1);
 }
 
+std::string actionImprovementFromText(const std::string& text)
+{
+    const std::vector<std::string> improvements = {
+        "pasture", "farm", "plantation", "camp", "fishing_boats", "quarry",
+        "winery", "cottage", "workshop", "mine", "fortification"
+    };
+    for (const std::string& improvement : improvements) {
+        std::string words = improvement;
+        std::replace(words.begin(), words.end(), '_', ' ');
+        if (text.find(words) != std::string::npos || text.find(improvement) != std::string::npos) {
+            return improvement;
+        }
+    }
+    return "cottage";
+}
+
+struct ActionCandidateTrainingRecord {
+    int command = 1;
+    float dx = 0.0f;
+    float dy = 0.0f;
+    float targetTerrain = 0.25f;
+    float targetResource = 0.0f;
+    float targetCityScore = 0.0f;
+    float targetRelation = 0.0f;
+    std::string state = "ready";
+    bool correct = false;
+};
+
 TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
                                         const std::string& family,
                                         const std::string& title,
@@ -334,19 +362,10 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
                                         float strategyDefensePriority = 0.0f,
                                         float immediateActionSignal = 0.0f)
 {
-    constexpr int object = 0;
-    const int objectBase = object * AI_PLAYER_OBJECT_FLOATS;
-    const int outputBase = object * AI_PLAYER_COMMAND_FLOATS;
     TrainingExample ex;
     ex.input = zeroInputSignal();
     ex.target = zeroOutputSignal();
     ex.explanation = "action " + family + " case: " + title;
-    ex.decisionSlots = actionDecisionSlotsForFamily(outputBase, family);
-    ex.correctSlot = outputBase + commandClass;
-    for (int slot : ex.decisionSlots) {
-        ex.target[slot] = -0.9f;
-    }
-    ex.target[ex.correctSlot] = 0.9f;
 
     const bool militaryFamily = family == "warrior" || family == "slinger"
         || family == "archer" || family == "horseman";
@@ -356,60 +375,101 @@ TrainingExample makeActionUnitSituation(const std::vector<std::string>& labels,
         strategyMilitaryPriority = 0.0f;
         strategyDefensePriority = 0.0f;
     }
-
-    ex.input[objectBase + 0] = unitTypeSignal;
-    ex.input[objectBase + 4] = 1.0f;
-    ex.input[objectBase + 5] = 0.2f;
-    ex.input[objectBase + 6] = 1.0f;
-    ex.input[objectBase + 8] = immediateActionSignal;
-    ex.input[objectBase + 9] = currentTerrain;
-    ex.input[objectBase + 10] = currentResource;
-    ex.input[objectBase + 11] = nearbyResource;
-    ex.input[objectBase + 12] = freshWater;
-    ex.input[objectBase + 13] = cityPlotScore;
-    ex.input[objectBase + 14] = agePressure;
-    ex.input[objectBase + 15] = cityDistance;
     const int localCueSlot = local9SlotFromOld10Slot(cueSlot);
-    ex.input[objectBase + 16 + localCueSlot] = cueValue;
-    ex.input[objectBase + 97] = strategyTargetX;
-    ex.input[objectBase + 98] = strategyTargetY;
-    ex.input[objectBase + 99] = strategyMilitaryPriority;
-    ex.input[objectBase + 100] = strategyDefensePriority;
+    const float targetDx = static_cast<float>(localCueSlot / 9 - 4) / 4.0f;
+    const float targetDy = static_cast<float>(localCueSlot % 9 - 4) / 4.0f;
+    const bool movement = commandClass == 0 || commandClass == 3 || commandClass == 7;
+    const std::string expectedState = commandClass == 1 ? "waiting"
+        : commandClass == 3 ? (title.find("road-to") != std::string::npos ? "road_to" : "road")
+        : commandClass == 4 ? "irrigate"
+        : commandClass == 5 ? "chop_forest"
+        : commandClass == 6 ? actionImprovementFromText(title)
+        : "ready";
+
+    std::vector<ActionCandidateTrainingRecord> candidates;
+    candidates.push_back({commandClass, movement ? targetDx : 0.0f, movement ? targetDy : 0.0f,
+        movement && cueValue >= 0.0f ? std::min(1.0f, cueValue) : currentTerrain,
+        currentResource, cityPlotScore, commandClass == 7 ? -1.0f : 0.0f, expectedState, true});
+    const std::vector<int> legalClasses = actionDecisionSlotsForFamily(0, family);
+    for (int cls : legalClasses) {
+        if (cls == commandClass || candidates.size() >= AI_PLAYER_OBJECT_COUNT) continue;
+        candidates.push_back({cls, cls == 0 || cls == 7 ? -targetDx : 0.0f,
+            cls == 0 || cls == 7 ? -targetDy : 0.0f, currentTerrain, 0.0f,
+            cls == 2 ? cityPlotScore : 0.0f, cls == 7 ? -1.0f : 0.0f,
+            cls == 1 ? "waiting" : cls == 3 ? "road" : cls == 4 ? "irrigate"
+                : cls == 5 ? "chop_forest" : cls == 6 ? "workshop" : "ready", false});
+    }
+    if (commandClass == 6) {
+        const std::vector<std::string> alternatives = {"mine", "cottage", "workshop", "farm", "pasture"};
+        for (const std::string& state : alternatives) {
+            if (state == expectedState || candidates.size() >= AI_PLAYER_OBJECT_COUNT) continue;
+            candidates.push_back({6, 0.0f, 0.0f, currentTerrain, currentResource,
+                cityPlotScore, 0.0f, state, false});
+        }
+    }
+    const std::array<std::pair<float, float>, 8> directions = {{{-1,0},{1,0},{0,-1},{0,1},{-1,-1},{1,1},{-1,1},{1,-1}}};
+    for (size_t d = 0; candidates.size() < AI_PLAYER_OBJECT_COUNT; ++d) {
+        const auto direction = directions[d % directions.size()];
+        candidates.push_back({0, direction.first, direction.second, currentTerrain, 0.0f,
+            0.0f, 0.0f, "ready", false});
+    }
+
+    uint32_t hash = 2166136261u;
+    for (char ch : title) hash = (hash ^ static_cast<unsigned char>(ch)) * 16777619u;
+    const int rotation = static_cast<int>(hash % AI_PLAYER_OBJECT_COUNT);
+    std::rotate(candidates.begin(), candidates.begin() + rotation, candidates.end());
+
+    ex.decisionSlots = slotRange(0, AI_PLAYER_COMMAND_FLOATS);
+    for (int slot : ex.decisionSlots) ex.target[slot] = -0.9f;
+    for (int candidateIndex = 0; candidateIndex < AI_PLAYER_OBJECT_COUNT; ++candidateIndex) {
+        const ActionCandidateTrainingRecord& candidate = candidates[candidateIndex];
+        const int base = candidateIndex * AI_PLAYER_OBJECT_FLOATS;
+        ex.input[base + 0] = unitTypeSignal;
+        ex.input[base + 1] = 0.0f;
+        ex.input[base + 2] = immediateActionSignal;
+        ex.input[base + 3] = 0.0f;
+        ex.input[base + 4] = 0.0f;
+        ex.input[base + 5] = static_cast<float>(candidate.command) / 7.0f;
+        ex.input[base + 6] = candidate.dx;
+        ex.input[base + 7] = candidate.dy;
+        ex.input[base + 8] = movement ? 0.25f : 0.0f;
+        ex.input[base + 9] = candidate.targetTerrain;
+        ex.input[base + 10] = candidate.targetResource;
+        ex.input[base + 11] = candidate.targetCityScore;
+        ex.input[base + 12] = candidate.targetRelation;
+        ex.input[base + 13] = actionStateSignal(candidate.state);
+        ex.input[base + 14] = strategyMilitaryPriority;
+        ex.input[base + 15] = 1.0f;
+        ex.input[base + 16] = agePressure;
+        ex.input[base + 17] = nearbyResource;
+        ex.input[base + 18] = freshWater;
+        ex.input[base + 19] = strategyDefensePriority;
+        ex.input[base + 20] = candidate.dx * strategyTargetX + candidate.dy * strategyTargetY;
+        ex.input[base + 21] = candidate.correct ? cueValue : candidate.targetTerrain;
+        ex.input[base + 22 + localCueSlot] = candidate.correct ? cueValue : currentTerrain;
+        if (candidate.correct) ex.correctSlot = candidateIndex;
+    }
+    ex.target[ex.correctSlot] = 0.9f;
     ex.input[AI_PLAYER_SITUATION_BASE + 0] = 0.50f;
     ex.input[AI_PLAYER_SITUATION_BASE + 5] = 0.35f;
     ex.input[AI_PLAYER_SITUATION_BASE + 8] = 0.25f;
 
-    ex.comments.push_back("Purpose: teach Action engine " + family + " behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.");
-    ex.comments.push_back("Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.");
-    ex.comments.push_back("Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.");
-    ex.comments.push_back("Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.");
-    ex.comments.push_back("Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.");
+    ex.comments.push_back("Purpose: teach Action to score eight complete legal action candidates for one unit.");
+    ex.comments.push_back("Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.");
+    ex.comments.push_back("Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.");
     ex.comments.push_back("Cue meaning: " + cueMeaning + ".");
     ex.comments.push_back("Decision meaning: " + decisionMeaning + ".");
-    addClassificationTargetSlotComments(ex, outputBase, labels, ex.decisionSlots, ex.correctSlot);
-    addSignalComment(ex.comments, "input", objectBase + 0, ex.input[objectBase + 0],
-                     "unit type normalized as unitTypeIndex/32");
-    addSignalComment(ex.comments, "input", objectBase + 1, ex.input[objectBase + 1],
-                     "unit state normalized by the same state order used in ai.js");
-    addSignalComment(ex.comments, "input", objectBase + 7, ex.input[objectBase + 7],
-                     "has active task flag; 1.0 means the unit is already busy and should usually preserve its current order");
-    addSignalComment(ex.comments, "input", objectBase + 9, ex.input[objectBase + 9],
-                     "current tile terrain type normalized as terrainType/8");
-    if (immediateActionSignal > 0.0f) {
-        addSignalComment(ex.comments, "input", objectBase + 8, ex.input[objectBase + 8],
-                         "immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill");
-    }
-    addSignalComment(ex.comments, "input", objectBase + 16 + localCueSlot,
-                     ex.input[objectBase + 16 + localCueSlot],
-                     "main local 9x9 cue driving this action");
-    addSignalComment(ex.comments, "input", objectBase + 99, ex.input[objectBase + 99],
-                     "forwarded strategy military attack priority");
+    ex.comments.push_back("Correct candidate is output[" + std::to_string(ex.correctSlot) + "] = "
+        + labels[commandClass] + "; every other legal candidate target is -0.900000.");
+    (void)cityDistance;
+    (void)immediateActionSignal;
     return ex;
 }
 
 } // namespace
 
-DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth)
+DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth, bool sharedCandidateScorer)
+    : sharedCandidateScorer_(sharedCandidateScorer)
 {
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> small(-0.002f, 0.002f);
@@ -464,6 +524,32 @@ DensePerceptronEngine::DensePerceptronEngine(uint32_t seed, int inputWidth)
             for (int i = 0; i < std::min(inWidth, outWidth); ++i) {
                 layers_[layer].weights[i * inWidth + i] = 1.0f;
             }
+        }
+    }
+    if (sharedCandidateScorer_) {
+        constexpr int candidateFeatures = 22;
+        Layer& first = layers_[0];
+        for (int out = 0; out < AI_PLAYER_OBJECT_COUNT * candidateFeatures; ++out) {
+            float* row = &first.weights[out * first.inputWidth];
+            std::fill(row, row + first.inputWidth, 0.0f);
+            first.bias[out] = 0.0f;
+        }
+        for (int candidate = 0; candidate < AI_PLAYER_OBJECT_COUNT; ++candidate) {
+            for (int feature = 0; feature < candidateFeatures; ++feature) {
+                const int out = candidate * candidateFeatures + feature;
+                first.weights[out * first.inputWidth + candidate * AI_PLAYER_OBJECT_FLOATS + feature] = 1.0f;
+            }
+        }
+        Layer& output = layers_[kLayerCount - 1];
+        std::array<float, candidateFeatures> sharedOutput{};
+        for (float& weight : sharedOutput) weight = small(rng);
+        for (int candidate = 0; candidate < AI_PLAYER_OBJECT_COUNT; ++candidate) {
+            float* row = &output.weights[candidate * output.inputWidth];
+            std::fill(row, row + output.inputWidth, 0.0f);
+            for (int feature = 0; feature < candidateFeatures; ++feature) {
+                row[candidate * candidateFeatures + feature] = sharedOutput[feature];
+            }
+            output.bias[candidate] = 0.0f;
         }
     }
 }
@@ -632,6 +718,142 @@ float DensePerceptronEngine::trainDecisionSlotsFromHidden(const TrainingExample&
     return loss / std::max<size_t>(1, trainSlots.size());
 }
 
+float DensePerceptronEngine::trainSharedCandidateScores(const TrainingExample& example, float learningRate)
+{
+    constexpr int candidates = AI_PLAYER_OBJECT_COUNT;
+    constexpr int features = 22;
+    constexpr int hiddenLayers = kLayerCount - 1;
+    using FeatureVector = std::array<float, features>;
+    using CandidateVectors = std::array<FeatureVector, candidates>;
+    std::array<CandidateVectors, hiddenLayers + 1> activation{};
+    std::array<CandidateVectors, hiddenLayers> delta{};
+
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        for (int feature = 0; feature < features; ++feature) {
+            activation[0][candidate][feature] = example.input[candidate * AI_PLAYER_OBJECT_FLOATS + feature];
+        }
+    }
+    for (int layer = 0; layer < hiddenLayers; ++layer) {
+        const Layer& current = layers_[layer];
+        const int inputStride = layer == 0 ? AI_PLAYER_OBJECT_FLOATS : features;
+        for (int candidate = 0; candidate < candidates; ++candidate) {
+            const int outputBase = candidate * features;
+            const int inputBase = candidate * inputStride;
+            for (int out = 0; out < features; ++out) {
+                float sum = current.bias[outputBase + out];
+                const float* row = &current.weights[(outputBase + out) * current.inputWidth + inputBase];
+                for (int in = 0; in < features; ++in) sum += row[in] * activation[layer][candidate][in];
+                activation[layer + 1][candidate][out] = activate(sum);
+            }
+        }
+    }
+
+    Layer& outputLayer = layers_[kLayerCount - 1];
+    std::array<float, candidates> output{};
+    std::array<float, candidates> outputDelta{};
+    float loss = 0.0f;
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        float sum = outputLayer.bias[candidate];
+        const float* row = &outputLayer.weights[candidate * outputLayer.inputWidth + candidate * features];
+        for (int feature = 0; feature < features; ++feature) {
+            sum += row[feature] * activation[hiddenLayers][candidate][feature];
+        }
+        output[candidate] = activate(sum);
+        const float error = output[candidate] - example.target[candidate];
+        loss += error * error;
+    }
+    const float maxOutput = *std::max_element(output.begin(), output.end());
+    float probabilitySum = 0.0f;
+    std::array<float, candidates> probability{};
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        probability[candidate] = std::exp(output[candidate] - maxOutput);
+        probabilitySum += probability[candidate];
+    }
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        probability[candidate] /= probabilitySum;
+        const float classError = probability[candidate] - (candidate == example.correctSlot ? 1.0f : 0.0f);
+        outputDelta[candidate] = classError * activateDerivativeFromOutput(output[candidate]);
+    }
+
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        const float* outputWeights = &outputLayer.weights[candidate * outputLayer.inputWidth + candidate * features];
+        for (int feature = 0; feature < features; ++feature) {
+            delta[hiddenLayers - 1][candidate][feature] = outputDelta[candidate] * outputWeights[feature]
+                * activateDerivativeFromOutput(activation[hiddenLayers][candidate][feature]);
+        }
+    }
+    for (int layer = hiddenLayers - 2; layer >= 0; --layer) {
+        const Layer& next = layers_[layer + 1];
+        for (int candidate = 0; candidate < candidates; ++candidate) {
+            const int block = candidate * features;
+            for (int in = 0; in < features; ++in) {
+                float sum = 0.0f;
+                for (int out = 0; out < features; ++out) {
+                    sum += next.weights[(block + out) * next.inputWidth + block + in]
+                        * delta[layer + 1][candidate][out];
+                }
+                delta[layer][candidate][in] = sum
+                    * activateDerivativeFromOutput(activation[layer + 1][candidate][in]);
+            }
+        }
+    }
+
+    const float scale = learningRate / static_cast<float>(candidates);
+    FeatureVector outputGradient{};
+    float outputBiasGradient = 0.0f;
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        outputBiasGradient += outputDelta[candidate];
+        for (int feature = 0; feature < features; ++feature) {
+            outputGradient[feature] += outputDelta[candidate] * activation[hiddenLayers][candidate][feature];
+        }
+    }
+    FeatureVector newOutputWeights{};
+    for (int feature = 0; feature < features; ++feature) {
+        newOutputWeights[feature] = outputLayer.weights[feature] - scale * outputGradient[feature];
+    }
+    const float newOutputBias = outputLayer.bias[0] - scale * outputBiasGradient;
+    for (int candidate = 0; candidate < candidates; ++candidate) {
+        float* row = &outputLayer.weights[candidate * outputLayer.inputWidth];
+        for (int feature = 0; feature < features; ++feature) {
+            row[candidate * features + feature] = newOutputWeights[feature];
+        }
+        outputLayer.bias[candidate] = newOutputBias;
+    }
+
+    for (int layer = 0; layer < hiddenLayers; ++layer) {
+        Layer& current = layers_[layer];
+        const int inputStride = layer == 0 ? AI_PLAYER_OBJECT_FLOATS : features;
+        std::array<FeatureVector, features> gradient{};
+        FeatureVector biasGradient{};
+        for (int candidate = 0; candidate < candidates; ++candidate) {
+            for (int out = 0; out < features; ++out) {
+                biasGradient[out] += delta[layer][candidate][out];
+                for (int in = 0; in < features; ++in) {
+                    gradient[out][in] += delta[layer][candidate][out] * activation[layer][candidate][in];
+                }
+            }
+        }
+        std::array<FeatureVector, features> newWeights{};
+        FeatureVector newBias{};
+        for (int out = 0; out < features; ++out) {
+            for (int in = 0; in < features; ++in) {
+                newWeights[out][in] = current.weights[out * current.inputWidth + in] - scale * gradient[out][in];
+            }
+            newBias[out] = current.bias[out] - scale * biasGradient[out];
+        }
+        for (int candidate = 0; candidate < candidates; ++candidate) {
+            const int outputBase = candidate * features;
+            const int inputBase = candidate * inputStride;
+            for (int out = 0; out < features; ++out) {
+                float* row = &current.weights[(outputBase + out) * current.inputWidth];
+                for (int in = 0; in < features; ++in) row[inputBase + in] = newWeights[out][in];
+                current.bias[outputBase + out] = newBias[out];
+            }
+        }
+    }
+    return loss / candidates;
+}
+
 float DensePerceptronEngine::trainFullBackprop(const InputSignal& input, const OutputSignal& target, float learningRate)
 {
     std::vector<std::vector<float>> activations(kLayerCount + 1);
@@ -686,13 +908,37 @@ float DensePerceptronEngine::trainFullBackprop(const InputSignal& input, const O
     return loss / kOutputWidth;
 }
 
-AIEngine::AIEngine(Schema schema, uint32_t seed, int inputWidth)
-    : schema_(std::move(schema)), network_(seed, inputWidth)
+AIEngine::AIEngine(Schema schema, uint32_t seed, int inputWidth, bool sharedCandidateScorer)
+    : schema_(std::move(schema)), network_(seed, inputWidth, sharedCandidateScorer)
 {
 }
 
 TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int epochs, float learningRate, std::ostream& out)
 {
+    if (schema_.kind == EngineKind::Action) {
+        const float candidateLearningRate = std::min(learningRate, 0.005f);
+        TrainingReport report;
+        for (int epoch = 1; epoch <= epochs; ++epoch) {
+            float trainLoss = 0.0f;
+            for (const TrainingExample& example : examples) {
+                trainLoss += network_.trainSharedCandidateScores(example, candidateLearningRate);
+                trainLoss += network_.trainDecisionSlots(example, candidateLearningRate * 4.0f);
+            }
+            report = evaluate(network_, examples);
+            if (epoch == 1 || epoch % 10 == 0 || epoch == epochs) {
+                out << schema_.name << " epoch " << std::setw(3) << epoch
+                    << " train_loss=" << std::fixed << std::setprecision(5) << trainLoss / examples.size()
+                    << " eval_loss=" << report.loss
+                    << " accuracy=" << std::setprecision(1) << report.accuracy * 100.0f << "%\n";
+            }
+            if (report.accuracy >= 0.98f && epoch >= 20) {
+                out << schema_.name << " early stop at epoch " << epoch
+                    << " accuracy=" << std::setprecision(1) << report.accuracy * 100.0f << "%\n";
+                break;
+            }
+        }
+        return report;
+    }
     struct CachedExample {
         const TrainingExample* example = nullptr;
         std::vector<float> hidden;
@@ -746,7 +992,7 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
 }
 
 StrategyEngine::StrategyEngine() : AIEngine(makeStrategySchema(), 11, AI_PLAYER_INPUT_WIDTH) {}
-ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33, AI_PLAYER_BASE_INPUT_WIDTH) {}
+ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33, AI_PLAYER_BASE_INPUT_WIDTH, true) {}
 EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44, AI_PLAYER_BASE_INPUT_WIDTH) {}
 
 Schema makeStrategySchema()
@@ -770,12 +1016,14 @@ Schema makeStrategySchema()
 Schema makeActionSchema()
 {
     Schema schema{EngineKind::Action, "action", {}, {}};
-    addField(schema.input, 0, 959, "units[8][120]", "records",
-             "own unit status without ids: type, state, x/y, hp, moves, relation, task, immediate action signal in slot 8, terrain/resource/fresh-water/city score, age, city distance, 9x9 local tile features in slots 16..96, forwarded relative strategy focus in slots 97..100 for military records or worker-support focus for worker records; slot 101 is nearby worker density");
+    addField(schema.input, 0, 959, "action_candidates[8][120]", "records",
+             "up to eight complete legal candidates for one selected unit: repeated unit type/state/hp/moves/task, command code, exact target dx/dy, path distance, target terrain/resource/city-site/relation facts, exact requested state or improvement, strategy priority, target-local 9x9 window, and forwarded Strategy focus");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
              "owner metrics, map knowledge, economy, science, visible resources, idle counts, military pressure");
-    addField(schema.output, 0, 63, "unit_command[8][8]", "records",
-             "eight unit commands corresponding to the eight input units in order");
+    addField(schema.output, 0, 7, "candidate_score[8]", "scores",
+             "scores for the eight complete action candidates in input order; highest legal score is executed without JS target selection");
+    addField(schema.output, 8, 63, "reserved_action_scores[56]", "reserved",
+             "reserved for future Action candidate batches");
     addField(schema.output, 64, 71, "general_decision[8]", "records",
              "reserved action-level decisions");
     return schema;
@@ -896,7 +1144,7 @@ std::vector<TrainingExample> makeStrategyExamples()
 
         ex.comments.push_back("Purpose: teach Strategy engine that output slots 0..3 of each object record are typed focus values, not command scores.");
         ex.comments.push_back("Output focus fields: output[" + std::to_string(outputBase + 0) + "]=target x, output[" + std::to_string(outputBase + 1) + "]=target y, output[" + std::to_string(outputBase + 2) + "]=military attack priority, output[" + std::to_string(outputBase + 3) + "]=defense priority.");
-        ex.comments.push_back("The browser converts the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.");
+        ex.comments.push_back("The browser forwards the record with maximum military attack priority directly to Action unit slots [97..100] as target dx, target dy, military priority, and defense priority relative to each unit.");
         ex.comments.push_back("Strategy command candidates for this object are only output slots " + std::to_string(outputBase + 4) + ".." + std::to_string(outputBase + 7) + "; first four floats are never selected as commands.");
         ex.comments.push_back("Civilian Action examples interpret high forwarded military priority near their position as danger and choose goto to run out of the focus area.");
         addClassificationTargetComments(ex, outputBase + 4, labels, cls);
@@ -2057,11 +2305,14 @@ std::vector<TrainingExample> makeActionWorkerExamples()
                                                      c.decision,
                                                      0.0f, 0.0f, 0.0f, 0.0f, c.workerSignal);
         ex.explanation = "action worker busy-task case: " + std::string(c.title);
-        ex.input[1] = actionStateSignal(c.state);
-        ex.input[7] = 1.0f;
-        ex.comments.push_back(std::string("Busy-worker preservation rule: input[1]=") + std::to_string(ex.input[1])
+        for (int candidate = 0; candidate < AI_PLAYER_OBJECT_COUNT; ++candidate) {
+            const int base = candidate * AI_PLAYER_OBJECT_FLOATS;
+            ex.input[base + 1] = actionStateSignal(c.state);
+            ex.input[base + 4] = 1.0f;
+        }
+        ex.comments.push_back(std::string("Busy-worker preservation rule: each candidate input[1]=") + std::to_string(ex.input[1])
                               + " encodes state '" + std::string(c.state)
-                              + "' and input[7]=1.0 encodes an active task, so the model must repeat the matching worker command instead of selecting a new one.");
+                              + "' and input[4]=1.0 encodes an active task, so the engine keeps the matching complete action.");
         addSignalComment(ex.comments, "input", 1, ex.input[1],
                          std::string("current worker state '") + c.state + "' normalized by ai.js unitStateCode order");
         addSignalComment(ex.comments, "input", 7, ex.input[7],
@@ -2079,7 +2330,9 @@ std::vector<TrainingExample> makeActionWorkerExamples()
                                                      "center tile plus worker-support focus from Strategy",
                                                      decision,
                                                      0.75f, -0.25f, 0.0f, 0.88f, workerSignal);
-        ex.input[101] = nearbyWorkers;
+        for (int candidate = 0; candidate < AI_PLAYER_OBJECT_COUNT; ++candidate) {
+            ex.input[candidate * AI_PLAYER_OBJECT_FLOATS + 3] = nearbyWorkers;
+        }
         ex.comments.push_back("Worker-support recheck: input[97..98] is the Strategy suggested city direction, input[100] is worker-support priority, and input[101] is nearby friendly worker count normalized so 1.0 means two or more workers are visible in the 9x9 window.");
         addSignalComment(ex.comments, "input", 101, ex.input[101],
                          "nearby friendly worker density; below 1.0 means this worker should keep improving the local city area instead of relocating");
@@ -2455,7 +2708,98 @@ std::vector<TrainingExample> makeEconomicsWorkerExamples()
                     : "Decision: produce Warrior; high Worker demand alone is insufficient when either half of the technology/plot pair is absent.");
                 addClassificationTargetComments(ex, outputBase, labels, command);
                 examples.push_back(ex);
+                if (matchingTechnology && matchingPlot) {
+                    // Keep every individual technology/job pair recognizable
+                    // after adding the simultaneous all-technology cases.
+                    examples.push_back(ex);
+                }
             }
+        }
+    }
+
+    // The multiplayer rules currently open every technology. Train that real
+    // runtime shape explicitly: several simultaneous improvement opportunities
+    // must not add up to an unconditional Worker decision after Workers exist.
+    struct FullTechnologyCase {
+        const char* title;
+        int command;
+        float workers;
+        float population;
+        float food;
+        float production;
+        float money;
+        float frontier;
+        float garrison;
+        float military;
+        float enemyMilitary;
+        std::array<float, 4> demand;
+        float account;
+        float accountDelta;
+        float upkeep;
+        const char* decision;
+    };
+    const std::vector<FullTechnologyCase> fullTechnologyCases = {
+        { "all technologies with no Workers", 2, 0.00f, 0.22f, 0.48f, 0.70f, 0.30f, 0.40f, 0.40f,
+          0.18f, 0.08f, {0.10f, 0.70f, 0.05f, 0.15f}, 0.40f, 0.15f, 0.10f,
+          "produce Worker because a multi-city civilization has no Workers and many unfinished jobs" },
+        { "all technologies with enough Workers and expansion demand", 0, 1.00f, 0.30f, 0.85f, 0.40f, 0.40f, 1.00f, 0.35f,
+          0.25f, 0.05f, {0.75f, 0.05f, 0.05f, 0.15f}, 0.40f, 0.15f, 0.20f,
+          "produce Settlers because enough Workers already exist and Strategy prioritizes expansion" },
+        { "all technologies with enough Workers and exploration demand", 1, 1.00f, 0.20f, 0.45f, 0.35f, 0.75f, 0.45f, 0.30f,
+          0.25f, 0.05f, {0.10f, 0.05f, 0.75f, 0.10f}, 0.40f, 0.15f, 0.20f,
+          "produce Explorer because enough Workers already exist and Strategy prioritizes exploration" },
+        { "all technologies with enough Workers and military demand", 4, 1.00f, 0.25f, 0.45f, 0.85f, 0.30f, 0.65f, 0.20f,
+          0.20f, 0.50f, {0.05f, 0.05f, 0.05f, 0.85f}, 0.40f, 0.15f, 0.25f,
+          "produce Slinger because enough Workers already exist and military pressure dominates" },
+        { "all technologies with enough Workers and stale Worker demand", 4, 1.00f, 0.25f, 0.50f, 0.65f, 0.30f, 0.50f, 0.30f,
+          0.25f, 0.15f, {0.20f, 0.45f, 0.10f, 0.25f}, 0.40f, 0.15f, 0.20f,
+          "produce Slinger because two Workers per city are enough and the next non-Worker pressure is military" },
+        { "all technologies with enough Workers and shrinking account", 7, 1.00f, 0.25f, 0.55f, 0.80f, 0.35f, 0.40f, 0.35f,
+          0.25f, 0.10f, {0.20f, 0.20f, 0.10f, 0.50f}, 0.05f, -0.30f, 0.90f,
+          "produce None because Worker opportunities cannot override a shrinking account" },
+    };
+    for (const FullTechnologyCase& c : fullTechnologyCases) {
+        for (int record = 0; record < AI_PLAYER_OBJECT_COUNT; ++record) {
+            const int objectBase = record * AI_PLAYER_OBJECT_FLOATS;
+            const int outputBase = record * AI_PLAYER_COMMAND_FLOATS;
+            TrainingExample ex;
+            ex.input = zeroInputSignal();
+            ex.target = zeroOutputSignal();
+            ex.decisionSlots = slotRange(outputBase, AI_PLAYER_COMMAND_FLOATS);
+            ex.correctSlot = outputBase + c.command;
+            setOneHot(ex.target, outputBase, AI_PLAYER_COMMAND_FLOATS, c.command);
+            ex.explanation = std::string("economics all-technology balance: ") + c.title;
+
+            ex.input[objectBase + 2] = c.population;
+            ex.input[objectBase + 3] = c.food;
+            ex.input[objectBase + 4] = c.production;
+            ex.input[objectBase + 5] = c.money;
+            ex.input[objectBase + 10] = c.frontier;
+            ex.input[objectBase + 12] = c.garrison;
+            ex.input[objectBase + 13] = 1.0f;
+            ex.input[objectBase + 14] = 1.0f;
+            ex.input[AI_PLAYER_SITUATION_BASE + 1] = 0.25f;
+            ex.input[AI_PLAYER_SITUATION_BASE + 2] = 0.13f;
+            ex.input[AI_PLAYER_SITUATION_BASE + 5] = c.military;
+            ex.input[AI_PLAYER_SITUATION_BASE + 6] = c.enemyMilitary;
+            ex.input[AI_PLAYER_SITUATION_BASE + 14] = 0.25f;
+            ex.input[AI_PLAYER_SITUATION_BASE + 15] = c.workers;
+            ex.input[AI_PLAYER_SITUATION_BASE + 16] = 1.0f;
+            for (int n = 0; n < 4; ++n) {
+                ex.input[AI_PLAYER_SITUATION_BASE + 20 + n] = c.demand[n];
+            }
+            ex.input[AI_PLAYER_SITUATION_BASE + 24] = c.account;
+            ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.accountDelta;
+            ex.input[AI_PLAYER_SITUATION_BASE + 26] = c.upkeep;
+            for (int n = 0; n < 8; ++n) {
+                ex.input[AI_PLAYER_SITUATION_BASE + 27 + n] = 1.0f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 35 + n] = 1.0f;
+                ex.input[AI_PLAYER_SITUATION_BASE + 43 + n] = 1.0f;
+            }
+            ex.comments.push_back("Purpose: train the real multiplayer input where every technology is open and several unfinished Worker jobs are visible together.");
+            ex.comments.push_back(std::string("Decision meaning: ") + c.decision + ".");
+            addClassificationTargetComments(ex, outputBase, labels, c.command);
+            examples.push_back(ex);
         }
     }
     return examples;

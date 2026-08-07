@@ -25,9 +25,8 @@ unused values are `0.0`.
 ## Shared Output
 
 Economics interprets `object_command[n][0..7]` as eight command scores for
-object `n`. The highest score is selected. Action uses the same eight slots, but
-the browser masks them by unit family before choosing the highest score, so
-settlers are never allowed to select worker-only commands.
+object `n`. Action instead interprets output slots `0..7` as scores for its
+eight complete legal input candidates; slots `8..71` are currently reserved.
 
 Strategy uses a typed prefix in every object command record:
 
@@ -44,10 +43,9 @@ priority and converts that focus per Action unit into relative
 - Strategy command scores in slots `4..7`: research production, research naval,
   focus anti-mounted units, protect expansion point. Slots `0..3` are focus
   values and are not command candidates.
-- Action: goto, wait, build city, road-to, irrigate, chop forest, build
-  improvement, attack. Legal masks are: Settlers use goto/wait/build city;
-  Workers use goto/wait/road-to/irrigate/chop forest/build improvement;
-  Explorers use goto/wait; military units use goto/wait/attack.
+- Action candidates may contain goto, wait, build city, road-to, irrigate, chop
+  forest, an exact Worker improvement, or an exact adjacent-enemy attack. JS
+  constructs only legal candidates and does not replace the selected candidate.
 - Economics: produce Settlers, Explorer, Worker, Warrior, Slinger, Archer,
   Spearman, or None.
 
@@ -105,25 +103,21 @@ Output:
 
 Input:
 
-- `objects[0..7]`: own unit records. Fields are type, state, x/y, hp, moves left,
-  owner relation, task flag, carried resource, current terrain, current resource
-  value, nearby resource score, fresh-water flag, city plot score, unit age, and
-  nearest friendly city distance.
-- `objects[n][16..96]`: 9x9 local tile window around the unit. Slot
-  `objects[n][56]` is the center tile under the unit. Each tile value
-  combines terrain, visible resource, roads, irrigation, A-bit land water source,
-  and friendly/enemy unit presence.
-- `objects[n][97..100]`: forwarded Strategy focus fields in this order: target
-  dx, target dy, military attack priority, defense priority. The dx/dy values
-  are relative to this unit and normalized by the 9x9 window radius of 4 tiles.
-  Military units may use these as convergence goals; civil units use high
-  military priority near them as danger and choose `goto` to run out of the
-  focus area.
+- One inference evaluates one rotating owned unit. `objects[0..7]` are complete
+  legal candidates for that unit.
+- Candidate slots `0..21` contain unit type/state/task, immediate-action and
+  nearby-Worker facts, command code, exact target `dx/dy`, path distance, target
+  terrain/resource/site/relation, exact requested state or improvement,
+  Strategy attack/defense/alignment, Settler age, nearby resources, fresh water,
+  validity, and the packed target tile signal.
+- Candidate slots `22..102` contain the `9x9` visible map window centered on the
+  candidate target. The remaining candidate slots are reserved.
 - `general_situation[0..63]`: owner economy, science, known-map ratio, visible
   resources, and idle unit counts.
 
-Action object records are units only. Cities are excluded here and controlled by
-the Economics engine.
+Output slots `0..7` score candidates in the same order. The selected record
+already identifies the destination, enemy, settlement tile, or Worker
+improvement. Cities remain controlled by Economics.
 
 ## Economics Engine
 
@@ -161,8 +155,9 @@ widths reduce from input to output:
 input -> 888 -> 752 -> 616 -> 480 -> 344 -> 208 -> 176 -> 72
 ```
 
-The first layer folds all eight object records into compact 16-float summaries
-and carries selected generic situation counters into hidden slots `128..167`.
+Strategy and Economics fold object records into compact 16-float summaries and
+carry selected generic counters into hidden slots `128..167`. Action uses eight
+tied 22-value candidate representations across all 176 bottleneck values, then
+learns both a shared candidate scorer and an eight-candidate comparison head.
 Strategy also pools its birdsview into eight coarse `2x4` regional summaries in
 hidden slots `168..175`.
-The last dense layer is trained over declared command slots.

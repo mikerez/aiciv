@@ -59,7 +59,8 @@ struct TrainingReport {
 
 class DensePerceptronEngine {
 public:
-    explicit DensePerceptronEngine(uint32_t seed = 1, int inputWidth = kBaseInputWidth);
+    explicit DensePerceptronEngine(uint32_t seed = 1, int inputWidth = kBaseInputWidth,
+                                   bool sharedCandidateScorer = false);
 
     OutputSignal forward(const InputSignal& input) const;
     std::vector<float> hiddenBeforeLast(const InputSignal& input) const;
@@ -72,6 +73,7 @@ public:
     float trainDecisionSlots(const TrainingExample& example, float learningRate);
     float trainDecisionSlotsFromHidden(const TrainingExample& example, const std::vector<float>& hidden,
                                        float learningRate);
+    float trainSharedCandidateScores(const TrainingExample& example, float learningRate);
 
     // Generic dense back-propagation implementation for all eight dense layers.
     // It is intentionally simple and slow; use for experiments, not the demo loop.
@@ -86,6 +88,7 @@ private:
     };
 
     std::array<Layer, kLayerCount> layers_;
+    bool sharedCandidateScorer_ = false;
 
     static float activate(float x);
     static float activateDerivativeFromOutput(float y);
@@ -94,7 +97,8 @@ private:
 
 class AIEngine {
 public:
-    AIEngine(Schema schema, uint32_t seed, int inputWidth = kBaseInputWidth);
+    AIEngine(Schema schema, uint32_t seed, int inputWidth = kBaseInputWidth,
+             bool sharedCandidateScorer = false);
     virtual ~AIEngine() = default;
 
     const Schema& schema() const { return schema_; }

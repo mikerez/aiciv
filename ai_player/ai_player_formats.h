@@ -17,10 +17,15 @@
  * keeps ids in side arrays in the same order as object records, then maps each
  * output command record back to the corresponding unit/city/group/civilization.
  *
- * All four engines use the same output shape:
+ * All three engines use the same output shape:
  * - 8 command records, 8 FP32 values each: 64 floats.
  * - 8 generic decision values: 8 floats.
  * - Total output: 72 FP32 values.
+ *
+ * Action interprets its eight input object records as eight complete legal
+ * candidates for one selected unit. action output[0..7] score those candidates
+ * in order; the remaining outputs are reserved. A candidate includes the exact
+ * command, target displacement, target facts, and requested state/improvement.
  *
  * Strategy is the one exception to the command-record interpretation:
  * object_command[n][0..3] are typed focus fields:
@@ -124,31 +129,32 @@ typedef struct AIPlayerStrategyForceObject {
     float reserved[108];
 } AIPlayerStrategyForceObject;
 
-typedef struct AIPlayerActionUnitObject {
+typedef struct AIPlayerActionCandidateObject {
     float type;
     float state;
-    float x;
-    float y;
-    float hp;
-    float moves_left;
-    float owner_relation;
+    float immediate_action_signal;
+    float nearby_worker_density;
     float task;
-    float immediate_action_signal; /* workers: 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military: 0.70 adjacent enemy, 0.50 defensive hill */
-    float current_terrain;
-    float current_resource_value;
+    float command;
+    float target_dx;
+    float target_dy;
+    float path_distance;
+    float target_terrain;
+    float target_resource_value;
+    float target_city_plot_score;
+    float target_relation;
+    float requested_state_or_improvement;
+    float strategy_military_priority;
+    float valid;
+    float settler_age;
     float nearby_resource_score;
     float fresh_water_nearby;
-    float city_plot_score;
-    float turns_since_created;
-    float distance_to_nearest_friendly_city;
-    float local_tile_feature[AI_PLAYER_LOCAL_WINDOW_FLOATS]; /* 9x9 terrain/resource/modifier/unit signal; slot 40 is the unit tile */
-    float strategy_target_dx;
-    float strategy_target_dy;
-    float strategy_military_attack_priority;
     float strategy_defense_or_worker_support_priority;
-    float nearby_worker_density;
-    float reserved[18];
-} AIPlayerActionUnitObject;
+    float strategy_alignment;
+    float packed_target_tile_signal;
+    float local_tile_feature[AI_PLAYER_LOCAL_WINDOW_FLOATS]; /* 9x9 window around the candidate target */
+    float reserved[17];
+} AIPlayerActionCandidateObject;
 
 typedef struct AIPlayerEconomicsCityObject {
     float x;
@@ -291,7 +297,7 @@ static_assert(sizeof(AIPlayerStrategyInput) == AI_PLAYER_INPUT_WIDTH * sizeof(fl
 static_assert(sizeof(AIPlayerUnifiedOutput) == AI_PLAYER_OUTPUT_WIDTH * sizeof(float), "AI output must be 72 floats");
 static_assert(sizeof(AIPlayerStrategyCivilizationObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy civ object must be 120 floats");
 static_assert(sizeof(AIPlayerStrategyForceObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy force object must be 120 floats");
-static_assert(sizeof(AIPlayerActionUnitObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "action unit object must be 120 floats");
+static_assert(sizeof(AIPlayerActionCandidateObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "action candidate object must be 120 floats");
 static_assert(sizeof(AIPlayerEconomicsCityObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "economics city object must be 120 floats");
 static_assert(sizeof(AIPlayerEconomicsSituation) == AI_PLAYER_SITUATION_FLOATS * sizeof(float), "economics situation must be 64 floats");
 static_assert(sizeof(AIPlayerStrategySituation) == AI_PLAYER_SITUATION_FLOATS * sizeof(float), "strategy situation must be 64 floats");

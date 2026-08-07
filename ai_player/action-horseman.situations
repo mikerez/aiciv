@@ -2,124 +2,56 @@
 # Machine row format: correct_output_slot|candidate_output_slots|nonzero_input_slots|target_output_slots|short_description
 # Comment blocks explain the game meaning of each slot used by the following machine row.
 # situation 0: action horseman case: horseman sees exposed enemy on grass
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: enemy unit is visible on open terrain.
 # Decision meaning: attack because mounted units should exploit open-field targets.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[7] = attack.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[7] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
-# input[8] = 0.700000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
-# input[58] = -0.150000 means main local 9x9 cue driving this action.
-# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Correct candidate is output[7] = attack; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-7|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,8:0.700000,9:0.250000,15:0.500000,58:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,7:0.900000|action horseman case: horseman sees exposed enemy on grass
+7|0,1,2,3,4,5,6,7|0:0.250000,2:0.700000,7:-0.500000,8:0.250000,9:0.250000,15:1.000000,21:0.250000,64:0.250000,120:0.250000,122:0.700000,125:0.142857,128:0.250000,129:0.250000,133:0.050000,135:1.000000,141:0.250000,184:0.250000,240:0.250000,242:0.700000,246:-1.000000,248:0.250000,249:0.250000,255:1.000000,261:0.250000,304:0.250000,360:0.250000,362:0.700000,366:1.000000,368:0.250000,369:0.250000,375:1.000000,381:0.250000,424:0.250000,480:0.250000,482:0.700000,487:-1.000000,488:0.250000,489:0.250000,495:1.000000,501:0.250000,544:0.250000,600:0.250000,602:0.700000,607:1.000000,608:0.250000,609:0.250000,615:1.000000,621:0.250000,664:0.250000,720:0.250000,722:0.700000,726:-1.000000,727:-1.000000,728:0.250000,729:0.250000,735:1.000000,741:0.250000,784:0.250000,840:0.250000,842:0.700000,845:1.000000,847:0.500000,848:0.250000,849:0.250000,852:-1.000000,855:1.000000,861:-0.150000,904:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|action horseman case: horseman sees exposed enemy on grass
 # situation 1: action horseman case: horseman sees enemy far across plains
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: enemy unit is visible farther across open land.
 # Decision meaning: goto because horseman speed closes distance quickly.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[0] = goto.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
-# input[59] = -0.150000 means main local 9x9 cue driving this action.
-# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Correct candidate is output[7] = goto; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-0|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,9:0.250000,15:0.500000,59:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,7:-0.900000|action horseman case: horseman sees enemy far across plains
+7|0,1,2,3,4,5,6,7|0:0.250000,5:0.142857,8:0.250000,9:0.250000,13:0.050000,15:1.000000,21:0.250000,65:0.250000,120:0.250000,125:1.000000,127:-0.750000,128:0.250000,129:0.250000,132:-1.000000,135:1.000000,141:0.250000,185:0.250000,240:0.250000,246:-1.000000,248:0.250000,249:0.250000,255:1.000000,261:0.250000,305:0.250000,360:0.250000,366:1.000000,368:0.250000,369:0.250000,375:1.000000,381:0.250000,425:0.250000,480:0.250000,487:-1.000000,488:0.250000,489:0.250000,495:1.000000,501:0.250000,545:0.250000,600:0.250000,607:1.000000,608:0.250000,609:0.250000,615:1.000000,621:0.250000,665:0.250000,720:0.250000,726:-1.000000,727:-1.000000,728:0.250000,729:0.250000,735:1.000000,741:0.250000,785:0.250000,840:0.250000,847:0.750000,848:0.250000,849:0.250000,855:1.000000,861:-0.150000,905:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:0.900000|action horseman case: horseman sees enemy far across plains
 # situation 2: action horseman case: horseman sees hills but no enemy
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: nearby hill blocks movement but offers observation.
 # Decision meaning: goto hill only when no exposed enemy is encoded.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[0] = goto.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
-# input[48] = 0.500000 means main local 9x9 cue driving this action.
-# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Correct candidate is output[0] = goto; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-0|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,9:0.250000,15:0.500000,48:0.500000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,7:-0.900000|action horseman case: horseman sees hills but no enemy
+0|0,1,2,3,4,5,6,7|0:0.250000,6:-0.250000,7:0.250000,8:0.250000,9:0.500000,15:1.000000,21:0.500000,54:0.500000,120:0.250000,125:0.142857,128:0.250000,129:0.250000,133:0.050000,135:1.000000,141:0.250000,174:0.250000,240:0.250000,245:1.000000,246:0.250000,247:-0.250000,248:0.250000,249:0.250000,252:-1.000000,255:1.000000,261:0.250000,294:0.250000,360:0.250000,366:-1.000000,368:0.250000,369:0.250000,375:1.000000,381:0.250000,414:0.250000,480:0.250000,486:1.000000,488:0.250000,489:0.250000,495:1.000000,501:0.250000,534:0.250000,600:0.250000,607:-1.000000,608:0.250000,609:0.250000,615:1.000000,621:0.250000,654:0.250000,720:0.250000,727:1.000000,728:0.250000,729:0.250000,735:1.000000,741:0.250000,774:0.250000,840:0.250000,846:-1.000000,847:-1.000000,848:0.250000,849:0.250000,855:1.000000,861:0.250000,894:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:-0.900000|action horseman case: horseman sees hills but no enemy
 # situation 3: action horseman case: horseman on hills should leave for open enemy
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: enemy is visible off current hill terrain.
 # Decision meaning: goto because mounted units prefer mobility over static hill defense.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[0] = goto.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.500000 means current tile terrain type normalized as terrainType/8.
-# input[58] = -0.150000 means main local 9x9 cue driving this action.
-# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Correct candidate is output[6] = goto; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-0|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,9:0.500000,15:0.500000,58:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,7:-0.900000|action horseman case: horseman on hills should leave for open enemy
+6|0,1,2,3,4,5,6,7|0:0.250000,5:1.000000,7:-0.500000,8:0.250000,9:0.500000,12:-1.000000,15:1.000000,21:0.500000,64:0.500000,120:0.250000,126:-1.000000,128:0.250000,129:0.500000,135:1.000000,141:0.500000,184:0.500000,240:0.250000,246:1.000000,248:0.250000,249:0.500000,255:1.000000,261:0.500000,304:0.500000,360:0.250000,367:-1.000000,368:0.250000,369:0.500000,375:1.000000,381:0.500000,424:0.500000,480:0.250000,487:1.000000,488:0.250000,489:0.500000,495:1.000000,501:0.500000,544:0.500000,600:0.250000,606:-1.000000,607:-1.000000,608:0.250000,609:0.500000,615:1.000000,621:0.500000,664:0.500000,720:0.250000,727:0.500000,728:0.250000,729:0.500000,735:1.000000,741:-0.150000,784:-0.150000,840:0.250000,845:0.142857,848:0.250000,849:0.500000,853:0.050000,855:1.000000,861:0.500000,904:0.500000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:0.900000,7:-0.900000|action horseman case: horseman on hills should leave for open enemy
 # situation 4: action horseman case: horseman adjacent to enemy city
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: adjacent enemy/city unit signal.
 # Decision meaning: attack because fast unit is already in striking position.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[7] = attack.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[7] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
-# input[8] = 0.700000 means immediate action signal: workers use 0.80 improvement, 0.60 irrigation, 0.45 chop, 0.30 road, 0.20 road-to; military uses 0.70 adjacent enemy, 0.50 defensive hill.
-# input[57] = -0.150000 means main local 9x9 cue driving this action.
-# input[99] = 0.000000 means forwarded strategy military attack priority.
+# Correct candidate is output[0] = attack; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-7|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,8:0.700000,9:0.250000,15:0.500000,57:-0.150000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,7:0.900000|action horseman case: horseman adjacent to enemy city
+0|0,1,2,3,4,5,6,7|0:0.250000,2:0.700000,5:1.000000,7:0.250000,8:0.250000,9:0.250000,12:-1.000000,15:1.000000,21:-0.150000,63:-0.150000,120:0.250000,122:0.700000,127:-0.250000,128:0.250000,129:0.250000,135:1.000000,141:0.250000,183:0.250000,240:0.250000,242:0.700000,245:0.142857,248:0.250000,249:0.250000,253:0.050000,255:1.000000,261:0.250000,303:0.250000,360:0.250000,362:0.700000,366:-1.000000,368:0.250000,369:0.250000,375:1.000000,381:0.250000,423:0.250000,480:0.250000,482:0.700000,486:1.000000,488:0.250000,489:0.250000,495:1.000000,501:0.250000,543:0.250000,600:0.250000,602:0.700000,607:-1.000000,608:0.250000,609:0.250000,615:1.000000,621:0.250000,663:0.250000,720:0.250000,722:0.700000,727:1.000000,728:0.250000,729:0.250000,735:1.000000,741:0.250000,783:0.250000,840:0.250000,842:0.700000,846:-1.000000,847:-1.000000,848:0.250000,849:0.250000,855:1.000000,861:0.250000,903:0.250000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,2:-0.900000,3:-0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:-0.900000|action horseman case: horseman adjacent to enemy city
 # situation 5: action horseman case: horseman charges forwarded attack focus
-# Purpose: teach Action engine horseman behavior from unit status, terrain, resource, fog, city, and local 9x9 window cues.
-# Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.
-# Action object fields used here: input[0]=unit type, input[1]=unit state, input[7]=has active task, input[8]=immediate action signal, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score or military usefulness, input[14]=age/pressure, input[15]=nearest friendly city distance.
-# Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[56] is the center tile under this unit. Negative local values such as -0.200000 represent fog-of-war or unknown tiles.
-# Forwarded strategy focus fields are relative to this unit: input[97]=target dx, input[98]=target dy, input[99]=military attack priority, input[100]=defense or worker-support priority. dx/dy are normalized by the 9x9 window radius of 4 tiles. Browser runtime fills military focus for military records and worker-support focus for worker records; settlers and explorers keep these fields at zero.
+# Purpose: teach Action to score eight complete legal action candidates for one unit.
+# Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
+# Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
 # Cue meaning: far enemy signal aligns with strategy focus attack priority.
 # Decision meaning: goto because fast military units should converge on the priority attack coordinates.
-# Legal output candidates: output[0] = goto; output[1] = wait; output[7] = attack.
-# Correct answer: choose output[0] = goto.
-# Evaluation rule: after inference, compare only legal candidate outputs; the highest value is the predicted answer.
-# Training target: output[0] is set to +0.900000, every other legal candidate output is set to -0.900000.
-# input[0] = 0.250000 means unit type normalized as unitTypeIndex/32.
-# input[1] = 0.000000 means unit state normalized by the same state order used in ai.js.
-# input[7] = 0.000000 means has active task flag; 1.0 means the unit is already busy and should usually preserve its current order.
-# input[9] = 0.250000 means current tile terrain type normalized as terrainType/8.
-# input[59] = -0.150000 means main local 9x9 cue driving this action.
-# input[99] = 0.950000 means forwarded strategy military attack priority.
+# Correct candidate is output[3] = goto; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.
-0|0,1,7|0:0.250000,4:1.000000,5:0.200000,6:1.000000,9:0.250000,15:0.500000,59:-0.150000,97:0.550000,98:-0.250000,99:0.950000,100:0.100000,960:0.500000,965:0.350000,968:0.250000|0:0.900000,1:-0.900000,7:-0.900000|action horseman case: horseman charges forwarded attack focus
+3|0,1,2,3,4,5,6,7|0:0.250000,7:-1.000000,8:0.250000,9:0.250000,14:0.950000,15:1.000000,19:0.100000,20:0.250000,21:0.250000,65:0.250000,120:0.250000,127:1.000000,128:0.250000,129:0.250000,134:0.950000,135:1.000000,139:0.100000,140:-0.250000,141:0.250000,185:0.250000,240:0.250000,246:-1.000000,247:-1.000000,248:0.250000,249:0.250000,254:0.950000,255:1.000000,259:0.100000,260:-0.300000,261:0.250000,305:0.250000,360:0.250000,367:0.750000,368:0.250000,369:0.250000,374:0.950000,375:1.000000,379:0.100000,380:-0.187500,381:-0.150000,425:-0.150000,480:0.250000,485:0.142857,488:0.250000,489:0.250000,493:0.050000,494:0.950000,495:1.000000,499:0.100000,501:0.250000,545:0.250000,600:0.250000,605:1.000000,607:-0.750000,608:0.250000,609:0.250000,612:-1.000000,614:0.950000,615:1.000000,619:0.100000,620:0.187500,621:0.250000,665:0.250000,720:0.250000,726:-1.000000,728:0.250000,729:0.250000,734:0.950000,735:1.000000,739:0.100000,740:-0.550000,741:0.250000,785:0.250000,840:0.250000,846:1.000000,848:0.250000,849:0.250000,854:0.950000,855:1.000000,859:0.100000,860:0.550000,861:0.250000,905:0.250000,960:0.500000,965:0.350000,968:0.250000|0:-0.900000,1:-0.900000,2:-0.900000,3:0.900000,4:-0.900000,5:-0.900000,6:-0.900000,7:-0.900000|action horseman case: horseman charges forwarded attack focus

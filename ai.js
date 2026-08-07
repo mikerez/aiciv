@@ -15,9 +15,9 @@ const _ai_player = new class
         this.gpuReady = false;
         this.statusCallback = null;
         this.defaultModelUrls = {
-            strategy: 'ai_player/strategy.db.gz?v=20260806a',
-            action: 'ai_player/action.db.gz?v=20260806a',
-            economics: 'ai_player/economics.db.gz?v=20260806a',
+            strategy: 'ai_player/strategy.db.gz?v=20260806c',
+            action: 'ai_player/action.db.gz?v=20260806c',
+            economics: 'ai_player/economics.db.gz?v=20260806c',
         };
         this.defaultModelsLoaded = false;
         this.defaultModelLoadPromise = null;
@@ -58,18 +58,15 @@ const _ai_player = new class
         ];
         this.productionDemandLabels = ['settlers', 'worker', 'explorer', 'military'];
         this.lastActionUnitIndices = [];
+        this.lastActionCandidates = [];
         this.lastEconomicsCityIndices = [];
         this.lastStrategyProductionDemands = null;
         this.batchSize = 8;
         this.batchCursors = {};
+        this.actionCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
         this.settlerBuildCityTurnLimit = 20;
-        // Settlement gate used after the Action model says "build city".
-        // The score must remain a true site-quality threshold; old settlers should
-        // route to a better candidate instead of settling arbitrary land.
-        this.settlerGoodCityPlotThreshold = 0.38;
-        this.settlerAgedCityPlotThreshold = 0.30;
-        this.settlerFirstCityPlotThreshold = 0.30;
+        this.barrenCityPlotSignalCap = 0.37;
     }
 
     log(message)
@@ -605,6 +602,23 @@ const _ai_player = new class
         return index < 0 ? 0 : index / Math.max(1, order.length - 1);
     }
 
+    unitStateIndex(state)
+    {
+        var order = ['ready', 'waiting', 'fortified', 'fortification', 'road', 'road_to', 'irrigate',
+            'chop_forest', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry',
+            'winery', 'cottage', 'workshop', 'mine', 'explore', 'patrol', 'automate'];
+        var index = order.indexOf(state || 'ready');
+        return index < 0 ? 0 : index;
+    }
+
+    visibleUnitAtForViewer(i, j, viewerUserId)
+    {
+        var records = this.visibleUnitRecords(viewerUserId, function(unit) {
+            return unit && unit.coord && unit.coord.i == i && unit.coord.j == j;
+        });
+        return records.length ? records[0].unit : null;
+    }
+
     actionImmediateSignal(k)
     {
         if (typeof _current_game == 'undefined' || !_current_game || typeof _units == 'undefined' || !_units[k]) {
@@ -1021,36 +1035,135 @@ const _ai_player = new class
         var records = this.actionUnitRecords(ownerTeam);
         this.lastActionUnitIndices = [];
         this.lastActionRecordSummaries = [];
-        for (var n = 0; n < records.length; n++) {
-            var unit = records[n].unit;
-            var base = n * 120;
-            this.lastActionUnitIndices[n] = records[n].index;
-            this.lastActionRecordSummaries[n] = this.unitSummary(records[n].index);
-            input[base + 0] = this.unitTypeIndex(unit) / 32;
-            input[base + 1] = this.unitStateCode(unit);
-            input[base + 2] = this.normalizedCoord(unit.coord.i);
-            input[base + 3] = this.normalizedCoord(unit.coord.j);
-            input[base + 4] = 1;
-            input[base + 5] = this.normalizeCount(unit.speed || 0, 5);
-            input[base + 6] = this.relationToTeam(ownerTeam, unit.team || 0);
-            input[base + 7] = this.unitHasTask(unit) ? 1 : 0;
-            input[base + 8] = this.actionImmediateSignal(records[n].index);
-            input[base + 9] = this.terrainTypeAt(unit.coord.i, unit.coord.j) / 8;
-            input[base + 10] = this.resourceSignalAt(unit.coord.i, unit.coord.j, ownerTeam);
-            input[base + 11] = this.nearbyResourceScore(unit.coord, ownerTeam, 2);
-            input[base + 12] = this.hasFreshWaterNearTile(unit.coord.i, unit.coord.j) ? 1 : 0;
-            input[base + 13] = this.cityPlotScore(unit.coord.i, unit.coord.j, ownerTeam);
-            input[base + 14] = this.normalizeCount(unit.aiSettlerTurns || 0, this.settlerBuildCityTurnLimit);
-            input[base + 15] = this.nearestFriendlyCityDistanceSignal(unit.coord, ownerTeam);
-            this.encodeLocalMapWindow(input, base + 16, unit.coord, ownerTeam);
-            var relativeFocus = this.strategyFocusRelativeToCoord(forwardedFocus, unit.coord);
-            input[base + 97] = relativeFocus.x;
-            input[base + 98] = relativeFocus.y;
-            input[base + 99] = relativeFocus.militaryPriority;
-            input[base + 100] = relativeFocus.defensePriority;
+        this.lastActionCandidates = [];
+        if (records.length) {
+            var record = records[0];
+            var candidates = this.actionCandidatesForUnit(record.index, ownerTeam, forwardedFocus);
+            this.lastActionUnitIndices[0] = record.index;
+            this.lastActionRecordSummaries[0] = this.unitSummary(record.index);
+            this.lastActionCandidates = candidates;
+            for (var n = 0; n < candidates.length; n++) {
+                this.encodeActionCandidate(input, n * 120, record.index, candidates[n], ownerTeam, forwardedFocus);
+            }
         }
         this.fillGenericSituation(input, ownerTeam, 0);
         return input;
+    }
+
+    encodeActionCandidate(input, base, k, candidate, ownerTeam, strategyFocus)
+    {
+        var unit = _units[k];
+        var target = candidate.target || unit.coord;
+        var relativeFocus = this.strategyFocusRelativeToCoord(strategyFocus, unit.coord);
+        input[base + 0] = this.unitTypeIndex(unit) / 32;
+        input[base + 1] = this.unitStateCode(unit);
+        input[base + 2] = this.actionImmediateSignal(k);
+        input[base + 3] = this.nearbyOwnedUnitDensity(unit.coord, ownerTeam, 'worker', 4);
+        input[base + 4] = this.unitHasTask(unit) ? 1 : 0;
+        input[base + 5] = this.actionCommandLabels.indexOf(candidate.command) / 7;
+        input[base + 6] = this.clamp((target.i - unit.coord.i) / 4, -1, 1);
+        input[base + 7] = this.clamp((target.j - unit.coord.j) / 4, -1, 1);
+        input[base + 8] = this.normalizeCount(candidate.path ? candidate.path.length : 0, 12);
+        input[base + 9] = this.terrainTypeAt(target.i, target.j) / 8;
+        input[base + 10] = this.resourceSignalAt(target.i, target.j, ownerTeam);
+        input[base + 11] = this.cityPlotScore(target.i, target.j, ownerTeam);
+        input[base + 12] = candidate.targetRelation || 0;
+        input[base + 13] = this.unitStateIndex(candidate.state || candidate.building || 'ready') / 20;
+        input[base + 14] = relativeFocus.militaryPriority;
+        input[base + 15] = 1;
+        input[base + 16] = this.normalizeCount(unit.aiSettlerTurns || 0, this.settlerBuildCityTurnLimit);
+        input[base + 17] = this.nearbyResourceScore(target, ownerTeam, 2);
+        input[base + 18] = this.hasFreshWaterNearTile(target.i, target.j) ? 1 : 0;
+        input[base + 19] = relativeFocus.defensePriority;
+        input[base + 20] = this.clamp(input[base + 6] * relativeFocus.x + input[base + 7] * relativeFocus.y, -1, 1);
+        input[base + 21] = this.packLocalTile(target.i, target.j, ownerTeam);
+        this.encodeLocalMapWindow(input, base + 22, target, ownerTeam);
+    }
+
+    actionCandidatesForUnit(k, ownerTeam, strategyFocus)
+    {
+        var unit = typeof _units != 'undefined' ? _units[k] : null;
+        if (!unit || !unit.coord) {
+            return [];
+        }
+        var pool = [];
+        var current = new Coord(unit.coord.i, unit.coord.j);
+        pool.push({ command: 'wait', target: current, state: 'waiting', targetRelation: 1 });
+        if (unit.type == 2) {
+            pool.push({ command: 'wait', target: current, state: 'fortified', targetRelation: 1 });
+        }
+        if (unit.unitTypeId == 'settlers' && this.terrainTypeAt(unit.coord.i, unit.coord.j) != 0) {
+            pool.push({ command: 'build_city', target: current, targetRelation: 1 });
+        }
+        if (unit.unitTypeId == 'worker' && typeof _current_game != 'undefined' && _current_game) {
+            if (_current_game.canBuildRoad && _current_game.canBuildRoad(k)) {
+                pool.push({ command: 'road_to', target: current, state: 'road', targetRelation: 1 });
+            }
+            if (_current_game.canBuildIrrigation && _current_game.canBuildIrrigation(k)) {
+                pool.push({ command: 'irrigate', target: current, state: 'irrigate', targetRelation: 1 });
+            }
+            if (_current_game.canChopForest && _current_game.canChopForest(k)) {
+                pool.push({ command: 'chop_forest', target: current, state: 'chop_forest', targetRelation: 1 });
+            }
+            if (_current_game.workerTileBuildingMenuOptions) {
+                var buildings = _current_game.workerTileBuildingMenuOptions(k);
+                for (var b = 0; b < buildings.length; b++) {
+                    pool.push({ command: 'build_improvement', target: current, building: buildings[b], state: buildings[b], targetRelation: 1 });
+                }
+            }
+        }
+        if (unit.can_move && typeof _current_game != 'undefined' && _current_game && _current_game.buildPath) {
+            for (var di = -4; di <= 4; di++) {
+                for (var dj = -4; dj <= 4; dj++) {
+                    if (di == 0 && dj == 0) continue;
+                    var i = unit.coord.i + di;
+                    var j = unit.coord.j + dj;
+                    if (!this.isTileSeenByUser(i, j, ownerTeam)) continue;
+                    var target = new Coord(i, j);
+                    var path = _current_game.buildPath(k, target);
+                    if (!path.length) continue;
+                    var targetUnit = this.visibleUnitAtForViewer(i, j, ownerTeam);
+                    var enemy = targetUnit && (targetUnit.team || 0) != ownerTeam;
+                    var adjacentEnemy = enemy && Math.max(Math.abs(di), Math.abs(dj)) <= 1;
+                    pool.push({
+                        command: adjacentEnemy && unit.type == 2 ? 'attack' : 'goto',
+                        target: target,
+                        path: path,
+                        targetRelation: enemy ? -1 : (targetUnit ? 1 : 0),
+                    });
+                    if (unit.unitTypeId == 'worker' && targetUnit && targetUnit.type == 3
+                        && (targetUnit.team || 0) == ownerTeam
+                        && _current_game.canUseRoadTo && _current_game.canUseRoadTo(k)) {
+                        pool.push({ command: 'road_to', target: target, path: path, state: 'road_to', targetRelation: 1 });
+                    }
+                }
+            }
+        }
+        var wait = pool[0];
+        var choices = pool.slice(1);
+        var key = ownerTeam + ':' + k;
+        var start = choices.length ? (this.actionCandidateCursors[key] || 0) % choices.length : 0;
+        var result = [wait];
+        for (var n = 0; n < Math.min(7, choices.length); n++) {
+            result.push(choices[(start + n) % choices.length]);
+        }
+        if (choices.length > 7) {
+            this.actionCandidateCursors[key] = (start + 7) % choices.length;
+        }
+        return result;
+    }
+
+    nearbyOwnedUnitDensity(coord, ownerTeam, unitTypeId, radius)
+    {
+        var count = 0;
+        var records = this.visibleUnitRecords(ownerTeam, function(unit) {
+            return unit && (unit.team || 0) == ownerTeam && unit.unitTypeId == unitTypeId;
+        });
+        for (var n = 0; n < records.length; n++) {
+            var candidate = records[n].unit;
+            if (Math.max(Math.abs(candidate.coord.i - coord.i), Math.abs(candidate.coord.j - coord.j)) <= radius) count++;
+        }
+        return this.normalizeCount(Math.max(0, count - 1), 4);
     }
 
     actionUnitRecords(ownerTeam = 0)
@@ -1095,7 +1208,7 @@ const _ai_player = new class
             }
             return priority(a.unit) - priority(b.unit) || a.index - b.index;
         });
-        return this.rotatingBatch(selected, 'action', ownerTeam);
+        return this.rotatingBatch(selected, 'action', ownerTeam, 1);
     }
 
     strategyFocusForForwarding(strategyFocus = null)
@@ -1203,6 +1316,21 @@ const _ai_player = new class
             return typeof _game_state != 'undefined' && _game_state.isTechnologyOpen(name) ? 1 : 0;
         });
         var plots = new Array(8).fill(0);
+        var jobSignal = {
+            road: 0,
+            chop_forest: 1,
+            irrigate: 2,
+            farm: 2,
+            pasture: 3,
+            camp: 3,
+            mine: 4,
+            cottage: 5,
+            quarry: 5,
+            plantation: 6,
+            winery: 6,
+            workshop: 7,
+            fortification: 7,
+        };
         var seen = {};
         for (var c = 0; c < cities.length; c++) {
             var city = cities[c].unit;
@@ -1215,16 +1343,9 @@ const _ai_player = new class
                     if (seen[key] || i < 0 || j < 0 || i >= _map_size || j >= _map_size
                         || !this.isTileSeenByUser(i, j, ownerTeam)) continue;
                     seen[key] = true;
-                    var terrain = this.terrainTypeAt(i, j);
-                    if (terrain != 0 && !(typeof _map != 'undefined' && _map.hasRoad && _map.hasRoad(i, j))) plots[0]++;
-                    if (terrain != 0 && this.isChoppableForestAt(i, j)) plots[1]++;
-                    if (terrain == 2 && this.hasLandWaterSourceAt(i, j)) plots[2]++;
-                    var resourceKind = this.strategyResourceKindAt(i, j, ownerTeam);
-                    if (resourceKind == 'animal') plots[3]++;
-                    if (terrain == 4 || terrain == 5) plots[4]++;
-                    if (terrain != 0 && (resourceKind == 'stone' || terrain == 2)) plots[5]++;
-                    if (terrain != 0 && (resourceKind == 'crop' || this.resourceSignalAt(i, j, ownerTeam) > 0)) plots[6]++;
-                    if (terrain != 0) plots[7]++;
+                    var job = this.workerTileJobScore(i, j, ownerTeam);
+                    var signal = job ? jobSignal[job.name] : undefined;
+                    if (signal != undefined) plots[signal]++;
                 }
             }
         }
@@ -1608,94 +1729,28 @@ const _ai_player = new class
 
     decodeActionOutput(output)
     {
-        var commands = [];
-        for (var record = 0; record < 8; record++) {
-            var base = record * 8;
-            var unitIndex = this.lastActionUnitIndices[record];
-            var unit = unitIndex != undefined && typeof _units != 'undefined' ? _units[unitIndex] : null;
-            var legal = this.actionLegalCommandIndices(unit).map(function(index) { return base + index; });
-            var best = this.argmaxSlots(output, legal);
-            var commandIndex = best.slot - base;
-            commands.push({
-                record: record,
-                unitIndex: unitIndex,
-                command: this.actionCommandLabels[commandIndex],
-                slot: best.slot,
-                confidence: best.value,
-                legalCommands: legal.map(function(slot) { return this.actionCommandLabels[slot - base]; }, this),
-                target: null,
-                aux: 0,
-                priority: output[64] || 0,
-            });
+        if (!this.lastActionCandidates.length || this.lastActionUnitIndices[0] == undefined) {
+            return [];
         }
-        return commands;
-    }
-
-    actionLegalCommandIndices(unit)
-    {
-        if (!unit) {
-            return [0, 1];
-        }
-        if (unit.unitTypeId == 'settlers') {
-            return [0, 1, 2];
-        }
-        if (unit.unitTypeId == 'worker') {
-            var commands = [0, 1];
-            if (typeof _current_game != 'undefined' && _current_game) {
-                if ((_current_game.canBuildRoad && _current_game.canBuildRoad(this.unitIndex(unit)))
-                    || (_current_game.canUseRoadTo && _current_game.canUseRoadTo(this.unitIndex(unit)))) {
-                    commands.push(3);
-                }
-                if (_current_game.canBuildIrrigation && _current_game.canBuildIrrigation(this.unitIndex(unit))) {
-                    commands.push(4);
-                }
-                if (_current_game.canChopForest && _current_game.canChopForest(this.unitIndex(unit))) {
-                    commands.push(5);
-                }
-                if (_current_game.workerTileBuildingMenuOptions
-                    && _current_game.workerTileBuildingMenuOptions(this.unitIndex(unit)).length) {
-                    commands.push(6);
-                }
-            }
-            return commands;
-        }
-        if (unit.unitTypeId == 'explorer') {
-            return [0, 1];
-        }
-        if (unit.type == 2) {
-            return [0, 1, 7];
-        }
-        return [0, 1];
-    }
-
-    chooseWorkerTileBuildingForAI(k, buildings)
-    {
-        if (!buildings || !buildings.length || typeof _units == 'undefined' || !_units[k]) {
-            return null;
-        }
-        var unit = _units[k];
-        var terrain = this.terrainTypeAt(unit.coord.i, unit.coord.j);
-        if (typeof _current_game != 'undefined' && _current_game && _current_game.openedResourceImprovementForTile) {
-            var resourceBuilding = _current_game.openedResourceImprovementForTile(unit.coord.i, unit.coord.j);
-            if (resourceBuilding && buildings.indexOf(resourceBuilding) != -1) {
-                return resourceBuilding;
-            }
-        }
-        var preferred = [];
-        if (terrain == 4 || terrain == 5) {
-            preferred.push('mine');
-        }
-        if (terrain == 2 || terrain == 7) {
-            preferred.push('cottage');
-        }
-        preferred.push('workshop');
-        preferred.push('fortification');
-        for (var n = 0; n < preferred.length; n++) {
-            if (buildings.indexOf(preferred[n]) != -1) {
-                return preferred[n];
-            }
-        }
-        return buildings[0];
+        var slots = [];
+        for (var n = 0; n < this.lastActionCandidates.length; n++) slots.push(n);
+        var best = this.argmaxSlots(output, slots);
+        var candidate = this.lastActionCandidates[best.slot];
+        return [{
+            record: best.slot,
+            unitIndex: this.lastActionUnitIndices[0],
+            command: candidate.command,
+            target: candidate.target ? new Coord(candidate.target.i, candidate.target.j) : null,
+            path: candidate.path || null,
+            building: candidate.building || null,
+            state: candidate.state || null,
+            slot: best.slot,
+            confidence: best.value,
+            legalCommands: this.lastActionCandidates.map(function(item) {
+                return item.command + (item.target ? '@' + item.target.i + ',' + item.target.j : '');
+            }),
+            priority: output[64] || 0,
+        }];
     }
 
     workerGotoTarget(k, ownerTeam)
@@ -2084,248 +2139,6 @@ const _ai_player = new class
         return result;
     }
 
-    // AI reasoning workarounds
-    //
-    // These are deliberately explicit patches around neural-network reasoning gaps.
-    // The models are small and trained on a compact handcrafted situation library, so
-    // they can leave strategically important units idle even when the game has an
-    // obvious rule-level expectation. Keep such fixes here, numbered and commented,
-    // so they remain visible as temporary policy guards rather than hidden AI logic.
-    //
-    // Workaround 1: settler expansion must not stall. If a settler reaches a good
-    // city plot, force it to build a city. Otherwise it routes to the best nearby
-    // settlement candidate; age alone is not a reason to settle bad land.
-    //
-    // Workaround 2: if a settler did not build a city and has no movement route
-    // after Action decoding, assign a random legal move. Random movement is crude,
-    // but it is better than a stationary settler because moving reveals map data and
-    // gives future turns new settlement candidates.
-    applyAiReasoningWorkarounds(ownerTeam = this.activeUserId())
-    {
-        var commands = [];
-        if (typeof _current_game == 'undefined' || !_current_game || !_current_game.buildPath || !_current_game.assignPath) {
-            return commands;
-        }
-        for (var k = 0; k < _units.length; k++) {
-            var unit = _units[k];
-            if (!unit || (unit.team || 0) != ownerTeam || !unit.can_move) {
-                continue;
-            }
-            if (unit.unitTypeId == 'settlers' && !this.unitHasRoute(unit)) {
-                var buildCity = this.workaroundForceSettlerBuildCity(k, ownerTeam);
-                if (buildCity) {
-                    commands.push(buildCity);
-                    continue;
-                }
-                var bestMove = this.routeSettlerToBestCityPlot(k, ownerTeam);
-                if (bestMove) {
-                    commands.push(bestMove);
-                    continue;
-                }
-                var randomMove = this.workaroundRandomMoveIdleSettler(k, ownerTeam);
-                if (randomMove) {
-                    commands.push(randomMove);
-                    continue;
-                }
-            }
-            if (this.unitHasTask(unit)) {
-                continue;
-            }
-            var command = this.fallbackCommandForUnit(k, ownerTeam);
-            if (command) {
-                commands.push(command);
-            }
-        }
-        if (commands.length && typeof console !== 'undefined' && console.log) {
-            console.log('AI fallback orders for user ' + ownerTeam, commands);
-        }
-        if (commands.length) {
-            this.log('U' + ownerTeam + ' AI workaround apply: ' + commands.map(function(command) {
-                return 'unit#' + command.unitIndex + ' ' + command.command
-                    + (command.target ? ' target=(' + command.target.i + ',' + command.target.j + ')' : '')
-                    + ' [' + (command.workaround || command.source || 'ai') + ']';
-            }).join('; '));
-        }
-        return commands;
-    }
-
-    ensureVisibleAiOrders(ownerTeam = this.activeUserId())
-    {
-        return this.applyAiReasoningWorkarounds(ownerTeam);
-    }
-
-    fallbackCommandForUnit(k, ownerTeam)
-    {
-        var unit = _units[k];
-        if (!unit) {
-            return null;
-        }
-        if (unit.unitTypeId == 'settlers') {
-            return this.workaroundForceSettlerBuildCity(k, ownerTeam)
-                || this.routeSettlerToBestCityPlot(k, ownerTeam)
-                || this.workaroundRandomMoveIdleSettler(k, ownerTeam);
-        }
-
-        if (unit.unitTypeId == 'worker') {
-            var workerTarget = this.workerGotoTarget(k, ownerTeam);
-            if (workerTarget && _current_game.buildPath && _current_game.assignPath) {
-                var workerPath = _current_game.buildPath(k, workerTarget);
-                if (workerPath.length) {
-                    _current_game.assignPath(k, workerPath);
-                    if (_current_game.setUnitState) {
-                        _current_game.setUnitState(k, 'ready');
-                    }
-                    return {
-                        unitIndex: k,
-                        command: 'goto',
-                        target: workerPath[workerPath.length - 1],
-                        source: 'worker_job_target',
-                        workerJob: workerTarget.workerJob
-                    };
-                }
-            }
-            return null;
-        }
-
-        var target = this.fallbackExploreTarget(unit, ownerTeam);
-        if (!target) {
-            return null;
-        }
-        var path = _current_game.buildPath(k, target);
-        if (!path.length) {
-            return null;
-        }
-        _current_game.assignPath(k, path);
-        if (unit.state == undefined || unit.state == 'ready') {
-            unit.state = unit.unitTypeId == 'explorer' ? 'explore' : 'ready';
-        }
-        return { unitIndex: k, command: 'goto', target: path[path.length - 1], source: 'fallback' };
-    }
-
-    workaroundForceSettlerBuildCity(k, ownerTeam)
-    {
-        var unit = _units[k];
-        if (!unit || unit.unitTypeId != 'settlers' || !this.shouldSettlerBuildCity(k, ownerTeam)) {
-            return null;
-        }
-        var target = new Coord(unit.coord.i, unit.coord.j);
-        var previousSelection = typeof _selection == 'undefined' ? -1 : _selection;
-        _selection = k;
-        _current_game.doCommand('build_city');
-        _selection = previousSelection;
-        return {
-            unitIndex: k,
-            command: 'build_city',
-            target: target,
-            source: 'ai_reasoning_workaround',
-            workaround: '1_settler_build_city_by_good_plot_or_turn_limit'
-        };
-    }
-
-    workaroundRandomMoveIdleSettler(k, ownerTeam)
-    {
-        var unit = _units[k];
-        if (!unit || unit.unitTypeId != 'settlers' || this.unitHasRoute(unit)) {
-            return null;
-        }
-        for (var attempt = 0; attempt < 32; attempt++) {
-            var radius = 2 + Math.floor(Math.random() * 7);
-            var di = Math.floor(Math.random() * (radius * 2 + 1)) - radius;
-            var dj = Math.floor(Math.random() * (radius * 2 + 1)) - radius;
-            if (di == 0 && dj == 0) {
-                continue;
-            }
-            var target = new Coord(
-                Math.round(this.clamp(unit.coord.i + di, 0, _map_size - 1)),
-                Math.round(this.clamp(unit.coord.j + dj, 0, _map_size - 1))
-            );
-            if (target.i == unit.coord.i && target.j == unit.coord.j) {
-                continue;
-            }
-            if (typeof _game != 'undefined' && _game.canUnitEnterTile && !_game.canUnitEnterTile(k, target.i, target.j)) {
-                continue;
-            }
-            var path = _current_game.buildPath(k, target);
-            if (!path.length) {
-                continue;
-            }
-            if (_current_game.setUnitState) {
-                _current_game.setUnitState(k, 'ready');
-            }
-            _current_game.assignPath(k, path);
-            return {
-                unitIndex: k,
-                command: 'goto',
-                target: path[path.length - 1],
-                source: 'ai_reasoning_workaround',
-                workaround: '2_random_move_idle_settler'
-            };
-        }
-        return null;
-    }
-
-    bestSettlementTargetForSettler(k, ownerTeam, radius = 6)
-    {
-        var unit = _units[k];
-        if (!unit || unit.unitTypeId != 'settlers') {
-            return null;
-        }
-        var currentScore = this.cityPlotScore(unit.coord.i, unit.coord.j, ownerTeam);
-        var best = null;
-        var bestScore = -1;
-        for (var di = -radius; di <= radius; di++) {
-            for (var dj = -radius; dj <= radius; dj++) {
-                if (di == 0 && dj == 0) {
-                    continue;
-                }
-                var i = unit.coord.i + di;
-                var j = unit.coord.j + dj;
-                if (i < 0 || j < 0 || i >= _map_size || j >= _map_size || !this.isTileSeenByUser(i, j, ownerTeam)) {
-                    continue;
-                }
-                if (this.terrainTypeAt(i, j) == 0) {
-                    continue;
-                }
-                var score = this.cityPlotScore(i, j, ownerTeam);
-                if (score < this.settlerGoodCityPlotThreshold || score < currentScore + 0.04) {
-                    continue;
-                }
-                if (score > bestScore) {
-                    bestScore = score;
-                    best = new Coord(i, j);
-                }
-            }
-        }
-        return best;
-    }
-
-    routeSettlerToBestCityPlot(k, ownerTeam)
-    {
-        var unit = _units[k];
-        if (!unit || unit.unitTypeId != 'settlers' || this.unitHasRoute(unit)
-            || typeof _current_game == 'undefined' || !_current_game || !_current_game.buildPath || !_current_game.assignPath) {
-            return null;
-        }
-        var target = this.bestSettlementTargetForSettler(k, ownerTeam);
-        if (!target) {
-            return null;
-        }
-        var path = _current_game.buildPath(k, target);
-        if (!path.length) {
-            return null;
-        }
-        if (_current_game.setUnitState) {
-            _current_game.setUnitState(k, 'ready');
-        }
-        _current_game.assignPath(k, path);
-        return {
-            unitIndex: k,
-            command: 'goto',
-            target: path[path.length - 1],
-            source: 'settlement_score'
-        };
-    }
-
     advanceSettlerTurnCounters(ownerTeam)
     {
         if (typeof _units == 'undefined') {
@@ -2337,128 +2150,6 @@ const _ai_player = new class
                 unit.aiSettlerTurns = Math.min(this.settlerBuildCityTurnLimit, (unit.aiSettlerTurns || 0) + 1);
             }
         }
-    }
-
-    hasFriendlyCity(ownerTeam)
-    {
-        for (var k = 0; k < _units.length; k++) {
-            if (_units[k] && (_units[k].team || 0) == ownerTeam && _units[k].type == 3) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    fallbackExploreTarget(unit, ownerTeam)
-    {
-        var preferHidden = Math.random() < 0.5;
-        var first = preferHidden ? this.nearbyHiddenExploreTarget(unit, ownerTeam) : this.nearestCityOrSettlerExploreTarget(unit, ownerTeam);
-        var second = preferHidden ? this.nearestCityOrSettlerExploreTarget(unit, ownerTeam) : this.nearbyHiddenExploreTarget(unit, ownerTeam);
-        return first || second || new Coord(
-            Math.round(this.clamp(unit.coord.i + (Math.random() < 0.5 ? -6 : 6), 0, _map_size - 1)),
-            Math.round(this.clamp(unit.coord.j + (Math.random() < 0.5 ? -6 : 6), 0, _map_size - 1))
-        );
-    }
-
-    nearbyHiddenExploreTarget(unit, ownerTeam)
-    {
-        var best = null;
-        var bestScore = -Infinity;
-        for (var radius = 4; radius <= 16; radius += 4) {
-            for (var di = -radius; di <= radius; di++) {
-                for (var dj = -radius; dj <= radius; dj++) {
-                    if (Math.max(Math.abs(di), Math.abs(dj)) != radius) {
-                        continue;
-                    }
-                    var i = unit.coord.i + di;
-                    var j = unit.coord.j + dj;
-                    if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) {
-                        continue;
-                    }
-                    if (typeof _game != 'undefined' && _game.canUnitEnterTile && !_game.canUnitEnterTile(this.unitIndex(unit), i, j)) {
-                        continue;
-                    }
-                    var unseenBonus = this.isTileSeenByUser(i, j, ownerTeam) ? 0 : 100;
-                    var distance = Math.abs(di) + Math.abs(dj);
-                    var score = unseenBonus + radius - distance * 0.1 + Math.random() * 0.01;
-                    if (score > bestScore) {
-                        bestScore = score;
-                        best = new Coord(i, j);
-                    }
-                }
-            }
-            if (best && bestScore >= 100) {
-                return best;
-            }
-        }
-        if (best) {
-            return best;
-        }
-        return null;
-    }
-
-    nearestCityOrSettlerExploreTarget(unit, ownerTeam)
-    {
-        var target = this.nearestUnitCoordForViewer(unit.coord, ownerTeam, function(candidate) {
-            return candidate.type == 3 || candidate.unitTypeId == 'settlers';
-        });
-        return target;
-    }
-
-    unitIndex(unit)
-    {
-        for (var k = 0; k < _units.length; k++) {
-            if (_units[k] === unit) {
-                return k;
-            }
-        }
-        return -1;
-    }
-
-    civilianRetreatTargetFromStrategyFocus(unit, ownerTeam)
-    {
-        var focus = this.strategyFocusForForwarding(null);
-        if (!unit || unit.type == 2 || focus.militaryPriority < 0.35) {
-            return null;
-        }
-        var focusI = this.denormalizedCoord(focus.x);
-        var focusJ = this.denormalizedCoord(focus.y);
-        var awayI = unit.coord.i - focusI;
-        var awayJ = unit.coord.j - focusJ;
-        var distance = Math.max(Math.abs(awayI), Math.abs(awayJ));
-        if (distance > 10) {
-            return null;
-        }
-        if (awayI == 0 && awayJ == 0) {
-            awayI = Math.random() < 0.5 ? 1 : -1;
-            awayJ = Math.random() < 0.5 ? 1 : -1;
-        }
-        var directions = [
-            [Math.sign(awayI), Math.sign(awayJ)],
-            [Math.sign(awayI), 0],
-            [0, Math.sign(awayJ)],
-            [Math.sign(awayI), -Math.sign(awayJ)],
-            [-Math.sign(awayI), Math.sign(awayJ)],
-        ];
-        for (var attempt = 0; attempt < directions.length; attempt++) {
-            var direction = directions[attempt];
-            if (direction[0] == 0 && direction[1] == 0) {
-                continue;
-            }
-            var target = new Coord(
-                Math.round(this.clamp(unit.coord.i + direction[0] * 8, 0, _map_size - 1)),
-                Math.round(this.clamp(unit.coord.j + direction[1] * 8, 0, _map_size - 1))
-            );
-            if (target.i == unit.coord.i && target.j == unit.coord.j) {
-                continue;
-            }
-            var k = this.unitIndex(unit);
-            if (typeof _game != 'undefined' && _game.canUnitEnterTile && !_game.canUnitEnterTile(k, target.i, target.j)) {
-                continue;
-            }
-            return target;
-        }
-        return null;
     }
 
     async inferGPU(model, input)
@@ -3095,52 +2786,9 @@ const _ai_player = new class
         }
         var normalized = this.clamp(score / 10.0, 0, 1);
         if (terrain == 6 && resource == 0 && nearbyResource < 0.10 && !landWaterSource && !freshWater) {
-            normalized = Math.min(normalized, this.settlerGoodCityPlotThreshold - 0.01);
+            normalized = Math.min(normalized, this.barrenCityPlotSignalCap);
         }
         return normalized;
-    }
-
-    shouldSettlerBuildCity(k, ownerTeam = this.activeUserId())
-    {
-        var unit = _units[k];
-        if (!unit || unit.unitTypeId != 'settlers') {
-            return false;
-        }
-        var terrain = this.terrainTypeAt(unit.coord.i, unit.coord.j);
-        if (!this.isSettlerBuildableTerrain(unit.coord.i, unit.coord.j, ownerTeam)) {
-            return false;
-        }
-        var score = this.cityPlotScore(unit.coord.i, unit.coord.j, ownerTeam);
-        if (score >= this.settlerGoodCityPlotThreshold) {
-            return true;
-        }
-        if (!this.hasFriendlyCity(ownerTeam) && score >= this.settlerFirstCityPlotThreshold) {
-            return true;
-        }
-        if ((unit.aiSettlerTurns || 0) >= this.settlerBuildCityTurnLimit
-            && score >= this.settlerAgedCityPlotThreshold
-            && terrain != 1 && terrain != 3) {
-            return true;
-        }
-        return false;
-    }
-
-    isSettlerBuildableTerrain(i, j, ownerTeam)
-    {
-        var terrain = this.terrainTypeAt(i, j);
-        if (terrain == 0 || terrain == 5) {
-            return false;
-        }
-        var resource = this.resourceSignalAt(i, j, ownerTeam);
-        var nearbyResource = this.nearbyResourceScore(new Coord(i, j), ownerTeam, 2);
-        var freshWater = this.hasFreshWaterNearTile(i, j) || this.hasLandWaterSourceAt(i, j);
-        if ((terrain == 1 || terrain == 3) && resource <= 0 && nearbyResource < 0.20 && !freshWater) {
-            return false;
-        }
-        if (terrain == 6 && resource <= 0 && nearbyResource < 0.16 && !freshWater) {
-            return false;
-        }
-        return true;
     }
 
     unitHasTask(unit)
@@ -3149,11 +2797,6 @@ const _ai_player = new class
             || (unit.state != undefined && unit.state != 'ready')
             || unit.chop_turns_left != undefined || unit.road_turns_left != undefined
             || unit.irrigation_turns_left != undefined || unit.building_turns_left != undefined));
-    }
-
-    unitHasRoute(unit)
-    {
-        return !!(unit && ((unit.gotoPath && unit.gotoPath.length) || unit.gotoCoord != undefined));
     }
 
     setResearchFromList(names)
@@ -3315,27 +2958,9 @@ const _ai_player = new class
         return this.nearestUnitCoord(origin, function(unit) { return (unit.team || 0) != ownerTeam && unit.type != 3; }, ownerTeam);
     }
 
-    nearestEnemyCityCoord(origin, ownerTeam)
-    {
-        return this.nearestUnitCoord(origin, function(unit) { return (unit.team || 0) != ownerTeam && unit.type == 3; }, ownerTeam);
-    }
-
     nearestFriendlyCityCoord(origin, ownerTeam)
     {
         return this.nearestUnitCoord(origin, function(unit) { return (unit.team || 0) == ownerTeam && unit.type == 3; }, ownerTeam);
-    }
-
-    nearestOtherFriendlyCityCoord(origin, ownerTeam)
-    {
-        return this.nearestUnitCoord(origin, function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.type == 3
-                && (!origin || unit.coord.i != origin.i || unit.coord.j != origin.j);
-        }, ownerTeam);
-    }
-
-    nearestUnitCoordForViewer(origin, viewerUserId, filter)
-    {
-        return this.nearestUnitCoord(origin, filter, viewerUserId);
     }
 
     nearestUnitCoord(origin, filter, viewerUserId = this.activeUserId())
@@ -3377,24 +3002,20 @@ const _ai_player = new class
         }
         var unit = _units[k];
         if (command.command == 'wait') {
-            if (_current_game.setUnitState && unit.can_move) {
-                var terrain = this.terrainTypeAt(unit.coord.i, unit.coord.j);
-                if (unit.type == 2 && (terrain == 4 || terrain == 5)) {
-                    _current_game.setUnitState(k, 'fortified');
-                    command.target = new Coord(unit.coord.i, unit.coord.j);
-                    command.appliedState = 'fortified';
-                    return true;
-                }
-                _current_game.setUnitState(k, 'waiting');
+            var waitState = command.state == 'fortified' ? 'fortified' : 'waiting';
+            if (_current_game.setUnitState && unit.can_move
+                && (waitState != 'fortified' || unit.type == 2)) {
+                _current_game.setUnitState(k, waitState);
                 command.target = new Coord(unit.coord.i, unit.coord.j);
-                command.appliedState = 'waiting';
+                command.appliedState = waitState;
                 return true;
             }
-            command.failureReason = 'unit cannot wait now';
+            command.failureReason = 'engine-selected wait state is not legal for this unit';
+            return false;
         }
         if (command.command == 'build_city') {
             command.target = new Coord(unit.coord.i, unit.coord.j);
-            if (unit.unitTypeId == 'settlers' && this.shouldSettlerBuildCity(k, unit.team || 0)) {
+            if (unit.unitTypeId == 'settlers') {
                 var previousSelection = typeof _selection == 'undefined' ? -1 : _selection;
                 _selection = k;
                 _current_game.doCommand('build_city');
@@ -3402,9 +3023,8 @@ const _ai_player = new class
                 command.appliedState = 'city built';
                 return true;
             }
-            command.failureReason = unit.unitTypeId == 'settlers'
-                ? 'settler is not on an accepted city plot yet'
-                : 'only settlers can build city';
+            command.failureReason = 'only settlers can build city';
+            return false;
         }
         if (command.command == 'irrigate' && _current_game.canBuildIrrigation && _current_game.canBuildIrrigation(k)) {
             _current_game.setUnitState(k, 'irrigate');
@@ -3414,6 +3034,7 @@ const _ai_player = new class
         }
         if (command.command == 'irrigate') {
             command.failureReason = 'irrigation is not available on this tile';
+            return false;
         }
         if (command.command == 'chop_forest' && _current_game.canChopForest && _current_game.canChopForest(k)) {
             _current_game.setUnitState(k, 'chop_forest');
@@ -3423,29 +3044,25 @@ const _ai_player = new class
         }
         if (command.command == 'chop_forest') {
             command.failureReason = 'forest chopping is not available on this tile';
-        }
-        if (command.command == 'goto' && unit.unitTypeId == 'settlers' && this.shouldSettlerBuildCity(k, unit.team || 0)) {
-            var previousSelectionForGotoBuild = typeof _selection == 'undefined' ? -1 : _selection;
-            command.target = new Coord(unit.coord.i, unit.coord.j);
-            _selection = k;
-            _current_game.doCommand('build_city');
-            _selection = previousSelectionForGotoBuild;
-            command.appliedState = 'city built';
-            return true;
+            return false;
         }
         if (command.command == 'build_improvement' && _current_game.workerTileBuildingMenuOptions) {
             var buildings = _current_game.workerTileBuildingMenuOptions(k);
             command.availableBuildings = buildings.slice();
-            if (buildings.length) {
-                var building = this.chooseWorkerTileBuildingForAI(k, buildings);
-                _current_game.setUnitState(k, building);
+            if (command.building && buildings.indexOf(command.building) != -1) {
+                _current_game.setUnitState(k, command.building);
                 command.target = new Coord(unit.coord.i, unit.coord.j);
-                command.appliedState = building;
+                command.appliedState = command.building;
                 return true;
             }
-            command.failureReason = 'no supported worker improvement on this tile';
+            command.failureReason = 'engine-selected worker improvement is not legal on this tile';
+            return false;
         }
-        if (command.command == 'road_to' && unit.unitTypeId == 'worker'
+        if (command.command == 'build_improvement') {
+            command.failureReason = 'worker improvement API is unavailable';
+            return false;
+        }
+        if (command.command == 'road_to' && command.state == 'road' && unit.unitTypeId == 'worker'
             && _current_game.canBuildRoad && _current_game.canBuildRoad(k)) {
             _current_game.setUnitState(k, 'road');
             command.target = new Coord(unit.coord.i, unit.coord.j);
@@ -3454,18 +3071,12 @@ const _ai_player = new class
         }
         if ((command.command == 'goto' || command.command == 'road_to' || command.command == 'attack') && unit.can_move) {
             var target = command.target;
-            if (!target && command.command == 'goto') {
-                target = this.civilianRetreatTargetFromStrategyFocus(unit, unit.team || 0)
-                    || (unit.unitTypeId == 'settlers' ? this.bestSettlementTargetForSettler(k, unit.team || 0) : null)
-                    || (unit.unitTypeId == 'worker' ? this.workerGotoTarget(k, unit.team || 0) : null)
-                    || this.fallbackExploreTarget(unit, unit.team || 0);
-            }
-            if (!target && command.command == 'road_to') {
-                target = this.nearestOtherFriendlyCityCoord(unit.coord, unit.team || 0)
-                    || this.nearestFriendlyCityCoord(unit.coord, unit.team || 0);
-            }
             if (command.command == 'attack') {
-                target = this.nearestEnemyCoord(unit.coord, unit.team || 0) || target;
+                var targetUnit = target ? this.visibleUnitAtForViewer(target.i, target.j, unit.team || 0) : null;
+                if (!targetUnit || (targetUnit.team || 0) == (unit.team || 0)) {
+                    command.failureReason = 'engine-selected attack target is no longer an enemy';
+                    return false;
+                }
             }
             command.selectedTarget = target;
             if (target && _current_game.buildPath && _current_game.assignPath) {
@@ -3473,9 +3084,14 @@ const _ai_player = new class
                 if (path.length) {
                     command.target = path[path.length - 1];
                     command.pathLength = path.length;
-                    if (command.command == 'road_to' && _current_game.canUseRoadTo && _current_game.canUseRoadTo(k)) {
+                    if (command.command == 'road_to' && command.state == 'road_to'
+                        && _current_game.canUseRoadTo && _current_game.canUseRoadTo(k)) {
                         _current_game.setUnitState(k, 'road_to');
                         command.appliedState = 'road_to';
+                    }
+                    else if (command.command == 'road_to') {
+                        command.failureReason = 'engine-selected road-to route is not legal';
+                        return false;
                     }
                     else if (_current_game.setUnitState) {
                         _current_game.setUnitState(k, 'ready');

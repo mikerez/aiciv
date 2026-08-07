@@ -14,5 +14,6 @@ struct ActionTestSummary {
 };
 
 ActionTestSummary runActionTests(const ActionEngine& engine, const std::vector<std::string>& paths, std::ostream& out);
+std::vector<TrainingExample> makeActionSimulationTrainingExamples(const std::vector<std::string>& paths);
 
 } // namespace aiciv::ai
