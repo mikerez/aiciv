@@ -1,0 +1,164 @@
+# Action simulations for the added land and naval unit types.
+
+scenario swordsman_attacks_adjacent_enemy
+unit swordsman 3 3
+tile 3 3 grass
+tile 3 4 grass enemy=1 local=-0.15
+target 3 4
+expect command attack
+expect effect enemy_removed
+end
+
+scenario swordsman_advances_to_distant_enemy
+unit swordsman 3 3
+tile 3 3 grass
+tile 3 5 grass enemy=1 local=-0.15
+target 3 5
+expect command goto
+expect effect moved
+end
+
+scenario pikeman_attacks_adjacent_mounted_enemy
+unit pikeman 3 3
+tile 3 3 grass
+tile 4 3 grass enemy=1 local=-0.15
+target 4 3
+expect command attack
+expect effect enemy_removed
+end
+
+scenario pikeman_moves_to_mounted_front
+unit pikeman 3 3
+tile 3 3 grass
+tile 5 3 grass enemy=1 local=-0.15
+target 5 3
+expect command goto
+expect effect moved
+end
+
+scenario catapult_attacks_adjacent_city_defender
+unit catapult 3 3
+tile 3 3 grass
+tile 4 4 grass enemy=1 city=1 local=-0.15
+target 4 4
+expect command attack
+expect effect enemy_removed
+end
+
+scenario catapult_moves_toward_enemy_city
+unit catapult 3 3
+tile 3 3 grass
+tile 5 5 grass enemy=1 city=1 local=-0.15
+target 5 5
+expect command goto
+expect effect moved
+end
+
+scenario trebuchet_attacks_adjacent_city_defender
+unit trebuchet 3 3
+tile 3 3 grass
+tile 2 3 grass enemy=1 city=1 local=-0.15
+target 2 3
+expect command attack
+expect effect enemy_removed
+end
+
+scenario trebuchet_moves_toward_enemy_city
+unit trebuchet 3 3
+tile 3 3 grass
+tile 1 3 grass enemy=1 city=1 local=-0.15
+target 1 3
+features strategy_dx=-0.50 strategy_dy=0.00 worker_focus=0.95
+expect command goto
+expect effect moved
+end
+
+scenario knight_attacks_adjacent_enemy
+unit knight 3 3
+tile 3 3 grass
+tile 4 3 grass enemy=1 local=-0.15
+target 4 3
+expect command attack
+expect effect enemy_removed
+end
+
+scenario knight_charges_distant_enemy
+unit knight 3 3
+tile 3 3 grass
+tile 5 4 grass enemy=1 local=-0.15
+target 5 4
+features strategy_dx=0.50 strategy_dy=0.25 worker_focus=0.90
+expect command goto
+expect effect moved
+end
+
+scenario trireme_attacks_adjacent_ship
+unit trireme 3 3
+tile 3 3 water
+tile 3 4 water enemy=1 local=-0.15
+target 3 4
+expect command attack
+expect effect enemy_removed
+end
+
+scenario trireme_patrols_toward_distant_ship
+unit trireme 3 3
+tile 3 3 water
+tile 3 5 water enemy=1 local=-0.15
+target 3 5
+expect command goto
+expect effect moved
+end
+
+scenario galley_attacks_adjacent_ship
+unit galley 3 3
+tile 3 3 water
+tile 4 3 water enemy=1 local=-0.15
+target 4 3
+expect command attack
+expect effect enemy_removed
+end
+
+scenario galley_moves_toward_transport_target
+unit galley 3 3
+tile 3 3 water
+tile 5 3 water friendly=1
+target 5 3
+expect command goto
+expect effect moved
+end
+
+scenario frigate_attacks_adjacent_ship
+unit frigate 3 3
+tile 3 3 water
+tile 2 3 water enemy=1 local=-0.15
+target 2 3
+expect command attack
+expect effect enemy_removed
+end
+
+scenario frigate_hunts_distant_ship
+unit frigate 3 3
+tile 3 3 water
+tile 1 3 water enemy=1 local=-0.15
+target 1 3
+features strategy_dx=-0.50 strategy_dy=0.00 worker_focus=0.95
+expect command goto
+expect effect moved
+end
+
+scenario workboat_builds_network_on_water
+unit workboat 3 3
+tile 3 3 water resource=fish
+expect command build_improvement
+expect effect network
+end
+
+scenario workboat_moves_then_builds_network
+unit workboat 3 3
+tile 3 3 water improvement=network
+tile 3 4 water
+target 3 4
+expect turns 2
+expect final network
+end

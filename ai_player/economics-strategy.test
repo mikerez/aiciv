@@ -2,7 +2,7 @@
 # Format:
 # scenario NAME
 # city record=N population=N food=N production=N money=N frontier=N seaside=N garrison=N free=1 legal=1
-# state cities=N free_cities=N workers=N military=N enemy_military=N idle=N account=N delta=N upkeep=N
+# state cities=N free_cities=N settlers=N workers=N explorers=N military=N enemy_military=N idle=N account=N delta=N upkeep=N
 # tech opened=N
 # demand settlers=N worker=N explorer=N military=N
 # expect production UNIT_TYPE

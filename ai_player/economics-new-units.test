@@ -1,0 +1,73 @@
+# Exact legal production candidates for the added land and naval units.
+
+scenario iron_frontier_builds_swordsman
+city population=0.35 food=0.55 production=0.95 money=0.45 frontier=1.00 seaside=0.00 garrison=0.25 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.25 free_cities=0.13 workers=0.25 military=0.25 enemy_military=0.70 idle=0.18 account=0.60 delta=0.20 upkeep=0.25 enemy_city=0.20
+candidates none warrior spearman pikeman swordsman catapult trebuchet knight
+expect production swordsman
+end
+
+scenario mounted_threat_builds_pikeman
+city population=0.30 food=0.50 production=0.78 money=0.40 frontier=1.00 seaside=0.00 garrison=0.20 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.20 free_cities=0.13 workers=0.25 military=0.20 enemy_military=0.80 idle=0.18 account=0.55 delta=0.15 upkeep=0.25 enemy_mounted=1.00
+candidates none warrior spearman pikeman swordsman catapult knight archer
+expect production pikeman
+end
+
+scenario city_assault_builds_catapult
+city population=0.28 food=0.45 production=0.82 money=0.35 frontier=1.00 seaside=0.00 garrison=0.35 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.25 free_cities=0.13 workers=0.25 military=0.35 enemy_military=0.60 idle=0.18 account=0.65 delta=0.18 upkeep=0.30 enemy_city=0.65
+candidates none warrior swordsman pikeman catapult knight slinger archer
+expect production catapult
+end
+
+scenario advanced_city_assault_builds_trebuchet
+city population=0.40 food=0.55 production=1.00 money=0.45 frontier=1.00 seaside=0.00 garrison=0.45 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.35 free_cities=0.13 workers=0.30 military=0.50 enemy_military=0.75 idle=0.18 account=0.80 delta=0.25 upkeep=0.35 enemy_city=1.00
+candidates none swordsman pikeman catapult trebuchet knight longbow fencer
+expect production trebuchet
+end
+
+scenario mobile_combined_arms_builds_knight
+city population=0.38 food=0.75 production=0.90 money=0.50 frontier=0.80 seaside=0.00 garrison=0.45 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.30 free_cities=0.13 workers=0.25 military=0.45 enemy_military=0.55 idle=0.18 account=0.85 delta=0.25 upkeep=0.30 enemy_city=0.20
+candidates none warrior swordsman pikeman catapult trebuchet knight horseman
+expect production knight
+end
+
+scenario seaside_jobs_build_workboat
+city population=0.22 food=0.55 production=0.50 money=0.50 frontier=0.30 seaside=1.00 garrison=0.35 free=1 legal=1
+demand settlers=0.05 worker=0.80 explorer=0.05 military=0.10
+state cities=0.20 free_cities=0.13 workers=0.25 military=0.30 enemy_military=0.10 idle=0.18 account=0.60 delta=0.20 upkeep=0.20 water_jobs=1.00
+candidates none worker workboat explorer warrior trireme galley frigate
+expect production workboat
+end
+
+scenario early_naval_defense_builds_trireme
+city population=0.20 food=0.50 production=0.55 money=0.40 frontier=0.65 seaside=1.00 garrison=0.15 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.15 free_cities=0.13 workers=0.20 military=0.10 enemy_military=0.45 idle=0.18 account=0.45 delta=0.15 upkeep=0.15 enemy_naval=0.55
+candidates none warrior slinger workboat trireme galley explorer settlers
+expect production trireme
+end
+
+scenario transport_need_builds_galley
+city population=0.28 food=0.65 production=0.68 money=0.45 frontier=0.55 seaside=1.00 garrison=0.35 free=1 legal=1
+demand settlers=0.15 worker=0.05 explorer=0.10 military=0.70
+state cities=0.25 free_cities=0.13 workers=0.25 military=0.35 enemy_military=0.30 idle=0.45 account=0.65 delta=0.20 upkeep=0.25 enemy_naval=0.20
+candidates none warrior workboat trireme galley frigate explorer settlers
+expect production galley
+end
+
+scenario advanced_naval_war_builds_frigate
+city population=0.42 food=0.65 production=1.00 money=0.60 frontier=0.85 seaside=1.00 garrison=0.50 free=1 legal=1
+demand settlers=0.05 worker=0.05 explorer=0.05 military=0.85
+state cities=0.35 free_cities=0.13 workers=0.30 military=0.55 enemy_military=0.85 idle=0.18 account=0.90 delta=0.25 upkeep=0.35 enemy_naval=1.00
+candidates none warrior trireme galley galleon frigate workboat knight
+expect production frigate
+end

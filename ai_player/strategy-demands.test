@@ -1,0 +1,27 @@
+# Strategy expansion-wave tests. Values use the same normalized representation
+# as ai.js. One Settler is 0.125 because the runtime count is divided by eight.
+
+scenario first_city_requires_settler
+empire units=0.00 cities=0.00 settlers=0.00 workers=0.00 military=0.00 enemy_military=0.00 money=0.20 known_map=0.10
+expect settlers_min=0.45 strongest=settlers
+end
+
+scenario safe_two_city_empire_starts_expansion_wave
+empire units=0.18 cities=0.13 settlers=0.00 workers=0.25 military=0.15 enemy_military=0.05 money=0.65 known_map=0.60
+expect settlers_min=0.32 strongest=settlers
+end
+
+scenario active_settler_suppresses_second_settler
+empire units=0.20 cities=0.13 settlers=0.125 workers=0.25 military=0.15 enemy_military=0.05 money=0.65 known_map=0.60
+expect settlers_max=0.25
+end
+
+scenario safe_four_city_empire_restarts_expansion_after_founding
+empire units=0.32 cities=0.25 settlers=0.00 workers=0.45 military=0.28 enemy_military=0.08 money=0.80 known_map=0.78
+expect settlers_min=0.30 strongest=settlers
+end
+
+scenario wartime_suppresses_expansion_even_without_settler
+empire units=0.25 cities=0.25 settlers=0.00 workers=0.20 military=0.15 enemy_military=0.65 money=0.45 known_map=0.40
+expect settlers_max=0.30 strongest=military
+end

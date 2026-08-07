@@ -318,6 +318,7 @@ const _multiplayer = new class
             lastActionRecordSummaries: this.clonePlain(_ai_player.lastActionRecordSummaries),
             lastActionCandidates: this.clonePlain(_ai_player.lastActionCandidates),
             lastEconomicsCityIndices: this.clonePlain(_ai_player.lastEconomicsCityIndices),
+            lastEconomicsCandidates: this.clonePlain(_ai_player.lastEconomicsCandidates),
         };
     }
 

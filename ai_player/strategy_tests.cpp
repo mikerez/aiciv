@@ -66,6 +66,21 @@ struct StrategyWorkerScenario {
     float tolerance = 0.18f;
 };
 
+struct StrategyDemandScenario {
+    std::string name;
+    float units = 0.0f;
+    float cities = 0.0f;
+    float settlers = 0.0f;
+    float workers = 0.0f;
+    float military = 0.0f;
+    float enemyMilitary = 0.0f;
+    float money = 0.0f;
+    float knownMap = 0.0f;
+    float settlersMin = -1.0f;
+    float settlersMax = 2.0f;
+    std::string strongest;
+};
+
 std::string trim(const std::string& text)
 {
     const size_t begin = text.find_first_not_of(" \t\r\n");
@@ -188,6 +203,31 @@ InputSignal buildStrategyWorkerInput(const StrategyWorkerScenario& scenario)
     input[AI_PLAYER_SITUATION_BASE + 1] = scenario.cityCount;
     input[AI_PLAYER_SITUATION_BASE + 15] = scenario.workerCount;
     input[AI_PLAYER_SITUATION_BASE + 21] = scenario.workerCount;
+    return input;
+}
+
+InputSignal buildStrategyDemandInput(const StrategyDemandScenario& scenario)
+{
+    InputSignal input{};
+    input.fill(0.0f);
+    input[AI_PLAYER_SITUATION_BASE + 1] = scenario.cities;
+    input[AI_PLAYER_SITUATION_BASE + 2] = scenario.units;
+    input[AI_PLAYER_SITUATION_BASE + 3] = scenario.knownMap;
+    input[AI_PLAYER_SITUATION_BASE + 4] = scenario.military;
+    input[AI_PLAYER_SITUATION_BASE + 5] = scenario.enemyMilitary;
+    input[AI_PLAYER_SITUATION_BASE + 6] = scenario.money;
+    input[AI_PLAYER_SITUATION_BASE + 14] = scenario.settlers;
+    input[AI_PLAYER_SITUATION_BASE + 15] = scenario.workers;
+    input[AI_PLAYER_SITUATION_BASE + 20] = scenario.settlers;
+    input[AI_PLAYER_SITUATION_BASE + 21] = scenario.workers;
+    input[AI_PLAYER_SITUATION_BASE + 22] = scenario.military;
+    input[AI_PLAYER_SITUATION_BASE + 23] = scenario.cities;
+    input[birdsviewSlot(14, 14)] = compactBirdsviewValue(0.0f, scenario.military * 100.0f,
+                                                         0.14f, 0.0f);
+    if (scenario.enemyMilitary > scenario.military) {
+        input[birdsviewSlot(34, 30)] = compactBirdsviewValue(1.0f, scenario.enemyMilitary * 100.0f,
+                                                             0.20f, 0.0f);
+    }
     return input;
 }
 
@@ -440,6 +480,68 @@ std::vector<StrategyWorkerScenario> loadStrategyWorkerTestFile(const std::string
     return scenarios;
 }
 
+std::vector<StrategyDemandScenario> loadStrategyDemandTestFile(const std::string& path)
+{
+    std::ifstream in(path);
+    if (!in) {
+        throw std::runtime_error("could not open strategy demand test file: " + path);
+    }
+
+    std::vector<StrategyDemandScenario> scenarios;
+    StrategyDemandScenario current;
+    bool inScenario = false;
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(in, line)) {
+        ++lineNumber;
+        line = trim(line);
+        if (line.empty() || line[0] == '#') continue;
+        const std::vector<std::string> words = splitWords(line);
+        if (words.empty()) continue;
+        if (words[0] == "scenario") {
+            if (inScenario) {
+                throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": nested scenario");
+            }
+            current = StrategyDemandScenario{};
+            current.name = words.size() > 1 ? words[1] : "unnamed";
+            inScenario = true;
+            continue;
+        }
+        if (!inScenario) {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": directive outside scenario");
+        }
+        if (words[0] == "empire") {
+            const auto options = parseOptions(words, 1);
+            current.units = optionFloat(options, "units", current.units);
+            current.cities = optionFloat(options, "cities", current.cities);
+            current.settlers = optionFloat(options, "settlers", current.settlers);
+            current.workers = optionFloat(options, "workers", current.workers);
+            current.military = optionFloat(options, "military", current.military);
+            current.enemyMilitary = optionFloat(options, "enemy_military", current.enemyMilitary);
+            current.money = optionFloat(options, "money", current.money);
+            current.knownMap = optionFloat(options, "known_map", current.knownMap);
+        }
+        else if (words[0] == "expect") {
+            const auto options = parseOptions(words, 1);
+            current.settlersMin = optionFloat(options, "settlers_min", current.settlersMin);
+            current.settlersMax = optionFloat(options, "settlers_max", current.settlersMax);
+            current.strongest = optionText(options, "strongest", current.strongest);
+        }
+        else if (words[0] == "end") {
+            if (current.settlersMin < 0.0f && current.settlersMax > 1.0f && current.strongest.empty()) {
+                throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": missing demand expectation");
+            }
+            scenarios.push_back(current);
+            inScenario = false;
+        }
+        else {
+            throw std::runtime_error(path + ":" + std::to_string(lineNumber) + ": unknown directive " + words[0]);
+        }
+    }
+    if (inScenario) throw std::runtime_error(path + ": unterminated scenario");
+    return scenarios;
+}
+
 bool isBudgetTestPath(const std::string& path)
 {
     return path.find("budget") != std::string::npos;
@@ -450,6 +552,11 @@ bool isWorkerTestPath(const std::string& path)
     return path.find("worker") != std::string::npos;
 }
 
+bool isDemandTestPath(const std::string& path)
+{
+    return path.find("demand") != std::string::npos;
+}
+
 } // namespace
 
 StrategyTestSummary runStrategyTests(const StrategyEngine& engine, const std::vector<std::string>& paths,
@@ -458,6 +565,38 @@ StrategyTestSummary runStrategyTests(const StrategyEngine& engine, const std::ve
     StrategyTestSummary summary;
     out << "\nRunning Strategy technology tests:\n";
     for (const std::string& path : paths) {
+        if (isDemandTestPath(path)) {
+            const std::vector<StrategyDemandScenario> scenarios = loadStrategyDemandTestFile(path);
+            out << "  " << path << " (" << scenarios.size() << " scenarios)\n";
+            const std::array<std::string, 4> labels = { "settlers", "worker", "explorer", "military" };
+            for (const StrategyDemandScenario& scenario : scenarios) {
+                ++summary.total;
+                const OutputSignal output = engine.infer(buildStrategyDemandInput(scenario));
+                std::array<float, 4> demand = {
+                    std::max(0.0f, std::min(1.0f, output[64])),
+                    std::max(0.0f, std::min(1.0f, output[65])),
+                    std::max(0.0f, std::min(1.0f, output[66])),
+                    0.0f,
+                };
+                demand[3] = std::max(0.0f, 1.0f - demand[0] - demand[1] - demand[2]);
+                const float sum = demand[0] + demand[1] + demand[2] + demand[3];
+                if (sum > 0.01f) for (float& value : demand) value /= sum;
+                const int strongest = static_cast<int>(std::max_element(demand.begin(), demand.end()) - demand.begin());
+                const bool ok = demand[0] >= scenario.settlersMin
+                    && demand[0] <= scenario.settlersMax
+                    && (scenario.strongest.empty() || labels[strongest] == scenario.strongest);
+                if (ok) ++summary.passed;
+                out << "    " << (ok ? "PASS" : "FAIL") << " " << scenario.name
+                    << ": settlers=" << std::fixed << std::setprecision(3) << demand[0]
+                    << " strongest=" << labels[strongest];
+                if (!ok) {
+                    out << " expected settlers=[" << scenario.settlersMin << "," << scenario.settlersMax
+                        << "] strongest=" << (scenario.strongest.empty() ? "any" : scenario.strongest);
+                }
+                out << "\n";
+            }
+            continue;
+        }
         if (isBudgetTestPath(path)) {
             const std::vector<StrategyBudgetScenario> scenarios = loadStrategyBudgetTestFile(path);
             out << "  " << path << " (" << scenarios.size() << " scenarios)\n";

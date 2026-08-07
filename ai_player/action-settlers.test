@@ -2,7 +2,7 @@
 # Format:
 # scenario NAME
 # unit UNIT_TYPE i j
-# tile i j TERRAIN [resource=NAME] [water=1] [hidden=1] [enemy=1] [city=1] [local=VALUE]
+# tile i j TERRAIN [resource=NAME] [food=YIELD] [water=1] [hidden=1] [enemy=1] [city=1] [local=VALUE]
 # features worker=N nearby=N fresh=N city_score=N city_dist=N age=N
 # target i j
 # expect command ACTION_LABEL
@@ -143,6 +143,65 @@ unit settlers 3 3
 tile 3 3 grass local=0.25
 tile 4 3 grass local=0.25
 features city_dist=1.00
+expect final city
+expect turns 10
+end
+
+scenario settler_routes_across_weak_land_then_builds_city
+unit settlers 2 3
+tile 2 3 desert local=0.13
+tile 3 3 grass local=0.25
+tile 4 3 grass resource=rice water=1 local=0.80
+tile 4 2 grass water=1 local=0.47
+target 4 3
+expect final city
+expect turns 10
+end
+
+scenario settler_builds_on_exact_two_food_grass
+unit settlers 3 3
+tile 3 3 grass food=2 local=0.25
+tile 4 3 hills food=1 local=0.50
+features nearby=0.08 fresh=0.00 city_score=0.40 city_dist=0.82
+expect command build_city
+expect effect city
+end
+
+scenario settler_rejects_one_food_hill_for_two_food_grass
+unit settlers 3 3
+tile 3 3 hills food=1 local=0.50
+tile 4 3 grass food=2 local=0.25
+features nearby=0.10 fresh=0.00 city_score=0.42 city_dist=0.88
+target 4 3
+expect command goto
+expect effect moved
+end
+
+scenario settler_rejects_one_food_forest_for_three_food_river
+unit settlers 3 3
+tile 3 3 forest food=1 local=0.75
+tile 2 3 grasswater food=3 water=1 local=0.88
+features nearby=0.12 fresh=0.00 city_score=0.44 city_dist=0.90
+target 2 3
+expect command goto
+expect effect moved
+end
+
+scenario settler_builds_on_four_food_resource_grass
+unit settlers 3 3
+tile 3 3 grass resource=rice food=4 local=0.35
+tile 4 3 grass food=2 local=0.25
+features nearby=0.30 fresh=0.00 city_score=0.62 city_dist=0.84
+expect command build_city
+expect effect city
+end
+
+scenario settler_routes_to_minimum_two_food_site_then_builds
+unit settlers 2 3
+tile 2 3 desert food=0 local=0.13
+tile 3 3 hills food=1 local=0.50
+tile 4 3 grass food=2 local=0.25
+target 4 3
 expect final city
 expect turns 10
 end
