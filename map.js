@@ -29,7 +29,8 @@ const _map = new class
                     camp: false,
                     fishing_boats: false,
                     quarry: false,
-                    winery: false
+                    winery: false,
+                    network: false
                 };
             }
         }
@@ -165,7 +166,7 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 }
                 if (_map_terrain_mod[i][j].cottage) {
                     var cottageAge = _map_terrain_mod[i][j].cottageAge || 0;
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 20 ? 870 : (cottageAge >= 10 ? 869 : 854) });
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 60 ? 870 : (cottageAge >= 30 ? 869 : 854) });
                 }
                 if (_map_terrain_mod[i][j].workshop) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 855 });
@@ -190,6 +191,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 }
                 if (_map_terrain_mod[i][j].winery) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 868 });
+                }
+                if (_map_terrain_mod[i][j].network) {
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 870 });
                 }
             }
         }
@@ -318,6 +322,11 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         return this.addTerrainModifier(i, j, 'fishing_boats');
     }
 
+    addNetwork(i, j)
+    {
+        return this.addTerrainModifier(i, j, 'network');
+    }
+
     addQuarry(i, j)
     {
         return this.addTerrainModifier(i, j, 'quarry');
@@ -336,10 +345,10 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 if (_map_terrain_mod[i][j].cottage) {
                     var previousAge = _map_terrain_mod[i][j].cottageAge || 0;
                     _map_terrain_mod[i][j].cottageAge = previousAge + 1;
-                    if (previousAge < 10 && _map_terrain_mod[i][j].cottageAge >= 10) {
+                    if (previousAge < 30 && _map_terrain_mod[i][j].cottageAge >= 30) {
                         changed = true;
                     }
-                    if (previousAge < 20 && _map_terrain_mod[i][j].cottageAge >= 20) {
+                    if (previousAge < 60 && _map_terrain_mod[i][j].cottageAge >= 60) {
                         changed = true;
                     }
                 }

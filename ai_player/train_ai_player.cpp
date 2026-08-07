@@ -125,6 +125,11 @@ std::string joinPaths(const std::vector<std::string>& paths)
 
 std::vector<TrainingExample> loadActionSituationSet(std::string& usedPath)
 {
+    try {
+        usedPath = "ai_player/action-runtime.situations";
+        return loadTrainingExamples(usedPath);
+    } catch (const std::runtime_error&) {
+    }
     std::vector<TrainingExample> examples;
     std::vector<std::string> usedPaths;
     const std::vector<std::string> splitNames = {
@@ -182,6 +187,12 @@ void exportDefaultSituations()
     saveTrainingExamples("ai_player/action-slinger.situations", makeActionSlingerExamples());
     saveTrainingExamples("ai_player/action-archer.situations", makeActionArcherExamples());
     saveTrainingExamples("ai_player/action-horseman.situations", makeActionHorsemanExamples());
+    saveTrainingExamples("ai_player/action-runtime.situations", makeActionSimulationTrainingExamples({
+        "ai_player/action-settlers.test", "ai_player/action-worker.test",
+        "ai_player/action-explorer.test", "ai_player/action-warrior.test",
+        "ai_player/action-slinger.test", "ai_player/action-archer.test",
+        "ai_player/action-horseman.test",
+    }));
     saveTrainingExamples("ai_player/economics.situations", makeEconomicsExamples());
     saveTrainingExamples("ai_player/economics-strategy.situations", makeEconomicsStrategyExamples());
     saveTrainingExamples("ai_player/economics-workers.situations", makeEconomicsWorkerExamples());
@@ -193,6 +204,7 @@ void exportDefaultSituations()
               << "ai_player/action-worker.situations, ai_player/action-explorer.situations, "
               << "ai_player/action-warrior.situations, ai_player/action-slinger.situations, "
               << "ai_player/action-archer.situations, ai_player/action-horseman.situations, "
+              << "ai_player/action-runtime.situations, "
               << "ai_player/economics.situations, ai_player/economics-strategy.situations, "
               << "ai_player/economics-workers.situations\n";
 }
@@ -241,6 +253,17 @@ int main(int argc, char** argv)
         loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations", "strategy-landscape.situations", "strategy-budget.situations", "strategy-workers.situations" },
                               "strategy.situations", strategyPath);
     std::vector<TrainingExample> actionExamples = loadActionSituationSet(actionPath);
+    const std::vector<std::string> actionTestPaths = {
+        "ai_player/action-settlers.test",
+        "ai_player/action-worker.test",
+        "ai_player/action-explorer.test",
+        "ai_player/action-warrior.test",
+        "ai_player/action-slinger.test",
+        "ai_player/action-archer.test",
+        "ai_player/action-horseman.test",
+    };
+    const std::vector<TrainingExample> simulationExamples = makeActionSimulationTrainingExamples(actionTestPaths);
+    (void)simulationExamples;
     std::vector<TrainingExample> economicsExamples =
         loadSplitSituationSet({ "economics-strategy.situations", "economics-workers.situations" }, "economics-strategy.situations", economicsPath);
 
@@ -258,15 +281,7 @@ int main(int argc, char** argv)
     }
     if (engineFilter == "all" || engineFilter == "action") {
         runEngine(action, actionExamples, actionPath, modelPathBesideSituations(actionPath, "action"), epochs, learningRate);
-        const ActionTestSummary actionTests = runActionTests(action, {
-            "ai_player/action-settlers.test",
-            "ai_player/action-worker.test",
-            "ai_player/action-explorer.test",
-            "ai_player/action-warrior.test",
-            "ai_player/action-slinger.test",
-            "ai_player/action-archer.test",
-            "ai_player/action-horseman.test",
-        }, std::cout);
+        const ActionTestSummary actionTests = runActionTests(action, actionTestPaths, std::cout);
         if (actionTests.passed != actionTests.total) {
             return 2;
         }

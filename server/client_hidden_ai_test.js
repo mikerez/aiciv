@@ -63,7 +63,7 @@ var workerCalls = [];
 const _ai_player = {
     lastStrategyObjectIds: [], lastStrategyContext: null, lastStrategyFocuses: [],
     lastStrategyMilitaryFocus: null, lastStrategyWorkerFocus: null,
-    lastStrategyProductionDemands: null, lastTacticsGroupIds: [],
+    lastStrategyProductionDemands: null,
     lastActionUnitIndices: [], lastActionRecordSummaries: [], lastEconomicsCityIndices: [],
     async ensureBackgroundModelsLoaded() {},
     buildStrategyInput() { this.lastStrategyObjectIds = [{team: 91}]; return new Float32Array(4); },
@@ -83,7 +83,6 @@ const _ai_player = {
         if (_current_user !== playerId) throw new Error('AI output applied outside AI context');
         _units[0].gotoPath = [{i: 1, j: 1}];
     },
-    applyAiReasoningWorkarounds() {},
 };
 `, sandbox);
 

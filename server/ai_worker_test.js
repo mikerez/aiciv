@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const zlib = require('node:zlib');
 
 let posted = null;
 const sandbox = {
@@ -19,11 +20,12 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('ai_worker.js', 'utf8'), sandbox, { filename: 'ai_worker.js' });
 
-const modelBuffer = fs.readFileSync('ai_player/action.db');
+const modelBuffer = zlib.gunzipSync(fs.readFileSync('ai_player/action.db.gz'));
 const arrayBuffer = modelBuffer.buffer.slice(modelBuffer.byteOffset, modelBuffer.byteOffset + modelBuffer.byteLength);
 const model = vm.runInContext('parseModel', sandbox)('action', 'action.db', arrayBuffer);
 assert.equal(model.inputWidth, 1024);
 assert.equal(model.outputWidth, 72);
+assert.deepEqual(Array.from(model.layers, layer => layer.outputWidth), [536, 448, 368, 288, 208, 176, 176, 72]);
 const output = vm.runInContext('inferCPU', sandbox)(model, new Float32Array(1024));
 assert.equal(output.length, 72);
 for (const value of output) assert.ok(Number.isFinite(value));

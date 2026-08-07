@@ -16,7 +16,7 @@
 - `MAIN-MENU-003`: A second click on an open main menu button hides that menu.
 - `MAIN-MENU-004`: Main menus use the same fixed screen area: `x=100`, `y=50`, right edge near the unit menu, and bottom at `y_max-200`.
 - `MAIN-MENU-005`: All main menus are hidden by default.
-- `MAIN-MENU-006`: Pressing `Escape` hides all open main menus.
+- `MAIN-MENU-006`: Pressing `Escape` hides all open menus, clears single and group unit selection, and cancels the active command mode.
 - `MAIN-MENU-007`: Main menu panels can be opened directly by game events, such as technology discovery.
 - `MAIN-MENU-008`: The Console menu shows verbose AI parsing and application logs for Strategy, Action, and Economics decisions.
 - `MAIN-MENU-009`: Phone UI mode is enabled only for a coarse-pointer or mobile-user-agent device whose physical screen has a short side no larger than `600` CSS pixels and a long side no larger than `1200` CSS pixels. It records the screen and live viewport dimensions, scales the former mobile controls to approximately one half size, and arranges controls within the live viewport; desktop layout remains unchanged.
@@ -24,7 +24,9 @@
 - `MAIN-MOBILE-002`: The white account, economy, and relations statistics lines are drawn below the phone controls and retain their black visibility offset.
 - `MAIN-MENU-011`: The technology, politics, finance, trade, and AI-console toolbar is temporarily disabled. Every player has every technology open.
 - `MAIN-MENU-012`: Clicking a tile with multiple owned units, including a City and units, opens a 50% transparent scrollable selector on the left.
-- `MAIN-MENU-013`: A bottom-right Civilizations button opens the known-player list with civilization identity, coat of arms, relation, living forces, kills, and City statistics.
+- `MAIN-MENU-012A`: A City is sorted first and becomes the primary selection on a shared Tile, so City production commands open immediately. The stack's Select all button selects only military units and applies movement and state commands to every selected military unit on that Tile.
+- `MAIN-MENU-012B`: Tile selection contains only current visible objects at the exact clicked coordinate. Stack buttons and group selection resolve stable server identities after every authoritative array update; hidden economic improvement records never appear.
+- `MAIN-MENU-013`: A bottom-right Civilizations button opens the known-player list with civilization identity, coat of arms, directional Friend/Enemy controls, food, gold, living forces, kills, and City statistics.
 - `MAIN-MENU-014`: On phones, the Civilizations list expands between the screen safe-area insets and the Civilizations button, using the available width and height with internal scrolling and enlarged player rows.
 - `MAIN-MENU-015`: On phones, a selected tile containing multiple units exposes a Units toggle directly below the white statistics and message lines. Its half-viewport-width selector starts below that toggle, uses a stable pixel height calculated from the live viewport, expands downward, scrolls internally, and retracts after a unit is selected.
 - `MAIN-MENU-016`: With the main toolbar disabled, the live turn countdown is part of the compact top-edge End Turn button. The two top-left status lines are raised approximately 15 pixels toward the screen corner.
@@ -34,6 +36,7 @@
 - `MAIN-INPUT-001`: A left click or drag beginning on empty map keeps the current unit selection and all assigned commands unchanged and pans the map. Manual path drawing begins only when the press starts on a movable unit.
 - `MAIN-INPUT-002`: Selecting a unit with an existing Goto destination immediately repaints its movement arrows without changing the stored route. The Action panel shows its authoritative server unit ID for debugging.
 - `MAIN-INPUT-003`: JS owns and browser-persists each complete Goto route. End Turn sends PHP only the next speed-limited atomic movement segment; authoritative updates trim reached client steps but never replace the destination. A rejected atomic movement is shown immediately in a browser popup.
+- `MAIN-INPUT-004`: Right-clicking a Tile opens a top Tile-information panel showing terrain, generic defence, base and current yields, resource, suggested improvement, and projected yields. With a selected movable unit the same click also assigns Goto.
 
 ## Unit And City Structures
 
@@ -43,9 +46,10 @@
 - `MAIN-UNIT-004`: Each unit is drawn with its team color overlay sprite named `<color_name>.png`.
 - `MAIN-UNIT-005`: Every visible unit or City displays its owning username or AI player name above the sprite. A same-owner stack on one Tile uses one shared label. Labels use a dedicated transparent canvas and small regular-weight text so map-overlay refreshes cannot thicken or blink them.
 - `MAIN-UNIT-006`: One Tile holds at most five living movable units. Cities and terrain-improvement records do not consume this capacity, and military attacks remain legal against full foreign stacks.
+- `MAIN-UNIT-007`: Trireme is the basic 1 attack, 1 defence water military unit. Galley carries two same-owner land units and Frigate carries four; carried units share the ship Tile and move with its authoritative resolved movement. Land units can always disembark from water to adjacent land.
 - `MAIN-CITY-001`: City units have `CityProperties`, including `productionPerTurn`.
 - `MAIN-CITY-002`: City production is an ordered `productionQueue`; its first item is represented by `CityProductionState(unitTypeId)` with accumulated `productionPoints`.
-- `MAIN-CITY-003`: City properties include a stored production account used as overflow when a city produces more than the current task requires.
+- `MAIN-CITY-003`: A City has no idle or overflow production account. Only the current backlog item accumulates production points.
 - `MAIN-CITY-004`: A city can be set to no production; this is different from an unassigned production task.
 - `MAIN-BUILDING-001`: Cities and completed terrain improvements are represented in the unit list for economy accounting.
 - `MAIN-BUILDING-002`: Terrain-improvement unit records are hidden economic records; map modifier sprites draw them, and they do not move, draw unit sprites, reveal fog, or create control zones.
@@ -53,10 +57,11 @@
 - `MAIN-TURN-001`: `_game.applyTurnProcessingRules(layer)` is the main end-turn function.
 - `MAIN-TURN-002`: Main turn processing delegates layer-specific movement, auto-routing, chopping, state, building, and menu rules through layer hooks.
 - `MAIN-TURN-003`: Main turn processing adds city production points to the first backlog item each turn. Completed items are removed in order and the next item becomes active.
-- `MAIN-TURN-004`: When accumulated city production exceeds a completed unit cost, the excess is applied to the next backlog item or saved in the City's stored production account when the backlog is empty.
-- `MAIN-TURN-005`: In multiplayer, PHP owns production accumulation and validates every completion. JS detects a ready City, sends `complete_production`, then applies the returned City and created-unit state.
+- `MAIN-TURN-004`: Every backlog item starts at zero production. Excess from a completed or removed item is discarded and cannot accelerate the next item.
+- `MAIN-TURN-005`: In multiplayer, PHP owns production accumulation. JS sends a `produce` command only when previous points plus displayed current income reach the cost; PHP recalculates income, validates points, resources, spawn capacity, and then creates the unit.
 - `MAIN-CITY-005`: Clicking a City production choice appends it to the backlog; right-clicking a backlog row removes that item. Clearing production removes the complete backlog without discarding accumulated production.
 - `MAIN-CITY-006`: Ready production pauses without losing points while five movable units occupy the City Tile and retries after capacity can become available.
+- `MAIN-CITY-007`: The production backlog is rendered after all City production choices so adding or removing backlog entries does not shift the choice list.
 - `MAIN-MARKUP-001`: `drawStroke()` control-zone markup is skipped during initial game setup.
 - `MAIN-MARKUP-002`: End-turn processing redraws control-zone markup once after layer hooks finish selection and recentering.
 - `MAIN-MARKUP-003`: Control-zone strokes use the same team color family as the unit team overlay.
@@ -73,10 +78,11 @@
 - `MAIN-AI-004A`: Strategy generic inputs `[24..40]` describe visible terrain and resources around owned cities, or around owned settlers when no city exists. They include hills, mountains, grass, water, animals, stone, crops, opened technology rate, visible context coverage, flat land, fresh water, forest, desert/snow, resource coverage, mineral resources, and whether the context anchor is a city or settler.
 - `MAIN-AI-004B`: Strategy appends a `50x50` birdsview projection in slots `1024..3523`. The birdsview is scaled from any world map size and compactly represents local controller civ id, military weight, landscape height, and resources.
 - `MAIN-AI-004C`: Strategy technology decisions use visible landscape and resources as positive and negative evidence. Mining requires substantial hills, mountains, or mineral evidence; a fully observed city/settler context with none of those signals must select a technology supported by the actual terrain or resources instead.
-- `MAIN-AI-006`: Action input uses eight own unit objects with unit state and a 9x9 local tile feature window centered on the unit.
-- `MAIN-AI-006A`: Worker Action input field `[11]` summarizes the strongest legal nearby improvement job, including resource-free terrain enhancements. When Action selects Goto, the adapter targets that local job before a Strategy relocation suggestion.
+- `MAIN-AI-006`: Action input uses up to eight complete legal action candidates for one rotating owned unit. Each candidate includes an exact command, destination or current-tile target, requested state/improvement, target facts, and a 9x9 window centered on that target.
+- `MAIN-AI-006A`: Action output slots `[0..7]` score the complete candidates in input order. The adapter revalidates and applies the selected target and parameters without choosing a Worker job, enemy, settlement site, or fallback action.
 - `MAIN-AI-007`: Economics input uses eight city objects with city state and a 9x9 local tile window centered on the city and describing landscape and food, production, and money sources.
 - `MAIN-AI-007A`: Economics Worker production requires both an explicitly encoded opened improvement technology and at least one corresponding known, unimproved plot around owned cities. The aggregate technology rate and Worker demand cannot independently justify Worker production.
+- `MAIN-AI-007B`: Because every technology is temporarily open, Economics training includes simultaneous improvement-technology signals. Existing Worker count and Strategy demand must outweigh those signals once the civilization has enough Workers; available improvements are not a permanent Worker-production order.
 - `MAIN-AI-010`: Action receives Strategy focus coordinates as dx/dy relative to the current unit and normalized by the 9x9 window radius, not as absolute map coordinates.
 - `MAIN-AI-008`: AI model fully connected layer widths reduce from input values to `72` output values through eight tanh layers. Strategy currently starts at `3524` input values; other engines currently start at `1024`.
 - `MAIN-AI-009`: Demo multiplayer mode can run both users as AI players; the human advances time by clicking End Turn and observes the visible prepared AI orders.

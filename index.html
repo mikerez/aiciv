@@ -9,9 +9,9 @@
             window.location.replace('login.html');
         }
     </script>
-    <link rel="preload" href="ai_player/strategy.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/action.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/economics.db.gz?v=20260806a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/strategy.db.gz?v=20260807a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/action.db.gz?v=20260807a" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/economics.db.gz?v=20260807a" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -27,9 +27,64 @@
             transform: translateX(-50%);
             z-index: 6;
             display: flex;
-            align-items: flex-start;
-            gap: 4px;
+            align-items: center;
+            gap: 8px;
         }
+        .economy-counter {
+            width: 126px;
+            min-height: 46px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            padding: 6px 10px 6px 46px;
+            border: 1px solid rgba(0,0,0,0.35);
+            border-radius: 8px;
+            background-color: rgba(255,255,255,0.58);
+            background-position: 9px center;
+            background-repeat: no-repeat;
+            background-size: 30px 30px;
+            color: #111;
+            font: bold 24px Arial;
+            text-shadow: 0 1px rgba(255,255,255,0.8);
+        }
+        #foodCounter { background-image: url('images/food.png'); }
+        #goldCounter { background-image: url('images/money.png'); }
+        #logoutButton {
+            position: fixed;
+            right: 76px;
+            bottom: 12px;
+            z-index: 9;
+        }
+        #tileInfoMenu {
+            position: fixed;
+            top: 58px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+            width: min(720px, calc(100vw - 24px));
+            box-sizing: border-box;
+            padding: 8px 38px 9px 12px;
+            border: 1px solid rgba(0,0,0,0.35);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.72);
+            color: #111;
+            font: 13px Arial;
+        }
+        .tile-info-title { font-weight: bold; margin-bottom: 5px; }
+        .tile-info-body { display: flex; flex-wrap: wrap; gap: 5px 18px; }
+        .tile-info-close {
+            position: absolute;
+            right: 5px;
+            top: 3px;
+            width: 28px;
+            height: 28px;
+            border: 0;
+            background: transparent;
+            font: 22px Arial;
+            cursor: pointer;
+        }
+        body.phone-ui #tileInfoMenu { top: 126px; font-size: 18px; }
         #turnControls > button {
             position: static !important;
             inset: auto !important;
@@ -73,10 +128,11 @@
             overflow: hidden;
         }
         body.phone-ui #turnControls {
-            top: env(safe-area-inset-top, 0px) !important;
-            left: auto !important;
-            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
-            transform: none !important;
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 12px) !important;
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            gap: 3px;
         }
         body.phone-ui button,
         body.phone-ui [data-menu-command],
@@ -115,6 +171,18 @@
             white-space: nowrap;
             font-size: var(--phone-font-size) !important;
             border-radius: 6px !important;
+        }
+        body.phone-ui .economy-counter {
+            width: 80px;
+            min-height: 34px;
+            padding: 4px 5px 4px 30px;
+            background-size: 22px 22px;
+            background-position: 5px center;
+            font-size: 18px;
+        }
+        body.phone-ui #logoutButton {
+            right: calc(env(safe-area-inset-right, 0px) + 72px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
         }
         body.phone-ui #foreground {
             top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 50px) !important;
@@ -224,9 +292,11 @@
         </div>
     </div>
     <div id="turnControls">
+        <div id="foodCounter" class="economy-counter" title="Food storage"><span id="foodCounterValue">100</span></div>
         <button id="endTurnButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">End Turn (6s)</button>
-        <button id="logoutButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Log Out</button>
+        <div id="goldCounter" class="economy-counter" title="Gold storage"><span id="goldCounterValue">500</span></div>
     </div>
+    <button id="logoutButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Log Out</button>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -250,11 +320,11 @@
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
     <script src="mobile_ui.js?v=20260805i"></script>
-    <script src="menu_unit.js?v=20260805c"></script>
-    <script src="draw.js?v=20260806b"></script>
-    <script src="control.js?v=20260805g"></script>
+    <script src="menu_unit.js?v=20260807e"></script>
+    <script src="draw.js?v=20260806d"></script>
+    <script src="control.js?v=20260807f"></script>
     <script src="birdsview.js?v=20260805a"></script>
-    <script src="ai.js?v=20260806a"></script>
+    <script src="ai.js?v=20260807a"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -264,12 +334,13 @@
             });
         }
     </script>
-    <script src="game.js?v=20260805d"></script>
-    <script src="military.js?v=20260806a"></script>
-    <script src="economics.js?v=20260709a"></script>
-    <script src="multiplayer.js?v=20260806b"></script>
-    <script src="server_game.js?v=20260806i"></script>
-    <script src="city.js?v=20260806d"></script>
+    <script src="game.js?v=20260807f"></script>
+    <script src="military.js?v=20260807e"></script>
+    <script src="economics.js?v=20260807e"></script>
+    <script src="multiplayer.js?v=20260807b"></script>
+    <script src="server_game.js?v=20260807f"></script>
+    <script src="city.js?v=20260807e"></script>
+    <script src="menu_tile.js?v=20260807e"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
     <script src="menu_technology.js"></script>
@@ -280,10 +351,10 @@
     <script src="menu_main.js"></script>
     -->
     <script src="game_events.js?v=20260805b"></script>
-    <script src="menu_stack.js?v=20260805d"></script>
-    <script src="menu_civilizations.js?v=20260805a"></script>
-    <script src="map.js?v=20260706a"></script>
-    <script src="screen.js?v=20260806a"></script>
+    <script src="menu_stack.js?v=20260807f"></script>
+    <script src="menu_civilizations.js?v=20260807e"></script>
+    <script src="map.js?v=20260807e"></script>
+    <script src="screen.js?v=20260807d"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -377,6 +448,8 @@
         _screen.loadTexture('money.png', 864);
         _screen.loadTexture('money5.png', 865);
         _screen.loadTexture('fishing_boats.png', 866);
+        _screen.loadTexture('destroyed_city.png', 869);
+        _screen.loadTexture('network.png', 870);
         _screen.loadTexture('quarry.png', 867);
         _screen.loadTexture('winery.png', 868);
         _screen.loadTexture('hamlet.png', 869);
@@ -386,7 +459,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260806f"></script>
+    <script src="game_prehistory.js?v=20260807f"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
@@ -402,6 +475,7 @@
         var _ctrl_pressed = 0;
         var _mousedown = 0;
         var _dragging_unit_path = 0;
+        var _dragging_unit_path_moved = 0;
         var _panning_map = 0;
         var _last_pointer_point = null;
         var _last_hover_coord = null;
@@ -547,15 +621,23 @@
             const coord = eventToMapCoord(input);
             _last_hover_coord = coord;
             if (event.button == 2 && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
+                _menu_tile.show(coord.i, coord.j);
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
                 }
                 _fulldraw = 1;
                 drawScene(0);
-                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                _current_game.drawCommandPathPreview(coord);
+                if (_current_game.configureSelectedMovementIntent) {
+                    _current_game.configureSelectedMovementIntent(coord);
+                }
                 if (_current_game.dismissActionMenu) {
                     _current_game.dismissActionMenu();
                 }
+                return;
+            }
+            if (event.button == 2) {
+                _menu_tile.show(coord.i, coord.j);
                 return;
             }
             var deferPhoneMapCommand = event.type === 'touchstart'
@@ -610,6 +692,7 @@
             _mousedown = 1;
             _last_pointer_point = point;
             _dragging_unit_path = (unitSelected && _selection != -1 && _units[_selection].can_move) ? 1 : 0;
+            _dragging_unit_path_moved = 0;
             _panning_map = _dragging_unit_path ? 0 : 1;
         }
 
@@ -671,10 +754,11 @@
             }
             event.preventDefault();
             if (_dragging_unit_path && _selection != -1 && _units[_selection].can_move) {
+                _dragging_unit_path_moved = 1;
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
                 }
-                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, coord.i, coord.j, _selection);
+                _current_game.drawCommandPathPreview(coord);
                 if (_current_game.dismissActionMenu) {
                     _current_game.dismissActionMenu();
                 }
@@ -718,8 +802,14 @@
                 && _current_game.showActionMenuForSelection) {
                 _current_game.showActionMenuForSelection();
             }
+            if (_dragging_unit_path && _dragging_unit_path_moved
+                && _selection != -1 && _units[_selection] && _units[_selection].gotoCoord
+                && _current_game.configureSelectedMovementIntent) {
+                _current_game.configureSelectedMovementIntent(_units[_selection].gotoCoord);
+            }
             _mousedown = 0;
             _dragging_unit_path = 0;
+            _dragging_unit_path_moved = 0;
             _panning_map = 0;
             _last_pointer_point = null;
         }
@@ -750,8 +840,18 @@
             else {
                 _ctrl_pressed = 0;
             }
-            if (event.code === 'Escape' && typeof hideMainMenus === 'function') {
-                hideMainMenus();
+            if (event.code === 'Escape') {
+                if (typeof hideMainMenus === 'function') hideMainMenus();
+                _selection = -1;
+                _multi_selection = [];
+                _selection_by_user[_current_user] = -1;
+                if (typeof _prehistory_command_mode !== 'undefined') _prehistory_command_mode = null;
+                if (typeof _unit_stack_menu !== 'undefined') _unit_stack_menu.hide();
+                if (typeof _menu_tile !== 'undefined') _menu_tile.hide();
+                _current_game.applyMenuRules();
+                _draw.clear();
+                _fulldraw = 1;
+                drawScene(0);
                 return;
             }
             if (event.code === 'Enter') {

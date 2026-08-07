@@ -3,6 +3,7 @@
 const models = {};
 const layerCount = 8;
 const outputWidth = 72;
+const hiddenLayerWidths = [536, 448, 368, 288, 208, 176, 176];
 const headerBytes = 72;
 
 function hasModelMagic(buffer)
@@ -60,6 +61,11 @@ function parseModel(kind, url, buffer)
     var widths = [inputWidth];
     for (var n = 0; n < count; n++) widths.push(view.getUint32(36 + n * 4, true));
     if (widths[widths.length - 1] != outputWidth) throw new Error('AI model output width mismatch');
+    for (var hidden = 0; hidden < hiddenLayerWidths.length; hidden++) {
+        if (widths[hidden + 1] != hiddenLayerWidths[hidden]) {
+            throw new Error('Unsupported AI model hidden layer widths in ' + url);
+        }
+    }
 
     var offset = headerBytes;
     var layers = [];

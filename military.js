@@ -9,6 +9,7 @@ const _military = new class
         this.fortifiedDefenseBonus = 0.25;
         this.fortificationDefenseBonus = 0.50;
         this.relations = {};
+        this.directionalRelations = {};
     }
 
     relationKey(teamA, teamB)
@@ -53,7 +54,18 @@ const _military = new class
         if (parseInt(teamA || 0, 10) == parseInt(teamB || 0, 10)) {
             return 'self';
         }
+        var directional = this.directionalRelations[parseInt(teamA || 0, 10) + ':' + parseInt(teamB || 0, 10)];
+        if (directional) return directional;
         return this.isAtWar(teamA, teamB) ? 'war' : 'neutral';
+    }
+
+    setDirectionalRelation(teamA, teamB, status)
+    {
+        teamA = parseInt(teamA || 0, 10);
+        teamB = parseInt(teamB || 0, 10);
+        status = String(status || 'neutral').toLowerCase();
+        if (teamA == teamB || ['neutral', 'friend', 'enemy'].indexOf(status) == -1) return;
+        this.directionalRelations[teamA + ':' + teamB] = status;
     }
 
     setWarForUsers(userIds)
@@ -177,29 +189,113 @@ const _military = new class
         return Math.max(0.25, unit.attack || 0) * Math.max(1, unit.experience || 1);
     }
 
-    defenseStrength(unit)
+    defenseBonusTable()
+    {
+        // The three columns are deliberately mirrored by serverDefenseBonusTable() in PHP.
+        return {
+            default:   { landscapeBonus: 'standard', unitBonus: 'none', buildingBonus: 'standard' },
+            horseman:  { landscapeBonus: 'mounted', unitBonus: 'anti_siege', buildingBonus: 'standard' },
+            chariot:   { landscapeBonus: 'mounted', unitBonus: 'chariot_anti_catapult', buildingBonus: 'standard' },
+            knight:    { landscapeBonus: 'mounted', unitBonus: 'anti_siege', buildingBonus: 'standard' },
+            spearman:  { landscapeBonus: 'standard', unitBonus: 'anti_mounted', buildingBonus: 'standard' },
+            pikeman:   { landscapeBonus: 'standard', unitBonus: 'anti_mounted', buildingBonus: 'standard' },
+            archer:    { landscapeBonus: 'standard', unitBonus: 'none', buildingBonus: 'ranged' },
+            longbow:   { landscapeBonus: 'standard', unitBonus: 'none', buildingBonus: 'ranged' },
+            elephant:  { landscapeBonus: 'standard', unitBonus: 'siege_vulnerable', buildingBonus: 'standard' },
+        };
+    }
+
+    terrainDefenseContext(unit)
+    {
+        var value = 0;
+        if (unit && unit.coord && typeof _map_terrain_tex != 'undefined'
+            && _map_terrain_tex[unit.coord.i] != undefined) {
+            value = _map_terrain_tex[unit.coord.i][unit.coord.j] || 0;
+        }
+        var type = value & 0x0f;
+        var level = (value >> 4) & 0x03;
+        var hills = type == 4;
+        var forest = type == 6 || (hills && (level & 1) != 0);
+        return {
+            type: type,
+            level: level,
+            hills: hills,
+            forest: forest,
+            highHills: hills && level >= 2,
+            lowHills: hills && level < 2,
+            fields: type == 2 || type == 7,
+        };
+    }
+
+    hasCityAt(coord)
+    {
+        if (!coord) return false;
+        var lists = this.unitLists();
+        for (var n=0; n < lists.length; n++) {
+            for (var k=0; k < lists[n].list.length; k++) {
+                var unit = lists[n].list[k];
+                if (this.isCity(unit) && this.canFight(unit) && unit.coord
+                    && unit.coord.i == coord.i && unit.coord.j == coord.j) return true;
+            }
+        }
+        return false;
+    }
+
+    battleChanceInputs(attacker, defender)
+    {
+        this.ensureUnit(defender);
+        var table = this.defenseBonusTable();
+        var row = table[defender.unitTypeId] || table.default;
+        var terrain = this.terrainDefenseContext(defender);
+        var landscapeBonus = (terrain.hills ? 0.25 : 0) + (terrain.forest ? 0.50 : 0);
+        if (row.landscapeBonus == 'mounted') {
+            if (terrain.forest || terrain.highHills) landscapeBonus -= 0.50;
+            else if (terrain.fields || (terrain.lowHills && !terrain.forest)) landscapeBonus += 0.30;
+        }
+
+        var attackerType = attacker ? attacker.unitTypeId : null;
+        var unitBonus = 0;
+        if (row.unitBonus == 'anti_mounted' && (attackerType == 'knight' || attackerType == 'horseman')) unitBonus = 0.30;
+        else if (row.unitBonus == 'anti_siege' && (attackerType == 'catapult' || attackerType == 'trebuchet')) unitBonus = 0.30;
+        else if (row.unitBonus == 'chariot_anti_catapult' && attackerType == 'catapult') unitBonus = 0.15;
+        else if (row.unitBonus == 'siege_vulnerable' && (attackerType == 'catapult' || attackerType == 'trebuchet')) unitBonus = -0.15;
+
+        var hasFortification = !!(defender.coord && typeof _map_terrain_mod != 'undefined'
+            && _map_terrain_mod[defender.coord.i] && _map_terrain_mod[defender.coord.i][defender.coord.j]
+            && _map_terrain_mod[defender.coord.i][defender.coord.j].fortification);
+        var buildingBonus = hasFortification ? this.fortificationDefenseBonus : 0;
+        if (row.buildingBonus == 'ranged') {
+            if (hasFortification) buildingBonus += 0.30;
+            if (this.hasCityAt(defender.coord)) buildingBonus += 0.30;
+        }
+        var stateBonus = defender.state == 'fortified' ? this.fortifiedDefenseBonus : 0;
+        return {
+            landscapeBonus: landscapeBonus,
+            unitBonus: unitBonus,
+            buildingBonus: buildingBonus,
+            stateBonus: stateBonus,
+            totalDefenseBonus: landscapeBonus + unitBonus + buildingBonus + stateBonus,
+        };
+    }
+
+    defenseStrength(unit, attacker)
     {
         this.ensureUnit(unit);
         var healthFactor = Math.max(0.25, (unit.health || this.defaultHealth) / Math.max(1, unit.maxHealth || this.defaultHealth));
-        var defenseBonus = unit.state == 'fortified' ? this.fortifiedDefenseBonus : 0;
-        if (unit.coord && typeof _map_terrain_mod != 'undefined'
-            && _map_terrain_mod[unit.coord.i] && _map_terrain_mod[unit.coord.i][unit.coord.j]
-            && _map_terrain_mod[unit.coord.i][unit.coord.j].fortification) {
-            defenseBonus += this.fortificationDefenseBonus;
-        }
-        return Math.max(0.25, unit.defense || 0) * (1 + defenseBonus)
+        var inputs = this.battleChanceInputs(attacker, unit);
+        return Math.max(0.25, unit.defense || 0) * Math.max(0.1, 1 + inputs.totalDefenseBonus)
             * Math.max(1, unit.experience || 1) * healthFactor;
     }
 
-    bestDefender(records)
+    bestDefender(records, attacker)
     {
         if (!records.length) {
             return null;
         }
         var best = records[0];
-        var bestStrength = this.defenseStrength(best.unit);
+        var bestStrength = this.defenseStrength(best.unit, attacker);
         for (var n=1; n < records.length; n++) {
-            var strength = this.defenseStrength(records[n].unit);
+            var strength = this.defenseStrength(records[n].unit, attacker);
             if (strength > bestStrength) {
                 best = records[n];
                 bestStrength = strength;
@@ -279,7 +375,7 @@ const _military = new class
     calculateDamage(attacker, defender)
     {
         var attack = this.attackStrength(attacker);
-        var defense = this.defenseStrength(defender);
+        var defense = this.defenseStrength(defender, attacker);
         var attackRoll = attack * (0.75 + Math.random() * 0.5);
         var defenseRoll = defense * (0.75 + Math.random() * 0.5);
         var total = Math.max(0.01, attackRoll + defenseRoll);
@@ -437,7 +533,7 @@ const _military = new class
         var cityOwner = cityRecord ? (cityRecord.unit.team || 0) : undefined;
         var defenders = this.militaryRecords(enemies, cityOwner);
         if (!defenders.length && !cityRecord) defenders = this.militaryRecords(enemies);
-        var defender = this.bestDefender(defenders);
+        var defender = this.bestDefender(defenders, attacker);
 
         if (!defender) {
             var civilianDefender = null;

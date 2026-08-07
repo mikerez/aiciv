@@ -23,6 +23,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-UNIT-005`: Every unit has an explicit layer state.
 - `PREHISTORY-UNIT-006`: Prehistory unit definitions use the main `UnitType` structure.
 - `PREHISTORY-UNIT-007`: Unit type nature is `land` or `water`; movement and seaside production rules use this nature instead of unit names.
+- `PREHISTORY-UNIT-008`: WorkBoat and Frigate are water-nature units. Knight, Pikeman, Longbow, Fencer, and Swordsman are land-nature units.
 
 ## Unit Types
 
@@ -42,6 +43,13 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 | Trebuchet | land | 7 | 1 | 1 | 2 | Engineering | 80 | none |
 | Galley | water | 2 | 2 | 2 | 3 | Sailing | 40 | none |
 | Galleon | water | 5 | 4 | 3 | 4 | Navigation | 90 | none |
+| WorkBoat | water | 0 | 1 | 2 | 3 | Sailing | 30 | none |
+| Frigate | water | 6 | 5 | 3 | 4 | Shipbuilding | 100 | Iron |
+| Knight | land | 6 | 5 | 2 | 3 | Engineering | 85 | Horses |
+| Pikeman | land | 4 | 6 | 1 | 2 | Iron Working | 55 | Iron |
+| Longbow | land | 5 | 3 | 1 | 3 | Archery | 55 | none |
+| Fencer | land | 4 | 3 | 2 | 2 | Bronze Working | 45 | none |
+| Swordsman | land | 7 | 5 | 1 | 2 | Iron Working | 75 | Iron |
 
 ## Building State Rules
 
@@ -55,6 +63,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-BUILD-008`: Units with a technology requirement can be produced only after that technology is discovered.
 - `PREHISTORY-BUILD-009`: A built city starts with road and irrigation modifiers on its tile, but the city-created irrigation gives extra city-tile food only if fresh water is in a neighboring tile.
 - `PREHISTORY-BUILD-010`: A City with five movable units on its Tile pauses ready unit production without consuming points or advancing its backlog. It retries after a later turn when capacity may be available.
+- `PREHISTORY-BUILD-011`: Strategic resources count for production only when their Tile is connected to the City by a contiguous road path.
+- `PREHISTORY-BUILD-012`: Horseman and Chariot require Horses; Knight requires Horses and Iron; Elephant requires Ivory; Spearman requires Copper/Bronze; Pikeman and Swordsman require Iron.
 
 ## Turn Processing Rules
 
@@ -85,6 +95,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-MENU-009`: Unit command menu entries show their command letter as a small button.
 - `PREHISTORY-MENU-010`: Selected movable units show attack force, defence force, steps per turn, health, and experience before movement commands.
 - `PREHISTORY-MENU-011`: On phones, giving a unit or city an order hides the complete action menu panel. Selecting a unit or city again, including automatic next-unit selection, shows its applicable actions again. Desktop menu visibility is unchanged.
+- `PREHISTORY-MENU-011A`: Selecting a City production item on a phone keeps the City action menu open so more backlog items can be added without selecting the City again.
 
 ## Command State Rules
 
@@ -104,8 +115,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 
 ## Selection Rules
 
-- `PREHISTORY-SELECT-001`: When a city and another unit share a tile, one click selects the top non-city unit.
-- `PREHISTORY-SELECT-002`: When a city and another unit share a tile, double click selects the city.
+- `PREHISTORY-SELECT-001`: When a City and other units share a Tile, the City is sorted first and selected by the Tile click so City commands are shown immediately.
+- `PREHISTORY-SELECT-002`: The stack selector can replace the City selection with one unit or with all military units on that Tile.
 
 ## Forest Chopping Rules
 
@@ -118,9 +129,10 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-CHOP-007`: A unit cannot enter `chop_forest` state unless it is already standing on forest terrain.
 - `PREHISTORY-CHOP-008`: When chopping completes, `hills1` becomes `hills` and `hills5` becomes `hills4`.
 - `PREHISTORY-CHOP-009`: Workers cannot chop forest before `Bronze Working` is discovered.
-- `PREHISTORY-CHOP-010`: Completed chopping gives `5 * wildity` production to the first same-team city found by round search within four tiles of the chopped tile.
-- `PREHISTORY-CHOP-011`: If the chop target city has no active production task, chop production is saved in the city's stored production account.
+- `PREHISTORY-CHOP-010`: Completed chopping gives exactly 10 production once to the nearest same-team City.
+- `PREHISTORY-CHOP-011`: Chop production is credited only when the nearest City has an active production task; idle Cities store no production.
 - `PREHISTORY-CHOP-012`: Workers cannot start forest chopping while standing on a city tile.
+- `PREHISTORY-WATER-001`: A WorkBoat can build one Network improvement on a water Tile; Network construction is unavailable on land.
 
 ## Start View Rules
 
@@ -156,11 +168,11 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-WORKER-BUILDING-002`: Worker tile-building commands are available only when the required technology is open: Pasture and Camp require `Animal Husbandry`, Farm requires `Irrigation`, Fishing Boats requires `Sailing`, Plantation and Winery require `Pottery`, Cottage and Quarry require `Masonry`, Workshop and Fortification require `Construction`, and Mine requires `Mining`.
 - `PREHISTORY-WORKER-BUILDING-003`: Worker tile-building commands are shown only when the building is supported on the worker tile and that tile does not already have the same building.
 - `PREHISTORY-WORKER-BUILDING-004`: Completed worker tile buildings set the corresponding terrain modifier on the worker tile.
-- `PREHISTORY-WORKER-BUILDING-005`: Resource improvements require the matching opened resource on the worker tile: Pasture for Cattle, Sheep, and Horses; Farm for Rice and Wheat; Plantation for Bananas, Citrus, Cotton, Dyes, Incense, Olives, Silk, Spices, Sugar, and Tea; Camp for Deer, Amber, Furs, Honey, and Ivory; Fishing Boats for Crabs, Fish, Pearls, Turtles, and Whales; Quarry for Stone, Gypsum, Marble, and Salt; Winery for Wine; Mine for Copper, Diamonds, Silver, Iron, and Gold.
+- `PREHISTORY-WORKER-BUILDING-005`: Resource improvements require the matching opened resource on the worker tile: Pasture for Cattle, Sheep, and Horses; Farm for Rice and Wheat; Plantation for Bananas, Citrus, Cotton, Dyes, Incense, Olives, Silk, Spices, Sugar, and Tea; Camp for Deer, Amber, Furs, Honey, and Ivory; Fishing Boats for Crabs, Fish, Pearls, Turtles, and Whales; Quarry for Stone, Gypsum, Marble, and Salt; Winery for Wine; Mine for Copper, Diamonds, Silver, Iron, Gold, and Gems.
 - `PREHISTORY-WORKER-BUILDING-006`: Mine can be built only on hills terrain type `4` or mountains/rocks terrain type `5`.
 - `PREHISTORY-WORKER-BUILDING-007`: If the worker tile has an opened resource and its required improvement is currently buildable, the worker menu suggests only that resource improvement from the worker tile-building list.
 - `PREHISTORY-WORKER-BUILDING-008`: Land worker tile buildings are not supported on water tiles; Fishing Boats is supported only on water resource tiles.
-- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each turn; a cottage becomes a Hamlet after 10 turns and a Village after 20 turns.
+- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 30 turns and a Village after 60 total turns.
 - `PREHISTORY-WORKER-BUILDING-010`: Workers cannot start Pasture, Farm, Plantation, Camp, Fishing Boats, Quarry, Winery, Cottage, Workshop, Mine, or Fortification while standing on a city tile.
 
 ## Irrigation Rules
@@ -169,8 +181,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-IRRIGATION-002`: Irrigation is a land terrain modifier and cannot be built on water.
 - `PREHISTORY-IRRIGATION-003`: Irrigation takes twice the terrain wildity stored in terrain `D` bits, with a minimum of two turns.
 - `PREHISTORY-IRRIGATION-004`: Completed irrigation sets the irrigation terrain modifier on the worker tile.
-- `PREHISTORY-IRRIGATION-005`: New irrigation must be adjacent to a valid source: mixed grass-water terrain type `7`, shallow water terrain type `0` with depth up to 1, or existing irrigation.
-- `PREHISTORY-IRRIGATION-006`: New irrigation can also be adjacent to an existing irrigation tile, allowing irrigation chains away from the source.
+- `PREHISTORY-IRRIGATION-005`: PHP validates irrigation with a breadth-first route search. The requested Tile is the origin, existing irrigation Tiles are the route, and the route must reach mixed grass-water, an `A`-bit water source, or shallow fresh water.
+- `PREHISTORY-IRRIGATION-006`: JS checks Worker, technology, City, grass, and existing-modifier restrictions but deliberately does not check water connectivity. A disconnected authoritative request returns `status: IMPOSSIBLE`, resets the Worker to ready, and is shown by the client.
 - `PREHISTORY-IRRIGATION-007`: A shallow water terrain type `0` source belongs to sea and cannot start irrigation if it has a cardinal neighboring water tile with depth greater than 1.
 - `PREHISTORY-IRRIGATION-008`: Irrigation can be built only on grass terrain type `2`.
 - `PREHISTORY-IRRIGATION-009`: The `A` terrain bit marks a local water source. On fields, hills, and mountains it represents land water; on water-related terrain it represents lake/source water and allows irrigation source detection.

@@ -52,8 +52,8 @@ Terrain is stored as one byte per map cell:
 ## Terrain Modifiers
 
 - `TERRAIN-MOD-001`: Each map tile has a terrain modifier state stored separately from terrain type.
-- `TERRAIN-MOD-002`: Terrain modifiers currently include `road`, `irrigation`, `pasture`, `farm`, `plantation`, `camp`, `fishing_boats`, `quarry`, `winery`, `fortification`, `cottage`, `workshop`, and `mine`; cottage stores an age counter and irrigation stores a city-food flag.
+- `TERRAIN-MOD-002`: Terrain modifiers currently include `road`, `irrigation`, `pasture`, `farm`, `plantation`, `camp`, `fishing_boats`, `network`, `quarry`, `winery`, `fortification`, `cottage`, `workshop`, and `mine`; cottage stores an age counter and irrigation stores a city-food flag.
 - `TERRAIN-MOD-003`: Roads are drawn as `images/road.png` overlays above terrain.
 - `TERRAIN-MOD-004`: Irrigation is drawn as `images/irrigation.png` overlays above terrain.
-- `TERRAIN-MOD-005`: Pasture, farm, plantation, camp, fishing boats, quarry, winery, fortification, cottage, hamlet, village, workshop, and mine are drawn as full `220x160` overlay sprites above terrain.
+- `TERRAIN-MOD-005`: Pasture, farm, plantation, camp, fishing boats, network, quarry, winery, fortification, cottage, hamlet, village, workshop, and mine are drawn as full `220x160` overlay sprites above terrain.
 - `TERRAIN-MOD-006`: Cottage uses `images/cottage.png` before 10 turns, `images/hamlet.png` from 10 turns, and `images/village.png` from 20 turns.

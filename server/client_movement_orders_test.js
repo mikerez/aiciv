@@ -37,6 +37,8 @@ assert.equal(sandbox.control.forceDrawSelectedMovementOrder(), true,
 assert.equal(arrows.length, arrowsBeforeSelection + 2, 'selected destination should repaint both arrow steps');
 
 const index = fs.readFileSync('index.html', 'utf8');
+assert.match(index, /event\.button == 2 && _selection != -1[\s\S]*?_menu_tile\.show\(coord\.i, coord\.j\)[\s\S]*?drawCommandPathPreview/,
+    'desktop right-click must open Tile details even while assigning a selected unit route');
 const validation = index.indexOf('!forcedByTimeout && _current_game.canEndTurnWithCurrentSelection');
 const capture = index.indexOf('_server_game.captureTurn(_current_user)');
 assert.ok(validation >= 0 && validation < capture, 'manual idle validation must happen before capture consumes paths');

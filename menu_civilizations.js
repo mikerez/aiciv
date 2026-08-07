@@ -85,15 +85,62 @@ const _civilizations_menu = new class
             coat.style.textShadow = '1px 1px 2px #000';
             var details = document.createElement('div');
             var own = player.player_id == viewerId ? ' (you)' : '';
+            var relation = player.player_id == viewerId ? 'self'
+                : typeof _server_game != 'undefined' && _server_game.directionalRelation
+                    ? _server_game.directionalRelation(viewerId, player.player_id) : player.relation;
             details.innerHTML = '<div style="font-weight:bold">' + this.escape(player.civilization_name) + own + '</div>'
-                + '<div>' + this.escape(player.player_name) + ' - ' + this.escape(player.relation) + '</div>'
+                + '<div>' + this.escape(player.player_name) + '</div>'
                 + '<div>Units: ' + player.current_units + ' | Cities: ' + player.current_cities + '</div>'
+                + '<div>Food: ' + (Number(player.food) || 0) + ' | Gold: ' + (Number(player.gold) || 0) + '</div>'
                 + '<div>Killed: ' + player.units_killed + ' | Occupied: ' + player.cities_occupied
                 + ' | Destroyed: ' + player.cities_destroyed + '</div>';
+            if (player.player_id != viewerId) {
+                let targetPlayerId = Number(player.player_id);
+                var relationControls = document.createElement('div');
+                relationControls.style.marginTop = '5px';
+                let friend = this.relationCheckbox('Friend', relation == 'friend');
+                let enemy = this.relationCheckbox('Enemy', relation == 'enemy');
+                let relationText = document.createElement('span');
+                relationText.style.marginLeft = '7px';
+                relationText.textContent = 'Relation to you: ' + relation;
+                let applyRelation = function(status) {
+                    friend.input.checked = status == 'friend';
+                    enemy.input.checked = status == 'enemy';
+                    relationText.textContent = 'Relation to you: ' + status;
+                    if (typeof _server_game != 'undefined' && _server_game.setRelationPreference) {
+                        _server_game.setRelationPreference(viewerId, targetPlayerId, status);
+                    }
+                };
+                friend.input.addEventListener('change', function() {
+                    applyRelation(friend.input.checked ? 'friend' : 'neutral');
+                });
+                enemy.input.addEventListener('change', function() {
+                    applyRelation(enemy.input.checked ? 'enemy' : 'neutral');
+                });
+                relationControls.appendChild(friend.label);
+                relationControls.appendChild(enemy.label);
+                relationControls.appendChild(relationText);
+                details.appendChild(relationControls);
+            }
             row.appendChild(coat);
             row.appendChild(details);
             this.panel.appendChild(row);
         }
+    }
+
+    relationCheckbox(text, checked)
+    {
+        var label = document.createElement('label');
+        label.style.marginRight = '8px';
+        label.style.whiteSpace = 'nowrap';
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = !!checked;
+        input.style.verticalAlign = 'middle';
+        input.style.margin = '0 3px 0 0';
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(text));
+        return { label: label, input: input };
     }
 
     escape(value)
