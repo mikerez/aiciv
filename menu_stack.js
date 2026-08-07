@@ -6,6 +6,7 @@ const _unit_stack_menu = new class
         this.button = null;
         this.expanded = false;
         this.pendingPhoneTap = null;
+        this.currentCoord = null;
         this.create();
     }
 
@@ -73,8 +74,66 @@ const _unit_stack_menu = new class
     hide()
     {
         this.pendingPhoneTap = null;
+        this.currentCoord = null;
         this.setExpanded(false);
         if (this.button) this.button.style.display = 'none';
+    }
+
+    isVisibleUnit(unit)
+    {
+        return !!(unit && unit.coord && !unit.hiddenOnMap
+            && (unit.health == undefined || Number(unit.health) > 0));
+    }
+
+    liveIndicesAt(coord)
+    {
+        var indices = [];
+        if (!coord || typeof _units == 'undefined') return indices;
+        for (var index=0; index < _units.length; index++) {
+            var unit = _units[index];
+            if (this.isVisibleUnit(unit)
+                && unit.coord.i == Math.round(coord.i) && unit.coord.j == Math.round(coord.j)) {
+                indices.push(index);
+            }
+        }
+        return indices;
+    }
+
+    unitIdentity(unit)
+    {
+        return {
+            serverId: unit && unit.serverId ? Number(unit.serverId) : null,
+            clientKey: unit && unit.serverClientKey ? String(unit.serverClientKey) : null,
+            object: unit || null,
+        };
+    }
+
+    liveIndex(identity, coord)
+    {
+        var indices = this.liveIndicesAt(coord);
+        for (var n=0; n < indices.length; n++) {
+            var unit = _units[indices[n]];
+            if ((identity.serverId && Number(unit.serverId) == identity.serverId)
+                || (identity.clientKey && unit.serverClientKey == identity.clientKey)
+                || (!identity.serverId && !identity.clientKey && unit === identity.object)) {
+                return indices[n];
+            }
+        }
+        return -1;
+    }
+
+    refresh()
+    {
+        if (!this.currentCoord) return false;
+        var coord = { i: this.currentCoord.i, j: this.currentCoord.j };
+        var preserveExpanded = this.expanded;
+        var indices = this.liveIndicesAt(coord);
+        if (indices.length < 2) {
+            this.hide();
+            return false;
+        }
+        this.show(indices, coord, preserveExpanded);
+        return true;
     }
 
     deferPhoneTap(indices, coord, point)
@@ -108,18 +167,25 @@ const _unit_stack_menu = new class
         if (!pending || !confirmedTouchEnd || pending.moved || Date.now() - pending.startedAt > 500) {
             return false;
         }
-        this.show(pending.indices, pending.coord);
+        this.show(this.liveIndicesAt(pending.coord), pending.coord);
         return true;
     }
 
     show(indices, coord, preserveExpanded)
     {
         this.pendingPhoneTap = null;
+        indices = this.liveIndicesAt(coord);
         if (!this.panel || !indices || indices.length < 2) {
             this.hide();
             return;
         }
+        this.currentCoord = { i: Math.round(coord.i), j: Math.round(coord.j) };
         var self = this;
+        indices = indices.slice().sort(function(a, b) {
+            var aCity = _units[a] && _units[a].type == 3 ? 0 : 1;
+            var bCity = _units[b] && _units[b].type == 3 ? 0 : 1;
+            return aCity - bCity || a - b;
+        });
         if (!preserveExpanded) this.expanded = true;
         this.panel.innerHTML = '';
         var title = document.createElement('div');
@@ -127,9 +193,43 @@ const _unit_stack_menu = new class
         title.style.fontWeight = 'bold';
         title.style.margin = '2px 4px 7px';
         this.panel.appendChild(title);
+        var militaryIndices = indices.filter(function(unitIndex) {
+            return _units[unitIndex] && _units[unitIndex].type == 2;
+        });
+        if (militaryIndices.length) {
+            var selectAll = document.createElement('button');
+            selectAll.type = 'button';
+            selectAll.textContent = 'Select all';
+            selectAll.title = 'Select all military units on this Tile';
+            selectAll.style.width = '100%';
+            selectAll.style.margin = '0 0 6px';
+            selectAll.style.padding = '6px';
+            selectAll.style.border = '1px solid rgba(0,0,0,0.4)';
+            selectAll.style.background = 'rgba(225,238,255,0.9)';
+            selectAll.addEventListener('click', function(event) {
+                event.preventDefault();
+                var liveMilitary = self.liveIndicesAt(coord).filter(function(unitIndex) {
+                    return _units[unitIndex] && _units[unitIndex].type == 2;
+                });
+                if (!liveMilitary.length) {
+                    self.refresh();
+                    return;
+                }
+                _multi_selection = liveMilitary;
+                _selection = liveMilitary[0];
+                _selection_by_user[_current_user] = _selection;
+                self.show(self.liveIndicesAt(coord), coord, true);
+                if (self.isPhone()) self.setExpanded(false);
+                if (_current_game.showActionMenuForSelection) _current_game.showActionMenuForSelection();
+                _fulldraw = 1;
+                drawScene(0);
+            });
+            this.panel.appendChild(selectAll);
+        }
         indices.forEach(function(unitIndex) {
             var unit = _units[unitIndex];
             if (!unit) return;
+            var identity = self.unitIdentity(unit);
             var button = document.createElement('button');
             button.type = 'button';
             button.style.display = 'grid';
@@ -139,7 +239,8 @@ const _unit_stack_menu = new class
             button.style.width = '100%';
             button.style.margin = '3px 0';
             button.style.padding = '6px';
-            button.style.border = unitIndex == _selection ? '2px solid #235d9f' : '1px solid rgba(0,0,0,0.3)';
+            var groupSelected = typeof _multi_selection != 'undefined' && _multi_selection.indexOf(unitIndex) != -1;
+            button.style.border = unitIndex == _selection || groupSelected ? '2px solid #235d9f' : '1px solid rgba(0,0,0,0.3)';
             button.style.background = 'rgba(255,255,255,0.76)';
             button.style.cursor = 'pointer';
             var badge = document.createElement('span');
@@ -159,9 +260,15 @@ const _unit_stack_menu = new class
             button.appendChild(health);
             button.addEventListener('click', function(event) {
                 event.preventDefault();
-                _selection = unitIndex;
-                _selection_by_user[_current_user] = unitIndex;
-                self.show(indices, coord, true);
+                var liveIndex = self.liveIndex(identity, coord);
+                if (liveIndex == -1) {
+                    self.refresh();
+                    return;
+                }
+                _multi_selection = [];
+                _selection = liveIndex;
+                _selection_by_user[_current_user] = liveIndex;
+                self.show(self.liveIndicesAt(coord), coord, true);
                 if (self.isPhone()) self.setExpanded(false);
                 if (_current_game.showActionMenuForSelection) _current_game.showActionMenuForSelection();
                 _fulldraw = 1;

@@ -138,7 +138,7 @@ const _draw = new class
 
         var units = visibleUnitsForCurrentUser();
         var zoom = Math.max(0.01, Number(_screenZoom) || 1);
-        var fullWidth = Math.max(12, Math.round(200/zoom));
+        var fullWidth = Math.max(6, Math.round(100/zoom));
         var mobile = document.body && document.body.classList
             && document.body.classList.contains('mobile-ui');
         var fontSize = mobile ? 11 : 9;
@@ -172,7 +172,8 @@ const _draw = new class
             var ownerLine = ownerLineByKey[unitOwnerKey] || 0;
             var unitLine = unitLinesPerOwner[unitOwnerKey] || 0;
             unitLinesPerOwner[unitOwnerKey] = unitLine + 1;
-            var x = Math.round(x1toX(ijtox1(unit.coord.i, unit.coord.j)) - fullWidth/2);
+            var centerX = x1toX(ijtox1(unit.coord.i, unit.coord.j));
+            var x = Math.round(centerX - fullWidth/2);
             var labelY = y1toY(ijtoy1(unit.coord.i, unit.coord.j))
                 - Math.max(42, 92/zoom) - ownerLine*(fontSize + 3);
             var y = Math.round(labelY + 2 + unitLine*5);

@@ -129,6 +129,9 @@ class GameState
         this.scienceRate = 0;
         this.lastScienceIncome = 0;
         this.money = 500;
+        this.food = 100;
+        this.lastGrossFoodIncome = 0;
+        this.lastFoodUpkeep = 0;
         this.lastMoneyIncome = 0;
         this.lastGrossMoneyIncome = 0;
         this.lastMaintenance = 0;
@@ -219,10 +222,12 @@ class GameState
 
     researchStatusText()
     {
-        if (typeof _economics !== 'undefined' && _economics.accountStatusText) {
-            return _economics.accountStatusText(this);
+        if (this.currentResearch && _technology_table[this.currentResearch]) {
+            var progress = Math.floor(this.technologyProgress[this.currentResearch] || 0);
+            return 'Technology: ' + this.currentResearch + ' ' + progress + '/'
+                + _technology_table[this.currentResearch].cost;
         }
-        return 'Account: ' + (this.money || 0);
+        return 'Technology: all discovered';
     }
 
     hasAvailableResearch()
@@ -285,6 +290,7 @@ var _units = Array();
 var _units_by_user = { 0: _units };
 
 var _selection = -1;
+var _multi_selection = [];
 
 var _mark = 1;  // for drawStroke algorithm
 
@@ -321,6 +327,7 @@ const _game = new class
         if (k < 0 || k >= _units.length) {
             return;
         }
+        _multi_selection = [];
         _units.splice(k, 1);
         if (_selection == k) {
             _selection = -1;
@@ -694,12 +701,9 @@ const _game = new class
             if (city.cityProperties == null) {
                 city.cityProperties = new CityProperties();
             }
-            if (city.cityProperties.productionStored == undefined) {
-                city.cityProperties.productionStored = 0;
-            }
+            city.cityProperties.productionStored = 0;
             city.production.productionPoints += city.cityProperties.productionPerTurn;
             if (city.production.productionPoints >= unitType.productionCost) {
-                var overflow = city.production.productionPoints - unitType.productionCost;
                 this.createUnit(unitType, city.coord, unitType.productionCost, city.team);
                 city.productionDisabled = false;
                 if (Array.isArray(city.productionQueue) && city.productionQueue.length) {
@@ -707,11 +711,10 @@ const _game = new class
                 }
                 if (city.productionQueue && city.productionQueue.length) {
                     city.production = new CityProductionState(city.productionQueue[0]);
-                    city.production.productionPoints = overflow;
+                    city.production.productionPoints = 0;
                 }
                 else {
                     city.production = null;
-                    city.cityProperties.productionStored += overflow;
                 }
                 _fulldraw = 1;
             }
@@ -771,7 +774,8 @@ const _game = new class
         if (typeof _economics !== 'undefined') {
             _economics.processTurn(cityMoneyIncome, _game_state, _units);
         }
-        if (typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
+        if ((typeof _server_game === 'undefined' || !_server_game.initialized)
+            && typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
             _map.processTerrainModifierTurns();
         }
         if (typeof _server_game === 'undefined') {
@@ -831,7 +835,8 @@ const _game = new class
         if (typeof _economics !== 'undefined') {
             _economics.processTurn(cityMoneyIncome, _game_state, _units);
         }
-        if (typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
+        if ((typeof _server_game === 'undefined' || !_server_game.initialized)
+            && typeof _map !== 'undefined' && _map.processTerrainModifierTurns) {
             _map.processTerrainModifierTurns();
         }
         if (typeof _server_game === 'undefined') {

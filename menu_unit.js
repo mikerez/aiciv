@@ -6,7 +6,6 @@ function hereDoc(f) {
 
 var tennysonQuote = hereDoc(function() {/*!
 <div data-menu-option="city_production_status" style="display:none;color:darkblue;font:bold 15px 'Courier New';margin-bottom:8px;"></div>
-<div data-menu-option="city_production_queue" style="display:none;color:darkblue;font:14px 'Courier New';margin-bottom:8px;"></div>
 <div data-menu-option="city_production_options" style="display:none;color:darkblue;font:15px 'Courier New';margin-bottom:12px;"></div>
 <center><font size="5" color="darkblue" face="Courier New">Action options:</font></center>
 <div data-menu-option="unit_identity" style="display:none;color:darkblue;font:13px 'Courier New';margin:5px 0 4px 0;"></div>
@@ -22,6 +21,7 @@ var tennysonQuote = hereDoc(function() {/*!
 <span data-menu-option="plantation"><a data-menu-command="plantation" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">N</span> Plantation</a><br></span>
 <span data-menu-option="camp"><a data-menu-command="camp" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">K</span> Camp</a><br></span>
 <span data-menu-option="fishing_boats"><a data-menu-command="fishing_boats" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">O</span> Fishing Boats</a><br></span>
+<span data-menu-option="network"><a data-menu-command="network" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">X</span> Network</a><br></span>
 <span data-menu-option="quarry"><a data-menu-command="quarry" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">Q</span> Quarry</a><br></span>
 <span data-menu-option="winery"><a data-menu-command="winery" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">V</span> Winery</a><br></span>
 <span data-menu-option="cottage"><a data-menu-command="cottage" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">T</span> Cottage</a><br></span>
@@ -36,6 +36,7 @@ var tennysonQuote = hereDoc(function() {/*!
 <span data-menu-option="patrol"><a data-menu-command="patrol" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">L</span> Patrol</a><br></span>
 <span data-menu-option="automate"><a data-menu-command="automate" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';"><span class="unit-command-key">A</span> Automate</a><br></span>
 </font>
+<div data-menu-option="city_production_queue" style="display:none;color:darkblue;font:14px 'Courier New';margin-top:12px;"></div>
 */});
 
 
@@ -57,7 +58,7 @@ foreground.addEventListener('click', function(event) {
   var command = commandElement ? commandElement.getAttribute('data-menu-command') : null;
   if (command && typeof _current_game !== 'undefined') {
     _current_game.doCommand(command);
-    if (_current_game.dismissActionMenu) {
+    if (_current_game.dismissActionMenu && command.indexOf('produce_unit:') != 0) {
       _current_game.dismissActionMenu();
     }
     if (typeof drawScene === 'function') {

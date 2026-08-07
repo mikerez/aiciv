@@ -94,9 +94,9 @@ const _control = new class
         }
     }
 
-    drawGoto(i1, j1, i2, j2, k)
+    drawGoto(i1, j1, i2, j2, k, existingContext)
     {
-        var ctx = _draw.clear();
+        var ctx = existingContext || _draw.clear();
         var path = [];
         this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
 //console.log(":::" + i + ":" + j)
@@ -108,6 +108,17 @@ const _control = new class
         _units[k].gotoCoord = path.length ? path[path.length - 1] : null;
         _units[k].pendingServerPath = [];
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+    }
+
+    drawGotoGroup(indices, i2, j2)
+    {
+        var ctx = _draw.clear();
+        indices = Array.isArray(indices) ? indices : [];
+        for (var n=0; n < indices.length; n++) {
+            var k = indices[n];
+            if (!_units[k] || !_units[k].can_move || _units[k].type != 2) continue;
+            this.drawGoto(_units[k].coord.i, _units[k].coord.j, i2, j2, k, ctx);
+        }
     }
 
     drawMovementArrow(ctx, i, j, arrow_num)
@@ -179,7 +190,10 @@ const _control = new class
         var tileI = coord ? Math.round(coord.i) : null;
         var tileJ = coord ? Math.round(coord.j) : null;
         var tileUnits = [];
+        var spriteUnits = [];
         for (var k=_units.length - 1; k >= 0; k--) {
+            if (!_units[k] || !_units[k].coord || _units[k].hiddenOnMap
+                || (_units[k].health != undefined && Number(_units[k].health) <= 0)) continue;
             var unitX = ijtox1(_units[k].coord.i, _units[k].coord.j);
             var unitY = ijtoy1(_units[k].coord.i, _units[k].coord.j);
             var unitHalfWidth = 220/_screenZoom;
@@ -188,20 +202,23 @@ const _control = new class
              && y >= unitY - unitHalfHeight && y <= unitY + unitHalfHeight;
             var tileHit = coord && _units[k].coord.i == tileI && _units[k].coord.j == tileJ;
             if (tileHit) tileUnits.push(k);
-            if (spriteHit || tileHit) {
-                if (_units[k].type == 3 && cityHit == -1) {
-                    cityHit = k;
-                }
-                if (_units[k].type != 3 && topHit == -1) {
-                    topHit = k;
-                }
-                if (topHit == -1) {
-                    topHit = k;
-                }
-            }
+            if (spriteHit) spriteUnits.push(k);
         }
+        // Exact Tile occupants take priority over overlapping neighboring
+        // sprites. This keeps stack selection tied to the clicked map Tile.
+        var hitUnits = tileUnits.length ? tileUnits : spriteUnits;
+        for (var hitIndex=0; hitIndex < hitUnits.length; hitIndex++) {
+            var unitIndex = hitUnits[hitIndex];
+            if (_units[unitIndex].type == 3 && cityHit == -1) cityHit = unitIndex;
+            if (_units[unitIndex].type != 3 && topHit == -1) topHit = unitIndex;
+        }
+        if (topHit == -1 && hitUnits.length) topHit = hitUnits[0];
         if (topHit != -1) {
-            _selection = preferCity && cityHit != -1 ? cityHit : topHit;
+            // A City is the primary object of a shared Tile. The stack menu can
+            // then select one unit or the military group explicitly.
+            _selection = cityHit != -1 && tileUnits.length > 1
+                ? cityHit : (preferCity && cityHit != -1 ? cityHit : topHit);
+            if (typeof _multi_selection != 'undefined') _multi_selection = [];
         }
         else {
             _selection = previousSelection;

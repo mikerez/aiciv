@@ -5,7 +5,7 @@ $serverGameRequestStartedNs = hrtime(true);
 require_once __DIR__ . '/game_auth.php';
 require_once __DIR__ . '/php_performance.php';
 
-const SERVER_GAME_SCHEMA_VERSION = 12;
+const SERVER_GAME_SCHEMA_VERSION = 14;
 const SERVER_GAME_TURN_SECONDS = 6;
 const SERVER_GAME_TURN_GRACE_SECONDS = 0;
 const SERVER_GAME_DEADLINE_SECONDS = SERVER_GAME_TURN_SECONDS + SERVER_GAME_TURN_GRACE_SECONDS;
@@ -722,6 +722,44 @@ function ensureServerSchema(PDO $db): void
         $statement->execute();
         $version = 12;
     }
+    if ($version < 13) {
+        $db->exec(
+            "ALTER TABLE server_game_relations
+             ADD COLUMN player_a_status VARCHAR(16) NOT NULL DEFAULT 'neutral' AFTER relation_status,
+             ADD COLUMN player_b_status VARCHAR(16) NOT NULL DEFAULT 'neutral' AFTER player_a_status"
+        );
+        $db->exec(
+            "UPDATE server_game_relations
+             SET player_a_status = IF(relation_status = 'war', 'enemy', 'neutral'),
+                 player_b_status = IF(relation_status = 'war', 'enemy', 'neutral')"
+        );
+        $statement = $db->prepare(
+            "INSERT INTO `version` (component, schema_version) VALUES ('server_game', 13)
+             ON DUPLICATE KEY UPDATE schema_version = VALUES(schema_version), applied_at = CURRENT_TIMESTAMP"
+        );
+        $statement->execute();
+        $version = 13;
+    }
+    if ($version < 14) {
+        // Production belongs only to the currently active queue item. Remove
+        // legacy idle storage and rollover balances once during migration.
+        $db->exec('UPDATE productions SET production_points = 0');
+        $db->exec(
+            "UPDATE server_game_units
+             SET properties_json = JSON_SET(
+                 CASE WHEN JSON_VALID(properties_json) THEN properties_json ELSE '{}' END,
+                 '$.cityProperties.productionStored', 0,
+                 '$.production.productionPoints', 0
+             )
+             WHERE unit_class = 3"
+        );
+        $statement = $db->prepare(
+            "INSERT INTO `version` (component, schema_version) VALUES ('server_game', 14)
+             ON DUPLICATE KEY UPDATE schema_version = VALUES(schema_version), applied_at = CURRENT_TIMESTAMP"
+        );
+        $statement->execute();
+        $version = 14;
+    }
     if ($version !== SERVER_GAME_SCHEMA_VERSION) {
         throw new RuntimeException('Unsupported server game schema version.');
     }
@@ -1437,6 +1475,9 @@ function defaultPlayerState(): array
         'scienceRate' => 0,
         'lastScienceIncome' => 0,
         'money' => 500,
+        'food' => 100,
+        'lastGrossFoodIncome' => 0,
+        'lastFoodUpkeep' => 0,
         'lastMoneyIncome' => 0,
         'lastGrossMoneyIncome' => 0,
         'lastMaintenance' => 0,
@@ -1468,6 +1509,8 @@ function normalizePlayerState(array $state): array
     $state['scienceRate'] = 0;
     $state['lastScienceIncome'] = 0;
     $state['lastTechnologyExpense'] = 0;
+    if (!isset($state['money']) || !is_numeric($state['money'])) $state['money'] = 500;
+    if (!isset($state['food']) || !is_numeric($state['food'])) $state['food'] = 100;
     return $state;
 }
 
@@ -1508,6 +1551,14 @@ function serverUnitDefinitions(): array
         'trebuchet' => ['name' => 'Trebuchet', 'class' => 2, 'texture' => 267, 'attack' => 7, 'defense' => 1, 'speed' => 1, 'view_range' => 2, 'technology' => 'Engineering', 'cost' => 80, 'nature' => 'land'],
         'galley' => ['name' => 'Galley', 'class' => 2, 'texture' => 268, 'attack' => 2, 'defense' => 2, 'speed' => 2, 'view_range' => 3, 'technology' => 'Sailing', 'cost' => 40, 'nature' => 'water'],
         'galleon' => ['name' => 'Galleon', 'class' => 2, 'texture' => 269, 'attack' => 5, 'defense' => 4, 'speed' => 3, 'view_range' => 4, 'technology' => 'Navigation', 'cost' => 90, 'nature' => 'water'],
+        'workboat' => ['name' => 'WorkBoat', 'class' => 1, 'texture' => 271, 'attack' => 0, 'defense' => 1, 'speed' => 2, 'view_range' => 3, 'technology' => 'Sailing', 'cost' => 30, 'nature' => 'water'],
+        'frigate' => ['name' => 'Frigate', 'class' => 2, 'texture' => 272, 'attack' => 6, 'defense' => 5, 'speed' => 3, 'view_range' => 4, 'technology' => 'Shipbuilding', 'cost' => 100, 'nature' => 'water'],
+        'knight' => ['name' => 'Knight', 'class' => 2, 'texture' => 273, 'attack' => 6, 'defense' => 5, 'speed' => 2, 'view_range' => 3, 'technology' => 'Engineering', 'cost' => 85, 'nature' => 'land'],
+        'pikeman' => ['name' => 'Pikeman', 'class' => 2, 'texture' => 274, 'attack' => 4, 'defense' => 6, 'speed' => 1, 'view_range' => 2, 'technology' => 'Iron Working', 'cost' => 55, 'nature' => 'land'],
+        'longbow' => ['name' => 'Longbow', 'class' => 2, 'texture' => 275, 'attack' => 5, 'defense' => 3, 'speed' => 1, 'view_range' => 3, 'technology' => 'Archery', 'cost' => 55, 'nature' => 'land'],
+        'fencer' => ['name' => 'Fencer', 'class' => 2, 'texture' => 276, 'attack' => 4, 'defense' => 3, 'speed' => 2, 'view_range' => 2, 'technology' => 'Bronze Working', 'cost' => 45, 'nature' => 'land'],
+        'swordsman' => ['name' => 'Swordsman', 'class' => 2, 'texture' => 277, 'attack' => 7, 'defense' => 5, 'speed' => 1, 'view_range' => 2, 'technology' => 'Iron Working', 'cost' => 75, 'nature' => 'land'],
+        'trireme' => ['name' => 'Trireme', 'class' => 2, 'texture' => 278, 'attack' => 1, 'defense' => 1, 'speed' => 2, 'view_range' => 3, 'technology' => 'Sailing', 'cost' => 30, 'nature' => 'water'],
     ];
 }
 
@@ -1927,7 +1978,28 @@ function coordinateKey(int $i, int $j): string
     return $i . ':' . $j;
 }
 
-function validatePath(array $unit, array $rawPath, array $tiles, int $mapSize, ?array &$diagnostic = null): array
+function serverTransportCapacity(string $unitTypeId): int
+{
+    return $unitTypeId === 'galley' ? 2 : ($unitTypeId === 'frigate' ? 4 : 0);
+}
+
+function serverTransportStateAt(array $units, int $ownerId, int $i, int $j, int $excludeUnitId = 0): array
+{
+    $capacity = 0; $passengers = 0;
+    foreach ($units as $candidate) {
+        if ((int) $candidate['id'] === $excludeUnitId || (int) $candidate['owner_id'] !== $ownerId
+            || (int) $candidate['i'] !== $i || (int) $candidate['j'] !== $j
+            || (float) $candidate['health'] <= 0) continue;
+        $capacity += serverTransportCapacity((string) $candidate['unit_type_id']);
+        if ((int) $candidate['can_move'] && !serverIsCityUnit($candidate)
+            && (string) $candidate['nature'] !== 'water') ++$passengers;
+    }
+    return ['capacity' => $capacity, 'passengers' => $passengers];
+}
+
+function validatePath(
+    array $unit, array $rawPath, array $tiles, int $mapSize, ?array &$diagnostic = null, array $units = []
+): array
 {
     $path = [];
     $i = (int) $unit['i'];
@@ -1960,7 +2032,18 @@ function validatePath(array $unit, array $rawPath, array $tiles, int $mapSize, ?
             break;
         }
         $water = (((int) $tile['terrain_tex']) & 0x0F) === 0;
-        if (($unit['nature'] === 'water') !== $water) {
+        $sourceTile = $tiles[coordinateKey($i, $j)] ?? null;
+        $sourceWater = $sourceTile && ((((int) $sourceTile['terrain_tex']) & 0x0f) === 0);
+        $terrainAllowed = $unit['nature'] === 'water' ? $water : !$water;
+        if ($unit['nature'] !== 'water' && $sourceWater && !$water) $terrainAllowed = true;
+        if ($unit['nature'] !== 'water' && !$sourceWater && $water) {
+            $transport = serverTransportStateAt(
+                $units, (int) $unit['owner_id'], $ni, $nj, (int) $unit['id']
+            );
+            $terrainAllowed = $transport['passengers'] < $transport['capacity'];
+        }
+        if ($unit['nature'] !== 'water' && $sourceWater && $water) $terrainAllowed = false;
+        if (!$terrainAllowed) {
             $diagnostic['stopped'] = [
                 'step' => $n, 'reason' => 'movement_nature_mismatch',
                 'unit_nature' => $unit['nature'], 'tile_is_water' => $water,
@@ -1984,6 +2067,41 @@ function serverTileSupportsUnit(array $unit, int $i, int $j, array $tiles, int $
     return ($unit['nature'] === 'water') === $water;
 }
 
+function serverAssignTransportCrews(array $units): array
+{
+    $assigned = [];
+    $crews = [];
+    ksort($units, SORT_NUMERIC);
+    foreach ($units as $carrierId => $carrier) {
+        $capacity = serverTransportCapacity((string) $carrier['unit_type_id']);
+        if ($capacity <= 0 || (float) $carrier['health'] <= 0) continue;
+        foreach ($units as $passengerId => $passenger) {
+            if (count($crews[$carrierId] ?? []) >= $capacity) break;
+            if (isset($assigned[$passengerId]) || (int) $passenger['owner_id'] !== (int) $carrier['owner_id']
+                || (int) $passenger['i'] !== (int) $carrier['i'] || (int) $passenger['j'] !== (int) $carrier['j']
+                || !(int) $passenger['can_move'] || serverIsCityUnit($passenger)
+                || (string) $passenger['nature'] === 'water' || (float) $passenger['health'] <= 0) continue;
+            $crews[$carrierId][] = $passengerId;
+            $assigned[$passengerId] = true;
+        }
+    }
+    return $crews;
+}
+
+function serverMoveTransportCrews(array &$units, array $transportCrews): void
+{
+    foreach ($transportCrews as $carrierId => $crewIds) {
+        if (!isset($units[$carrierId]) || (float) $units[$carrierId]['health'] <= 0
+            || ((int) $units[$carrierId]['i'] === (int) $units[$carrierId]['start_i']
+                && (int) $units[$carrierId]['j'] === (int) $units[$carrierId]['start_j'])) continue;
+        foreach ($crewIds as $crewId) {
+            if (!isset($units[$crewId]) || (float) $units[$crewId]['health'] <= 0) continue;
+            $units[$crewId]['i'] = (int) $units[$carrierId]['i'];
+            $units[$crewId]['j'] = (int) $units[$carrierId]['j'];
+        }
+    }
+}
+
 function validateAtomicMovementCommands(PDO $db, array $game, int $playerId, array $commands): ?array
 {
     $gameId = (int) $game['id'];
@@ -1995,6 +2113,11 @@ function validateAtomicMovementCommands(PDO $db, array $game, int $playerId, arr
     if ($duplicate->fetchColumn()) return null;
 
     $tiles = loadTiles($db, $gameId);
+    $allUnitsStatement = $db->prepare(
+        'SELECT * FROM server_game_units WHERE game_id = ? AND deleted_at IS NULL AND health > 0 ORDER BY id'
+    );
+    $allUnitsStatement->execute([$gameId]);
+    $allUnits = $allUnitsStatement->fetchAll();
     $mapSize = (int) $game['map_size'];
     $byId = $db->prepare(
         'SELECT * FROM server_game_units WHERE game_id = ? AND owner_id = ? AND id = ? AND deleted_at IS NULL'
@@ -2046,7 +2169,7 @@ function validateAtomicMovementCommands(PDO $db, array $game, int $playerId, arr
             ];
         }
         $diagnostic = null;
-        $accepted = validatePath($unit, $path, $tiles, $mapSize, $diagnostic);
+        $accepted = validatePath($unit, $path, $tiles, $mapSize, $diagnostic, $allUnits);
         if (count($accepted) !== count($path)) {
             return [
                 'reason' => 'movement_path_invalid', 'command_index' => $commandIndex,
@@ -2162,7 +2285,8 @@ function serverCombat(
     string $eventType,
     array $audiencePlayers,
     array &$statistics,
-    array $tiles
+    array $tiles,
+    bool $defenderInCity = false
 ): array
 {
     $attackerBefore = combatUnitSnapshot($attacker);
@@ -2171,8 +2295,9 @@ function serverCombat(
     $attackerBefore['j'] = (int) ($attacker['start_j'] ?? $attackerBefore['j']);
     $before = ['attacker' => $attackerBefore, 'defender' => $defenderBefore];
     $attackPower = max(0.25, (float) $attacker['attack_value']) * max(1.0, (float) $attacker['experience']);
-    $defenseBonus = serverUnitDefenseBonus($defender, $tiles);
-    $defensePower = serverUnitDefenseStrength($defender, $tiles);
+    $chanceInputs = serverBattleChanceInputs($attacker, $defender, $tiles, $defenderInCity);
+    $defenseBonus = $chanceInputs['total_defense_bonus'];
+    $defensePower = serverUnitDefenseStrength($defender, $attacker, $tiles, $defenderInCity);
     $seed = (int) sprintf('%u', crc32($turn . ':' . $attacker['id'] . ':' . $defender['id'] . ':' . $i . ':' . $j));
     $attackRoll = $attackPower * (0.85 + (($seed % 31) / 100.0));
     $defenseRoll = $defensePower * (0.85 + ((($seed >> 5) % 31) / 100.0));
@@ -2215,6 +2340,7 @@ function serverCombat(
             'attacker_damage' => $attackerDamage,
             'defender_damage' => $defenderDamage,
             'defender_defense_bonus' => $defenseBonus,
+            'defender_defense_inputs' => $chanceInputs,
             'defender_effective_defense' => $defensePower,
             'attacker_before' => $attackerBefore,
             'defender_before' => $defenderBefore,
@@ -2253,23 +2379,83 @@ function serverIsMilitaryUnit(array $unit): bool
     return (int) ($unit['unit_class'] ?? -1) === 2 && (float) ($unit['health'] ?? 0) > 0;
 }
 
-function serverUnitDefenseBonus(array $unit, array $tiles): float
+function serverDefenseBonusTable(): array
 {
-    $bonus = ($unit['state'] ?? '') === 'fortified' ? SERVER_GAME_FORTIFIED_DEFENSE_BONUS : 0.0;
-    $tile = $tiles[coordinateKey((int) $unit['i'], (int) $unit['j'])] ?? null;
-    if ($tile) {
-        $modifiers = json_decode((string) ($tile['modifiers_json'] ?? '{}'), true);
-        if (is_array($modifiers) && !empty($modifiers['fortification'])) {
-            $bonus += SERVER_GAME_FORTIFICATION_DEFENSE_BONUS;
-        }
-    }
-    return $bonus;
+    // The three columns are deliberately mirrored by defenseBonusTable() in military.js.
+    return [
+        'default' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'none', 'building_bonus' => 'standard'],
+        'horseman' => ['landscape_bonus' => 'mounted', 'unit_bonus' => 'anti_siege', 'building_bonus' => 'standard'],
+        'chariot' => ['landscape_bonus' => 'mounted', 'unit_bonus' => 'chariot_anti_catapult', 'building_bonus' => 'standard'],
+        'knight' => ['landscape_bonus' => 'mounted', 'unit_bonus' => 'anti_siege', 'building_bonus' => 'standard'],
+        'spearman' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'anti_mounted', 'building_bonus' => 'standard'],
+        'pikeman' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'anti_mounted', 'building_bonus' => 'standard'],
+        'archer' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'none', 'building_bonus' => 'ranged'],
+        'longbow' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'none', 'building_bonus' => 'ranged'],
+        'elephant' => ['landscape_bonus' => 'standard', 'unit_bonus' => 'siege_vulnerable', 'building_bonus' => 'standard'],
+    ];
 }
 
-function serverUnitDefenseStrength(array $unit, array $tiles): float
+function serverTerrainDefenseContext(array $unit, array $tiles): array
+{
+    $tile = $tiles[coordinateKey((int) $unit['i'], (int) $unit['j'])] ?? [];
+    $value = (int) ($tile['terrain_tex'] ?? 0);
+    $type = $value & 0x0f;
+    $level = ($value >> 4) & 0x03;
+    $hills = $type === 4;
+    $forest = $type === 6 || ($hills && ($level & 1) !== 0);
+    return [
+        'type' => $type,
+        'level' => $level,
+        'hills' => $hills,
+        'forest' => $forest,
+        'high_hills' => $hills && $level >= 2,
+        'low_hills' => $hills && $level < 2,
+        'fields' => $type === 2 || $type === 7,
+    ];
+}
+
+function serverBattleChanceInputs(array $attacker, array $defender, array $tiles, bool $defenderInCity = false): array
+{
+    $table = serverDefenseBonusTable();
+    $defenderType = (string) ($defender['unit_type_id'] ?? '');
+    $row = $table[$defenderType] ?? $table['default'];
+    $terrain = serverTerrainDefenseContext($defender, $tiles);
+    $landscapeBonus = ($terrain['hills'] ? 0.25 : 0.0) + ($terrain['forest'] ? 0.50 : 0.0);
+    if ($row['landscape_bonus'] === 'mounted') {
+        if ($terrain['forest'] || $terrain['high_hills']) $landscapeBonus -= 0.50;
+        elseif ($terrain['fields'] || ($terrain['low_hills'] && !$terrain['forest'])) $landscapeBonus += 0.30;
+    }
+
+    $attackerType = (string) ($attacker['unit_type_id'] ?? '');
+    $unitBonus = 0.0;
+    if ($row['unit_bonus'] === 'anti_mounted' && in_array($attackerType, ['knight', 'horseman'], true)) $unitBonus = 0.30;
+    elseif ($row['unit_bonus'] === 'anti_siege' && in_array($attackerType, ['catapult', 'trebuchet'], true)) $unitBonus = 0.30;
+    elseif ($row['unit_bonus'] === 'chariot_anti_catapult' && $attackerType === 'catapult') $unitBonus = 0.15;
+    elseif ($row['unit_bonus'] === 'siege_vulnerable' && in_array($attackerType, ['catapult', 'trebuchet'], true)) $unitBonus = -0.15;
+
+    $tile = $tiles[coordinateKey((int) $defender['i'], (int) $defender['j'])] ?? null;
+    $modifiers = $tile ? json_decode((string) ($tile['modifiers_json'] ?? '{}'), true) : [];
+    $hasFortification = is_array($modifiers) && !empty($modifiers['fortification']);
+    $buildingBonus = $hasFortification ? SERVER_GAME_FORTIFICATION_DEFENSE_BONUS : 0.0;
+    if ($row['building_bonus'] === 'ranged') {
+        if ($hasFortification) $buildingBonus += 0.30;
+        if ($defenderInCity) $buildingBonus += 0.30;
+    }
+    $stateBonus = ($defender['state'] ?? '') === 'fortified' ? SERVER_GAME_FORTIFIED_DEFENSE_BONUS : 0.0;
+    return [
+        'landscape_bonus' => $landscapeBonus,
+        'unit_bonus' => $unitBonus,
+        'building_bonus' => $buildingBonus,
+        'state_bonus' => $stateBonus,
+        'total_defense_bonus' => $landscapeBonus + $unitBonus + $buildingBonus + $stateBonus,
+    ];
+}
+
+function serverUnitDefenseStrength(array $unit, array $attacker, array $tiles, bool $defenderInCity = false): float
 {
     $healthFactor = max(0.25, (float) $unit['health'] / max(1.0, (float) $unit['max_health']));
-    return max(0.25, (float) $unit['defense_value']) * (1.0 + serverUnitDefenseBonus($unit, $tiles))
+    $inputs = serverBattleChanceInputs($attacker, $unit, $tiles, $defenderInCity);
+    return max(0.25, (float) $unit['defense_value']) * max(0.1, 1.0 + $inputs['total_defense_bonus'])
         * max(1.0, (float) $unit['experience']) * $healthFactor;
 }
 
@@ -2362,7 +2548,7 @@ function serverCityOnTile(array &$units, int $i, int $j, ?int $ownerId = null): 
     return null;
 }
 
-function serverBestMilitaryDefenderOnTile(array &$units, int $i, int $j, int $ownerId, array $tiles): ?int
+function serverBestMilitaryDefenderOnTile(array &$units, int $i, int $j, int $ownerId, array $attacker, array $tiles): ?int
 {
     $bestId = null;
     $bestStrength = -1.0;
@@ -2371,7 +2557,12 @@ function serverBestMilitaryDefenderOnTile(array &$units, int $i, int $j, int $ow
             || (int) $unit['i'] !== $i || (int) $unit['j'] !== $j) {
             continue;
         }
-        $strength = serverUnitDefenseStrength($unit, $tiles);
+        $strength = serverUnitDefenseStrength(
+            $unit,
+            $attacker,
+            $tiles,
+            serverCityOnTile($units, $i, $j, $ownerId) !== null
+        );
         if ($strength > $bestStrength) {
             $bestId = (int) $unitId;
             $bestStrength = $strength;
@@ -2583,7 +2774,7 @@ function serverResolveTileInteraction(
     $defenderId = $candidateDefenderId;
     if ($enemyCityId !== null) {
         $cityOwner = (int) $units[$enemyCityId]['owner_id'];
-        $garrisonId = serverBestMilitaryDefenderOnTile($units, $i, $j, $cityOwner, $tiles);
+        $garrisonId = serverBestMilitaryDefenderOnTile($units, $i, $j, $cityOwner, $units[$attackerId], $tiles);
         if ($garrisonId !== null) $defenderId = $garrisonId;
         else $defenderId = $enemyCityId;
     }
@@ -2602,7 +2793,7 @@ function serverResolveTileInteraction(
     if (serverIsMilitaryUnit($units[$defenderId])) {
         $combat = serverCombat(
             $units[$attackerId], $units[$defenderId], $turn, $i, $j, $events,
-            $eventType, $audiencePlayers, $statistics, $tiles
+            $eventType, $audiencePlayers, $statistics, $tiles, $enemyCityId !== null
         );
         if ($combat['defender_dead']) {
             $population = serverReduceCityPopulationForKilledUnit($units, $units[$defenderId], $i, $j);
@@ -2714,7 +2905,32 @@ function combatPairKey(int $firstId, int $secondId): string
     return min($firstId, $secondId) . ':' . max($firstId, $secondId);
 }
 
-function applyBuildOrder(PDO $db, int $gameId, array &$unit, array $payload, array &$tiles, int $revision, array &$events): bool
+function serverAddChopProduction(
+    PDO $db, int $gameId, array &$units, array $worker, int $revision, float $production = 10.0
+): ?int {
+    $cityId = serverNearestOwnedCityId(
+        $units, (int) $worker['owner_id'], (int) $worker['i'], (int) $worker['j']
+    );
+    if ($cityId === null || !isset($units[$cityId])) return null;
+    $statement = $db->prepare(
+        'UPDATE productions SET production_points = production_points + ? WHERE game_id = ? AND city_unit_id = ?'
+    );
+    $statement->execute([$production, $gameId, $cityId]);
+    if ($statement->rowCount() === 0) {
+        // A City without an active task has no production account to credit.
+        $production = 0.0;
+    }
+    serverTrace('forest_chop_production', [
+        'worker_id' => (int) $worker['id'], 'city_id' => $cityId,
+        'production' => $production, 'revision' => $revision,
+    ]);
+    return $cityId;
+}
+
+function applyBuildOrder(
+    PDO $db, int $gameId, array &$unit, array $payload, array &$tiles,
+    int $revision, array &$events, array &$units
+): bool
 {
     if ($unit['unit_type_id'] !== 'worker') {
         return false;
@@ -2741,6 +2957,7 @@ function applyBuildOrder(PDO $db, int $gameId, array &$unit, array $payload, arr
     if (!is_array($modifiers)) $modifiers = [];
     if ($modifier === 'chop_forest') {
         $tile['terrain_tex'] = (((int) $tile['terrain_tex']) & ~0x0F) | 2;
+        $chopCityId = serverAddChopProduction($db, $gameId, $units, $unit, $revision, 10.0);
     } else {
         $modifiers[$modifier] = true;
     }
@@ -2752,7 +2969,11 @@ function applyBuildOrder(PDO $db, int $gameId, array &$unit, array $payload, arr
     $statement->execute([$tile['terrain_tex'], $tile['modifiers_json'], $revision, $gameId, $unit['i'], $unit['j']]);
     $unit['state'] = 'ready';
     eventForPlayers($events, [(int) $unit['owner_id']], 'landscape_changed', $unit, null, (int) $unit['i'], (int) $unit['j'],
-        'Worker completed ' . $modifier . ' at (' . $unit['i'] . ',' . $unit['j'] . ')', ['modifier' => $modifier]);
+        'Worker completed ' . $modifier . ' at (' . $unit['i'] . ',' . $unit['j'] . ')', [
+            'modifier' => $modifier,
+            'production_bonus' => $modifier === 'chop_forest' ? 10 : 0,
+            'city_id' => $chopCityId ?? null,
+        ]);
     return true;
 }
 
@@ -2762,7 +2983,7 @@ function immediateBuildingDefinitions(): array
         'road' => 850, 'irrigation' => 851, 'pasture' => 852, 'fortification' => 853,
         'cottage' => 854, 'workshop' => 855, 'mine' => 856, 'farm' => 857,
         'plantation' => 858, 'camp' => 859, 'fishing_boats' => 866, 'quarry' => 867,
-        'winery' => 868,
+        'winery' => 868, 'network' => 870,
     ];
 }
 
@@ -2782,9 +3003,10 @@ function immediateBuild(PDO $db, array $game, int $playerId, int $workerId, stri
         );
         $statement->execute([(int) $game['id'], $workerId, $playerId]);
         $worker = $statement->fetch();
-        if (!$worker || $worker['unit_type_id'] !== 'worker') {
+        $requiredUnitType = $modifier === 'network' ? 'workboat' : 'worker';
+        if (!$worker || $worker['unit_type_id'] !== $requiredUnitType) {
             $db->rollBack();
-            serverError(404, 'worker_not_found', 'The requested active Worker does not belong to this player.');
+            serverError(404, 'worker_not_found', 'The requested active ' . ucfirst($requiredUnitType) . ' does not belong to this player.');
         }
 
         $i = (int) $worker['i'];
@@ -2838,14 +3060,40 @@ function immediateBuild(PDO $db, array $game, int $playerId, int $workerId, stri
         $validTerrain = !($modifier === 'road' && $terrainType === 0)
             && !($modifier === 'irrigation' && $terrainType !== 2)
             && !($modifier === 'mine' && $terrainType !== 4 && $terrainType !== 5)
-            && !($modifier === 'fishing_boats' && $terrainType !== 0);
+            && !($modifier === 'fishing_boats' && $terrainType !== 0)
+            && !($modifier === 'network' && $terrainType !== 0)
+            && serverImprovementMatchesTileResource($tile, $modifier);
         if (!$validTerrain) {
             $db->rollBack();
             serverError(422, 'building_not_supported', $modifier . ' cannot be built on this terrain.');
         }
+        if ($modifier === 'irrigation') {
+            $allTiles = loadTiles($db, (int) $game['id']);
+            if (!serverIrrigationConnectedToWater($allTiles, $i, $j)) {
+                $db->rollBack();
+                return [
+                    'status' => 'IMPOSSIBLE', 'already_built' => false,
+                    'reason' => 'water_not_connected', 'revision' => (int) $game['revision'],
+                    'building' => null,
+                    'tile' => [
+                        'i' => $i, 'j' => $j, 'terrain_tex' => (int) $tile['terrain_tex'],
+                        'terrain_bits' => (int) $tile['terrain_bits'],
+                        'resource_type' => (int) $tile['resource_type'],
+                        'modifiers' => $modifiers, 'revision' => (int) $tile['revision'],
+                    ],
+                ];
+            }
+        }
 
         $revision = (int) $game['revision'] + 1;
+        serverRemoveDestroyedCityAt($db, (int) $game['id'], $i, $j, $revision);
         $occupancyKey = 'tile:' . $i . ':' . $j;
+        $statement = $db->prepare(
+            'SELECT * FROM server_game_units WHERE game_id = ? AND owner_id = ? AND unit_class = 3
+             AND deleted_at IS NULL AND health > 0 ORDER BY id'
+        );
+        $statement->execute([(int) $game['id'], $playerId]);
+        $parentCityId = serverNearestOwnedCityId($statement->fetchAll(), $playerId, $i, $j);
         $properties = [
             'economicClass' => 'terrain_improvement',
             'improvementType' => $modifier,
@@ -2854,6 +3102,7 @@ function immediateBuild(PDO $db, array $game, int $playerId, int $workerId, stri
             'noControlZone' => true,
             'noFogReveal' => true,
             'maintenanceCost' => 1,
+            'parentCityId' => $parentCityId,
         ];
         $statement = $db->prepare(
             'INSERT INTO server_game_units
@@ -2916,6 +3165,245 @@ function immediateBuild(PDO $db, array $game, int $playerId, int $workerId, stri
 function serverNeighborDirections(): array
 {
     return [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1]];
+}
+
+function serverHexDistance(int $i1, int $j1, int $i2, int $j2): int
+{
+    $di = $i2 - $i1; $dj = $j2 - $j1;
+    return $di * $dj >= 0 ? max(abs($di), abs($dj)) : abs($di) + abs($dj);
+}
+
+function serverNearestOwnedCityId(array $units, int $ownerId, int $i, int $j): ?int
+{
+    $bestId = null; $bestDistance = PHP_INT_MAX;
+    foreach ($units as $unitId => $candidate) {
+        if ((int) ($candidate['owner_id'] ?? -1) !== $ownerId
+            || (float) ($candidate['health'] ?? 0) <= 0 || !serverIsCityUnit($candidate)) continue;
+        $distance = serverHexDistance($i, $j, (int) $candidate['i'], (int) $candidate['j']);
+        $candidateId = (int) ($candidate['id'] ?? $unitId);
+        if ($distance < $bestDistance || ($distance === $bestDistance && $candidateId < (int) $bestId)) {
+            $bestId = $candidateId; $bestDistance = $distance;
+        }
+    }
+    return $bestId;
+}
+
+function serverTileIsIrrigationWaterSource(array $tiles, int $i, int $j): bool
+{
+    $tile = $tiles[coordinateKey($i, $j)] ?? null;
+    if (!$tile) return false;
+    $terrain = (int) $tile['terrain_tex'];
+    $type = $terrain & 0x0f;
+    $depth = ($terrain >> 4) & 0x03;
+    if (($terrain & 0x80) !== 0 || $type === 7) return true;
+    if ($type !== 0 || $depth > 1) return false;
+    foreach (serverNeighborDirections() as [$di, $dj]) {
+        $neighbor = $tiles[coordinateKey($i + $di, $j + $dj)] ?? null;
+        if ($neighbor && ((((int) $neighbor['terrain_tex']) & 0x0f) === 0)
+            && (((((int) $neighbor['terrain_tex']) >> 4) & 0x03) > 1)) return false;
+    }
+    return true;
+}
+
+function serverIrrigationConnectedToWater(array $tiles, int $originI, int $originJ): bool
+{
+    // Same breadth-first route shape as serverConnectedRoadResources(): the
+    // request Tile is the unbuilt origin and every later land node must carry
+    // the connecting modifier, here irrigation rather than road.
+    $queue = [[$originI, $originJ]];
+    $visited = [];
+    for ($cursor = 0; $cursor < count($queue); ++$cursor) {
+        [$i, $j] = $queue[$cursor];
+        $key = coordinateKey($i, $j);
+        if (isset($visited[$key]) || !isset($tiles[$key])) continue;
+        $origin = $i === $originI && $j === $originJ;
+        $modifiers = json_decode((string) ($tiles[$key]['modifiers_json'] ?? '{}'), true);
+        if (!$origin && (!is_array($modifiers) || empty($modifiers['irrigation']))) continue;
+        $visited[$key] = true;
+        if (serverTileIsIrrigationWaterSource($tiles, $i, $j)) return true;
+        foreach (serverNeighborDirections() as [$di, $dj]) {
+            $ni = $i + $di; $nj = $j + $dj;
+            if (serverTileIsIrrigationWaterSource($tiles, $ni, $nj)) return true;
+            $neighbor = $tiles[coordinateKey($ni, $nj)] ?? null;
+            if (!$neighbor) continue;
+            $neighborModifiers = json_decode((string) ($neighbor['modifiers_json'] ?? '{}'), true);
+            if (is_array($neighborModifiers) && !empty($neighborModifiers['irrigation'])) {
+                $queue[] = [$ni, $nj];
+            }
+        }
+    }
+    return false;
+}
+
+function serverResourceNamesById(): array
+{
+    return [
+        1 => 'bananas', 2 => 'cattle', 3 => 'copper', 4 => 'crabs', 5 => 'deer', 6 => 'fish',
+        7 => 'rice', 8 => 'sheep', 9 => 'stone', 10 => 'wheat', 11 => 'amber', 12 => 'citrus',
+        13 => 'cotton', 14 => 'dyes', 15 => 'diamonds', 16 => 'furs', 17 => 'gypsum', 18 => 'honey',
+        19 => 'incense', 20 => 'ivory', 21 => 'marble', 22 => 'olives', 23 => 'pearls', 24 => 'salt',
+        25 => 'silk', 26 => 'silver', 27 => 'spices', 28 => 'sugar', 29 => 'tea', 30 => 'turtles',
+        31 => 'whales', 32 => 'wine', 33 => 'horses', 34 => 'iron', 35 => 'gold', 36 => 'gems',
+    ];
+}
+
+function serverProductionResourceRequirements(): array
+{
+    // Mirrored by productionResourceRequirements() in game_prehistory.js.
+    return [
+        'horseman' => ['horses'],
+        'knight' => ['horses', 'iron'],
+        'chariot' => ['horses'],
+        'elephant' => ['ivory'],
+        'spearman' => ['copper'],
+        'pikeman' => ['iron'],
+        'swordsman' => ['iron'],
+    ];
+}
+
+function serverResourceImprovementRequirements(): array
+{
+    // Mirrored by resourceImprovementRequirements() in economics.js.
+    return [
+        'bananas' => 'plantation', 'cattle' => 'pasture', 'copper' => 'mine', 'crabs' => 'fishing_boats',
+        'deer' => 'camp', 'fish' => 'fishing_boats', 'rice' => 'farm', 'sheep' => 'pasture',
+        'stone' => 'quarry', 'wheat' => 'farm', 'amber' => 'camp', 'citrus' => 'plantation',
+        'cotton' => 'plantation', 'dyes' => 'plantation', 'diamonds' => 'mine', 'furs' => 'camp',
+        'gypsum' => 'quarry', 'honey' => 'camp', 'incense' => 'plantation', 'ivory' => 'camp',
+        'marble' => 'quarry', 'olives' => 'plantation', 'pearls' => 'fishing_boats', 'salt' => 'quarry',
+        'silk' => 'plantation', 'silver' => 'mine', 'spices' => 'plantation', 'sugar' => 'plantation',
+        'tea' => 'plantation', 'turtles' => 'fishing_boats', 'whales' => 'fishing_boats',
+        'wine' => 'winery', 'horses' => 'pasture', 'iron' => 'mine', 'gold' => 'mine', 'gems' => 'mine',
+    ];
+}
+
+function serverImprovementYieldMultipliers(): array
+{
+    // Mirrored by improvementYieldMultipliers() in economics.js.
+    return [
+        'road' => ['money' => 1.25], 'irrigation' => ['food' => 1.50],
+        'pasture' => ['food' => 1.50, 'production' => 1.25], 'farm' => ['food' => 1.75],
+        'plantation' => ['food' => 1.25],
+        'camp' => ['food' => 1.25, 'production' => 1.50],
+        'fishing_boats' => ['food' => 1.50, 'money' => 1.50],
+        'quarry' => ['production' => 2.00], 'winery' => ['food' => 1.25],
+        'cottage' => ['money' => 2.00], 'workshop' => [],
+        'mine' => ['production' => 2.00], 'fortification' => [],
+        'network' => ['food' => 1.50],
+    ];
+}
+
+function serverTerrainIncomeTable(): array
+{
+    return [
+        0 => ['food' => 2, 'production' => 0, 'money' => 0], 1 => ['food' => 0, 'production' => 1, 'money' => 0],
+        2 => ['food' => 2, 'production' => 0, 'money' => 0], 3 => ['food' => 0, 'production' => 1, 'money' => 0],
+        4 => ['food' => 1, 'production' => 2, 'money' => 0], 5 => ['food' => 0, 'production' => 3, 'money' => 0],
+        6 => ['food' => 1, 'production' => 1, 'money' => 0], 7 => ['food' => 3, 'production' => 0, 'money' => 1],
+    ];
+}
+
+function serverResourceIncomeTable(): array
+{
+    return [
+        1=>[2,0,0],2=>[2,1,0],3=>[0,2,1],4=>[2,0,1],5=>[1,1,0],6=>[1,0,0],7=>[2,0,0],8=>[1,1,0],9=>[0,2,0],10=>[2,0,0],
+        11=>[0,0,1],12=>[1,0,1],13=>[0,0,1],14=>[0,0,1],15=>[0,0,2],16=>[0,1,1],17=>[0,2,0],18=>[1,0,1],19=>[0,0,1],20=>[0,1,1],
+        21=>[0,2,1],22=>[1,0,1],23=>[0,0,1],24=>[1,0,1],25=>[0,0,1],26=>[0,0,1],27=>[1,0,1],28=>[1,0,1],29=>[0,0,1],30=>[1,0,1],
+        31=>[1,1,1],32=>[1,0,1],33=>[0,1,1],34=>[0,2,0],35=>[0,0,2],36=>[0,0,2],
+    ];
+}
+
+function serverApplyImprovementYieldMultipliers(
+    array $income, array $modifiers, bool $isCityTile, int $terrainType, bool $hasWaterSource
+): array
+{
+    if ($terrainType === 1 && !empty($modifiers['irrigation'])
+        && (!$isCityTile || !empty($modifiers['irrigationCityFood']))) {
+        $income['food'] += $hasWaterSource ? 2 : 1;
+    }
+    foreach (serverImprovementYieldMultipliers() as $improvement => $multipliers) {
+        if (empty($modifiers[$improvement])) continue;
+        if ($improvement === 'irrigation' && $isCityTile && empty($modifiers['irrigationCityFood'])) continue;
+        if ($improvement === 'irrigation' && $terrainType === 1) continue;
+        if ($improvement === 'cottage') {
+            $age = (int) ($modifiers['cottageAge'] ?? 0);
+            $multipliers = ['money' => $age >= 60 ? 4.0 : ($age >= 30 ? 3.0 : 2.0)];
+        }
+        foreach ($multipliers as $field => $multiplier) $income[$field] = ceil(($income[$field] ?? 0) * $multiplier);
+        if ($improvement === 'workshop') $income['production'] = 4;
+    }
+    return $income;
+}
+
+function serverTileIncome(array $tile, bool $isCityTile = false): array
+{
+    $terrain = (int) ($tile['terrain_tex'] ?? 0);
+    $type = $terrain & 0x0f;
+    $income = serverTerrainIncomeTable()[$type] ?? ['food' => 0, 'production' => 0, 'money' => 0];
+    if ($type === 0 && (($terrain >> 4) & 0x03) > 1) $income['food'] = 1;
+    $hasWaterSource = ($terrain & 0x80) !== 0;
+    if ($hasWaterSource && $type !== 0) {
+        if ($type === 1) $income['food'] = 2;
+        else ++$income['food'];
+        if ($type === 4 || $type === 5) ++$income['production'];
+    }
+    $resourceIncome = serverResourceIncomeTable()[(int) ($tile['resource_type'] ?? 0)] ?? null;
+    if ($resourceIncome) {
+        $income['food'] += $resourceIncome[0];
+        $income['production'] += $resourceIncome[1];
+        $income['money'] += $resourceIncome[2];
+    }
+    $modifiers = json_decode((string) ($tile['modifiers_json'] ?? '{}'), true);
+    $modifiers = is_array($modifiers) ? $modifiers : [];
+    $resourceName = serverResourceNamesById()[(int) ($tile['resource_type'] ?? 0)] ?? null;
+    $required = $resourceName ? (serverResourceImprovementRequirements()[$resourceName] ?? null) : null;
+    if (($required === 'plantation' || $required === 'winery') && !empty($modifiers[$required]) && $resourceIncome) {
+        $income['money'] += 2 - $resourceIncome[2];
+    }
+    return serverApplyImprovementYieldMultipliers($income, $modifiers, $isCityTile, $type, $hasWaterSource);
+}
+
+function serverImprovementMatchesTileResource(array $tile, string $modifier): bool
+{
+    if (in_array($modifier, ['road', 'fortification', 'network'], true)) return true;
+    $resourceOnly = ['pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry', 'winery'];
+    $resourceName = serverResourceNamesById()[(int) ($tile['resource_type'] ?? 0)] ?? null;
+    if ($resourceName === null) return !in_array($modifier, $resourceOnly, true);
+    $required = serverResourceImprovementRequirements()[$resourceName] ?? null;
+    return $required === null ? !in_array($modifier, $resourceOnly, true) : $modifier === $required;
+}
+
+function serverConnectedRoadResources(array $tiles, int $cityI, int $cityJ): array
+{
+    $names = serverResourceNamesById();
+    $found = [];
+    $queue = [[$cityI, $cityJ]];
+    $visited = [];
+    for ($cursor = 0; $cursor < count($queue); ++$cursor) {
+        [$i, $j] = $queue[$cursor];
+        $key = coordinateKey($i, $j);
+        if (isset($visited[$key]) || !isset($tiles[$key])) continue;
+        $tile = $tiles[$key];
+        $modifiers = json_decode((string) ($tile['modifiers_json'] ?? '{}'), true);
+        $origin = $i === $cityI && $j === $cityJ;
+        if (!$origin && (!is_array($modifiers) || empty($modifiers['road']))) continue;
+        $visited[$key] = true;
+        $resourceId = (int) ($tile['resource_type'] ?? 0);
+        if (isset($names[$resourceId])) $found[$names[$resourceId]] = true;
+        foreach (serverNeighborDirections() as [$di, $dj]) $queue[] = [$i + $di, $j + $dj];
+    }
+    return $found;
+}
+
+function serverCityHasProductionResources(array $tiles, array $city, string $unitTypeId): bool
+{
+    $required = serverProductionResourceRequirements()[$unitTypeId] ?? [];
+    if (!$required) return true;
+    $connected = serverConnectedRoadResources($tiles, (int) $city['i'], (int) $city['j']);
+    foreach ($required as $resource) {
+        if (empty($connected[$resource])) return false;
+    }
+    return true;
 }
 
 function serverHasFreshWaterNear(array $tiles, int $i, int $j): bool
@@ -2985,6 +3473,17 @@ function setProductionProperties(array &$properties, array $queue, float $points
     $properties['productionDisabled'] = $disabled;
 }
 
+function serverRemoveDestroyedCityAt(PDO $db, int $gameId, int $i, int $j, int $revision): void
+{
+    $statement = $db->prepare(
+        "UPDATE server_game_units
+         SET health = 0, revision = ?, deleted_at = UTC_TIMESTAMP()
+         WHERE game_id = ? AND i = ? AND j = ? AND unit_type_id = 'destroyed_city'
+           AND deleted_at IS NULL"
+    );
+    $statement->execute([$revision, $gameId, $i, $j]);
+}
+
 function buildCity(PDO $db, array $game, int $playerId, int $settlerId): array
 {
     $db->beginTransaction();
@@ -3022,6 +3521,7 @@ function buildCity(PDO $db, array $game, int $playerId, int $settlerId): array
         }
 
         $revision = (int) $game['revision'] + 1;
+        serverRemoveDestroyedCityAt($db, $gameId, $i, $j, $revision);
         $tiles = loadTiles($db, $gameId);
         $modifiers = json_decode((string) ($tile['modifiers_json'] ?? '{}'), true);
         if (!is_array($modifiers)) $modifiers = [];
@@ -3115,17 +3615,20 @@ function growCity(PDO $db, array $game, int $playerId, int $cityId, float $repor
         }
         $population = serverCityPopulation($city);
         $growthCost = 20 + $population * 10;
-        if ($reportedFood + 0.0001 < $growthCost) {
+        $properties = json_decode((string) ($city['properties_json'] ?? '{}'), true);
+        if (!is_array($properties)) $properties = [];
+        $authoritativeFood = max(0.0, (float) ($properties['cityFoodStored'] ?? 0));
+        if ($authoritativeFood + 0.0001 < $growthCost) {
             $db->rollBack();
             serverError(409, 'insufficient_city_food', 'The City does not have enough stored food to grow.', [
                 'population' => $population,
-                'food_stored' => $reportedFood,
+                'food_stored' => $authoritativeFood,
                 'growth_cost' => $growthCost,
             ]);
         }
 
         serverSetCityPopulation($city, min(500, $population + 1));
-        serverSetCityFood($city, 0);
+        serverSetCityFood($city, max(0.0, $authoritativeFood - $growthCost));
         $revision = (int) $game['revision'] + 1;
         $statement = $db->prepare(
             'UPDATE server_game_units SET properties_json = ?, revision = ? WHERE id = ?'
@@ -3137,7 +3640,7 @@ function growCity(PDO $db, array $game, int $playerId, int $cityId, float $repor
         $db->commit();
         serverTrace('city_grown', [
             'player_id' => $playerId, 'city_id' => $cityId, 'population_before' => $population,
-            'population_after' => $population + 1, 'food_before_reset' => $reportedFood,
+            'population_after' => $population + 1, 'food_before_growth' => $authoritativeFood,
             'growth_cost' => $growthCost, 'revision' => $revision,
         ]);
         return ['revision' => $revision, 'city' => $city, 'growth_cost' => $growthCost];
@@ -3287,8 +3790,15 @@ function selectCityProduction(PDO $db, array $game, int $playerId, int $cityId, 
             $db->rollBack();
             serverError(409, 'technology_required', $definitions[$unitTypeId]['technology'] . ' is required for this unit.');
         }
+        $tiles = $unitTypeId !== null ? loadTiles($db, $gameId) : [];
+        if ($unitTypeId !== null && !serverCityHasProductionResources($tiles, $city, $unitTypeId)) {
+            $db->rollBack();
+            serverError(409, 'connected_resource_required', 'The City is not connected by road to all resources required for this unit.', [
+                'unit_type_id' => $unitTypeId,
+                'required_resources' => serverProductionResourceRequirements()[$unitTypeId] ?? [],
+            ]);
+        }
         if ($unitTypeId !== null && $definitions[$unitTypeId]['nature'] === 'water') {
-            $tiles = loadTiles($db, $gameId);
             if (!serverCityIsSeaside($tiles, (int) $city['i'], (int) $city['j'])) {
                 $db->rollBack();
                 serverError(409, 'seaside_city_required', 'Water units can be produced only by a seaside city.');
@@ -3299,7 +3809,7 @@ function selectCityProduction(PDO $db, array $game, int $playerId, int $cityId, 
         if (!is_array($properties)) $properties = [];
         $cityProperties = $properties['cityProperties'] ?? [];
         if (!is_array($cityProperties)) $cityProperties = [];
-        $stored = max(0.0, (float) ($cityProperties['productionStored'] ?? 0));
+        $cityProperties['productionStored'] = 0;
         $statement = $db->prepare(
             'SELECT * FROM productions WHERE game_id = ? AND city_unit_id = ? FOR UPDATE'
         );
@@ -3308,12 +3818,13 @@ function selectCityProduction(PDO $db, array $game, int $playerId, int $cityId, 
         $queue = $existingProduction ? productionQueue($existingProduction) : [];
         $points = $existingProduction
             ? max(0.0, (float) $existingProduction['production_points'])
-            : $stored;
+            : 0.0;
         $revision = (int) $game['revision'] + 1;
         if ($unitTypeId === null) {
             $statement = $db->prepare('DELETE FROM productions WHERE game_id = ? AND city_unit_id = ?');
             $statement->execute([$gameId, $cityId]);
-            $cityProperties['productionStored'] = $points;
+            $points = 0.0;
+            $cityProperties['productionStored'] = 0;
             $properties['cityProperties'] = $cityProperties;
             setProductionProperties($properties, [], 0, true);
             $queue = [];
@@ -3333,7 +3844,6 @@ function selectCityProduction(PDO $db, array $game, int $playerId, int $cityId, 
                 $gameId, $cityId, $playerId, $currentTypeId, $points,
                 $definition['cost'], jsonObject($queue),
             ]);
-            $cityProperties['productionStored'] = 0;
             $properties['cityProperties'] = $cityProperties;
             setProductionProperties($properties, $queue, $points, false);
         }
@@ -3382,25 +3892,26 @@ function removeCityProduction(PDO $db, array $game, int $playerId, int $cityId, 
         $removed = $queue[$queueIndex];
         array_splice($queue, $queueIndex, 1);
         $points = max(0.0, (float) $city['production_points']);
+        if ($queueIndex === 0) $points = 0.0;
         $properties = json_decode((string) ($city['properties_json'] ?? '{}'), true);
         if (!is_array($properties)) $properties = [];
         $cityProperties = $properties['cityProperties'] ?? [];
         if (!is_array($cityProperties)) $cityProperties = [];
+        $cityProperties['productionStored'] = 0;
+        $properties['cityProperties'] = $cityProperties;
         $revision = (int) $game['revision'] + 1;
 
         if ($queue) {
             $current = $queue[0];
             $statement = $db->prepare(
-                'UPDATE productions SET unit_type_id = ?, production_cost = ?, queue_json = ?
+                'UPDATE productions SET unit_type_id = ?, production_points = ?, production_cost = ?, queue_json = ?
                  WHERE game_id = ? AND city_unit_id = ?'
             );
-            $statement->execute([$current, $definitions[$current]['cost'], jsonObject($queue), $gameId, $cityId]);
+            $statement->execute([$current, $points, $definitions[$current]['cost'], jsonObject($queue), $gameId, $cityId]);
             setProductionProperties($properties, $queue, $points, false);
         } else {
             $statement = $db->prepare('DELETE FROM productions WHERE game_id = ? AND city_unit_id = ?');
             $statement->execute([$gameId, $cityId]);
-            $cityProperties['productionStored'] = max(0.0, (float) ($cityProperties['productionStored'] ?? 0)) + $points;
-            $properties['cityProperties'] = $cityProperties;
             setProductionProperties($properties, [], 0, false);
         }
         $statement = $db->prepare('UPDATE server_game_units SET properties_json = ?, revision = ? WHERE id = ?');
@@ -3455,6 +3966,14 @@ function completeCityProduction(PDO $db, array $game, int $playerId, int $cityId
             $db->rollBack();
             serverError(409, 'invalid_production_queue', 'The first production backlog item is invalid.');
         }
+        $tiles = loadTiles($db, $gameId);
+        if (!serverCityHasProductionResources($tiles, $city, $unitTypeId)) {
+            $db->rollBack();
+            serverError(409, 'connected_resource_required', 'The City is no longer connected by road to all resources required for this unit.', [
+                'unit_type_id' => $unitTypeId,
+                'required_resources' => serverProductionResourceRequirements()[$unitTypeId] ?? [],
+            ]);
+        }
         $points = max(0.0, (float) $city['production_points']);
         $cost = max(1.0, (float) $definition['cost']);
         if ($points + 0.0001 < $cost) {
@@ -3477,7 +3996,6 @@ function completeCityProduction(PDO $db, array $game, int $playerId, int $cityId
                 'retry_turn' => (int) $game['turn_number'] + 1,
             ];
         }
-        $tiles = loadTiles($db, $gameId);
         $coord = productionSpawnCoordinate($definition, $city, $tiles);
         if ($coord === null) {
             $db->rollBack();
@@ -3488,12 +4006,15 @@ function completeCityProduction(PDO $db, array $game, int $playerId, int $cityId
             $db, $gameId, $playerId, $cityId, (int) $game['turn_number'],
             $unitTypeId, $definition, $coord, $revision
         );
-        $remaining = max(0.0, $points - $cost);
+        // Each backlog item starts from zero; excess from the completed item is discarded.
+        $remaining = 0.0;
         array_shift($queue);
         $properties = json_decode((string) ($city['properties_json'] ?? '{}'), true);
         if (!is_array($properties)) $properties = [];
         $cityProperties = $properties['cityProperties'] ?? [];
         if (!is_array($cityProperties)) $cityProperties = [];
+        $cityProperties['productionStored'] = 0;
+        $properties['cityProperties'] = $cityProperties;
         if ($queue) {
             $next = $queue[0];
             $statement = $db->prepare(
@@ -3507,7 +4028,7 @@ function completeCityProduction(PDO $db, array $game, int $playerId, int $cityId
         } else {
             $statement = $db->prepare('DELETE FROM productions WHERE game_id = ? AND city_unit_id = ?');
             $statement->execute([$gameId, $cityId]);
-            $cityProperties['productionStored'] = max(0.0, (float) ($cityProperties['productionStored'] ?? 0)) + $remaining;
+            $cityProperties['productionStored'] = 0;
             $properties['cityProperties'] = $cityProperties;
             setProductionProperties($properties, [], 0, false);
         }
@@ -3666,7 +4187,7 @@ function processCityProductions(
             $updateCity->execute([jsonObject($properties), $revision, (int) $production['city_unit_id']]);
             continue;
         }
-        $perTurn = max(1.0, (float) ($cityProperties['productionPerTurn'] ?? 5));
+        $perTurn = max(0.0, (float) ($cityProperties['productionPerTurn'] ?? 0));
         $points = (float) $production['production_points'] + $perTurn;
         $cost = max(1.0, (float) $production['production_cost']);
         $cityId = (int) $production['city_unit_id'];
@@ -3678,6 +4199,85 @@ function processCityProductions(
             'points' => $points, 'cost' => $cost, 'queue' => $queue,
         ]);
     }
+}
+
+function completeRequestedProductionsInTurn(
+    PDO $db,
+    int $gameId,
+    int $turn,
+    int $revision,
+    array $tiles,
+    array $requests,
+    array &$events
+): array {
+    $definitions = serverUnitDefinitions();
+    $results = [];
+    foreach ($requests as $request) {
+        $cityId = (int) $request['city_id'];
+        $playerId = (int) $request['player_id'];
+        $statement = $db->prepare(
+            'SELECT u.*, p.unit_type_id, p.production_points, p.production_cost, p.queue_json
+             FROM server_game_units u JOIN productions p ON p.game_id = u.game_id AND p.city_unit_id = u.id
+             WHERE u.game_id = ? AND u.id = ? AND u.owner_id = ? AND u.unit_class = 3
+               AND u.deleted_at IS NULL FOR UPDATE'
+        );
+        $statement->execute([$gameId, $cityId, $playerId]);
+        $city = $statement->fetch();
+        if (!$city) continue;
+        $queue = productionQueue($city);
+        $unitTypeId = $queue[0] ?? '';
+        $definition = $definitions[$unitTypeId] ?? null;
+        $points = max(0.0, (float) $city['production_points']);
+        $cost = $definition ? max(1.0, (float) $definition['cost']) : INF;
+        $pauseReason = null;
+        if (!$definition || $points + 0.0001 < $cost) $pauseReason = 'insufficient_production_points';
+        elseif (!serverCityHasProductionResources($tiles, $city, $unitTypeId)) $pauseReason = 'connected_resource_required';
+        elseif (serverMovableUnitCountAt($db, $gameId, (int) $city['i'], (int) $city['j']) >= SERVER_GAME_TILE_UNIT_LIMIT) {
+            $pauseReason = 'unit_stack_full';
+        }
+        $coord = $pauseReason === null ? productionSpawnCoordinate($definition, $city, $tiles) : null;
+        if ($pauseReason === null && $coord === null) $pauseReason = 'production_spawn_unavailable';
+        if ($pauseReason !== null) {
+            $results[] = ['city_id' => $cityId, 'status' => 'PAUSE', 'reason' => $pauseReason];
+            serverTrace('turn_production_paused', end($results));
+            continue;
+        }
+
+        $producedId = insertProducedUnit(
+            $db, $gameId, $playerId, $cityId, $turn, $unitTypeId, $definition, $coord, $revision
+        );
+        // Each backlog item starts from zero; excess from the completed item is discarded.
+        $remaining = 0.0;
+        array_shift($queue);
+        $properties = json_decode((string) ($city['properties_json'] ?? '{}'), true);
+        if (!is_array($properties)) $properties = [];
+        $cityProperties = $properties['cityProperties'] ?? [];
+        if (!is_array($cityProperties)) $cityProperties = [];
+        $cityProperties['productionStored'] = 0;
+        $properties['cityProperties'] = $cityProperties;
+        if ($queue) {
+            $next = $queue[0];
+            $update = $db->prepare(
+                'UPDATE productions SET unit_type_id = ?, production_points = ?, production_cost = ?, queue_json = ?
+                 WHERE game_id = ? AND city_unit_id = ?'
+            );
+            $update->execute([$next, $remaining, $definitions[$next]['cost'], jsonObject($queue), $gameId, $cityId]);
+            setProductionProperties($properties, $queue, $remaining, false);
+        } else {
+            $db->prepare('DELETE FROM productions WHERE game_id = ? AND city_unit_id = ?')->execute([$gameId, $cityId]);
+            $cityProperties['productionStored'] = 0;
+            $properties['cityProperties'] = $cityProperties;
+            setProductionProperties($properties, [], 0, false);
+        }
+        $db->prepare('UPDATE server_game_units SET properties_json = ?, revision = ? WHERE id = ?')
+            ->execute([jsonObject($properties), $revision, $cityId]);
+        $message = $city['name'] . ' completed ' . $definition['name'] . ' #' . $producedId . '.';
+        eventForPlayers($events, [$playerId], 'production_completed', $city, null,
+            (int) $city['i'], (int) $city['j'], $message,
+            ['city_id' => $cityId, 'unit_id' => $producedId, 'unit_type_id' => $unitTypeId]);
+        $results[] = ['city_id' => $cityId, 'status' => 'BUILT', 'unit_id' => $producedId, 'unit_type_id' => $unitTypeId];
+    }
+    return $results;
 }
 
 function saveEvents(PDO $db, int $gameId, int $turn, int $revision, array $events): void
@@ -3714,23 +4314,455 @@ function loadServerRelations(PDO $db, int $gameId): array
     return $relations;
 }
 
+function loadServerDirectionalRelations(PDO $db, int $gameId): array
+{
+    $statement = $db->prepare(
+        'SELECT player_a, player_b, player_a_status, player_b_status
+         FROM server_game_relations WHERE game_id = ?'
+    );
+    $statement->execute([$gameId]);
+    $relations = [];
+    foreach ($statement->fetchAll() as $relation) {
+        $a = (int) $relation['player_a'];
+        $b = (int) $relation['player_b'];
+        $relations[$a . ':' . $b] = (string) $relation['player_a_status'];
+        $relations[$b . ':' . $a] = (string) $relation['player_b_status'];
+    }
+    return $relations;
+}
+
+function serverDirectionalRelation(array $relations, int $viewerId, int $otherId): string
+{
+    if ($viewerId === $otherId) return 'self';
+    $status = strtolower((string) ($relations[$viewerId . ':' . $otherId] ?? 'neutral'));
+    return in_array($status, ['friend', 'enemy'], true) ? $status : 'neutral';
+}
+
+function storePlayerDirectionalRelations(
+    PDO $db, int $gameId, int $playerId, array $preferences, int $revision
+): void {
+    if (!$preferences) return;
+    $validPlayers = $db->prepare('SELECT 1 FROM server_game_players WHERE game_id = ? AND player_id = ?');
+    $upsertA = $db->prepare(
+        "INSERT INTO server_game_relations
+         (game_id, player_a, player_b, relation_status, player_a_status, player_b_status, revision)
+         VALUES (?, ?, ?, IF(? = 'enemy', 'war', 'neutral'), ?, 'neutral', ?)
+         ON DUPLICATE KEY UPDATE player_a_status = VALUES(player_a_status),
+             relation_status = IF(VALUES(player_a_status) = 'enemy' OR player_b_status = 'enemy', 'war', 'neutral'),
+             revision = VALUES(revision)"
+    );
+    $upsertB = $db->prepare(
+        "INSERT INTO server_game_relations
+         (game_id, player_a, player_b, relation_status, player_a_status, player_b_status, revision)
+         VALUES (?, ?, ?, IF(? = 'enemy', 'war', 'neutral'), 'neutral', ?, ?)
+         ON DUPLICATE KEY UPDATE player_b_status = VALUES(player_b_status),
+             relation_status = IF(player_a_status = 'enemy' OR VALUES(player_b_status) = 'enemy', 'war', 'neutral'),
+             revision = VALUES(revision)"
+    );
+    $count = 0;
+    foreach ($preferences as $otherId => $rawStatus) {
+        if (++$count > 256 || !is_numeric($otherId)) break;
+        $otherId = (int) $otherId;
+        if ($otherId <= 0 || $otherId === $playerId) continue;
+        $status = strtolower(trim((string) $rawStatus));
+        if (!in_array($status, ['neutral', 'friend', 'enemy'], true)) continue;
+        $validPlayers->execute([$gameId, $otherId]);
+        if (!$validPlayers->fetchColumn()) continue;
+        $a = min($playerId, $otherId);
+        $b = max($playerId, $otherId);
+        if ($playerId === $a) $upsertA->execute([$gameId, $a, $b, $status, $status, $revision]);
+        else $upsertB->execute([$gameId, $a, $b, $status, $status, $revision]);
+    }
+}
+
 function serverPlayersAtWar(array $relations, int $playerA, int $playerB): bool
 {
     return $playerA !== $playerB
         && ($relations[serverRelationKey($playerA, $playerB)] ?? 'neutral') === 'war';
 }
 
+function serverPlanInteractionIntent(array $plan, int $movingOwner, int $otherOwner): string
+{
+    if ($movingOwner === $otherOwner) return 'coexist';
+    $targetOwner = isset($plan['target_owner_id']) ? (int) $plan['target_owner_id'] : 0;
+    if ($targetOwner > 0 && $targetOwner !== $otherOwner) return 'auto';
+    $intent = (string) ($plan['interaction_intent'] ?? 'auto');
+    return in_array($intent, ['attack', 'coexist'], true) ? $intent : 'auto';
+}
+
+function serverPlansAllowCombat(array $plans, array $units, int $aId, int $bId, array $relations): bool
+{
+    $aOwner = (int) $units[$aId]['owner_id'];
+    $bOwner = (int) $units[$bId]['owner_id'];
+    if ($aOwner === $bOwner) return false;
+    $aIntent = isset($plans[$aId]) ? serverPlanInteractionIntent($plans[$aId], $aOwner, $bOwner) : 'auto';
+    $bIntent = isset($plans[$bId]) ? serverPlanInteractionIntent($plans[$bId], $bOwner, $aOwner) : 'auto';
+    if ($aIntent === 'attack' || $bIntent === 'attack') return true;
+    if ($aIntent === 'coexist' || $bIntent === 'coexist') return false;
+    return serverPlayersAtWar($relations, $aOwner, $bOwner);
+}
+
+function serverUnitFoodUpkeep(array $unit): int
+{
+    if (!(int) ($unit['can_move'] ?? 0) || serverIsCityUnit($unit) || (float) ($unit['health'] ?? 0) <= 0) return 0;
+    $type = (string) ($unit['unit_type_id'] ?? '');
+    if (in_array($type, ['knight', 'pikeman', 'swordsman', 'trebuchet', 'frigate', 'elephant'], true)) return 3;
+    if (in_array($type, ['horseman', 'chariot', 'catapult', 'galley', 'galleon'], true)) return 2;
+    return 1;
+}
+
+function serverUnitGoldUpkeep(array $unit): int
+{
+    $type = (string) ($unit['unit_type_id'] ?? '');
+    if (!(int) ($unit['can_move'] ?? 0) || serverIsCityUnit($unit) || (float) ($unit['health'] ?? 0) <= 0) return 0;
+    if (in_array($type, ['knight', 'trebuchet', 'frigate'], true)) return 2;
+    if (in_array($type, ['pikeman', 'swordsman', 'longbow'], true)) return 1;
+    return 0;
+}
+
+function serverPrepareCityInfrastructure(
+    PDO $db, int $gameId, int $turn, int $revision, array &$tiles, array &$units, array &$events
+): array {
+    $counts = [];
+    $cities = [];
+    foreach ($units as $unitId => $unit) {
+        if ((float) $unit['health'] > 0 && serverIsCityUnit($unit)) $cities[$unitId] = $unit;
+    }
+    $updateTile = $db->prepare(
+        'UPDATE server_game_map SET modifiers_json = ?, revision = ? WHERE game_id = ? AND i = ? AND j = ?'
+    );
+    foreach ($units as $unitId => &$unit) {
+        if ((float) $unit['health'] <= 0 || (int) ($unit['unit_class'] ?? -1) !== 4) continue;
+        $type = (string) ($unit['unit_type_id'] ?? '');
+        if ($type !== 'building_road' && $type !== 'building_workshop') continue;
+        $properties = json_decode((string) ($unit['properties_json'] ?? '{}'), true);
+        if (!is_array($properties)) $properties = [];
+        $parentId = (int) ($properties['parentCityId'] ?? 0);
+        $validParent = $parentId > 0 && isset($cities[$parentId])
+            && (int) $cities[$parentId]['owner_id'] === (int) $unit['owner_id'];
+        if (!$validParent) {
+            $parentId = serverNearestOwnedCityId(
+                $cities, (int) $unit['owner_id'], (int) $unit['i'], (int) $unit['j']
+            ) ?? 0;
+            $properties['parentCityId'] = $parentId ?: null;
+            $unit['properties_json'] = jsonObject($properties);
+        }
+        if ($parentId <= 0 && $type === 'building_road') {
+            $unit['health'] = 0.0;
+            $key = coordinateKey((int) $unit['i'], (int) $unit['j']);
+            if (isset($tiles[$key])) {
+                $modifiers = json_decode((string) ($tiles[$key]['modifiers_json'] ?? '{}'), true);
+                if (!is_array($modifiers)) $modifiers = [];
+                unset($modifiers['road']);
+                $tiles[$key]['modifiers_json'] = jsonObject($modifiers);
+                $tiles[$key]['revision'] = $revision;
+                $updateTile->execute([
+                    $tiles[$key]['modifiers_json'], $revision, $gameId,
+                    (int) $unit['i'], (int) $unit['j'],
+                ]);
+            }
+            $message = 'Road #' . $unitId . ' was destroyed because it has no parent City.';
+            eventForPlayers($events, [(int) $unit['owner_id']], 'orphan_road_destroyed', $unit, null,
+                (int) $unit['i'], (int) $unit['j'], $message, ['reason' => 'parent_city_missing']);
+            serverTrace('orphan_road_destroyed', [
+                'turn' => $turn, 'unit_id' => $unitId, 'owner_id' => (int) $unit['owner_id'],
+                'i' => (int) $unit['i'], 'j' => (int) $unit['j'],
+            ]);
+            continue;
+        }
+        if ($parentId > 0) {
+            if (!isset($counts[$parentId])) $counts[$parentId] = ['roads' => 0, 'workshops' => 0];
+            if ($type === 'building_road') ++$counts[$parentId]['roads'];
+            if ($type === 'building_workshop') ++$counts[$parentId]['workshops'];
+        }
+    }
+    unset($unit);
+    return $counts;
+}
+
+function serverRoadConnectedTileKeys(array $tiles, int $cityI, int $cityJ): array
+{
+    $keys = [];
+    $queue = [[$cityI, $cityJ]];
+    for ($cursor = 0; $cursor < count($queue); ++$cursor) {
+        [$i, $j] = $queue[$cursor];
+        $key = coordinateKey($i, $j);
+        if (isset($keys[$key]) || !isset($tiles[$key])) continue;
+        $origin = $i === $cityI && $j === $cityJ;
+        $modifiers = json_decode((string) ($tiles[$key]['modifiers_json'] ?? '{}'), true);
+        if (!$origin && (!is_array($modifiers) || empty($modifiers['road']))) continue;
+        $keys[$key] = true;
+        foreach (serverNeighborDirections() as [$di, $dj]) $queue[] = [$i + $di, $j + $dj];
+    }
+    return $keys;
+}
+
+function serverCityEconomicTileKeys(array $city, array $tiles): array
+{
+    $keys = serverRoadConnectedTileKeys($tiles, (int) $city['i'], (int) $city['j']);
+    for ($di = -3; $di <= 3; ++$di) {
+        for ($dj = -3; $dj <= 3; ++$dj) {
+            if (serverHexDistance(0, 0, $di, $dj) > 3) continue;
+            $key = coordinateKey((int) $city['i'] + $di, (int) $city['j'] + $dj);
+            if (isset($tiles[$key])) $keys[$key] = true;
+        }
+    }
+    return $keys;
+}
+
+function serverCityWorkedTiles(array $city, array $tiles): array
+{
+    $population = serverCityPopulation($city);
+    $worked = [];
+    $used = [];
+    $eligible = serverCityEconomicTileKeys($city, $tiles);
+    for ($citizen = 0; $citizen < $population; ++$citizen) {
+        $best = null;
+        $bestScore = -INF;
+        foreach ($eligible as $key => $_) {
+            if (isset($used[$key]) || !isset($tiles[$key])) continue;
+            $income = serverTileIncome(
+                $tiles[$key], $key === coordinateKey((int) $city['i'], (int) $city['j'])
+            );
+            $score = $income['food'] * 4 + $income['production'] * 3 + $income['money'] * 2;
+            if ($score > $bestScore || ($score === $bestScore && ($best === null || strcmp($key, $best['key']) < 0))) {
+                $best = ['key' => $key, 'income' => $income];
+                $bestScore = $score;
+            }
+        }
+        if ($best === null) break;
+        $used[$best['key']] = true;
+        $worked[] = $best;
+    }
+    return $worked;
+}
+
+function serverCityFoodResolution(int $population, float $storedFood, float $netFood): array
+{
+    $population = max(1, $population);
+    $nextStoredFood = $storedFood + $netFood;
+    if ($nextStoredFood >= 0) {
+        return ['population' => $population, 'stored_food' => $nextStoredFood, 'starved' => false, 'collapsed' => false];
+    }
+    return [
+        'population' => max(0, $population - 1),
+        'stored_food' => 0.0,
+        'starved' => true,
+        'collapsed' => $population === 1,
+    ];
+}
+
+function processTerrainImprovementAges(
+    PDO $db, int $gameId, int $turn, int $revision, array &$tiles, array &$events
+): void {
+    $update = $db->prepare(
+        'UPDATE server_game_map SET modifiers_json = ?, revision = ? WHERE game_id = ? AND i = ? AND j = ?'
+    );
+    foreach ($tiles as $key => &$tile) {
+        $modifiers = json_decode((string) ($tile['modifiers_json'] ?? '{}'), true);
+        if (!is_array($modifiers) || empty($modifiers['cottage'])) continue;
+        $before = max(0, (int) ($modifiers['cottageAge'] ?? 0));
+        $after = $before + 1;
+        $modifiers['cottageAge'] = $after;
+        $beforeStage = $before >= 60 ? 'village' : ($before >= 30 ? 'hamlet' : 'cottage');
+        $afterStage = $after >= 60 ? 'village' : ($after >= 30 ? 'hamlet' : 'cottage');
+        $modifiers['cottageStage'] = $afterStage;
+        $tile['modifiers_json'] = jsonObject($modifiers);
+        $tileRevision = $beforeStage !== $afterStage ? $revision : (int) ($tile['revision'] ?? 0);
+        $tile['revision'] = $tileRevision;
+        $update->execute([$tile['modifiers_json'], $tileRevision, $gameId, (int) $tile['i'], (int) $tile['j']]);
+        if ($beforeStage !== $afterStage) {
+            serverTrace('cottage_transformed', [
+                'turn' => $turn, 'i' => (int) $tile['i'], 'j' => (int) $tile['j'],
+                'from' => $beforeStage, 'to' => $afterStage, 'age' => $after,
+            ]);
+        }
+    }
+    unset($tile);
+}
+
+function processPlayerEconomies(
+    PDO $db,
+    int $gameId,
+    int $turn,
+    int $revision,
+    array $tiles,
+    array &$units,
+    array &$events
+): void {
+    $infrastructure = serverPrepareCityInfrastructure(
+        $db, $gameId, $turn, $revision, $tiles, $units, $events
+    );
+    $players = [];
+    foreach ($units as $unitId => &$unit) {
+        if ((float) $unit['health'] <= 0) continue;
+        $owner = (int) $unit['owner_id'];
+        if (!isset($players[$owner])) $players[$owner] = ['food_income' => 0, 'gold_income' => 0];
+        if (!serverIsCityUnit($unit)) continue;
+        $food = 0; $production = 0; $gold = 0;
+        foreach (serverCityWorkedTiles($unit, $tiles) as $worked) {
+            $food += $worked['income']['food'];
+            $production += $worked['income']['production'];
+            $gold += $worked['income']['money'];
+        }
+        $population = serverCityPopulation($unit);
+        $costs = $infrastructure[$unitId] ?? ['roads' => 0, 'workshops' => 0];
+        $roadProductionCost = max(0, (int) $costs['roads']);
+        $workshopCost = max(0, (int) $costs['workshops']);
+        $foodConsumption = $population + $workshopCost;
+        $foodExcess = $food - $foodConsumption;
+        $netProduction = max(0, $production - $roadProductionCost);
+        $netGold = $gold - $workshopCost;
+        $properties = json_decode((string) ($unit['properties_json'] ?? '{}'), true);
+        if (!is_array($properties)) $properties = [];
+        $cityProperties = $properties['cityProperties'] ?? [];
+        if (!is_array($cityProperties)) $cityProperties = [];
+        $foodResult = serverCityFoodResolution(
+            $population, max(0.0, (float) ($properties['cityFoodStored'] ?? 0)), $foodExcess
+        );
+        $properties['cityFoodStored'] = $foodResult['stored_food'];
+        $properties['cityPopulation'] = max(1, (int) $foodResult['population']);
+        if (isset($properties['economy']['citizens']) && is_array($properties['economy']['citizens'])) {
+            $properties['economy']['citizens'] = array_slice(
+                $properties['economy']['citizens'], 0, (int) $foodResult['population']
+            );
+        }
+        $cityProperties['productionPerTurn'] = $netProduction;
+        $properties['cityProperties'] = $cityProperties;
+        $properties['lastCityIncome'] = [
+            'food' => $foodExcess, 'grossFood' => $food,
+            'production' => $netProduction, 'grossProduction' => $production,
+            'money' => $netGold, 'grossMoney' => $gold,
+            'foodConsumption' => $foodConsumption,
+            'roadProductionCost' => $roadProductionCost,
+            'workshopFoodCost' => $workshopCost,
+            'workshopGoldCost' => $workshopCost,
+        ];
+        $unit['properties_json'] = jsonObject($properties);
+        if ($foodResult['starved']) {
+            if ($foodResult['collapsed']) {
+                $destroyedProperties = [
+                    'destroyedCity' => true,
+                    'economicClass' => 'destroyed_city',
+                    'noControlZone' => true,
+                    'noFogReveal' => true,
+                ];
+                $unit['unit_type_id'] = 'destroyed_city';
+                $unit['unit_class'] = 4;
+                $unit['name'] = 'Destroyed City';
+                $unit['texture'] = 869;
+                $unit['can_move'] = 0;
+                $unit['attack_value'] = 0.0;
+                $unit['defense_value'] = 0.0;
+                $unit['speed'] = 0.0;
+                $unit['view_range'] = 0;
+                $unit['state'] = 'destroyed';
+                $unit['properties_json'] = jsonObject($destroyedProperties);
+                $db->prepare(
+                    "UPDATE server_game_units SET occupancy_key = NULL, unit_type_id = 'destroyed_city', unit_class = 4,
+                     name = 'Destroyed City', texture = 869, can_move = 0, attack_value = 0, defense_value = 0,
+                     speed = 0, view_range = 0, state = 'destroyed', properties_json = ?, revision = ? WHERE id = ?"
+                )->execute([$unit['properties_json'], $revision, $unitId]);
+                $db->prepare('DELETE FROM productions WHERE game_id = ? AND city_unit_id = ?')
+                    ->execute([$gameId, $unitId]);
+                $tileKey = coordinateKey((int) $unit['i'], (int) $unit['j']);
+                if (isset($tiles[$tileKey])) {
+                    $tiles[$tileKey]['modifiers_json'] = '{}';
+                    $tiles[$tileKey]['revision'] = $revision;
+                    $db->prepare(
+                        'UPDATE server_game_map SET modifiers_json = ?, revision = ? WHERE game_id = ? AND i = ? AND j = ?'
+                    )->execute(['{}', $revision, $gameId, (int) $unit['i'], (int) $unit['j']]);
+                }
+                $message = 'City #' . $unitId . ' starved and became a destroyed City.';
+                eventForPlayers($events, [$owner], 'city_destroyed_by_starvation', $unit, null,
+                    (int) $unit['i'], (int) $unit['j'], $message,
+                    ['city_id' => (int) $unitId, 'replacement_allowed' => true]);
+            } else {
+                $message = $unit['name'] . ' is starving: population decreased from '
+                    . $population . ' to ' . $foodResult['population'] . '.';
+                eventForPlayers($events, [$owner], 'city_starvation', $unit, null,
+                    (int) $unit['i'], (int) $unit['j'], $message,
+                    ['city_id' => (int) $unitId, 'population' => (int) $foodResult['population']]);
+            }
+            serverTrace('city_starvation', [
+                'turn' => $turn, 'city_id' => (int) $unitId, 'owner_id' => $owner,
+                'population_before' => $population, 'population_after' => (int) $foodResult['population'],
+                'food_income' => $food, 'food_consumption' => $foodConsumption,
+                'collapsed' => $foodResult['collapsed'],
+            ]);
+        }
+        $players[$owner]['food_income'] += max(0, $foodExcess);
+        $players[$owner]['gold_income'] += $netGold;
+    }
+    unset($unit);
+
+    $loadState = $db->prepare('SELECT state_json FROM server_game_players WHERE game_id = ? AND player_id = ? FOR UPDATE');
+    $saveState = $db->prepare('UPDATE server_game_players SET state_json = ? WHERE game_id = ? AND player_id = ?');
+    foreach ($players as $playerId => $income) {
+        $loadState->execute([$gameId, $playerId]);
+        $state = json_decode((string) ($loadState->fetchColumn() ?: '{}'), true);
+        $state = normalizePlayerState(is_array($state) ? $state : []);
+        $availableFood = max(0, (int) ($state['food'] ?? 100)) + $income['food_income'];
+        $availableGold = max(0, (int) ($state['money'] ?? 500)) + $income['gold_income'];
+
+        $candidates = [];
+        $foodUpkeep = 0; $goldUpkeep = 0;
+        foreach ($units as $unitId => $unit) {
+            if ((int) $unit['owner_id'] !== $playerId || (float) $unit['health'] <= 0) continue;
+            $foodCost = serverUnitFoodUpkeep($unit);
+            $goldCost = serverUnitGoldUpkeep($unit);
+            $foodUpkeep += $foodCost; $goldUpkeep += $goldCost;
+            if ($foodCost || $goldCost) $candidates[] = [$unitId, $foodCost, $goldCost];
+        }
+        usort($candidates, static function(array $a, array $b): int {
+            return ($b[1] + $b[2] * 2) <=> ($a[1] + $a[2] * 2) ?: $b[0] <=> $a[0];
+        });
+        while (($foodUpkeep > $availableFood || $goldUpkeep > $availableGold) && $candidates) {
+            [$unitId, $foodCost, $goldCost] = array_shift($candidates);
+            if (!isset($units[$unitId]) || (float) $units[$unitId]['health'] <= 0) continue;
+            $units[$unitId]['health'] = 0.0;
+            $foodUpkeep -= $foodCost; $goldUpkeep -= $goldCost;
+            $message = $units[$unitId]['name'] . ' #' . $unitId . ' was disbanded because food or gold was insufficient.';
+            $state['oneTurnMessage'] = $message;
+            eventForPlayers($events, [$playerId], 'unit_disbanded', $units[$unitId], null,
+                (int) $units[$unitId]['i'], (int) $units[$unitId]['j'], $message,
+                ['food_cost' => $foodCost, 'gold_cost' => $goldCost]);
+        }
+        $state['food'] = max(0, $availableFood - $foodUpkeep);
+        $state['money'] = max(0, $availableGold - $goldUpkeep);
+        $state['lastGrossFoodIncome'] = $income['food_income'];
+        $state['lastFoodUpkeep'] = $foodUpkeep;
+        $state['lastGrossMoneyIncome'] = $income['gold_income'];
+        $state['lastMaintenance'] = $goldUpkeep;
+        $state['lastAccountIncome'] = $income['gold_income'] - $goldUpkeep;
+        $saveState->execute([jsonObject($state), $gameId, $playerId]);
+        serverTrace('player_economy_processed', [
+            'turn' => $turn, 'player_id' => $playerId, 'food' => $state['food'], 'gold' => $state['money'],
+            'food_income' => $income['food_income'], 'food_upkeep' => $foodUpkeep,
+            'gold_income' => $income['gold_income'], 'gold_upkeep' => $goldUpkeep,
+        ]);
+    }
+}
+
 function declareServerWar(PDO $db, int $gameId, int $playerA, int $playerB, int $revision, array &$relations): void
 {
-    if ($playerA === $playerB || serverPlayersAtWar($relations, $playerA, $playerB)) return;
+    if ($playerA === $playerB) return;
     $a = min($playerA, $playerB);
     $b = max($playerA, $playerB);
+    $attackerIsA = $playerA === $a;
     $statement = $db->prepare(
-        "INSERT INTO server_game_relations (game_id, player_a, player_b, relation_status, revision)
-         VALUES (?, ?, ?, 'war', ?)
-         ON DUPLICATE KEY UPDATE relation_status = 'war', revision = VALUES(revision)"
+        "INSERT INTO server_game_relations
+         (game_id, player_a, player_b, relation_status, player_a_status, player_b_status, revision)
+         VALUES (?, ?, ?, 'war', ?, ?, ?)
+         ON DUPLICATE KEY UPDATE relation_status = 'war',
+             player_a_status = IF(? = 1, 'enemy', player_a_status),
+             player_b_status = IF(? = 1, 'enemy', player_b_status),
+             revision = VALUES(revision)"
     );
-    $statement->execute([$gameId, $a, $b, $revision]);
+    $statement->execute([
+        $gameId, $a, $b, $attackerIsA ? 'enemy' : 'neutral', $attackerIsA ? 'neutral' : 'enemy', $revision,
+        $attackerIsA ? 1 : 0, $attackerIsA ? 0 : 1,
+    ]);
     $relations[serverRelationKey($a, $b)] = 'war';
     serverTrace('war_declared_by_attack', [
         'game_id' => $gameId, 'player_a' => $a, 'player_b' => $b, 'revision' => $revision,
@@ -3792,6 +4824,7 @@ function resolveTurn(PDO $db, array $game): array
     $unitsWithoutOrderCount = 0;
     $unitsWithoutOrders = [];
     $nonMovementCommands = [];
+    $productionRequests = [];
     foreach ($units as $unitId => &$unit) {
         $order = $orders[$unitId] ?? null;
         if (!$order) {
@@ -3802,14 +4835,14 @@ function resolveTurn(PDO $db, array $game): array
         $command = $order['command_name'];
         $payload = json_decode((string) ($order['payload_json'] ?? '{}'), true);
         if (!is_array($payload)) $payload = [];
-        if (serverIsCityUnit($unit) && isset($payload['city_food_stored']) && is_numeric($payload['city_food_stored'])) {
-            serverSetCityFood($unit, (float) $payload['city_food_stored']);
-        }
         if ($command === 'set_state' || $command === 'wait' || $command === 'fortify') {
             $unit['state'] = substr((string) ($payload['state'] ?? ($command === 'wait' ? 'waiting' : 'fortified')), 0, 40);
         }
         if ($command === 'build') {
-            applyBuildOrder($db, $gameId, $unit, $payload, $tiles, $revision, $events);
+            applyBuildOrder($db, $gameId, $unit, $payload, $tiles, $revision, $events, $units);
+        }
+        if ($command === 'produce' && serverIsCityUnit($unit)) {
+            $productionRequests[] = ['city_id' => $unitId, 'player_id' => (int) $unit['owner_id']];
         }
         if ($command !== 'move' || !(int) $unit['can_move'] || (int) $unit['move_penalty'] > 0) {
             $nonMovementCommands[$command] = ($nonMovementCommands[$command] ?? 0) + 1;
@@ -3818,7 +4851,7 @@ function resolveTurn(PDO $db, array $game): array
         $rawPath = json_decode((string) ($order['path_json'] ?? '[]'), true);
         if (!is_array($rawPath)) $rawPath = [];
         $pathDiagnostic = null;
-        $path = validatePath($unit, $rawPath, $tiles, $mapSize, $pathDiagnostic);
+        $path = validatePath($unit, $rawPath, $tiles, $mapSize, $pathDiagnostic, $units);
         serverTrace('movement_path_validated', [
             'unit_id' => $unitId, 'owner_id' => (int) $unit['owner_id'],
             'start' => ['i' => (int) $unit['i'], 'j' => (int) $unit['j']],
@@ -3834,6 +4867,12 @@ function resolveTurn(PDO $db, array $game): array
             'speed' => max(1.0, (float) $unit['speed']),
             'early' => $steps > 0 && $steps * 2 <= max(1.0, (float) $unit['speed']),
             'canceled' => false,
+            'interaction_intent' => in_array(($payload['interaction_intent'] ?? ''), ['attack', 'coexist'], true)
+                ? (string) $payload['interaction_intent']
+                : (isset($payload['attack_owner_id']) ? 'attack' : 'auto'),
+            'target_owner_id' => isset($payload['target_owner_id'])
+                ? (int) $payload['target_owner_id']
+                : (isset($payload['attack_owner_id']) ? (int) $payload['attack_owner_id'] : 0),
         ];
     }
     unset($unit);
@@ -3846,30 +4885,32 @@ function resolveTurn(PDO $db, array $game): array
         'movement_plans' => count($plans),
     ]);
 
+    $transportCrews = serverAssignTransportCrews($units);
+    foreach ($transportCrews as $carrierId => $crewIds) {
+        if (!isset($plans[$carrierId]) || !$plans[$carrierId]['steps']) continue;
+        foreach ($crewIds as $crewId) unset($plans[$crewId]);
+        serverTrace('transport_crew_assigned', [
+            'carrier_id' => $carrierId, 'crew_ids' => $crewIds,
+            'capacity' => serverTransportCapacity((string) $units[$carrierId]['unit_type_id']),
+        ]);
+    }
+
     $startOccupants = [];
     foreach ($units as $unitId => $unit) {
         $startOccupants[coordinateKey((int) $unit['i'], (int) $unit['j'])][] = $unitId;
     }
 
-    // Moving a military unit directly onto a foreign unit is the declaration of war.
+    // Only an explicit attack intent declares war. Neutral and friendly units
+    // may intentionally share a Tile without PHP inferring hostility.
     foreach ($plans as $unitId => $plan) {
         if (!$plan['steps'] || !serverIsMilitaryUnit($units[$unitId])) continue;
-        $orderPayload = json_decode((string) ($orders[$unitId]['payload_json'] ?? '{}'), true);
-        $explicitTargetOwner = is_array($orderPayload) && isset($orderPayload['attack_owner_id'])
-            ? (int) $orderPayload['attack_owner_id'] : (int) $units[$unitId]['owner_id'];
-        if ($explicitTargetOwner !== (int) $units[$unitId]['owner_id']) {
+        $explicitTargetOwner = (int) ($plan['target_owner_id'] ?? 0);
+        if ($plan['interaction_intent'] === 'attack'
+            && $explicitTargetOwner > 0
+            && $explicitTargetOwner !== (int) $units[$unitId]['owner_id']) {
             declareServerWar(
                 $db, $gameId, (int) $units[$unitId]['owner_id'], $explicitTargetOwner, $revision, $relations
             );
-        }
-        $target = $plan['path'][$plan['steps'] - 1];
-        foreach ($startOccupants[coordinateKey($target['i'], $target['j'])] ?? [] as $targetId) {
-            $targetOwner = (int) $units[$targetId]['owner_id'];
-            if ($targetOwner !== (int) $units[$unitId]['owner_id']) {
-                declareServerWar(
-                    $db, $gameId, (int) $units[$unitId]['owner_id'], $targetOwner, $revision, $relations
-                );
-            }
         }
     }
 
@@ -3878,7 +4919,7 @@ function resolveTurn(PDO $db, array $game): array
         $target = $plan['path'][$plan['steps'] - 1];
         foreach ($startOccupants[coordinateKey($target['i'], $target['j'])] ?? [] as $defenderId) {
             if ($defenderId === $unitId || $units[$defenderId]['health'] <= 0
-                || !serverPlayersAtWar($relations, (int) $units[$defenderId]['owner_id'], (int) $units[$unitId]['owner_id'])) continue;
+                || !serverPlansAllowCombat($plans, $units, $unitId, $defenderId, $relations)) continue;
             $pairKey = combatPairKey($unitId, $defenderId);
             if (isset($engagedPairs[$pairKey])) continue;
             // A half-turn arrival owns the interaction point. Combat never rolls it back.
@@ -3922,7 +4963,8 @@ function resolveTurn(PDO $db, array $game): array
         $plan = $plans[$unitId];
         $target = $plan['path'][$plan['steps'] - 1];
         $targetKey = coordinateKey($target['i'], $target['j']);
-        $isAttack = serverMovementTargetsForeignDefender($units, $unitId, $target['i'], $target['j']);
+        $isAttack = $plan['interaction_intent'] === 'attack'
+            && serverMovementTargetsForeignDefender($units, $unitId, $target['i'], $target['j']);
         if (($tileUnitCounts[$targetKey] ?? 0) >= SERVER_GAME_TILE_UNIT_LIMIT && !$isAttack) {
             $originKey = coordinateKey((int) $units[$unitId]['i'], (int) $units[$unitId]['j']);
             $tileUnitCounts[$originKey] = ($tileUnitCounts[$originKey] ?? 0) + 1;
@@ -3948,7 +4990,7 @@ function resolveTurn(PDO $db, array $game): array
             $aId = $unitIds[$a];
             $bId = $unitIds[$b];
             if ($units[$aId]['health'] <= 0 || $units[$bId]['health'] <= 0
-                || !serverPlayersAtWar($relations, (int) $units[$aId]['owner_id'], (int) $units[$bId]['owner_id'])) continue;
+                || !serverPlansAllowCombat($plans, $units, $aId, $bId, $relations)) continue;
             if (!isset($plans[$aId], $plans[$bId])) continue;
             $intersection = null;
             foreach ($plans[$aId]['trajectory'] as $ai => $pointA) {
@@ -3984,6 +5026,10 @@ function resolveTurn(PDO $db, array $game): array
         }
     }
 
+    // Crew follows the ship's authoritative resolved position. If combat kept
+    // or returned the ship to its origin, passengers remain there as well.
+    serverMoveTransportCrews($units, $transportCrews);
+
     $occupants = [];
     foreach ($units as $unitId => $unit) {
         if ($unit['health'] > 0) $occupants[coordinateKey((int) $unit['i'], (int) $unit['j'])][] = $unitId;
@@ -3995,7 +5041,7 @@ function resolveTurn(PDO $db, array $game): array
                 $aId = $ids[$a];
                 $bId = $ids[$b];
                 if ($units[$aId]['health'] <= 0 || $units[$bId]['health'] <= 0
-                    || !serverPlayersAtWar($relations, (int) $units[$aId]['owner_id'], (int) $units[$bId]['owner_id'])) continue;
+                    || !serverPlansAllowCombat($plans, $units, $aId, $bId, $relations)) continue;
                 $pairKey = combatPairKey($aId, $bId);
                 if (isset($engagedPairs[$pairKey])) continue;
                 $attackerId = isset($plans[$aId]) ? $aId : $bId;
@@ -4013,6 +5059,9 @@ function resolveTurn(PDO $db, array $game): array
             }
         }
     }
+
+    processTerrainImprovementAges($db, $gameId, $turn, $revision, $tiles, $events);
+    processPlayerEconomies($db, $gameId, $turn, $revision, $tiles, $units, $events);
 
     $update = $db->prepare(
         'UPDATE server_game_units SET owner_id = ?, i = ?, j = ?, state = ?, health = ?, experience = ?, move_penalty = ?,
@@ -4077,6 +5126,9 @@ function resolveTurn(PDO $db, array $game): array
         }
     }
     processCityProductions($db, $gameId, $turn, $revision, $tiles, $events);
+    completeRequestedProductionsInTurn(
+        $db, $gameId, $turn, $revision, $tiles, $productionRequests, $events
+    );
     serverTrace('turn_resolution_finished', [
         'turn' => $turn, 'revision_after' => $revision,
         'unit_count' => count($units),
@@ -4138,7 +5190,9 @@ function maybeResolveTurn(PDO $db, array $game): array
     return ['resolved_turn' => null, 'new_turn' => (int) $game['turn_number'], 'revision' => (int) $game['revision'], 'events' => []];
 }
 
-function storePlayerOrders(PDO $db, array $game, int $playerId, array $commands, array $playerState): bool
+function storePlayerOrders(
+    PDO $db, array $game, int $playerId, array $commands, array $playerState, array $relationPreferences = []
+): bool
 {
     $gameId = (int) $game['id'];
     $turn = (int) $game['turn_number'];
@@ -4153,7 +5207,21 @@ function storePlayerOrders(PDO $db, array $game, int $playerId, array $commands,
         ]);
         return false;
     }
+    storePlayerDirectionalRelations(
+        $db, $gameId, $playerId, $relationPreferences, (int) $game['revision'] + 1
+    );
+    $currentStateStatement = $db->prepare(
+        'SELECT state_json FROM server_game_players WHERE game_id = ? AND player_id = ?'
+    );
+    $currentStateStatement->execute([$gameId, $playerId]);
+    $currentState = json_decode((string) ($currentStateStatement->fetchColumn() ?: '{}'), true);
+    if (!is_array($currentState)) $currentState = [];
     $playerState = normalizePlayerState($playerState);
+    // Clients may select presentation/research state, but cannot overwrite server economy balances.
+    foreach (['food', 'money', 'lastGrossFoodIncome', 'lastFoodUpkeep', 'lastGrossMoneyIncome',
+        'lastMaintenance', 'lastAccountIncome', 'oneTurnMessage'] as $field) {
+        if (array_key_exists($field, $currentState)) $playerState[$field] = $currentState[$field];
+    }
     $statement = $db->prepare(
         'INSERT INTO server_game_players (game_id, player_id, civilization_key, state_json) VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE state_json = VALUES(state_json),
@@ -4343,9 +5411,11 @@ function serverCivilizations(PDO $db, array $game, int $viewerId): array
 {
     $catalog = civilizationCatalog();
     $relations = loadServerRelations($db, (int) $game['id']);
+    $directionalRelations = loadServerDirectionalRelations($db, (int) $game['id']);
     $testLoginPattern = '^(server[_]test[_]|logout[_]test[_]|device[_]test[_]|handoff[_]test[_]|ai[_]parent[_]test[_]|phone[_]session[_])';
     $statement = $db->prepare(
-        "SELECT p.player_id, p.civilization_key, p.active, p.units_killed, p.cities_occupied, p.cities_destroyed,
+        "SELECT p.player_id, p.civilization_key, p.active, p.state_json,
+                p.units_killed, p.cities_occupied, p.cities_destroyed,
                 CASE WHEN u.user_type = 'ai' THEN CONCAT('AI Player ', p.player_id)
                      ELSE COALESCE(u.login, CONCAT('Player ', p.player_id)) END AS player_name,
                 SUM(CASE WHEN gu.id IS NOT NULL AND gu.deleted_at IS NULL THEN 1 ELSE 0 END) AS current_units,
@@ -4355,7 +5425,7 @@ function serverCivilizations(PDO $db, array $game, int $viewerId): array
          LEFT JOIN server_game_units gu ON gu.game_id = p.game_id AND gu.owner_id = p.player_id
          WHERE p.game_id = ?
            AND LOWER(COALESCE(u.login, '')) NOT REGEXP ?
-         GROUP BY p.player_id, p.civilization_key, p.active, p.units_killed, p.cities_occupied,
+         GROUP BY p.player_id, p.civilization_key, p.active, p.state_json, p.units_killed, p.cities_occupied,
                   p.cities_destroyed, u.login, u.user_type
          ORDER BY p.player_id"
     );
@@ -4365,6 +5435,8 @@ function serverCivilizations(PDO $db, array $game, int $viewerId): array
         $playerId = (int) $player['player_id'];
         $key = (string) ($player['civilization_key'] ?: civilizationKeyForPlayer($playerId));
         $identity = $catalog[$key] ?? $catalog['romans'];
+        $state = json_decode((string) ($player['state_json'] ?? '{}'), true);
+        if (!is_array($state)) $state = [];
         $result[] = [
             'player_id' => $playerId,
             'player_name' => (string) $player['player_name'],
@@ -4372,9 +5444,12 @@ function serverCivilizations(PDO $db, array $game, int $viewerId): array
             'civilization_name' => $identity['name'],
             'coat' => $identity,
             'relation' => $playerId === $viewerId
-                ? 'Own civilization'
-                : (serverPlayersAtWar($relations, $viewerId, $playerId) ? 'War' : 'Neutral'),
+                ? 'self' : serverDirectionalRelation($directionalRelations, $viewerId, $playerId),
+            'combat_relation' => $playerId === $viewerId
+                ? 'self' : (serverPlayersAtWar($relations, $viewerId, $playerId) ? 'war' : 'neutral'),
             'active' => (bool) $player['active'],
+            'food' => max(0, (int) ($state['food'] ?? 0)),
+            'gold' => max(0, (int) ($state['money'] ?? 0)),
             'current_units' => (int) $player['current_units'],
             'current_cities' => (int) $player['current_cities'],
             'units_killed' => (int) $player['units_killed'],
@@ -4849,6 +5924,7 @@ try {
             'ok' => true, 'request' => 'build', 'game_id' => $key, 'player_id' => $playerId,
             'turn' => (int) $game['turn_number'], 'revision' => $result['revision'],
             'status' => $result['status'], 'already_built' => $result['already_built'],
+            'reason' => $result['reason'] ?? null,
             'building' => $result['building'], 'tile' => $result['tile'],
         ]);
     }
@@ -4989,7 +6065,10 @@ try {
             $playerState = isset($data['player_state']) && is_array($data['player_state']) ? $data['player_state'] : [];
             $rejectedMovements = rejectInvalidAtomicMovements($db, $game, $playerId, $commands);
             if ($rejectedMovements) serverTrace('atomic_movements_rejected', $rejectedMovements);
-            $ordersStored = storePlayerOrders($db, $game, $playerId, $commands, $playerState);
+            $relationPreferences = isset($data['relations']) && is_array($data['relations']) ? $data['relations'] : [];
+            $ordersStored = storePlayerOrders(
+                $db, $game, $playerId, $commands, $playerState, $relationPreferences
+            );
             $resolution = maybeResolveTurn($db, $game);
             $game = loadGame($db, $key, true);
             $db->commit();
@@ -4997,7 +6076,7 @@ try {
             if ($db->inTransaction()) $db->rollBack();
             throw $error;
         }
-        $productionResults = completeReadyProductionsForPlayer($db, $key, $playerId);
+        $productionResults = [];
         $game = loadGame($db, $key);
         $updates = null;
         if (!empty($data['include_updates'])) {
@@ -5034,7 +6113,6 @@ try {
     ensureGame($db, $key, $playerId, null);
     [$game, $resolution] = lockedGameAndResolution($db, $key);
     if ($action === 'load_full') {
-        completeReadyProductionsForPlayer($db, $key, $playerId);
         $game = loadGame($db, $key);
         $includeFullMap = !array_key_exists('include_map', $data) || (bool) $data['include_map'];
         $snapshot = fullGameLoad($db, $game, $playerId, $authenticatedUserId, $includeFullMap);
@@ -5046,9 +6124,7 @@ try {
         ], $snapshot));
     }
     if ($action === 'load_update') {
-        $productionResults = !array_key_exists('complete_ready_productions', $data)
-            || (bool) $data['complete_ready_productions']
-            ? completeReadyProductionsForPlayer($db, $key, $playerId) : [];
+        $productionResults = [];
         $game = loadGame($db, $key);
         $updates = combinedPlayerUpdates(
             $db, $game, $playerId,

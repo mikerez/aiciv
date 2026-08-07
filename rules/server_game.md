@@ -116,6 +116,10 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ORDER-009A`: If five movable units occupy the producing City's Tile, `complete_production` returns HTTP 200 with `status: "PAUSE"`, preserves all production points and backlog state, and provides a later retry turn. The JS client does not treat this as an error and retries after the indicated turn.
 
+`SERVER-ORDER-009B`: An irrigation build uses the same breadth-first connectivity shape as road-connected resource lookup. Existing irrigation is traversable from the unbuilt request origin and must reach a valid fresh-water source. A disconnected request returns HTTP 200 with `status: "IMPOSSIBLE"` and `reason: "water_not_connected"` without changing the map.
+
+`SERVER-ORDER-009C`: A completed road or Workshop stores its nearest same-owner City as `parentCityId`. Legacy improvements are assigned during turn processing. A road with no possible parent City is deleted together with its Tile modifier and emits an owner-visible event.
+
 `SERVER-ORDER-010`: The browser calculates a City's worked-tile food each turn. When stored food reaches `20 + population * 10`, it calls `grow_city`. PHP locks the owned City, checks that reported food reaches its authoritative population threshold, increments population once, resets stored food to zero, and returns the updated City.
 
 `SERVER-ORDER-011`: During turn capture, the browser sends one sequential `heal_units` request for each owned City containing damaged friendly movable units. Sequential execution prevents many Cities from creating concurrent PHP workers waiting on the same game-row lock. PHP locks the City and requested units, verifies that every unit is alive, movable, owned by the same player, and on the City's exact Tile, then restores 10% of each unit's maximum health without exceeding maximum health. The client applies each returned HP snapshot immediately. A City records `last_healed_turn`, so retries cannot heal its occupants more than once in one authoritative turn.
@@ -164,6 +168,18 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for hidden AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
 
+`SERVER-ECONOMY-001`: End-turn resolution calculates worked-Tile food, production, and gold in PHP using tables mirrored by `city.js` and `economics.js`; client-reported balances and city food cannot overwrite these values.
+
+`SERVER-ECONOMY-002`: PHP adds positive city food excess and gross city gold to player storage, deducts per-unit upkeep, and disbands movable units when either resource cannot cover the army.
+
+`SERVER-ECONOMY-003`: A population-one starving City becomes a replaceable `destroyed_city` unit. It has no movement, economy, fog, control-zone, production, or combat behavior.
+
+`SERVER-PRODUCTION-001`: Production points accrue by the exact authoritative city production yield. Unit creation occurs only for a City that submitted `produce`, after PHP validates cost, road-connected resources, nature/spawn location, and the five-unit stack limit.
+
+`SERVER-PRODUCTION-002`: Authoritative City yield uses only nearby or road-connected worked Tiles. Parent roads each subtract one production, while parent Workshops each subtract one food and one gold and set their worked Tile to four production.
+
+`SERVER-PRODUCTION-003`: Production points belong only to the current backlog item. Selecting the first item starts at zero; cancelling, removing, or completing it discards its balance and the next item also starts at zero.
+
 `SERVER-EVENT-001`: The event part of `load_update` takes `since_event_id`, returns addressed events in id order plus the next cursor and current civilization statistics, then deletes those delivered event rows.
 
 `SERVER-EVENT-002`: Combat is addressed to both participants and every player with full visibility of the combat tile. Its payload contains attacker and defender ids, before/after snapshots, damage, combat kind (`unit_attack`, `city_attack`, or `city_capture`), and destroyed unit ids.
@@ -179,6 +195,10 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 `SERVER-CIV-004`: The secret-protected `cleanup_orphan_players` administration request reports player/unit owners that have no valid `game_users` account link and automated test-human logins hidden by `SERVER-CIV-003`. With confirmation `REMOVE_ORPHANS`, it transactionally removes only those game players and their units, production, orders, visibility, events, and relations. Accounts with `user_type='ai'` are never candidates, including AI players assigned to test humans.
 
 `SERVER-CIV-002`: Civilization statistics store units killed, cities occupied, and cities destroyed. Capturing a surviving City increments cities occupied; City records do not take combat damage or count as destroyed during capture.
+
+`SERVER-CIV-005`: End Turn accepts the current player's directional `friend`, `enemy`, or `neutral` preferences and returns each known civilization's directional relation plus its authoritative food and gold balances.
+
+`SERVER-MOVE-005`: A movement command may include `interaction_intent` (`attack` or `coexist`) and `target_owner_id`. Explicit attack permits combat and declares the attacker's enemy preference; explicit coexist suppresses combat unless the other side attacks.
 
 ## Request Example
 

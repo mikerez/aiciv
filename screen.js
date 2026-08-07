@@ -291,8 +291,8 @@ function drawSelectionStroke()
 
     var x = x1toX(ijtox1(_units[_selection].coord.i, _units[_selection].coord.j));
     var y = y1toY(ijtoy1(_units[_selection].coord.i, _units[_selection].coord.j));
-    var radiusX = 118/_screenZoom;
-    var radiusY = 82/_screenZoom;
+    var radiusX = 79/_screenZoom;
+    var radiusY = 55/_screenZoom;
 
     ctx.save();
     ctx.lineWidth = 2;
@@ -300,7 +300,7 @@ function drawSelectionStroke()
     ctx.setLineDash([10, 6]);
     ctx.lineDashOffset = _step%2 ? 0 : 8;
     ctx.beginPath();
-    ctx.ellipse(x, y + 8/_screenZoom, radiusX, radiusY, 0, 0, Math.PI*2);
+    ctx.ellipse(x, y + 5/_screenZoom, radiusX, radiusY, 0, 0, Math.PI*2);
     ctx.stroke();
     ctx.restore();
 }

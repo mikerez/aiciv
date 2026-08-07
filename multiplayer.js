@@ -154,7 +154,9 @@ const _multiplayer = new class
         current_user = userId;
         _units = _units_by_user[userId];
         _game_state = _game_state_by_user[userId];
+        if (typeof _economics != 'undefined') _economics.updateCounters(_game_state, userId, 'set-current-user');
         _selection = _selection_by_user[userId] == undefined ? -1 : _selection_by_user[userId];
+        if (typeof _multi_selection != 'undefined') _multi_selection = [];
         if (_map_terrain_bit_by_user[userId] != undefined) {
             _map_terrain_bit = _map_terrain_bit_by_user[userId];
         }
@@ -292,6 +294,9 @@ const _multiplayer = new class
         if (_map.prepareResourceSprites) _map.prepareResourceSprites();
         if (typeof _current_game != 'undefined' && _current_game && _current_game.applyMenuRules) {
             _current_game.applyMenuRules();
+        }
+        if (typeof _economics != 'undefined') {
+            _economics.updateCounters(_game_state, _current_user, 'hidden-snapshot-restore');
         }
         _fulldraw = context.fullDraw;
     }
