@@ -16,9 +16,9 @@ const _ai_player = new class
         this.gpuReady = false;
         this.statusCallback = null;
         this.defaultModelUrls = {
-            strategy: 'ai_player/strategy.db.gz?v=20260807a',
-            action: 'ai_player/action.db.gz?v=20260807a',
-            economics: 'ai_player/economics.db.gz?v=20260807a',
+            strategy: 'ai_player/strategy.db.gz?v=20260807d',
+            action: 'ai_player/action.db.gz?v=20260807d',
+            economics: 'ai_player/economics.db.gz?v=20260807d',
         };
         this.defaultModelsLoaded = false;
         this.defaultModelLoadPromise = null;
@@ -47,24 +47,16 @@ const _ai_player = new class
             'build_improvement',
             'attack',
         ];
-        this.economicsProductionLabels = [
-            'settlers',
-            'explorer',
-            'worker',
-            'warrior',
-            'slinger',
-            'archer',
-            'spearman',
-            null,
-        ];
         this.productionDemandLabels = ['settlers', 'worker', 'explorer', 'military'];
         this.lastActionUnitIndices = [];
         this.lastActionCandidates = [];
         this.lastEconomicsCityIndices = [];
+        this.lastEconomicsCandidates = [];
         this.lastStrategyProductionDemands = null;
         this.batchSize = 8;
         this.batchCursors = {};
         this.actionCandidateCursors = {};
+        this.economicsCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
         this.settlerBuildCityTurnLimit = 20;
         this.barrenCityPlotSignalCap = 0.37;
@@ -602,7 +594,7 @@ const _ai_player = new class
     {
         var order = ['ready', 'waiting', 'fortified', 'fortification', 'road', 'road_to', 'irrigate',
             'chop_forest', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry',
-            'winery', 'cottage', 'workshop', 'mine', 'explore', 'patrol', 'automate'];
+            'winery', 'cottage', 'workshop', 'mine', 'explore', 'patrol', 'automate', 'network'];
         var state = unit && unit.state ? unit.state : 'ready';
         var index = order.indexOf(state);
         return index < 0 ? 0 : index / Math.max(1, order.length - 1);
@@ -612,7 +604,7 @@ const _ai_player = new class
     {
         var order = ['ready', 'waiting', 'fortified', 'fortification', 'road', 'road_to', 'irrigate',
             'chop_forest', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry',
-            'winery', 'cottage', 'workshop', 'mine', 'explore', 'patrol', 'automate'];
+            'winery', 'cottage', 'workshop', 'mine', 'explore', 'patrol', 'automate', 'network'];
         var index = order.indexOf(state || 'ready');
         return index < 0 ? 0 : index;
     }
@@ -647,6 +639,9 @@ const _ai_player = new class
                 return 0.50;
             }
             return 0;
+        }
+        if (unit.unitTypeId == 'workboat') {
+            return _current_game.canBuildNetwork && _current_game.canBuildNetwork(k) ? 0.80 : 0;
         }
         if (unit.unitTypeId != 'worker') {
             return 0;
@@ -1076,7 +1071,7 @@ const _ai_player = new class
         input[base + 12] = candidate.targetRelation || 0;
         input[base + 13] = this.unitStateIndex(candidate.state || candidate.building || 'ready') / 20;
         input[base + 14] = relativeFocus.militaryPriority;
-        input[base + 15] = 1;
+        input[base + 15] = this.normalizeCount(this.tileFoodYieldAt(target.i, target.j, ownerTeam), 8);
         input[base + 16] = this.normalizeCount(unit.aiSettlerTurns || 0, this.settlerBuildCityTurnLimit);
         input[base + 17] = this.nearbyResourceScore(target, ownerTeam, 2);
         input[base + 18] = this.hasFreshWaterNearTile(target.i, target.j) ? 1 : 0;
@@ -1117,6 +1112,10 @@ const _ai_player = new class
                     pool.push({ command: 'build_improvement', target: current, building: buildings[b], state: buildings[b], targetRelation: 1 });
                 }
             }
+        }
+        if (unit.unitTypeId == 'workboat' && typeof _current_game != 'undefined' && _current_game
+            && _current_game.canBuildNetwork && _current_game.canBuildNetwork(k)) {
+            pool.push({ command: 'build_improvement', target: current, building: 'network', state: 'network', targetRelation: 1 });
         }
         if (unit.can_move && typeof _current_game != 'undefined' && _current_game && _current_game.buildPath) {
             for (var di = -4; di <= 4; di++) {
@@ -1252,7 +1251,7 @@ const _ai_player = new class
         var input = this.zeroInput();
         var demands = this.normalizedProductionDemands(productionDemands || this.lastStrategyProductionDemands);
         var freeCities = this.freeCityRecords(ownerTeam);
-        var cities = this.rotatingBatch(freeCities, 'economics', ownerTeam);
+        var cities = this.rotatingBatch(freeCities, 'economics', ownerTeam, 1);
         var allCities = this.sortedUnits(function(unit) {
             return (unit.team || 0) == ownerTeam && unit.type == 3;
         });
@@ -1264,32 +1263,20 @@ const _ai_player = new class
         var enemyMilitary = this.countEnemyMilitary(ownerTeam);
 
         this.lastEconomicsCityIndices = [];
-        for (var n = 0; n < cities.length; n++) {
-            var record = cities[n];
+        this.lastEconomicsCandidates = [];
+        if (cities.length) {
+            var record = cities[0];
             var city = record.unit;
             if (typeof _city_economy != 'undefined') {
                 _city_economy.ensureCity(city);
             }
-            var base = n * 120;
-            this.lastEconomicsCityIndices[n] = record.index;
-            input[base + 0] = this.normalizedCoord(city.coord.i);
-            input[base + 1] = this.normalizedCoord(city.coord.j);
-            input[base + 2] = this.normalizeCount(city.economy ? city.economy.citizens.length : 1, 20);
-            input[base + 3] = this.normalizeCount(city.economy ? city.economy.lastIncome.food : 0, 20);
-            input[base + 4] = this.normalizeCount(city.economy ? city.economy.lastIncome.production : 0, 20);
-            input[base + 5] = this.normalizeCount(city.economy ? city.economy.lastIncome.money : 0, 20);
-            input[base + 6] = this.normalizeCount(city.economy ? city.economy.foodStored : 0, 50);
-            input[base + 7] = this.normalizeCount(city.economy ? city.economy.foodConsumption : 0, 20);
-            input[base + 8] = this.normalizeCount(city.economy ? city.economy.turnsToNewCitizen : 0, 20);
-            input[base + 9] = this.normalizeCount(city.cityProperties ? city.cityProperties.productionStored : 0, 100);
-            input[base + 10] = this.isFrontierCity(city, ownerTeam) ? 1 : 0;
-            input[base + 11] = _current_game && _current_game.isSeasideCity && _current_game.isSeasideCity(city) ? 1 : 0;
-            input[base + 12] = this.normalizeCount(this.cityGarrisonStrength(city, ownerTeam), 30);
-            input[base + 13] = city.production == null ? 1 : 0;
-            input[base + 14] = this.cityLegalProductionCount(city);
-            input[base + 15] = this.cityEconomicRole(city, ownerTeam);
-            this.encodeEconomicsTileWindow(input, base + 16, city.coord, ownerTeam);
-            this.encodeCityProductionLegality(input, base + 97, city);
+            var candidates = this.economicsCandidatesForCity(record.index, ownerTeam);
+            this.lastEconomicsCityIndices[0] = record.index;
+            this.lastEconomicsCandidates = candidates;
+            for (var n = 0; n < candidates.length; n++) {
+                this.encodeEconomicsCandidate(input, n * 120, record.index, candidates[n], ownerTeam, demands,
+                    military, enemyMilitary);
+            }
         }
         this.fillGenericSituation(input, ownerTeam, 0);
         input[960 + 1] = this.normalizeCount(allCities.length, 16);
@@ -1310,6 +1297,116 @@ const _ai_player = new class
         }).length, 64);
         this.encodeEconomicsWorkerSignals(input, ownerTeam, allCities);
         return input;
+    }
+
+    economicsCandidatesForCity(k, ownerTeam)
+    {
+        var city = typeof _units != 'undefined' ? _units[k] : null;
+        var choices = [];
+        if (city && typeof _current_game != 'undefined' && _current_game && _current_game.unitTypes) {
+            for (var n = 0; n < _current_game.unitTypes.length; n++) {
+                var unitType = _current_game.unitTypes[n];
+                if (!_current_game.canCityProduceUnit || _current_game.canCityProduceUnit(city, unitType)) {
+                    choices.push({ unitTypeId: unitType.id });
+                }
+            }
+        }
+        var key = ownerTeam + ':' + k;
+        var start = choices.length ? (this.economicsCandidateCursors[key] || 0) % choices.length : 0;
+        var result = [{ unitTypeId: null }];
+        for (var c = 0; c < Math.min(7, choices.length); c++) {
+            result.push(choices[(start + c) % choices.length]);
+        }
+        if (choices.length > 7) {
+            this.economicsCandidateCursors[key] = (start + 7) % choices.length;
+        }
+        return result;
+    }
+
+    encodeEconomicsCandidate(input, base, k, candidate, ownerTeam, demands, military, enemyMilitary)
+    {
+        var city = _units[k];
+        var unitType = candidate.unitTypeId && _current_game && _current_game.unitTypesById
+            ? _current_game.unitTypesById[candidate.unitTypeId] : null;
+        var typeIndex = unitType ? this.unitTypeIndex({ unitTypeId: unitType.id, type: unitType.type }) : 0;
+        input[base + 0] = typeIndex / 32;
+        input[base + 1] = unitType ? unitType.type / 3 : -1;
+        input[base + 2] = this.normalizeCount(unitType ? unitType.attack : 0, 10);
+        input[base + 3] = this.normalizeCount(unitType ? unitType.defense : 0, 10);
+        input[base + 4] = this.normalizeCount(unitType ? unitType.speed : 0, 5);
+        input[base + 5] = this.normalizeCount(unitType ? unitType.viewRange : 0, 5);
+        input[base + 6] = this.normalizeCount(unitType ? unitType.productionCost : 0, 100);
+        input[base + 7] = unitType && unitType.nature == 'water' ? 1 : 0;
+        input[base + 8] = candidate.unitTypeId ? this.normalizeCount(this.countUnitsByType(ownerTeam, candidate.unitTypeId), 8) : 0;
+        input[base + 9] = this.economicsDemandForUnitType(unitType, demands);
+        input[base + 10] = this.normalizeCount(city.economy ? city.economy.citizens.length : 1, 20);
+        input[base + 11] = this.normalizeCount(city.economy ? city.economy.lastIncome.food : 0, 20);
+        input[base + 12] = this.normalizeCount(city.economy ? city.economy.lastIncome.production : 0, 20);
+        input[base + 13] = this.normalizeCount(city.economy ? city.economy.lastIncome.money : 0, 20);
+        input[base + 14] = this.isFrontierCity(city, ownerTeam) ? 1 : 0;
+        input[base + 15] = _current_game && _current_game.isSeasideCity && _current_game.isSeasideCity(city) ? 1 : 0;
+        input[base + 16] = this.normalizeCount(this.cityGarrisonStrength(city, ownerTeam), 30);
+        input[base + 17] = this.normalizeCount(military, 32);
+        input[base + 18] = this.normalizeCount(enemyMilitary, 32);
+        input[base + 19] = this.economicsEnemyPressure(ownerTeam, 'mounted');
+        input[base + 20] = this.economicsEnemyPressure(ownerTeam, unitType && unitType.nature == 'water' ? 'naval' : 'city');
+        input[base + 21] = this.economicsCandidateContext(unitType, city, ownerTeam);
+        this.encodeEconomicsTileWindow(input, base + 22, city.coord, ownerTeam);
+    }
+
+    economicsDemandForUnitType(unitType, demands)
+    {
+        if (!unitType) return this.clamp(-(typeof _game_state != 'undefined' ? _game_state.lastMoneyIncome || 0 : 0) / 20, 0, 1);
+        if (unitType.id == 'settlers') return demands.settlers;
+        if (unitType.id == 'worker' || unitType.id == 'workboat') return demands.worker;
+        if (unitType.id == 'explorer') return demands.explorer;
+        return demands.military;
+    }
+
+    economicsEnemyPressure(ownerTeam, kind)
+    {
+        var mounted = ['horseman', 'chariot', 'knight'];
+        var siege = ['catapult', 'trebuchet'];
+        var count = this.visibleUnitRecords(ownerTeam, function(unit) {
+            if (!unit || (unit.team || 0) == ownerTeam) return false;
+            if (kind == 'mounted') return mounted.indexOf(unit.unitTypeId) != -1;
+            if (kind == 'naval') return unit.nature == 'water' && unit.type == 2;
+            if (kind == 'siege') return siege.indexOf(unit.unitTypeId) != -1;
+            return unit.type == 3;
+        }).length;
+        return this.normalizeCount(count, 8);
+    }
+
+    economicsCandidateContext(unitType, city, ownerTeam)
+    {
+        if (!unitType) {
+            var delta = typeof _game_state != 'undefined' ? _game_state.lastMoneyIncome || 0 : 0;
+            return this.clamp(-delta / 20, 0, 1);
+        }
+        if (unitType.id == 'worker') return this.economicsImprovementOpportunity(city, ownerTeam, false);
+        if (unitType.id == 'workboat') return this.economicsImprovementOpportunity(city, ownerTeam, true);
+        if (unitType.id == 'pikeman' || unitType.id == 'spearman') return this.economicsEnemyPressure(ownerTeam, 'mounted');
+        if (unitType.id == 'catapult' || unitType.id == 'trebuchet') return this.economicsEnemyPressure(ownerTeam, 'city');
+        if (unitType.nature == 'water') return this.economicsEnemyPressure(ownerTeam, 'naval');
+        return this.isFrontierCity(city, ownerTeam) ? 1 : 0;
+    }
+
+    economicsImprovementOpportunity(city, ownerTeam, waterOnly)
+    {
+        if (!city || !city.coord) return 0;
+        var count = 0;
+        for (var di = -4; di <= 4; di++) {
+            for (var dj = -4; dj <= 4; dj++) {
+                var i = city.coord.i + di;
+                var j = city.coord.j + dj;
+                if (i < 0 || j < 0 || i >= _map_size || j >= _map_size || !this.isTileSeenByUser(i, j, ownerTeam)) continue;
+                if (waterOnly) {
+                    if (this.terrainTypeAt(i, j) == 0 && !this.hasTileModifier(i, j, 'network')) count++;
+                }
+                else if (this.workerTileJobScore(i, j, ownerTeam)) count++;
+            }
+        }
+        return this.normalizeCount(count, 8);
     }
 
     encodeEconomicsWorkerSignals(input, ownerTeam, cities)
@@ -1455,13 +1552,13 @@ const _ai_player = new class
         if (!_current_game || !_current_game.unitTypes) {
             return 0;
         }
-        for (var n = 0; n < Math.min(8, this.economicsProductionLabels.length); n++) {
-            var unitType = _current_game.unitTypesById ? _current_game.unitTypesById[this.economicsProductionLabels[n]] : null;
+        for (var n = 0; n < _current_game.unitTypes.length; n++) {
+            var unitType = _current_game.unitTypes[n];
             if (unitType && (!_current_game.canCityProduceUnit || _current_game.canCityProduceUnit(city, unitType))) {
                 count++;
             }
         }
-        return this.normalizeCount(count, 8);
+        return this.normalizeCount(count, _current_game.unitTypes.length);
     }
 
     encodeEconomicsTileWindow(input, base, coord, ownerTeam)
@@ -1507,16 +1604,6 @@ const _ai_player = new class
             return false;
         }
         return Math.abs(city.coord.i - enemy.i) + Math.abs(city.coord.j - enemy.j) <= 12;
-    }
-
-    encodeCityProductionLegality(input, base, city)
-    {
-        var maxSlots = Math.min(this.economicsProductionLabels.length, 960 - base);
-        for (var n = 0; n < maxSlots; n++) {
-            var unitTypeId = this.economicsProductionLabels[n];
-            var unitType = _current_game && _current_game.unitTypesById ? _current_game.unitTypesById[unitTypeId] : null;
-            input[base + n] = unitType && (!_current_game.canCityProduceUnit || _current_game.canCityProduceUnit(city, unitType)) ? 1 : 0;
-        }
     }
 
     decodeStrategyOutput(output)
@@ -1976,20 +2063,18 @@ const _ai_player = new class
 
     decodeEconomicsOutput(output)
     {
-        var decisions = [];
-        for (var record = 0; record < 8; record++) {
-            var base = record * 8;
-            var best = this.argmax(output, base, Math.min(8, this.economicsProductionLabels.length));
-            decisions.push({
-                record: record,
-                cityIndex: this.lastEconomicsCityIndices[record],
-                unitTypeId: this.economicsProductionLabels[best.index],
-                slot: best.slot,
-                confidence: best.value,
-                priority: output[64] || 0,
-            });
-        }
-        return decisions;
+        if (!this.lastEconomicsCandidates.length || this.lastEconomicsCityIndices[0] == undefined) return [];
+        var best = this.argmax(output, 0, this.lastEconomicsCandidates.length);
+        var candidate = this.lastEconomicsCandidates[best.index];
+        return [{
+            record: best.index,
+            cityIndex: this.lastEconomicsCityIndices[0],
+            unitTypeId: candidate.unitTypeId,
+            slot: best.slot,
+            confidence: best.value,
+            legalProduction: this.lastEconomicsCandidates.map(function(item) { return item.unitTypeId || 'none'; }),
+            priority: output[64] || 0,
+        }];
     }
 
     applyEconomicsOutput(output, ownerTeam = 0)
@@ -2690,6 +2775,37 @@ const _ai_player = new class
         return 0.35;
     }
 
+    tileFoodYieldAt(i, j, ownerTeam = this.activeUserId())
+    {
+        if (typeof _map_terrain_tex == 'undefined' || i < 0 || j < 0 || i >= _map_size || j >= _map_size) {
+            return 0;
+        }
+        var rawTerrain = _map_terrain_tex[i][j];
+        var terrain = rawTerrain & 0x0F;
+        var baseFood = [2, 0, 2, 0, 1, 0, 1, 3][terrain] || 0;
+        if (terrain == 0 && ((rawTerrain >> 4) & 0x03) > 1) baseFood = 1;
+        if ((rawTerrain & 0x80) != 0 && terrain != 0) {
+            baseFood = terrain == 1 ? 2 : baseFood + 1;
+        }
+        var income = { food: baseFood, production: 0, money: 0 };
+        var resourceState = typeof _map_resource != 'undefined' && _map_resource[i]
+            ? _map_resource[i][j] : null;
+        if (resourceState && resourceState.type && this.isResourceVisible(i, j, ownerTeam)
+            && typeof _resource_types != 'undefined' && _resource_types[resourceState.type]
+            && typeof _economics != 'undefined' && _economics.resourceYield) {
+            var resourceIncome = _economics.resourceYield(_resource_types[resourceState.type].id,
+                typeof _map_terrain_mod != 'undefined' && _map_terrain_mod[i] ? _map_terrain_mod[i][j] : null);
+            income.food += resourceIncome.food || 0;
+        }
+        var modifiers = typeof _map_terrain_mod != 'undefined' && _map_terrain_mod[i]
+            ? _map_terrain_mod[i][j] : null;
+        if (typeof _economics != 'undefined' && _economics.applyImprovementYieldMultipliers) {
+            income = _economics.applyImprovementYieldMultipliers(income, modifiers, false, terrain,
+                (rawTerrain & 0x80) != 0);
+        }
+        return Math.max(0, Number(income.food) || 0);
+    }
+
     nearbyResourceScore(coord, ownerTeam = this.activeUserId(), radius = 2)
     {
         if (!coord || typeof _map_resource == 'undefined') {
@@ -3051,6 +3167,16 @@ const _ai_player = new class
         if (command.command == 'chop_forest') {
             command.failureReason = 'forest chopping is not available on this tile';
             return false;
+        }
+        if (command.command == 'build_improvement' && command.building == 'network'
+            && unit.unitTypeId == 'workboat' && _current_game.canBuildNetwork && _current_game.canBuildNetwork(k)) {
+            var previousNetworkSelection = typeof _selection == 'undefined' ? -1 : _selection;
+            _selection = k;
+            _current_game.doCommand('network');
+            _selection = previousNetworkSelection;
+            command.target = new Coord(unit.coord.i, unit.coord.j);
+            command.appliedState = 'network';
+            return true;
         }
         if (command.command == 'build_improvement' && _current_game.workerTileBuildingMenuOptions) {
             var buildings = _current_game.workerTileBuildingMenuOptions(k);

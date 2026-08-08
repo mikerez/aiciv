@@ -109,6 +109,7 @@ public:
 protected:
     Schema schema_;
     DensePerceptronEngine network_;
+    bool sharedCandidateScorer_ = false;
 };
 
 class StrategyEngine final : public AIEngine {

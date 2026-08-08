@@ -191,11 +191,15 @@ void exportDefaultSituations()
         "ai_player/action-settlers.test", "ai_player/action-worker.test",
         "ai_player/action-explorer.test", "ai_player/action-warrior.test",
         "ai_player/action-slinger.test", "ai_player/action-archer.test",
-        "ai_player/action-horseman.test",
+        "ai_player/action-horseman.test", "ai_player/action-new-units.test",
     }));
     saveTrainingExamples("ai_player/economics.situations", makeEconomicsExamples());
     saveTrainingExamples("ai_player/economics-strategy.situations", makeEconomicsStrategyExamples());
     saveTrainingExamples("ai_player/economics-workers.situations", makeEconomicsWorkerExamples());
+    saveTrainingExamples("ai_player/economics-runtime.situations", makeEconomicsSimulationTrainingExamples({
+        "ai_player/economics-strategy.test", "ai_player/economics-workers.test",
+        "ai_player/economics-new-units.test", "ai_player/economics-settlers.test",
+    }));
     std::cout << "Exported ai_player/strategy.situations, "
               << "ai_player/strategy-demands.situations, ai_player/strategy-technology.situations, "
               << "ai_player/strategy-landscape.situations, "
@@ -206,7 +210,7 @@ void exportDefaultSituations()
               << "ai_player/action-archer.situations, ai_player/action-horseman.situations, "
               << "ai_player/action-runtime.situations, "
               << "ai_player/economics.situations, ai_player/economics-strategy.situations, "
-              << "ai_player/economics-workers.situations\n";
+              << "ai_player/economics-workers.situations, ai_player/economics-runtime.situations\n";
 }
 
 std::string modelPathBesideSituations(const std::string& situationPath, const std::string& modelName)
@@ -261,11 +265,18 @@ int main(int argc, char** argv)
         "ai_player/action-slinger.test",
         "ai_player/action-archer.test",
         "ai_player/action-horseman.test",
+        "ai_player/action-new-units.test",
     };
     const std::vector<TrainingExample> simulationExamples = makeActionSimulationTrainingExamples(actionTestPaths);
     (void)simulationExamples;
-    std::vector<TrainingExample> economicsExamples =
-        loadSplitSituationSet({ "economics-strategy.situations", "economics-workers.situations" }, "economics-strategy.situations", economicsPath);
+    const std::vector<std::string> economicsTestPaths = {
+        "ai_player/economics-strategy.test",
+        "ai_player/economics-workers.test",
+        "ai_player/economics-new-units.test",
+        "ai_player/economics-settlers.test",
+    };
+    economicsPath = "ai_player/economics-runtime.situations";
+    std::vector<TrainingExample> economicsExamples = makeEconomicsSimulationTrainingExamples(economicsTestPaths);
 
     if (engineFilter == "all" || engineFilter == "strategy") {
         runEngine(strategy, strategyExamples, strategyPath, modelPathBesideSituations(strategyPath, "strategy"), epochs, learningRate);
@@ -274,6 +285,7 @@ int main(int argc, char** argv)
             "ai_player/strategy-landscape.test",
             "ai_player/strategy-budget.test",
             "ai_player/strategy-workers.test",
+            "ai_player/strategy-demands.test",
         }, std::cout);
         if (strategyTests.passed != strategyTests.total) {
             return 4;
@@ -288,10 +300,7 @@ int main(int argc, char** argv)
     }
     if (engineFilter == "all" || engineFilter == "economics") {
         runEngine(economics, economicsExamples, economicsPath, modelPathBesideSituations(economicsPath, "economics"), epochs, learningRate);
-        const EconomicsTestSummary economicsTests = runEconomicsTests(economics, {
-            "ai_player/economics-strategy.test",
-            "ai_player/economics-workers.test",
-        }, std::cout);
+        const EconomicsTestSummary economicsTests = runEconomicsTests(economics, economicsTestPaths, std::cout);
         if (economicsTests.passed != economicsTests.total) {
             return 3;
         }

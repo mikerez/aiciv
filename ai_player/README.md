@@ -12,8 +12,8 @@ All engines share the same base records and output contract:
 - Strategy input: the same `1024` values followed by a compact `50x50` birdsview, for `3524` FP32 values total.
 - Output: `72` FP32 values = `8` object commands * `8` floats + `8` generic decision floats.
 - Object ids are not included in model inputs or outputs. Browser adapters keep ids in side state and map decisions back to game objects.
-- Economics local windows remain in object slots `16..96`. Action instead uses each object as one complete candidate for a single unit: slots `0..21` contain unit/candidate facts and slots `22..102` contain a `9x9` window centered on that candidate's exact target.
-- Action output slots `0..7` score its eight complete legal candidates. A candidate already contains the command, exact target, path distance, and exact wait/build/improvement state; the browser only revalidates and applies it.
+- Action and Economics use each object as one complete candidate for one rotating game object. Slots `0..21` contain candidate and context facts; Action slot `15` is exact target food yield. Slots `22..102` contain a `9x9` window centered on the Action target or Economics City.
+- Action and Economics output slots `0..7` score their complete legal candidates. Action candidates contain the command, target, path, and state; Economics candidates contain the exact unit type. The browser only revalidates and applies the selected candidate.
 - Strategy output slots `64..66` are production demand percentages for
   Settlers, Worker, and Explorer; slot `67` is science funding. The browser
   derives remaining Military demand and copies the four demands into Economics
@@ -24,10 +24,10 @@ All engines share the same base records and output contract:
 input -> 536 -> 448 -> 368 -> 288 -> 208 -> 176 -> 176 -> 72
 ```
 
-For Strategy and Economics, the first layer deterministically folds object
-records into 16-float summaries. Action uses the complete 176-value bottleneck
-as eight tied 22-value candidate representations and trains a comparison head
-over them. Strategy also carries eight coarse birdsview regions in `168..175`.
+Action and Economics use the complete 176-value bottleneck as eight tied
+22-value candidate representations and train comparison heads over them.
+Strategy folds object records into summaries and also carries eight coarse
+birdsview regions in `168..175`.
 
 ## Files
 
@@ -42,8 +42,11 @@ over them. Strategy also carries eight coarse birdsview regions in `168..175`.
   for example `action-bootstrap.situations`, `action-settlers.situations`,
   `action-worker.situations`, `action-explorer.situations`, and unit-family
   military files. `action-runtime.situations` is generated from the maintained
-  exact-action simulations and is the deployed Action training set. Strategy demand and Economics demand-response examples are in
-  `strategy-demands.situations` and `economics-strategy.situations`.
+  exact-action simulations and is the deployed Action training set.
+  `economics-runtime.situations` is generated from maintained Strategy-response,
+  Worker-usefulness, periodic-Settler, and exact-unit production simulations and
+  is the deployed Economics set. Strategy demand tests pair zero-Settler states
+  with active-Settler states so expansion happens in waves rather than as spam.
 - `*.db`: generated binary model databases.
 
 ## Build And Run
@@ -103,6 +106,7 @@ WebGPU compute when available, and otherwise uses the CPU inferencer.
 - `buildActionInput` / `applyActionOutput`
 - `buildEconomicsInput` / `applyEconomicsOutput`
 
-Strategy and Economics fill object records and retain object ids separately.
-Action selects one rotating unit, fills eight complete legal candidates, and
-applies the exact candidate selected by output slots `0..7`.
+Strategy fills object records and retains object ids separately. Action selects
+one rotating unit and Economics selects one rotating free City; each fills up
+to eight complete legal candidates and applies the exact candidate selected by
+output slots `0..7`.

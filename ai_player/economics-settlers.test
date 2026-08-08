@@ -1,0 +1,57 @@
+# Economics expansion-wave tests. Candidate count fields mirror ai.js; one
+# active Settler is encoded as settlers=0.125.
+
+scenario safe_food_city_produces_requested_settler
+city population=0.30 food=0.88 production=0.42 money=0.42 frontier=0.70 garrison=0.35
+state cities=0.13 free_cities=0.13 settlers=0.00 workers=0.25 military=0.18 enemy_military=0.05 account=0.55 delta=0.18 upkeep=0.15
+tech opened=1.00
+demand settlers=0.62 worker=0.12 explorer=0.06 military=0.20
+candidates none warrior worker explorer settlers slinger archer spearman
+expect production settlers
+end
+
+scenario active_settler_uses_city_for_escort_instead
+city population=0.30 food=0.88 production=0.65 money=0.42 frontier=0.80 garrison=0.15
+state cities=0.13 free_cities=0.13 settlers=0.125 workers=0.25 military=0.12 enemy_military=0.12 account=0.55 delta=0.18 upkeep=0.15
+tech opened=1.00
+demand settlers=0.42 worker=0.10 explorer=0.05 military=0.43
+candidates none warrior worker explorer settlers slinger archer spearman
+expect production warrior
+end
+
+scenario same_city_restarts_settler_after_previous_one_founds
+city population=0.32 food=0.90 production=0.52 money=0.45 frontier=0.65 garrison=0.40
+state cities=0.25 free_cities=0.13 settlers=0.00 workers=0.45 military=0.28 enemy_military=0.08 account=0.70 delta=0.20 upkeep=0.20
+tech opened=1.00
+demand settlers=0.52 worker=0.12 explorer=0.04 military=0.32
+candidates none swordsman pikeman settlers worker explorer knight catapult
+expect production settlers
+end
+
+scenario active_late_game_settler_prevents_parallel_wave
+city population=0.32 food=0.90 production=0.72 money=0.45 frontier=0.65 garrison=0.40
+state cities=0.25 free_cities=0.13 settlers=0.125 workers=0.45 military=0.28 enemy_military=0.08 account=0.70 delta=0.20 upkeep=0.20
+tech opened=1.00
+demand settlers=0.30 worker=0.10 explorer=0.05 military=0.55
+candidates none swordsman pikeman settlers worker explorer knight catapult
+expect production swordsman
+end
+
+scenario all_technologies_open_does_not_block_expansion
+city population=0.28 food=0.84 production=0.45 money=0.38 frontier=0.55 garrison=0.35
+state cities=0.18 free_cities=0.13 settlers=0.00 workers=0.38 military=0.22 enemy_military=0.05 account=0.62 delta=0.16 upkeep=0.18
+tech opened=1.00 wheel=1 bronze=1 irrigation=1 animals=1 mining=1 masonry=1 pottery=1 construction=1
+plots road=0.40 forest=0.40 irrigation=0.40 animals=0.40 mine=0.40 masonry=0.40 pottery=0.40 construction=0.40
+demand settlers=0.64 worker=0.16 explorer=0.05 military=0.15
+candidates none worker settlers swordsman pikeman trebuchet knight explorer
+expect production settlers
+end
+
+scenario expansion_waits_when_treasury_is_shrinking
+city population=0.32 food=0.90 production=0.62 money=0.30 frontier=0.60 garrison=0.35
+state cities=0.25 free_cities=0.13 settlers=0.00 workers=0.40 military=0.25 enemy_military=0.05 account=0.04 delta=-0.30 upkeep=0.70
+tech opened=1.00
+demand settlers=0.68 worker=0.10 explorer=0.04 military=0.18
+candidates none worker settlers swordsman pikeman explorer knight catapult
+expect production none
+end

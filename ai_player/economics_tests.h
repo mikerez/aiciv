@@ -15,5 +15,6 @@ struct EconomicsTestSummary {
 
 EconomicsTestSummary runEconomicsTests(const EconomicsEngine& engine, const std::vector<std::string>& paths,
                                        std::ostream& out);
+std::vector<TrainingExample> makeEconomicsSimulationTrainingExamples(const std::vector<std::string>& paths);
 
 } // namespace aiciv::ai
