@@ -156,27 +156,32 @@ typedef struct AIPlayerActionCandidateObject {
     float reserved[17];
 } AIPlayerActionCandidateObject;
 
-typedef struct AIPlayerEconomicsCityObject {
-    float x;
-    float y;
-    float population;
-    float food_income;
-    float production_income;
-    float money_income;
-    float food_stored;
-    float food_consumption;
-    float growth_turns;
-    float stored_production;
+typedef struct AIPlayerEconomicsProductionCandidateObject {
+    float unit_type;
+    float unit_class;
+    float attack;
+    float defense;
+    float speed;
+    float view_range;
+    float production_cost;
+    float water_nature;
+    float existing_unit_count;
+    float matching_strategy_demand;
+    float city_population;
+    float city_food_income;
+    float city_production_income;
+    float city_money_income;
     float frontier;
     float seaside;
     float garrison_strength;
-    float no_production;
-    float legal_production_count;
-    float city_center_value;
-    float local_tile_feature[AI_PLAYER_LOCAL_WINDOW_FLOATS]; /* 9x9 landscape/source strength; slot 40 is the city tile */
-    float legal_production_mask[4];
-    float reserved[19];
-} AIPlayerEconomicsCityObject;
+    float own_military_count;
+    float enemy_military_count;
+    float enemy_mounted_pressure;
+    float enemy_city_or_naval_pressure;
+    float candidate_specific_context;
+    float local_tile_feature[AI_PLAYER_LOCAL_WINDOW_FLOATS]; /* 9x9 city window */
+    float reserved[17];
+} AIPlayerEconomicsProductionCandidateObject;
 
 typedef struct AIPlayerCommonSituation {
     float owner_team;
@@ -298,7 +303,7 @@ static_assert(sizeof(AIPlayerUnifiedOutput) == AI_PLAYER_OUTPUT_WIDTH * sizeof(f
 static_assert(sizeof(AIPlayerStrategyCivilizationObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy civ object must be 120 floats");
 static_assert(sizeof(AIPlayerStrategyForceObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "strategy force object must be 120 floats");
 static_assert(sizeof(AIPlayerActionCandidateObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "action candidate object must be 120 floats");
-static_assert(sizeof(AIPlayerEconomicsCityObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "economics city object must be 120 floats");
+static_assert(sizeof(AIPlayerEconomicsProductionCandidateObject) == AI_PLAYER_OBJECT_FLOATS * sizeof(float), "economics production candidate object must be 120 floats");
 static_assert(sizeof(AIPlayerEconomicsSituation) == AI_PLAYER_SITUATION_FLOATS * sizeof(float), "economics situation must be 64 floats");
 static_assert(sizeof(AIPlayerStrategySituation) == AI_PLAYER_SITUATION_FLOATS * sizeof(float), "strategy situation must be 64 floats");
 static_assert(sizeof(AIPlayerInputSignal) == AI_PLAYER_INPUT_WIDTH * sizeof(float), "input union must be 3524 floats");

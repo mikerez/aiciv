@@ -26,6 +26,7 @@ struct TestTile {
     bool city = false;
     std::string improvement;
     float localOverride = 999.0f;
+    float food = -1.0f;
 };
 
 struct ActionScenario {
@@ -155,6 +156,25 @@ float resourceSignal(const std::string& resource)
     return 0.35f;
 }
 
+float tileFoodYield(const TestTile& tile)
+{
+    if (tile.food >= 0.0f) return tile.food;
+    static const std::array<float, 8> baseFood = {2.0f, 0.0f, 2.0f, 0.0f, 1.0f, 0.0f, 1.0f, 3.0f};
+    float food = tile.terrain >= 0 && tile.terrain < static_cast<int>(baseFood.size())
+        ? baseFood[tile.terrain] : 0.0f;
+    if (tile.waterSource && tile.terrain != 0) food = tile.terrain == 1 ? 2.0f : food + 1.0f;
+    static const std::map<std::string, float> resourceFood = {
+        {"bananas", 2.0f}, {"cattle", 2.0f}, {"crabs", 2.0f}, {"deer", 1.0f},
+        {"fish", 1.0f}, {"rice", 2.0f}, {"sheep", 1.0f}, {"wheat", 2.0f},
+        {"citrus", 1.0f}, {"honey", 1.0f}, {"olives", 1.0f}, {"salt", 1.0f},
+        {"spices", 1.0f}, {"sugar", 1.0f}, {"turtles", 1.0f}, {"whales", 1.0f},
+        {"wine", 1.0f}, {"food", 2.0f},
+    };
+    const auto resource = resourceFood.find(tile.resource);
+    if (resource != resourceFood.end()) food += resource->second;
+    return food;
+}
+
 float unitTypeSignal(const std::string& unitType)
 {
     static const std::map<std::string, int> unitOrder = {
@@ -172,6 +192,14 @@ float unitTypeSignal(const std::string& unitType)
         {"trebuchet", 12},
         {"galley", 13},
         {"galleon", 14},
+        {"workboat", 15},
+        {"frigate", 16},
+        {"knight", 17},
+        {"pikeman", 18},
+        {"longbow", 19},
+        {"fencer", 20},
+        {"swordsman", 21},
+        {"trireme", 22},
     };
     const auto it = unitOrder.find(unitType);
     if (it == unitOrder.end()) {
@@ -185,7 +213,7 @@ float unitStateSignal(const std::string& state)
     static const std::vector<std::string> order = {
         "ready", "waiting", "fortified", "fortification", "road", "road_to", "irrigate",
         "chop_forest", "pasture", "farm", "plantation", "camp", "fishing_boats", "quarry",
-        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate",
+        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate", "network",
     };
     const auto it = std::find(order.begin(), order.end(), state);
     if (it == order.end()) {
@@ -350,7 +378,11 @@ std::vector<TestActionCandidate> buildTestCandidates(const ActionScenario& scena
         || scenario.unitType == "archer" || scenario.unitType == "horseman"
         || scenario.unitType == "spearman" || scenario.unitType == "chariot"
         || scenario.unitType == "elephant" || scenario.unitType == "catapult"
-        || scenario.unitType == "trebuchet";
+        || scenario.unitType == "trebuchet" || scenario.unitType == "frigate"
+        || scenario.unitType == "knight" || scenario.unitType == "pikeman"
+        || scenario.unitType == "longbow" || scenario.unitType == "fencer"
+        || scenario.unitType == "swordsman" || scenario.unitType == "trireme"
+        || scenario.unitType == "galley" || scenario.unitType == "galleon";
     if (military) add("wait", "fortified", scenario.unitI, scenario.unitJ);
     if (scenario.unitType == "settlers" && current.terrain != 0) {
         add("build_city", "ready", scenario.unitI, scenario.unitJ);
@@ -372,6 +404,9 @@ std::vector<TestActionCandidate> buildTestCandidates(const ActionScenario& scena
             add("build_improvement", scenario.taskFlag > 0.5f ? scenario.unitState : resourceImprovement(current),
                 scenario.unitI, scenario.unitJ);
         }
+    }
+    if (scenario.unitType == "workboat" && current.terrain == 0 && current.improvement != "network") {
+        add("build_improvement", "network", scenario.unitI, scenario.unitJ);
     }
     if (scenario.targetI >= 0 && scenario.targetJ >= 0
         && (scenario.targetI != scenario.unitI || scenario.targetJ != scenario.unitJ)) {
@@ -428,7 +463,7 @@ EncodedActionCandidates buildActionInput(const ActionScenario& scenario)
         encoded.input[base + 12] = target.enemyUnit ? -1.0f : (target.friendlyUnit || target.city ? 1.0f : 0.0f);
         encoded.input[base + 13] = unitStateSignal(candidate.state);
         encoded.input[base + 14] = scenario.strategyPriority;
-        encoded.input[base + 15] = 1.0f;
+        encoded.input[base + 15] = clamp(tileFoodYield(target) / 8.0f, 0.0f, 1.0f);
         encoded.input[base + 16] = scenario.agePressure;
         encoded.input[base + 17] = scenario.nearbyResource > 0.0f ? scenario.nearbyResource : nearbyResourceScore(scenario);
         encoded.input[base + 18] = scenario.freshWater;
@@ -541,7 +576,8 @@ std::string simulateEffect(const ActionScenario& scenario, const TestActionCandi
     const std::string& command = candidate.command;
     const TestTile current = tileAt(scenario, scenario.unitI, scenario.unitJ);
     if (command == "build_city") {
-        return current.terrain == 0 ? "blocked" : "city";
+        if (current.terrain == 0) return "blocked";
+        return tileFoodYield(current) > 1.0f ? "city" : "low_food_site";
     }
     if (command == "build_improvement") {
         return candidate.state;
@@ -701,6 +737,7 @@ std::vector<ActionScenario> loadActionTestFile(const std::string& path)
             if (options.find("local") != options.end()) {
                 tile.localOverride = std::stof(options.at("local"));
             }
+            tile.food = toFloat(options, "food", tile.food);
             current.tiles[{i, j}] = tile;
         }
         else if (words[0] == "target") {
@@ -798,6 +835,7 @@ std::vector<TrainingExample> makeActionSimulationTrainingExamples(const std::vec
         example.target[correct] = 0.9f;
         example.explanation = "action simulation situation: " + scenario.name + " " + suffix;
         const bool hardCase = scenario.name.find("old_settler") != std::string::npos
+            || scenario.name.find("routes_to_minimum_two_food") != std::string::npos
             || scenario.name.find("first_city_does_not_build_on_jungle") != std::string::npos
             || scenario.name.find("aged_settler_does_not_build_on_hills") != std::string::npos
             || scenario.name.find("clean_grass_with_spacing") != std::string::npos
@@ -809,7 +847,8 @@ std::vector<TrainingExample> makeActionSimulationTrainingExamples(const std::vec
             || scenario.name.find("holds_hill") != std::string::npos
             || scenario.name.find("attacks_adjacent_enemy") != std::string::npos
             || scenario.name.find("leaves_city_for_forest") != std::string::npos;
-        const int copies = hardCase ? 8 : 1;
+        const int copies = hardCase ? 8
+            : (scenario.name.find("trebuchet_moves_toward_enemy_city") != std::string::npos ? 2 : 1);
         for (int copy = 0; copy < copies; ++copy) examples.push_back(example);
     };
 

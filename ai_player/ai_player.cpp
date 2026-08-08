@@ -303,7 +303,7 @@ float actionStateSignal(const std::string& state)
     static const std::vector<std::string> order = {
         "ready", "waiting", "fortified", "fortification", "road", "road_to", "irrigate",
         "chop_forest", "pasture", "farm", "plantation", "camp", "fishing_boats", "quarry",
-        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate",
+        "winery", "cottage", "workshop", "mine", "explore", "patrol", "automate", "network",
     };
     const auto it = std::find(order.begin(), order.end(), state);
     if (it == order.end()) {
@@ -908,20 +908,26 @@ float DensePerceptronEngine::trainFullBackprop(const InputSignal& input, const O
 }
 
 AIEngine::AIEngine(Schema schema, uint32_t seed, int inputWidth, bool sharedCandidateScorer)
-    : schema_(std::move(schema)), network_(seed, inputWidth, sharedCandidateScorer)
+    : schema_(std::move(schema)), network_(seed, inputWidth, sharedCandidateScorer),
+      sharedCandidateScorer_(sharedCandidateScorer)
 {
 }
 
 TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int epochs, float learningRate, std::ostream& out)
 {
-    if (schema_.kind == EngineKind::Action) {
+    if (sharedCandidateScorer_) {
         const float candidateLearningRate = std::min(learningRate, 0.005f);
         TrainingReport report;
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             float trainLoss = 0.0f;
             for (const TrainingExample& example : examples) {
-                trainLoss += network_.trainSharedCandidateScores(example, candidateLearningRate);
-                trainLoss += network_.trainDecisionSlots(example, candidateLearningRate * 4.0f);
+                if (schema_.kind == EngineKind::Action) {
+                    trainLoss += network_.trainSharedCandidateScores(example, candidateLearningRate);
+                    trainLoss += network_.trainDecisionSlots(example, candidateLearningRate * 4.0f);
+                }
+                else {
+                    trainLoss += network_.trainDecisionSlots(example, learningRate);
+                }
             }
             report = evaluate(network_, examples);
             if (epoch == 1 || epoch % 10 == 0 || epoch == epochs) {
@@ -992,7 +998,7 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
 
 StrategyEngine::StrategyEngine() : AIEngine(makeStrategySchema(), 11, AI_PLAYER_INPUT_WIDTH) {}
 ActionEngine::ActionEngine() : AIEngine(makeActionSchema(), 33, AI_PLAYER_BASE_INPUT_WIDTH, true) {}
-EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44, AI_PLAYER_BASE_INPUT_WIDTH) {}
+EconomicsEngine::EconomicsEngine() : AIEngine(makeEconomicsSchema(), 44, AI_PLAYER_BASE_INPUT_WIDTH, true) {}
 
 Schema makeStrategySchema()
 {
@@ -1016,7 +1022,7 @@ Schema makeActionSchema()
 {
     Schema schema{EngineKind::Action, "action", {}, {}};
     addField(schema.input, 0, 959, "action_candidates[8][120]", "records",
-             "up to eight complete legal candidates for one selected unit: repeated unit type/state/hp/moves/task, command code, exact target dx/dy, path distance, target terrain/resource/city-site/relation facts, exact requested state or improvement, strategy priority, target-local 9x9 window, and forwarded Strategy focus");
+             "up to eight complete legal candidates for one selected unit: repeated unit type/state/hp/moves/task, command code, exact target dx/dy, path distance, target terrain/resource/city-site/relation and food-yield facts, exact requested state or improvement, strategy priority, target-local 9x9 window, and forwarded Strategy focus");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
              "owner metrics, map knowledge, economy, science, visible resources, idle counts, military pressure");
     addField(schema.output, 0, 7, "candidate_score[8]", "scores",
@@ -1031,12 +1037,14 @@ Schema makeActionSchema()
 Schema makeEconomicsSchema()
 {
     Schema schema{EngineKind::Economics, "economics", {}, {}};
-    addField(schema.input, 0, 959, "cities[8][120]", "records",
-             "city status without ids: x/y, population, food, production, money, storage, consumption, growth, frontier, seaside, garrison, 9x9 tile food/production/money and landscape features, production legality in slots 97..100");
+    addField(schema.input, 0, 959, "production_candidates[8][120]", "records",
+             "up to eight complete legal candidates for one free City: exact unit type/class/combat/mobility/cost/nature, current count, matching Strategy demand, City economy/frontier/seaside/garrison, enemy pressure, candidate-specific matchup or improvement context, and a City-local 9x9 window");
     addField(schema.input, 960, 1023, "general_situation[64]", "FP32",
              "global economics metrics: money, income, science rate, city counts, unit counts, map knowledge, visible resources; slots 1,2,5,6,14,15 carry city/free-city/military/enemy/idle/worker counts, slot 16 carries opened technology rate, slots 20..23 carry Strategy production demand percentages, slots 24..26 carry money state, slots 27..34 are explicit Worker-improvement technology flags, slots 35..42 are matching available-plot counts, and slots 43..50 are actionable technology-times-plot signals");
-    addField(schema.output, 0, 63, "city_command[8][8]", "records",
-             "eight production decisions corresponding to the eight input cities in order");
+    addField(schema.output, 0, 7, "candidate_score[8]", "scores",
+             "scores for the exact production candidates in input order; the selected unit id is retained outside the tensor");
+    addField(schema.output, 8, 63, "reserved_economics_scores[56]", "reserved",
+             "reserved for future Economics candidate batches");
     addField(schema.output, 64, 71, "general_decision[8]", "records",
              "general budget, science, emergency and reserve economic decisions");
     return schema;
@@ -1186,6 +1194,10 @@ std::vector<TrainingExample> makeStrategyDemandExamples()
         { "enemy military is stronger", 0.16f, 0.18f, 0.05f, 0.20f, 0.10f, 0.45f, 0.35f, 0.35f, {0.10f, 0.10f, 0.05f, 0.75f}, 3, "make military the main demand under war pressure" },
         { "many cities behind on workers", 0.30f, 0.35f, 0.05f, 0.10f, 0.22f, 0.20f, 0.55f, 0.45f, {0.10f, 0.70f, 0.05f, 0.15f}, 1, "large empire with too few workers should prioritize workers" },
         { "safe economy with few cities", 0.14f, 0.12f, 0.00f, 0.15f, 0.18f, 0.05f, 0.70f, 0.55f, {0.65f, 0.15f, 0.05f, 0.15f}, 0, "safe economy should expand with settlers" },
+        { "safe two city empire between expansion waves", 0.18f, 0.13f, 0.00f, 0.25f, 0.15f, 0.05f, 0.65f, 0.60f, {0.58f, 0.16f, 0.06f, 0.20f}, 0, "request the next settler when the previous expansion unit has founded and disappeared" },
+        { "safe two city empire already has active settler", 0.20f, 0.13f, 0.125f, 0.25f, 0.15f, 0.05f, 0.65f, 0.60f, {0.08f, 0.32f, 0.10f, 0.50f}, 1, "suppress another settler while one is already travelling and use production for development or escort" },
+        { "safe four city empire ready for another expansion", 0.32f, 0.25f, 0.00f, 0.45f, 0.28f, 0.08f, 0.80f, 0.78f, {0.52f, 0.12f, 0.04f, 0.32f}, 0, "periodically restart settler production after the active settler founded its city" },
+        { "four city empire already expanding", 0.34f, 0.25f, 0.125f, 0.45f, 0.28f, 0.08f, 0.80f, 0.78f, {0.07f, 0.15f, 0.03f, 0.75f}, 1, "avoid simultaneous settler spam while an expansion unit exists" },
         { "frontier war economy", 0.25f, 0.25f, 0.06f, 0.20f, 0.15f, 0.65f, 0.45f, 0.40f, {0.15f, 0.15f, 0.05f, 0.65f}, 3, "frontier pressure should move production toward military" },
     };
 
@@ -1464,7 +1476,9 @@ std::vector<TrainingExample> makeStrategyBudgetExamples()
         { "thirty five funds sets seventy percent science", 35.0f, 0.05f, 0.35f },
         { "forty five funds sets ninety percent science", 45.0f, 0.10f, 0.30f },
         { "fifty funds sets full science", 50.0f, 0.12f, 0.25f },
+        { "fifty funds with stable income sets full science", 50.0f, 0.08f, 0.30f },
         { "large reserve keeps full science", 90.0f, 0.20f, 0.20f },
+        { "large reserve with ordinary upkeep keeps full science", 100.0f, 0.12f, 0.30f },
     };
 
     for (int repeat = 0; repeat < 108; ++repeat) {
