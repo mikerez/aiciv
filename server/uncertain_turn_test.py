@@ -38,7 +38,7 @@ def test_five_player_interception(api):
         require((record["i"], record["j"]) == (3, 3), record)
 
 
-def test_first_build_wins(api):
+def test_later_primary_build_replaces_previous(api):
     game = unique_game("build-race")
     workers = [unit("builder-0", 0, 1, 1, unit_type="worker"), unit("builder-1", 1, 1, 1, unit_type="worker")]
     _, created = api.call(
@@ -54,12 +54,13 @@ def test_first_build_wins(api):
 
     status, first = api.call("build", game, 0, worker_unit_id=worker0, building_type="cottage")
     require(status == 200 and first["tile"]["modifiers"].get("cottage") is True, first)
-    status, second = api.call("build", game, 1, worker_unit_id=worker1, building_type="mine")
-    require(status == 409 and second["error"]["code"] == "tile_already_built", second)
+    status, second = api.call("build", game, 1, worker_unit_id=worker1, building_type="fortification")
+    require(status == 200 and second["tile"]["modifiers"].get("fortification") is True, second)
+    require(not second["tile"]["modifiers"].get("cottage"), second)
 
     _, update = api.call("update_units", game, 0, since_revision=0)
     buildings = [record for record in update["units"] if record["unit_class"] == 4 and not record["deleted"]]
-    require(len(buildings) == 1 and buildings[0]["unit_type_id"] == "building_cottage", update)
+    require(len(buildings) == 1 and buildings[0]["unit_type_id"] == "building_fortification", update)
 
 
 def main():
@@ -71,7 +72,7 @@ def main():
     api = GameApi(args.endpoint, secret)
     test_five_player_interception(api)
     print("PASS five-player interception has no rollback")
-    test_first_build_wins(api)
+    test_later_primary_build_replaces_previous(api)
     print("PASS immediate build first-writer ownership")
 
 

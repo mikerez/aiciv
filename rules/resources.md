@@ -18,6 +18,7 @@ Resources are base map properties stored separately from terrain.
 
 - `RESOURCE-SPRITE-001`: Each resource sprite is a `220x160` transparent PNG tile overlay.
 - `RESOURCE-SPRITE-002`: The visible resource icon is approximately `30x30` pixels and is centered on the tile overlay.
+- `RESOURCE-INCOME-003`: A Deer Tile with a Camp supplies food, production, and at least one gold before City expenses.
 - `RESOURCE-SPRITE-003`: Resource sprites are drawn above terrain and below units.
 - `RESOURCE-SPRITE-004`: Resource sprites use the same fog brightness as their underlying terrain tile.
 
@@ -62,7 +63,7 @@ Resources are base map properties stored separately from terrain.
 | Whales | water | Food, production, and luxury from water tiles. |
 | Wine | grass, hills | Luxury and culture value from grass or hills. |
 | Horses | grass, sand | Strategic animal resource for horse units. |
-| Iron | hills, rocks | Strategic metal for iron weapons and units. |
+| Iron | sand, hills, rocks | Strategic metal for iron weapons and units. |
 | Niter | sand, hills, rocks | Strategic resource for gunpowder units. |
 | Coal | hills, rocks | Strategic fuel for industry and railways. |
 | Oil | water, sand, rocks | Strategic fuel for modern units and industry. |
@@ -80,6 +81,7 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-GEN-005`: Resource generation uses sparse probabilities so resources remain rare on the map.
 - `RESOURCE-GEN-006`: Duplicate resource names in design input are represented once in `_resource_types`.
 - `RESOURCE-GEN-007`: Server migration 8 seeds Gems once on eligible empty hill and rock tiles in existing worlds without replacing terrain or existing resources.
+- `RESOURCE-GEN-008`: JS and PHP use matching elevated generation chances for Stone (`0.024`), Marble (`0.014`), Copper (`0.020`), and Iron (`0.040`).
 
 ## Visibility
 
@@ -93,7 +95,7 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-IMPROVEMENT-001`: A resource tile is enhanced by the terrain modifier listed for that resource after the resource has been opened.
 - `RESOURCE-IMPROVEMENT-002`: Farm requires `Irrigation`; Pasture and Camp require `Animal Husbandry`; Fishing Boats requires `Sailing`; Plantation and Winery require `Pottery`; Quarry requires `Masonry`; Mine requires `Mining`.
 - `RESOURCE-IMPROVEMENT-003`: JS and PHP use matching resource-to-improvement tables and reject an economic improvement that does not match the Tile resource.
-- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles; Knight requires both connected Horses and connected Iron.
+- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles. Knight requires connected Horses and Iron; Spearman, Fencer, and Catapult require connected Copper/Bronze or Iron.
 
 | Resource | Improvement |
 | --- | --- |

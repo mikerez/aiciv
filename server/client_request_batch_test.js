@@ -45,13 +45,14 @@ vm.runInContext(
     game.setRelationPreference(7, 8, "friend");
     await game.buildImprovement(worker, "cottage");
     await game.selectProduction(city, "warrior");
+    await game.optimizeCity(city, "gold");
     const submission = game.captureTurn(7);
     assert.equal(submission.relations[8], "friend");
     assert.equal(submission.commands[2].payload.interaction_intent, "coexist");
     assert.equal(submission.commands[2].payload.target_owner_id, 8);
     assert.deepEqual(
         Array.from(submission.actions, action => action.type),
-        ["build", "select_production", "heal_units"],
+        ["build", "select_production", "optimize_city", "heal_units"],
         "construction, production, and healing must share the End Turn batch"
     );
 
@@ -62,18 +63,39 @@ vm.runInContext(
             ok: true, submitted_turn: 4, resolved_turn: 4, turn: 5, revision: 20,
             unit_id_map: {}, rejected_movements: [], combat_units: [],
             action_results: body.actions.map(item => ({
-                client_action_id: item.client_action_id, type: item.type, ok: true,
+                client_action_id: item.client_action_id,
+                type: item.type,
+                ok: item.type != "build",
+                error: item.type == "build" ? {
+                    code: "building_not_supported",
+                    message: "irrigation cannot be built on this terrain.",
+                } : undefined,
             })),
+            updates: {},
         };
     };
     game.applyUnitIdMap = function() {};
     game.applyRejectedMovements = function() {};
     game.applyCombatUnitUpdates = function() {};
+    const responseOrder = [];
+    game.applyCombinedUpdates = async function() {
+        responseOrder.push("updates");
+        worker.state = "irrigate";
+        worker.clientImprovementTurnsLeft = 0;
+    };
+    const applyTurnActionResults = game.applyTurnActionResults.bind(game);
+    game.applyTurnActionResults = function(playerId, actions, results, hidden) {
+        responseOrder.push("actions");
+        return applyTurnActionResults(playerId, actions, results, hidden);
+    };
     await game.submitTurn(submission, {hidden: true, deferUpdates: true, deferPolling: true});
     assert.equal(requests.length, 1, "one logical turn must make one write request");
     assert.equal(requests[0].action, "make_turn");
-    assert.equal(requests[0].body.actions.length, 3);
+    assert.equal(requests[0].body.actions.length, 4);
     assert.equal(worker.pendingImmediateBuild, false);
+    assert.equal(worker.state, "ready", "a rejected build must not restart from a stale unit snapshot");
+    assert.equal(worker.clientImprovementTurnsLeft, undefined);
+    assert.deepEqual(responseOrder, ["updates", "actions"], "action outcomes must override the response snapshot");
     worker.state = "irrigate";
     worker.pendingImmediateBuild = true;
     game.applyTurnActionResults(7, [{client_action_id: 99, type: "build", worker_unit_id: 11}], [{
@@ -83,6 +105,11 @@ vm.runInContext(
     assert.equal(worker.state, "ready");
     assert.equal(worker.pendingImmediateBuild, false);
     assert.match(context.window.alerts[0], /IMPOSSIBLE: water not connected/);
+    await game.disbandUnit(warrior);
+    const disbandSubmission = game.captureTurn(7);
+    assert.ok(disbandSubmission.actions.some(action => action.type == 'disband_unit' && action.unit_id == 13));
+    assert.ok(!disbandSubmission.commands.some(command => command.unit_id == 13),
+        'a pending Disband action must not also submit an order for the deleted unit');
     console.log("PASS frequent turn actions are aggregated into one make_turn request");
 })().catch(error => {
     console.error(error);

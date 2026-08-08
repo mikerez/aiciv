@@ -65,6 +65,7 @@ public:
     OutputSignal forward(const InputSignal& input) const;
     std::vector<float> hiddenBeforeLast(const InputSignal& input) const;
     OutputSignal forwardFromHidden(const std::vector<float>& hidden) const;
+    void loadBinary(const std::string& path);
     void saveBinary(const std::string& path) const;
 
     // Fast deterministic back-propagation path used by the example trainer.
@@ -104,6 +105,7 @@ public:
     const Schema& schema() const { return schema_; }
     OutputSignal infer(const InputSignal& input) const { return network_.forward(input); }
     TrainingReport train(const std::vector<TrainingExample>& examples, int epochs, float learningRate, std::ostream& out);
+    void loadModel(const std::string& path) { network_.loadBinary(path); }
     void saveModel(const std::string& path) const { network_.saveBinary(path); }
 
 protected:

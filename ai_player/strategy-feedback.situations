@@ -1,0 +1,59 @@
+# AI Civ runtime feedback situations v1
+# Generated from long-horizon JS + PHP integration scenarios.
+# Each comment identifies the game state, policy expectation, observed decision, and exact candidate order.
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 1.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,4:0.040000,5:0.040000,6:0.100000,7:0.120000,8:0.052632,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,967:0.100000,968:0.040000,969:1.000000,972:0.020000,973:0.062500,975:0.125000,977:0.250000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:0.052632,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1002:0.100000,1891:0.003077,2095:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 1: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 2.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1891:0.003077,2099:0.003077|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 2: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 4.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1891:0.003077,1895:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 4: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 5.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1741:0.003077,1891:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 5: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 6.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1538:0.003333,1891:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 6: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 7.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1534:0.003333,1891:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 7: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 8.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1738:0.003077,1891:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 8: expected Mining; observed Irrigation
+
+# Feedback scenario: worker_improves_copper_hill, simulated turn 7.
+# Policy opinion: A Worker with Mining available should move to a nearby copper hill and complete a Mine. Technology priority should follow the visible City/Settler terrain and resource context.
+# Observed model decision: Irrigation. Expected decision: Mining.
+# The browser encoded this exact production input; candidate order was: Mining | Animal Husbandry | Masonry | Irrigation.
+# Output slots 68,69,70,71 score those declared alternatives; output[68] is the required alternative.
+68|68,69,70,71|0:1.000000,1:0.075000,2:0.083333,3:0.030000,5:0.040000,6:0.100000,7:0.120000,8:1.000000,10:1.000000,13:1.000000,480:1.000000,481:-0.230769,482:-0.230769,483:0.030000,485:0.033333,488:0.031250,490:-0.230769,491:-0.230769,961:0.062500,962:0.046875,963:1.000000,964:0.015625,966:0.500000,972:0.020000,973:0.062500,975:0.125000,976:1.000000,977:1.000000,978:1.000000,979:1.000000,981:0.125000,982:0.015625,983:0.062500,984:0.040000,986:0.960000,991:1.000000,992:1.000000,993:0.960000,997:0.125000,998:1.000000,999:1.000000,1001:1.000000,1384:0.003333,1891:0.003077,2099:0.000840|68:0.900000,69:-0.900000,70:-0.900000,71:-0.900000|worker_improves_copper_hill turn 7: expected Mining; observed Irrigation

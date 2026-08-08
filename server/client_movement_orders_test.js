@@ -8,10 +8,13 @@ const vm = require('node:vm');
 const arrows = [];
 const sandbox = {
     console,
+    Coord: class Coord {
+        constructor(i, j) { this.i = i; this.j = j; }
+    },
     _units: [
-        {coord: {i: 10, j: 10}, gotoPath: [{i: 11, j: 10}, {i: 12, j: 11}]},
-        {coord: {i: 20, j: 20}, gotoPath: [{i: 20, j: 19}]},
-        {coord: {i: 30, j: 30}, gotoPath: [], gotoCoord: {i: 32, j: 30}},
+        {coord: {i: 10, j: 10}, type: 2, can_move: true, gotoPath: [{i: 11, j: 10}, {i: 12, j: 11}]},
+        {coord: {i: 20, j: 20}, type: 2, can_move: true, gotoPath: [{i: 20, j: 19}]},
+        {coord: {i: 30, j: 30}, type: 2, can_move: true, gotoPath: [], gotoCoord: {i: 32, j: 30}},
     ],
     _selection: 2,
     _map_size: 100,
@@ -36,9 +39,27 @@ assert.equal(sandbox.control.forceDrawSelectedMovementOrder(), true,
     'selecting a unit with a destination must force route drawing');
 assert.equal(arrows.length, arrowsBeforeSelection + 2, 'selected destination should repaint both arrow steps');
 
+const routeBeforePreview = JSON.stringify(sandbox._units[0]);
+const arrowsBeforePreview = arrows.length;
+const previewPath = sandbox.control.drawGotoPreview(10, 10, 13, 10, 0);
+assert.equal(previewPath.length, 3, 'Goto hover preview must calculate the path to the current pointer Tile');
+assert.ok(arrows.length > arrowsBeforePreview, 'Goto hover preview must paint arrows immediately');
+assert.equal(JSON.stringify(sandbox._units[0]), routeBeforePreview,
+    'Goto hover preview must not overwrite the unit route before destination click');
+
+sandbox.control.drawGoto(10, 10, 13, 10, 0);
+assert.equal(sandbox._units[0].gotoPath.length, 3, 'committed Goto must still save the calculated route');
+assert.deepEqual(
+    JSON.parse(JSON.stringify(sandbox._units[0].gotoCoord)),
+    {i: 13, j: 10},
+    'committed Goto must retain the final destination'
+);
+
 const index = fs.readFileSync('index.html', 'utf8');
-assert.match(index, /event\.button == 2 && _selection != -1[\s\S]*?_menu_tile\.show\(coord\.i, coord\.j\)[\s\S]*?drawCommandPathPreview/,
-    'desktop right-click must open Tile details even while assigning a selected unit route');
+assert.match(index, /function applySecondaryMapAction\(coord\)[\s\S]*?_selection != -1[\s\S]*?drawCommandPathPreview\(coord\)[\s\S]*?return;[\s\S]*?_menu_tile\.show\(coord\.i, coord\.j\)/,
+    'secondary map action must assign a selected unit route and show Tile details otherwise');
+assert.match(index, /drawCommandPathPreview\(coord\);[\s\S]*?commitCommandPath\(coord\);[\s\S]*?configureSelectedMovementIntent\(coord\)/,
+    'right-click and drag movement must commit the path after drawing its preview');
 const validation = index.indexOf('!forcedByTimeout && _current_game.canEndTurnWithCurrentSelection');
 const capture = index.indexOf('_server_game.captureTurn(_current_user)');
 assert.ok(validation >= 0 && validation < capture, 'manual idle validation must happen before capture consumes paths');
@@ -50,6 +71,8 @@ const menu = fs.readFileSync('menu_unit.js', 'utf8');
 const prehistory = fs.readFileSync('game_prehistory.js', 'utf8');
 assert.match(menu, /data-menu-option="unit_identity"/, 'Action panel must include unit identity');
 assert.match(prehistory, /Unit ID:.*serverId/s, 'Action panel identity must use authoritative serverId');
+assert.match(prehistory, /drawCommandPathPreview\(coord\)[\s\S]*?drawGotoPreview/,
+    'Goto command mode must use the non-mutating realtime preview renderer');
 const serverGame = fs.readFileSync('server_game.js', 'utf8');
 assert.match(serverGame, /atomic_movement_rejected|showServerErrorPopup/,
     'server turn failures must be routed to the immediate client popup');

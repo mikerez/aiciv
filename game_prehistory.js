@@ -2,13 +2,13 @@ const _resource_types = [
     null,
     { id: 'bananas', name: 'Bananas', texture: 801, sprite: 'resource_bananas.png', gives: 'food from tropical forest and grass tiles', terrains: [6, 2], chance: 0.012 },
     { id: 'cattle', name: 'Cattle', texture: 802, sprite: 'resource_cattle.png', gives: 'food and production from grassland herds', terrains: [2], chance: 0.012 },
-    { id: 'copper', name: 'Copper', texture: 803, sprite: 'resource_copper.png', gives: 'early metal production and trade value', terrains: [4, 5], chance: 0.010 },
+    { id: 'copper', name: 'Copper', texture: 803, sprite: 'resource_copper.png', gives: 'early metal production and trade value', terrains: [4, 5], chance: 0.020 },
     { id: 'crabs', name: 'Crabs', texture: 804, sprite: 'resource_crabs.png', gives: 'food from coastal water and river grass', terrains: [0, 7], chance: 0.010 },
     { id: 'deer', name: 'Deer', texture: 805, sprite: 'resource_deer.png', gives: 'food and hides from forest or snow edge tiles', terrains: [6, 3], chance: 0.010 },
     { id: 'fish', name: 'Fish', texture: 806, sprite: 'resource_fish.png', gives: 'food from water tiles', terrains: [0], chance: 0.012 },
     { id: 'rice', name: 'Rice', texture: 807, sprite: 'resource_rice.png', gives: 'food from wet grass and river grass', terrains: [2, 7], chance: 0.012 },
     { id: 'sheep', name: 'Sheep', texture: 808, sprite: 'resource_sheep.png', gives: 'food and wool from grass or hills', terrains: [2, 4], chance: 0.012 },
-    { id: 'stone', name: 'Stone', texture: 809, sprite: 'resource_stone.png', gives: 'production support for early buildings and construction', terrains: [4, 5], chance: 0.012 },
+    { id: 'stone', name: 'Stone', texture: 809, sprite: 'resource_stone.png', gives: 'production support for early buildings and construction', terrains: [4, 5], chance: 0.024 },
     { id: 'wheat', name: 'Wheat', texture: 810, sprite: 'resource_wheat.png', gives: 'food support for city growth', terrains: [2, 7], chance: 0.012 },
     { id: 'amber', name: 'Amber', texture: 811, sprite: 'resource_amber.png', gives: 'luxury and trade value from forested lands', terrains: [6, 3], chance: 0.007 },
     { id: 'citrus', name: 'Citrus', texture: 812, sprite: 'resource_citrus.png', gives: 'food and luxury from warm grass or forest', terrains: [2, 6], chance: 0.008 },
@@ -20,7 +20,7 @@ const _resource_types = [
     { id: 'honey', name: 'Honey', texture: 820, sprite: 'resource_honey.png', gives: 'food and luxury from forest and grass', terrains: [6, 2], chance: 0.008 },
     { id: 'incense', name: 'Incense', texture: 821, sprite: 'resource_incense.png', gives: 'luxury and ceremonial trade value', terrains: [1, 4], chance: 0.007 },
     { id: 'ivory', name: 'Ivory', texture: 822, sprite: 'resource_ivory.png', gives: 'luxury and strategic animal material', terrains: [2, 6], chance: 0.006 },
-    { id: 'marble', name: 'Marble', texture: 823, sprite: 'resource_marble.png', gives: 'luxury stone and building production value', terrains: [4, 5], chance: 0.007 },
+    { id: 'marble', name: 'Marble', texture: 823, sprite: 'resource_marble.png', gives: 'luxury stone and building production value', terrains: [4, 5], chance: 0.014 },
     { id: 'olives', name: 'Olives', texture: 825, sprite: 'resource_olives.png', gives: 'food and luxury from grass or hills', terrains: [2, 4], chance: 0.008 },
     { id: 'pearls', name: 'Pearls', texture: 826, sprite: 'resource_pearls.png', gives: 'luxury from water tiles', terrains: [0], chance: 0.006 },
     { id: 'salt', name: 'Salt', texture: 827, sprite: 'resource_salt.png', gives: 'food preservation and trade value', terrains: [1, 0, 4], chance: 0.008 },
@@ -33,7 +33,7 @@ const _resource_types = [
     { id: 'whales', name: 'Whales', texture: 835, sprite: 'resource_whales.png', gives: 'food, production, and luxury from water tiles', terrains: [0], chance: 0.005 },
     { id: 'wine', name: 'Wine', texture: 836, sprite: 'resource_wine.png', gives: 'luxury and culture value from grass or hills', terrains: [2, 4], chance: 0.007 },
     { id: 'horses', name: 'Horses', texture: 837, sprite: 'resource_horses.png', gives: 'strategic animal resource for horse units', terrains: [2, 1], chance: 0.010 },
-    { id: 'iron', name: 'Iron', texture: 838, sprite: 'resource_iron.png', gives: 'strategic metal for iron weapons and units', terrains: [4, 5], chance: 0.009 },
+    { id: 'iron', name: 'Iron', texture: 838, sprite: 'resource_iron.png', gives: 'strategic metal for iron weapons and units', terrains: [1, 4, 5], chance: 0.040 },
     { id: 'gold', name: 'Gold', texture: 844, sprite: 'resource_gold.png', gives: 'commerce and trade value', terrains: [4, 5, 1], chance: 0.007 },
     { id: 'gems', name: 'Gems', texture: 845, sprite: 'resource_gems.png', gives: 'valuable minerals for luxury and trade', terrains: [4, 5], chance: 0.006 },
 
@@ -96,11 +96,11 @@ const _prehistory_unit_types = [
     new UnitType('warrior', 'Warrior', 2, 258, 2, 1, 1, 2, null, 20, null),
     new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
     new UnitType('archer', 'Archer', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
-    new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper'),
+    new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper or Iron'),
     new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 2, 3, 'Horseback Riding', 50, 'Horses'),
     new UnitType('chariot', 'Chariot', 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses'),
     new UnitType('elephant', 'Elephant', 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Ivory'),
-    new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, null),
+    new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, 'Copper or Iron'),
     new UnitType('trebuchet', 'Trebuchet', 2, 267, 7, 1, 1, 2, 'Engineering', 80, null),
     new UnitType('galley', 'Galley', 2, 268, 2, 2, 2, 3, 'Sailing', 40, null, true, 'water'),
     new UnitType('galleon', 'Galleon', 2, 269, 5, 4, 3, 4, 'Navigation', 90, null, true, 'water'),
@@ -109,7 +109,7 @@ const _prehistory_unit_types = [
     new UnitType('knight', 'Knight', 2, 273, 6, 5, 2, 3, 'Engineering', 85, 'Horses'),
     new UnitType('pikeman', 'Pikeman', 2, 274, 4, 6, 1, 2, 'Iron Working', 55, 'Iron'),
     new UnitType('longbow', 'Longbow', 2, 275, 5, 3, 1, 3, 'Archery', 55, null),
-    new UnitType('fencer', 'Fencer', 2, 276, 4, 3, 2, 2, 'Bronze Working', 45, null),
+    new UnitType('fencer', 'Fencer', 2, 276, 4, 3, 2, 2, 'Bronze Working', 45, 'Copper or Iron'),
     new UnitType('swordsman', 'Swordsman', 2, 277, 7, 5, 1, 2, 'Iron Working', 75, 'Iron'),
     new UnitType('trireme', 'Trireme', 2, 278, 1, 1, 2, 3, 'Sailing', 30, null, true, 'water'),
 ];
@@ -205,6 +205,13 @@ const _game_prehistory = new class
                         }
                     });
                     return;
+                }
+                var cityI = _units[_selection].coord.i;
+                var cityJ = _units[_selection].coord.j;
+                _map.splitSupertileAt(cityI, cityJ);
+                if (this.isChoppableForestTerrain(_map_terrain_tex[cityI][cityJ])) {
+                    _map_terrain_tex[cityI][cityJ] = this.choppedForestTerrain(_map_terrain_tex[cityI][cityJ]);
+                    _map_terrain_bit[cityI][cityJ] &= 0xFFF0;
                 }
                 this.removeDestroyedCityAt(_units[_selection].coord);
                 _game.make_unit(_city, _units[_selection].coord);
@@ -311,7 +318,7 @@ const _game_prehistory = new class
             if (unit.unitTypeId != 'worker') {
                 show('fortificate');
             }
-            show('destroy');
+            show('disband');
             show('wait');
             show('explore');
             show('patrol');
@@ -351,6 +358,7 @@ const _game_prehistory = new class
             show('city_production_status');
             show('city_production_queue');
             show('city_production_options');
+            show('city_optimization');
         }
     }
 
@@ -400,7 +408,8 @@ const _game_prehistory = new class
         if (k == -1 || !_units[k] || _units[k].unitTypeId != 'workboat') return false;
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
-        return this.isWaterTerrain(i, j)
+        var terrain = _map_terrain_tex[i][j];
+        return this.isWaterTerrain(i, j) && ((terrain >> 4) & 0x03) <= 1
             && _game_state.isTechnologyOpen('Sailing')
             && !_map.hasTerrainModifier(i, j, 'network');
     }
@@ -461,6 +470,13 @@ const _game_prehistory = new class
         return this.isSeasideCity(city);
     }
 
+    unitGoldUpkeep(unitTypeId)
+    {
+        if (['knight', 'trebuchet', 'frigate'].indexOf(unitTypeId) != -1) return 2;
+        if (['pikeman', 'swordsman', 'longbow'].indexOf(unitTypeId) != -1) return 1;
+        return 0;
+    }
+
     productionResourceRequirements()
     {
         // Mirrored by serverProductionResourceRequirements() in server_game.php.
@@ -469,7 +485,9 @@ const _game_prehistory = new class
             knight: ['horses', 'iron'],
             chariot: ['horses'],
             elephant: ['ivory'],
-            spearman: ['copper'],
+            spearman: [['copper', 'iron']],
+            fencer: [['copper', 'iron']],
+            catapult: [['copper', 'iron']],
             pikeman: ['iron'],
             swordsman: ['iron'],
         };
@@ -508,7 +526,15 @@ const _game_prehistory = new class
         if (!required.length) return true;
         var connected = this.connectedRoadResources(city);
         for (var n=0; n < required.length; n++) {
-            if (!connected[required[n]]) return false;
+            var alternatives = Array.isArray(required[n]) ? required[n] : [required[n]];
+            var satisfied = false;
+            for (var a=0; a < alternatives.length; a++) {
+                if (connected[alternatives[a]]) {
+                    satisfied = true;
+                    break;
+                }
+            }
+            if (!satisfied) return false;
         }
         return true;
     }
@@ -679,14 +705,18 @@ const _game_prehistory = new class
                 var economyText = '';
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
-                    economyText = ' Pop:' + unit.economy.citizens.length + ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    var grossFood = unit.economy.lastGrossIncome
+                        ? unit.economy.lastGrossIncome.food : unit.economy.lastIncome.food;
+                    economyText = ' Pop:' + unit.economy.citizens.length + ' F:' + grossFood + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
                 }
                 status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)' + economyText;
             }
             else if (unit.type == 3) {
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
-                    status.textContent = 'Producing: ' + (unit.productionDisabled ? 'none' : 'none selected') + ' Pop:' + unit.economy.citizens.length + ' F:' + unit.economy.lastIncome.food + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    var idleGrossFood = unit.economy.lastGrossIncome
+                        ? unit.economy.lastGrossIncome.food : unit.economy.lastIncome.food;
+                    status.textContent = 'Producing: ' + (unit.productionDisabled ? 'none' : 'none selected') + ' Pop:' + unit.economy.citizens.length + ' F:' + idleGrossFood + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
                 }
                 else {
                     status.textContent = 'Producing: none';
@@ -694,6 +724,9 @@ const _game_prehistory = new class
             }
             else {
                 status.textContent = '';
+            }
+            if (unit.type == 3) {
+                status.textContent += ' Focus:' + (unit.cityOptimization || 'balanced');
             }
         }
 
@@ -756,9 +789,16 @@ const _game_prehistory = new class
             return;
         }
 
+        var productionState = typeof _game_state_by_user !== 'undefined'
+            && _game_state_by_user[unit.team] ? _game_state_by_user[unit.team] : _game_state;
+        var availableGold = productionState ? Number(productionState.money || 0) : 0;
+
         for (var k=0; k < this.unitTypes.length; k++) {
             var unitType = this.unitTypes[k];
             if (!this.canCityProduceUnit(unit, unitType)) {
+                continue;
+            }
+            if (availableGold < this.unitGoldUpkeep(unitType.id)) {
                 continue;
             }
             var link = document.createElement('a');
@@ -797,7 +837,25 @@ const _game_prehistory = new class
         if (!this.workerTileBuildingDefinitions[state]) {
             _units[k].building_turns_left = undefined;
         }
+        if (!this.isImprovementState(state)) {
+            _units[k].clientImprovementTurnsLeft = undefined;
+        }
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+    }
+
+    isImprovementState(state)
+    {
+        return state == 'road' || state == 'irrigate' || state == 'chop_forest' || state == 'network'
+            || this.workerTileBuildingDefinitions[state] != undefined;
+    }
+
+    beginImprovement(k, state, preserveAutomation = false)
+    {
+        if (k == -1 || !_units[k]) return false;
+        this.setUnitState(k, state, preserveAutomation);
+        _units[k].clientImprovementTurnsLeft = state == 'chop_forest' ? 4 : 2;
+        if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+        return true;
     }
 
     prepareManualMovement(k)
@@ -829,11 +887,22 @@ const _game_prehistory = new class
 
     drawCommandPathPreview(coord)
     {
+        if (!coord) return;
         var indices = this.commandSelectionIndices();
-        if (indices.length > 1) _control.drawGotoGroup(indices, coord.i, coord.j);
+        if (indices.length > 1) _control.drawGotoGroupPreview(indices, coord.i, coord.j);
         else if (indices.length == 1) {
             var k = indices[0];
-            _control.drawGoto(_units[k].coord.i, _units[k].coord.j, coord.i, coord.j, k);
+            _control.drawGotoPreview(_units[k].coord.i, _units[k].coord.j, coord.i, coord.j, k);
+        }
+    }
+
+    commitCommandPath(coord)
+    {
+        if (!coord) return;
+        var indices = this.commandSelectionIndices();
+        for (var n=0; n < indices.length; n++) {
+            var k = indices[n];
+            this.assignPath(k, this.buildPath(k, coord));
         }
     }
 
@@ -1071,21 +1140,32 @@ const _game_prehistory = new class
         try {
             var available = this.workerTileBuildingMenuOptions(k);
             var resourceImprovement = this.openedResourceImprovementForTile(i, j);
-            var priority = [];
             if (resourceImprovement && available.indexOf(resourceImprovement) != -1) {
-                priority.push(resourceImprovement);
+                return [resourceImprovement];
             }
-            if (this.canBuildIrrigation(k)) priority.push('irrigate');
-            var order = ['mine', 'farm', 'pasture', 'plantation', 'camp', 'fishing_boats',
-                'quarry', 'winery', 'cottage', 'workshop', 'fortification'];
-            for (var n=0; n < order.length; n++) {
-                if (available.indexOf(order[n]) != -1 && priority.indexOf(order[n]) == -1) {
-                    priority.push(order[n]);
+            var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
+                ? _map_terrain_mod[i][j] : {};
+            var primary = ['irrigation', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats',
+                'quarry', 'winery', 'cottage', 'workshop', 'fortification', 'mine'];
+            var hasPrimary = false;
+            for (var n=0; n < primary.length; n++) {
+                if (modifiers[primary[n]]) {
+                    hasPrimary = true;
+                    break;
                 }
             }
-            if (this.canBuildRoad(k)) priority.push('road');
-            if (this.canChopForest(k)) priority.push('chop_forest');
-            return priority;
+            if (!hasPrimary && this.canChopForest(k)) return ['chop_forest'];
+            if (!hasPrimary && this.canBuildIrrigation(k)) return ['irrigate'];
+            var terrainType = _map_terrain_tex[i][j] & 0x0F;
+            if (!hasPrimary && (terrainType == 4 || terrainType == 5)
+                && available.indexOf('mine') != -1) return ['mine'];
+            if (!hasPrimary && terrainType == 2 && available.indexOf('cottage') != -1) {
+                return ['cottage'];
+            }
+            // Roads coexist with completed economic improvements. Bare Tiles
+            // are not endless automation targets merely because a road is legal.
+            if (hasPrimary && this.canBuildRoad(k)) return ['road'];
+            return [];
         }
         finally {
             _units[k].coord = original;
@@ -1094,30 +1174,63 @@ const _game_prehistory = new class
 
     autoRouteWorker(k)
     {
-        // PREHISTORY-AUTO-006, rules/prehostory.md: an automated Worker searches its 5x5 neighborhood.
-        var currentOptions = this.workerAutomationOptionsAt(k, _units[k].coord.i, _units[k].coord.j);
-        if (currentOptions.length) {
-            this.setUnitState(k, currentOptions[0], true);
-            return true;
-        }
+        // PREHISTORY-AUTO-006, rules/prehostory.md: an automated Worker searches a 10x10-scale neighborhood.
         var best = null;
-        for (var di=-2; di <= 2; di++) {
-            for (var dj=-2; dj <= 2; dj++) {
-                if (di == 0 && dj == 0) continue;
+        for (var di=-5; di <= 4; di++) {
+            for (var dj=-5; dj <= 4; dj++) {
                 var i = _units[k].coord.i + di;
                 var j = _units[k].coord.j + dj;
                 if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) continue;
+                if ((di != 0 || dj != 0) && this.workerAutomationTargetReserved(k, i, j)) continue;
                 var options = this.workerAutomationOptionsAt(k, i, j);
                 if (!options.length) continue;
-                var path = this.buildPath(k, new Coord(i, j));
-                if (!path.length) continue;
-                var candidate = { path: path, action: options[0] };
-                if (!best || candidate.path.length < best.path.length) best = candidate;
+                var isCurrent = di == 0 && dj == 0;
+                var path = isCurrent ? [] : this.buildPath(k, new Coord(i, j));
+                if (!isCurrent && !path.length) continue;
+                var resourceAction = this.openedResourceImprovementForTile(i, j);
+                var actionPriority = resourceAction == options[0] ? 0 : {
+                    pasture: 0, farm: 0, plantation: 0, camp: 0, fishing_boats: 0,
+                    quarry: 0, winery: 0, chop_forest: 1, irrigate: 2,
+                    mine: 3, cottage: 4, road: 5,
+                }[options[0]];
+                var candidate = {
+                    path: path,
+                    action: options[0],
+                    priority: actionPriority == undefined ? 9 : actionPriority,
+                };
+                if (!best || candidate.priority < best.priority
+                    || (candidate.priority == best.priority && candidate.path.length < best.path.length)) {
+                    best = candidate;
+                }
             }
         }
         if (!best) return false;
+        if (!best.path.length) {
+            delete _units[k].automateBuild;
+            delete _units[k].automateTarget;
+            return this.startAutomatedWorkerAction(k, best.action);
+        }
         _units[k].automateBuild = best.action;
+        var destination = best.path[best.path.length - 1];
+        _units[k].automateTarget = new Coord(destination.i, destination.j);
         this.assignPath(k, best.path);
+        return true;
+    }
+
+    workerAutomationTargetReserved(k, i, j)
+    {
+        for (var n=0; n < _units.length; n++) {
+            if (n == k || !_units[n] || _units[n].unitTypeId != 'worker'
+                || _units[n].automationMode != 'automate' || !_units[n].automateTarget) continue;
+            if (_units[n].automateTarget.i == i && _units[n].automateTarget.j == j) return true;
+        }
+        return false;
+    }
+
+    startAutomatedWorkerAction(k, action)
+    {
+        if (!_units[k] || _units[k].pendingImmediateBuild) return true;
+        this.beginImprovement(k, action, true);
         return true;
     }
 
@@ -1139,11 +1252,17 @@ const _game_prehistory = new class
     applyAutoRoutingRules()
     {
         for (var k=0; k < _units.length; k++) {
-            if (!_units[k].can_move || _units[k].gotoPath.length || _units[k].gotoCoord != undefined) {
+            if (!_units[k].can_move) continue;
+            var mode = _units[k].automationMode || _units[k].state;
+            if (mode == 'road_to' && _units[k].unitTypeId == 'worker') {
+                if (this.prepareRoadToTurn(k)) continue;
+            }
+            if (_units[k].pendingImmediateBuild
+                || this.isImprovementState(_units[k].state)
+                || _units[k].gotoPath.length || _units[k].gotoCoord != undefined) {
                 continue;
             }
             // PREHISTORY-AUTO-001, rules/prehostory.md: explore alternates between nearby fog and nearest known city.
-            var mode = _units[k].automationMode || _units[k].state;
             if (mode == 'explore') {
                 _units[k].state = 'explore';
                 this.autoRouteExplore(k);
@@ -1165,8 +1284,11 @@ const _game_prehistory = new class
     {
         for (var k=0; k < _units.length; k++) {
             if (_units[k].state == 'road_to' && _units[k].unitTypeId == 'worker'
-                && (!(_units[k].gotoPath && _units[k].gotoPath.length) && _units[k].gotoCoord == undefined)) {
+                && !_units[k].roadToBuilding
+                && (!(_units[k].gotoPath && _units[k].gotoPath.length) && _units[k].gotoCoord == undefined)
+                && _map.hasRoad(_units[k].coord.i, _units[k].coord.j)) {
                 _units[k].state = 'ready';
+                _units[k].automationMode = null;
             }
         }
 
@@ -1187,9 +1309,9 @@ const _game_prehistory = new class
                 continue;
             }
 
-            // PREHISTORY-ROAD-003, rules/prehostory.md: road building cost is two times terrain wildity.
+            // PREHISTORY-ROAD-003, rules/prehostory.md: every improvement takes two client turns.
             if (_units[k].road_turns_left == undefined) {
-                _units[k].road_turns_left = 2*((terrain>>4)&0x3);
+                _units[k].road_turns_left = 2;
             }
             if (_units[k].road_turns_left > 0) {
                 --_units[k].road_turns_left;
@@ -1221,9 +1343,9 @@ const _game_prehistory = new class
                 continue;
             }
 
-            // PREHISTORY-IRRIGATION-003, rules/prehostory.md: irrigation takes twice the terrain wildity, with a minimum of two turns.
+            // PREHISTORY-IRRIGATION-003, rules/prehostory.md: every improvement takes two client turns.
             if (_units[k].irrigation_turns_left == undefined) {
-                _units[k].irrigation_turns_left = Math.max(2, 2*((terrain>>4)&0x3));
+                _units[k].irrigation_turns_left = 2;
             }
             if (_units[k].irrigation_turns_left > 0) {
                 --_units[k].irrigation_turns_left;
@@ -1270,6 +1392,23 @@ const _game_prehistory = new class
                 _fulldraw = 1;
             }
         }
+
+        for (var k=0; k < _units.length; k++) {
+            if (_units[k].state != 'network' || _units[k].unitTypeId != 'workboat') continue;
+            if (!this.canBuildNetwork(k)) {
+                _units[k].state = 'ready';
+                _units[k].building_turns_left = undefined;
+                continue;
+            }
+            if (_units[k].building_turns_left == undefined) _units[k].building_turns_left = 2;
+            if (_units[k].building_turns_left > 0) --_units[k].building_turns_left;
+            if (_units[k].building_turns_left == 0) {
+                _map.addNetwork(_units[k].coord.i, _units[k].coord.j);
+                _units[k].state = 'ready';
+                _units[k].building_turns_left = undefined;
+                _fulldraw = 1;
+            }
+        }
     }
 
     applyForestChoppingRules()
@@ -1292,9 +1431,9 @@ const _game_prehistory = new class
                 continue;
             }
 
-            // PREHISTORY-CHOP-004, rules/prehostory.md: chopping duration is forest wildity plus two turns under current processing timing.
+            // PREHISTORY-CHOP-004, rules/prehostory.md: jungle chopping takes four client turns.
             if (_units[k].chop_turns_left == undefined) {
-                _units[k].chop_turns_left = ((terrain>>4)&0x3) + 2;
+                _units[k].chop_turns_left = 4;
             }
             if (_units[k].chop_turns_left > 0) {
                 --_units[k].chop_turns_left;
@@ -1303,6 +1442,8 @@ const _game_prehistory = new class
             if (_units[k].chop_turns_left == 0) {
                 this.addChopProductionToNearestCity(_units[k], 10);
                 // PREHISTORY-CHOP-005 and PREHISTORY-CHOP-008, rules/prehostory.md: completed chopping converts forest to base terrain.
+                _map.splitSupertileAt(i, j);
+                terrain = _map_terrain_tex[i][j];
                 _map_terrain_tex[i][j] = this.choppedForestTerrain(terrain);
                 _map_terrain_bit[i][j] &= 0xFFF0;
                 _units[k].state = 'ready';
@@ -1387,18 +1528,13 @@ const _game_prehistory = new class
     isChoppableForestTerrain(terrain)
     {
         // PREHISTORY-CHOP-003, rules/prehostory.md: base forest tiles and forested hill variants can be chopped.
-        return (terrain&0x0F) == 6 || terrain == 4+(1<<4) || terrain == 4+((1+4)<<4);
+        return (terrain&0x0F) == 6 || ((terrain&0x0F) == 4 && (terrain&0x10) != 0);
     }
 
     choppedForestTerrain(terrain)
     {
         // PREHISTORY-CHOP-008, rules/prehostory.md: hill forest variants preserve their hill base after chopping.
-        if (terrain == 4+(1<<4)) {
-            return 4;
-        }
-        if (terrain == 4+((1+4)<<4)) {
-            return 4+(4<<4);
-        }
+        if ((terrain&0x0F) == 4 && (terrain&0x10) != 0) return terrain & ~0x10;
         return 2;
     }
 
@@ -1485,13 +1621,55 @@ const _game_prehistory = new class
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker' || _units[k].state != 'road_to') {
             return;
         }
-        // PREHISTORY-ROAD-008, rules/prehostory.md: Road-to lays road on each supported path tile while moving.
-        if (fromCoord && this.canBuildRoadAt(fromCoord.i, fromCoord.j)) {
-            _map.addRoad(fromCoord.i, fromCoord.j);
+        // PREHISTORY-ROAD-008: captureTurn performs a delayed authoritative
+        // road build at the reached Tile before this route can continue.
+        this.prepareRoadToTurn(k);
+    }
+
+    prepareRoadToTurn(k)
+    {
+        var unit = _units[k];
+        if (!unit || unit.unitTypeId != 'worker'
+            || (unit.automationMode || unit.state) != 'road_to') return false;
+        unit.state = 'road_to';
+        unit.automationMode = 'road_to';
+        if (unit.pendingImmediateBuild || unit.roadToBuilding) return true;
+        if (this.canBuildRoadAt(unit.coord.i, unit.coord.j)) {
+            unit.roadToBuilding = true;
+            unit.clientImprovementTurnsLeft = 2;
+            if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+            return true;
         }
-        if (toCoord && this.canBuildRoadAt(toCoord.i, toCoord.j)) {
-            _map.addRoad(toCoord.i, toCoord.j);
+        var hasRoute = unit.gotoPath && unit.gotoPath.length;
+        if (!hasRoute && unit.gotoCoord == undefined) {
+            unit.state = 'ready';
+            unit.automationMode = null;
         }
+        return false;
+    }
+
+    completeRoadToBuild(unitOrIndex, succeeded)
+    {
+        var unit = typeof unitOrIndex == 'object' ? unitOrIndex : _units[unitOrIndex];
+        if (!unit || unit.automationMode != 'road_to') return false;
+        unit.pendingImmediateBuild = false;
+        unit.roadToBuilding = false;
+        delete unit.clientImprovementTurnsLeft;
+        if (!succeeded) {
+            unit.state = 'ready';
+            unit.automationMode = null;
+            unit.gotoPath = [];
+            unit.gotoCoord = null;
+            return true;
+        }
+        if (unit.gotoPath && unit.gotoPath.length) {
+            unit.state = 'road_to';
+        }
+        else {
+            unit.state = 'ready';
+            unit.automationMode = null;
+        }
+        return true;
     }
 
     afterUnitRouteUpdated(k)
@@ -1501,7 +1679,7 @@ const _game_prehistory = new class
         }
         if (!(_units[k].gotoPath && _units[k].gotoPath.length) && _units[k].gotoCoord == undefined) {
             if (_units[k].state == 'road_to') {
-                _units[k].state = 'ready';
+                this.prepareRoadToTurn(k);
             }
             else if (_units[k].state == 'explore') {
                 this.autoRouteExplore(k);
@@ -1625,6 +1803,11 @@ const _game_prehistory = new class
         if (_map.hasIrrigation(i, j)) {
             return false;
         }
+        // PREHISTORY-WORKER-BUILDING-007: an opened resource reserves its Tile
+        // for the matching resource improvement rather than generic irrigation.
+        if (this.openedResourceImprovementForTile(i, j)) {
+            return false;
+        }
         // Connectivity is authoritative server work. The client deliberately
         // allows the request; PHP returns IMPOSSIBLE when no irrigation route
         // reaches fresh water.
@@ -1664,7 +1847,7 @@ const _game_prehistory = new class
         },
         plantation: {
             technology: 'Pottery',
-            turns: 3,
+            turns: 2,
             requiresResourceImprovement: true,
             apply: function(i, j) { return _map.addPlantation(i, j); }
         },
@@ -1683,19 +1866,19 @@ const _game_prehistory = new class
         },
         quarry: {
             technology: 'Masonry',
-            turns: 3,
+            turns: 2,
             requiresResourceImprovement: true,
             apply: function(i, j) { return _map.addQuarry(i, j); }
         },
         winery: {
             technology: 'Pottery',
-            turns: 3,
+            turns: 2,
             requiresResourceImprovement: true,
             apply: function(i, j) { return _map.addWinery(i, j); }
         },
         fortification: {
             technology: 'Construction',
-            turns: 3,
+            turns: 2,
             apply: function(i, j) { return _map.addFortification(i, j); }
         },
         cottage: {
@@ -1705,12 +1888,12 @@ const _game_prehistory = new class
         },
         workshop: {
             technology: 'Construction',
-            turns: 3,
+            turns: 2,
             apply: function(i, j) { return _map.addWorkshop(i, j); }
         },
         mine: {
             technology: 'Mining',
-            turns: 3,
+            turns: 2,
             terrainTypes: [4, 5],
             apply: function(i, j) { return _map.addMine(i, j); }
         }
@@ -1744,6 +1927,8 @@ const _game_prehistory = new class
         if (building.terrainTypes && building.terrainTypes.indexOf(_map_terrain_tex[i][j]&0x0F) == -1) {
             return false;
         }
+        var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
+            ? _map_terrain_mod[i][j] : {};
         var resourceImprovement = this.openedResourceImprovementForTile(i, j);
         if (resourceImprovement && buildingName != 'fortification' && buildingName != resourceImprovement) {
             return false;
@@ -1853,6 +2038,9 @@ const _game_prehistory = new class
         if (unit.building_turns_left != undefined) {
             return true;
         }
+        if (unit.clientImprovementTurnsLeft != undefined) {
+            return true;
+        }
         if (unit.gotoCoord != undefined) {
             return true;
         }
@@ -1947,12 +2135,11 @@ const _game_prehistory = new class
             }
             if (_prehistory_command_mode == 'road_to' && _units[_selection].unitTypeId == 'worker') {
                 _units[_selection].state = 'road_to';
-                if (this.canBuildRoadAt(_units[_selection].coord.i, _units[_selection].coord.j)) {
-                    _map.addRoad(_units[_selection].coord.i, _units[_selection].coord.j);
-                }
+                _units[_selection].automationMode = 'road_to';
+                this.prepareRoadToTurn(_selection);
             }
             _prehistory_command_mode = null;
-            _draw.clear();
+            _control.drawMovementOrders(_draw.clear());
             this.dismissActionMenu();
             return true;
         }
@@ -2129,6 +2316,45 @@ const _game_prehistory = new class
     doCommand(command)
     {
         var commandIndices = this.commandSelectionIndices();
+        if (command.indexOf('optimize_city:') == 0 && _selection != -1) {
+            var city = _units[_selection];
+            var optimization = command.substring('optimize_city:'.length);
+            if (city && city.type == 3 && typeof _city_economy != 'undefined'
+                && _city_economy.optimizeCity(city, optimization)) {
+                if (typeof _server_game != 'undefined' && city.serverId) {
+                    _server_game.optimizeCity(city, optimization);
+                }
+                this.applyMenuRules();
+                return;
+            }
+        }
+        if (command == 'disband' && commandIndices.length) {
+            var disbandIndices = commandIndices.slice().sort(function(a, b) { return b - a; });
+            var deletedImmediately = false;
+            for (var disbandIndex=0; disbandIndex < disbandIndices.length; disbandIndex++) {
+                var unitIndex = disbandIndices[disbandIndex];
+                var unit = _units[unitIndex];
+                if (!unit || !unit.can_move) continue;
+                if (typeof _server_game !== 'undefined' && unit.serverId) {
+                    _server_game.disbandUnit(unit);
+                }
+                else {
+                    _game.del_unit(unitIndex);
+                    deletedImmediately = true;
+                }
+            }
+            // Server disbanding is queued until End Turn, so keep the unit and
+            // its action menu selected. Offline units are deleted immediately.
+            if (deletedImmediately) {
+                if (typeof clearGameSelection == 'function') clearGameSelection();
+                else {
+                    _selection = -1;
+                    if (typeof _multi_selection != 'undefined') _multi_selection = [];
+                }
+            }
+            this.applyMenuRules();
+            return;
+        }
         if (command == 'goto' && commandIndices.length) {
             _prehistory_command_mode = 'goto';
             for (var gotoIndex=0; gotoIndex < commandIndices.length; gotoIndex++) {
@@ -2143,9 +2369,10 @@ const _game_prehistory = new class
         if (command == 'road_to' && this.canUseRoadTo(_selection)) {
             _prehistory_command_mode = 'road_to';
             this.setUnitState(_selection, 'road_to');
+            _units[_selection].automationMode = 'road_to';
             this.applyMenuRules();
             if (!this.usesCompactActionMenu() && typeof _last_hover_coord !== 'undefined' && _last_hover_coord) {
-                _control.drawGoto(_units[_selection].coord.i, _units[_selection].coord.j, _last_hover_coord.i, _last_hover_coord.j, _selection);
+                this.drawCommandPathPreview(_last_hover_coord);
             }
             return;
         }
@@ -2156,25 +2383,17 @@ const _game_prehistory = new class
                 _units[fortifiedUnitIndex].move_penalty = Math.max(_units[fortifiedUnitIndex].move_penalty, 1);
             }
         }
-        if ((command == 'fortification' || command == 'pasture' || command == 'farm' || command == 'plantation'
+        var workerBuildingCommand = command == 'fortification' || command == 'pasture' || command == 'farm'
+            || command == 'plantation'
             || command == 'camp' || command == 'fishing_boats' || command == 'quarry' || command == 'winery'
-            || command == 'cottage' || command == 'workshop' || command == 'mine')
-            && this.canBuildWorkerTileBuilding(_selection, command)) {
-            this.setUnitState(_selection, command);
-            if (typeof _server_game != 'undefined' && _units[_selection].serverId) {
-                _server_game.buildImprovement(_units[_selection], command).catch(function() {});
-            }
+            || command == 'cottage' || command == 'workshop' || command == 'mine';
+        if (workerBuildingCommand) {
+            if (this.canBuildWorkerTileBuilding(_selection, command)) this.beginImprovement(_selection, command);
+            else this.showUnavailableWorkerCommand(command);
         }
         if (command == 'network' && this.canBuildNetwork(_selection)) {
             var workBoat = _units[_selection];
-            this.setUnitState(_selection, 'network');
-            if (typeof _server_game != 'undefined' && workBoat.serverId) {
-                _server_game.buildImprovement(workBoat, 'network').catch(function() {});
-            }
-            else {
-                _map.addNetwork(workBoat.coord.i, workBoat.coord.j);
-                workBoat.state = 'ready';
-            }
+            this.beginImprovement(_selection, 'network');
         }
         if (command == 'wait' && commandIndices.length) {
             for (var waitIndex=0; waitIndex < commandIndices.length; waitIndex++) {
@@ -2182,19 +2401,13 @@ const _game_prehistory = new class
             }
         }
         if (command == 'road' && this.canBuildRoad(_selection)) {
-            this.setUnitState(_selection, command);
-            if (typeof _server_game != 'undefined' && _units[_selection].serverId) {
-                _server_game.buildImprovement(_units[_selection], 'road').catch(function() {});
-            }
+            this.beginImprovement(_selection, command);
         }
         if (command == 'irrigate' && this.canBuildIrrigation(_selection)) {
-            this.setUnitState(_selection, command);
-            if (typeof _server_game != 'undefined' && _units[_selection].serverId) {
-                _server_game.buildImprovement(_units[_selection], 'irrigation').catch(function() {});
-            }
+            this.beginImprovement(_selection, command);
         }
         if (command == 'chop_forest' && this.canChopForest(_selection)) {
-            this.setUnitState(_selection, command);
+            this.beginImprovement(_selection, command);
         }
         if ((command == 'explore' || command == 'patrol' || command == 'automate') && commandIndices.length) {
             for (var autoIndex=0; autoIndex < commandIndices.length; autoIndex++) {
@@ -2209,5 +2422,15 @@ const _game_prehistory = new class
         this.applyBuildingStateRules(command);
         // PREHISTORY-MENU-005, rules/prehostory.md: menu visibility follows command state changes.
         this.applyMenuRules();
+    }
+
+    showUnavailableWorkerCommand(command)
+    {
+        var unit = _selection != -1 ? _units[_selection] : null;
+        var unitId = unit ? (unit.serverId || unit.serverClientKey || '?') : '?';
+        var message = command.replaceAll('_', ' ') + ' is not available for Worker #' + unitId + ' on this Tile.';
+        if (typeof _one_turn_message != 'undefined') _one_turn_message = message;
+        if (typeof _server_game != 'undefined' && _server_game.log) _server_game.log(message);
+        if (typeof window != 'undefined' && typeof window.alert == 'function') window.alert(message);
     }
 }

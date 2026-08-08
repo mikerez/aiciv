@@ -16,9 +16,9 @@ const _ai_player = new class
         this.gpuReady = false;
         this.statusCallback = null;
         this.defaultModelUrls = {
-            strategy: 'ai_player/strategy.db.gz?v=20260807d',
-            action: 'ai_player/action.db.gz?v=20260807d',
-            economics: 'ai_player/economics.db.gz?v=20260807d',
+            strategy: 'ai_player/strategy.db.gz?v=20260808b',
+            action: 'ai_player/action.db.gz?v=20260808b',
+            economics: 'ai_player/economics.db.gz?v=20260808b',
         };
         this.defaultModelsLoaded = false;
         this.defaultModelLoadPromise = null;
@@ -625,11 +625,13 @@ const _ai_player = new class
         var unit = _units[k];
         if (unit.type == 2) {
             var ownerTeam = unit.team || 0;
-            for (var n = 0; n < _units.length; n++) {
-                if (!_units[n] || (_units[n].team || 0) == ownerTeam || _units[n].type == 3) {
+            var visible = this.visibleUnitRecords(ownerTeam);
+            for (var n = 0; n < visible.length; n++) {
+                var other = visible[n].unit;
+                if (!other || (other.team || 0) == ownerTeam || other.type == 3) {
                     continue;
                 }
-                var distance = Math.max(Math.abs(_units[n].coord.i - unit.coord.i), Math.abs(_units[n].coord.j - unit.coord.j));
+                var distance = Math.max(Math.abs(other.coord.i - unit.coord.i), Math.abs(other.coord.j - unit.coord.j));
                 if (distance <= 1) {
                     return 0.70;
                 }
@@ -1146,14 +1148,43 @@ const _ai_player = new class
         }
         var wait = pool[0];
         var choices = pool.slice(1);
+        var urgent = choices.filter(function(candidate) { return candidate.command == 'attack'; });
+        choices = choices.filter(function(candidate) { return candidate.command != 'attack'; });
+        var preferred = [];
+        if (unit.unitTypeId == 'worker') {
+            preferred = choices.filter(function(candidate) {
+                if (candidate.command != 'goto' || !candidate.target) return false;
+                var job = this.workerTileJobScore(candidate.target.i, candidate.target.j, ownerTeam);
+                candidate.workerJobScore = job ? job.score : 0;
+                return candidate.workerJobScore > 0;
+            }, this).sort(function(a, b) { return b.workerJobScore - a.workerJobScore; }).slice(0, 3);
+        }
+        else if (unit.unitTypeId == 'settlers') {
+            preferred = choices.filter(function(candidate) {
+                return candidate.command == 'goto' && candidate.target;
+            }).sort(function(a, b) {
+                return this.cityPlotScore(b.target.i, b.target.j, ownerTeam)
+                    - this.cityPlotScore(a.target.i, a.target.j, ownerTeam);
+            }.bind(this)).slice(0, 2);
+        }
+        if (preferred.length) {
+            choices = choices.filter(function(candidate) { return preferred.indexOf(candidate) == -1; });
+        }
         var key = ownerTeam + ':' + k;
         var start = choices.length ? (this.actionCandidateCursors[key] || 0) % choices.length : 0;
         var result = [wait];
-        for (var n = 0; n < Math.min(7, choices.length); n++) {
+        for (var urgentIndex = 0; urgentIndex < Math.min(7, urgent.length); urgentIndex++) {
+            result.push(urgent[urgentIndex]);
+        }
+        for (var preferredIndex = 0; preferredIndex < preferred.length && result.length < 8; preferredIndex++) {
+            result.push(preferred[preferredIndex]);
+        }
+        for (var n = 0; n < Math.min(8 - result.length, choices.length); n++) {
             result.push(choices[(start + n) % choices.length]);
         }
-        if (choices.length > 7) {
-            this.actionCandidateCursors[key] = (start + 7) % choices.length;
+        var rotatingCount = Math.max(0, 8 - 1 - urgent.length - preferred.length);
+        if (choices.length > rotatingCount) {
+            this.actionCandidateCursors[key] = (start + rotatingCount) % choices.length;
         }
         return result;
     }
@@ -1194,22 +1225,20 @@ const _ai_player = new class
         // The Action engine has only 8 records. Workers need explicit priority
         // because otherwise early settlers/explorers can occupy all slots and the
         // model never receives any worker input to command.
+        addWhere(function(unit, index) { return unit.type == 2 && self.actionImmediateSignal(index) >= 0.70; });
         addWhere(function(unit) { return unit.unitTypeId == 'worker' && !self.unitHasTask(unit); });
         addWhere(function(unit) { return unit.unitTypeId == 'settlers' && !self.unitHasTask(unit); });
         addWhere(function(unit) { return unit.type == 2 && !self.unitHasTask(unit); });
         addWhere(function(unit) { return unit.unitTypeId == 'explorer' && !self.unitHasTask(unit); });
         addWhere(function(unit) { return !self.unitHasTask(unit); });
-        addWhere(function(unit) { return unit.unitTypeId == 'worker'; });
-        addWhere(function() { return true; });
         selected.sort(function(a, b) {
             function priority(unit) {
-                if (!self.unitHasTask(unit) && unit.unitTypeId == 'worker') return 0;
-                if (!self.unitHasTask(unit) && unit.unitTypeId == 'settlers') return 1;
-                if (!self.unitHasTask(unit) && unit.type == 2) return 2;
-                if (!self.unitHasTask(unit) && unit.unitTypeId == 'explorer') return 3;
-                if (!self.unitHasTask(unit)) return 4;
-                if (unit.unitTypeId == 'worker') return 5;
-                return 6;
+                if (unit.type == 2 && self.actionImmediateSignal(_units.indexOf(unit)) >= 0.70) return 0;
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'worker') return 1;
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'settlers') return 2;
+                if (!self.unitHasTask(unit) && unit.type == 2) return 3;
+                if (!self.unitHasTask(unit) && unit.unitTypeId == 'explorer') return 4;
+                return 5;
             }
             return priority(a.unit) - priority(b.unit) || a.index - b.index;
         });
@@ -1508,7 +1537,8 @@ const _ai_player = new class
         var idleMovable = this.sortedUnits(function(unit) {
             return (unit.team || 0) == ownerTeam && unit.can_move;
         }).length;
-        input[b + 0] = ownerTeam / 16;
+        // Object IDs are kept in last* ID arrays and must never enter model FP32 input.
+        input[b + 0] = 0;
         input[b + 1] = this.normalizeCount(this.sortedUnits(function(unit) { return (unit.team || 0) == ownerTeam && unit.type == 3; }).length, 16);
         input[b + 2] = this.normalizeCount(this.sortedUnits(function(unit) { return (unit.team || 0) == ownerTeam; }).length, 64);
         input[b + 3] = this.knownMapRatioForUser(ownerTeam);
@@ -3149,7 +3179,8 @@ const _ai_player = new class
             return false;
         }
         if (command.command == 'irrigate' && _current_game.canBuildIrrigation && _current_game.canBuildIrrigation(k)) {
-            _current_game.setUnitState(k, 'irrigate');
+            if (_current_game.beginImprovement) _current_game.beginImprovement(k, 'irrigate');
+            else _current_game.setUnitState(k, 'irrigate');
             command.target = new Coord(unit.coord.i, unit.coord.j);
             command.appliedState = 'irrigate';
             return true;
@@ -3159,7 +3190,8 @@ const _ai_player = new class
             return false;
         }
         if (command.command == 'chop_forest' && _current_game.canChopForest && _current_game.canChopForest(k)) {
-            _current_game.setUnitState(k, 'chop_forest');
+            if (_current_game.beginImprovement) _current_game.beginImprovement(k, 'chop_forest');
+            else _current_game.setUnitState(k, 'chop_forest');
             command.target = new Coord(unit.coord.i, unit.coord.j);
             command.appliedState = 'chop_forest';
             return true;
@@ -3182,7 +3214,8 @@ const _ai_player = new class
             var buildings = _current_game.workerTileBuildingMenuOptions(k);
             command.availableBuildings = buildings.slice();
             if (command.building && buildings.indexOf(command.building) != -1) {
-                _current_game.setUnitState(k, command.building);
+                if (_current_game.beginImprovement) _current_game.beginImprovement(k, command.building);
+                else _current_game.setUnitState(k, command.building);
                 command.target = new Coord(unit.coord.i, unit.coord.j);
                 command.appliedState = command.building;
                 return true;
@@ -3196,7 +3229,8 @@ const _ai_player = new class
         }
         if (command.command == 'road_to' && command.state == 'road' && unit.unitTypeId == 'worker'
             && _current_game.canBuildRoad && _current_game.canBuildRoad(k)) {
-            _current_game.setUnitState(k, 'road');
+            if (_current_game.beginImprovement) _current_game.beginImprovement(k, 'road');
+            else _current_game.setUnitState(k, 'road');
             command.target = new Coord(unit.coord.i, unit.coord.j);
             command.appliedState = 'road';
             return true;

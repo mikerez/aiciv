@@ -10,8 +10,11 @@ const menu = fs.readFileSync("menu_unit.js", "utf8");
 
 assert.match(screen, /radiusX\s*=\s*79\/_screenZoom/);
 assert.match(screen, /radiusY\s*=\s*55\/_screenZoom/);
-assert.match(index, /event\.code\s*===\s*'Escape'[\s\S]*?_selection\s*=\s*-1/);
-assert.match(index, /event\.code\s*===\s*'Escape'[\s\S]*?_multi_selection\s*=\s*\[\]/);
+assert.match(index, /function clearGameSelection\(\)[\s\S]*?_selection\s*=\s*-1/);
+assert.match(index, /function clearGameSelection\(\)[\s\S]*?_multi_selection\s*=\s*\[\]/);
+assert.match(index, /event\.code\s*===\s*'Escape'[\s\S]*?clearGameSelection\(\)/);
 assert.match(menu, /command\.indexOf\('produce_unit:'\)\s*!=\s*0/);
+assert.match(menu, /data-menu-command="disband"[\s\S]*?> Disband</);
+assert.doesNotMatch(menu, /data-menu-command="destroy"/);
 
 console.log("PASS selection size, Escape clearing, and persistent phone production menu");

@@ -53,6 +53,9 @@ const _menu_tile = new class
 
     show(i, j)
     {
+        i = Math.round(Number(i));
+        j = Math.round(Number(j));
+        if (!Number.isFinite(i) || !Number.isFinite(j)) return;
         if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) return;
         var panel = this.ensureElement();
         var terrainType = _map_terrain_tex[i][j] & 0x0f;

@@ -9,9 +9,9 @@
             window.location.replace('login.html');
         }
     </script>
-    <link rel="preload" href="ai_player/strategy.db.gz?v=20260807d" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/action.db.gz?v=20260807d" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/economics.db.gz?v=20260807d" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/strategy.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/action.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="ai_player/economics.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -320,11 +320,11 @@
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
     <script src="mobile_ui.js?v=20260805i"></script>
-    <script src="menu_unit.js?v=20260807h"></script>
+    <script src="menu_unit.js?v=20260808c"></script>
     <script src="draw.js?v=20260806d"></script>
-    <script src="control.js?v=20260807f"></script>
+    <script src="control.js?v=20260808a"></script>
     <script src="birdsview.js?v=20260805a"></script>
-    <script src="ai.js?v=20260807d"></script>
+    <script src="ai.js?v=20260808b"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -334,13 +334,13 @@
             });
         }
     </script>
-    <script src="game.js?v=20260807j"></script>
+    <script src="game.js?v=20260808b"></script>
     <script src="military.js?v=20260807e"></script>
-    <script src="economics.js?v=20260807j"></script>
-    <script src="multiplayer.js?v=20260807b"></script>
-    <script src="server_game.js?v=20260808a"></script>
-    <script src="city.js?v=20260807i"></script>
-    <script src="menu_tile.js?v=20260807f"></script>
+    <script src="economics.js?v=20260808b"></script>
+    <script src="multiplayer.js?v=20260808d"></script>
+    <script src="server_game.js?v=20260808e"></script>
+    <script src="city.js?v=20260808b"></script>
+    <script src="menu_tile.js?v=20260808b"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
     <script src="menu_technology.js"></script>
@@ -353,7 +353,7 @@
     <script src="game_events.js?v=20260805b"></script>
     <script src="menu_stack.js?v=20260807f"></script>
     <script src="menu_civilizations.js?v=20260807e"></script>
-    <script src="map.js?v=20260807h"></script>
+    <script src="map.js?v=20260808b"></script>
     <script src="screen.js?v=20260807d"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
@@ -459,7 +459,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260808a"></script>
+    <script src="game_prehistory.js?v=20260808e"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
@@ -709,6 +709,9 @@
                 _fulldraw = 1;
                 drawScene(0);
                 _current_game.drawCommandPathPreview(coord);
+                if (_current_game.commitCommandPath) {
+                    _current_game.commitCommandPath(coord);
+                }
                 if (_current_game.configureSelectedMovementIntent) {
                     _current_game.configureSelectedMovementIntent(coord);
                 }
@@ -785,6 +788,7 @@
                 _last_pointer_point = point;
                 _dragging_unit_path = 0;
                 _panning_map = 0;
+                _current_game.drawCommandPathPreview(coord);
                 return;
             }
             if (_current_game.handleMapClick(coord)) {
@@ -916,6 +920,9 @@
                     _current_game.prepareManualMovement(_selection);
                 }
                 _current_game.drawCommandPathPreview(coord);
+                if (_current_game.commitCommandPath) {
+                    _current_game.commitCommandPath(coord);
+                }
                 if (_current_game.dismissActionMenu) {
                     _current_game.dismissActionMenu();
                 }

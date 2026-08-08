@@ -7,7 +7,8 @@ require dirname(__DIR__) . '/server_game.php';
 if (SERVER_GAME_TURN_SECONDS !== 6) {
     throw new RuntimeException('PHP authoritative timeout must remain 6 seconds.');
 }
-if (!function_exists('executeClientTurnActions') || !function_exists('combinedPlayerUpdates')) {
+if (!function_exists('executeClientTurnActions') || !function_exists('combinedPlayerUpdates')
+    || !function_exists('disbandUnit')) {
     throw new RuntimeException('Batched action and combined update functions are missing.');
 }
 

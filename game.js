@@ -128,8 +128,8 @@ class GameState
         this.science = 0;
         this.scienceRate = 0;
         this.lastScienceIncome = 0;
-        this.money = 500;
-        this.food = 100;
+        this.money = 0;
+        this.food = 200;
         this.lastGrossFoodIncome = 0;
         this.lastFoodUpkeep = 0;
         this.lastMoneyIncome = 0;
@@ -250,6 +250,9 @@ class GameState
     processMoneyIncome(moneyIncome)
     {
         // TECHNOLOGY-MENU-005 and CITY-TURN-004, rules/technology.md and rules/city.md: science rate dedicates city money to research.
+        if (typeof _authenticated_player_id !== 'undefined' && _authenticated_player_id != null) {
+            return typeof _economics !== 'undefined' ? _economics.serverEconomyResult(this) : null;
+        }
         if (typeof _economics !== 'undefined' && _economics.processTurnIncome) {
             return _economics.processTurnIncome(this, moneyIncome, this.lastMaintenance || 0);
         }
@@ -432,6 +435,25 @@ const _game = new class
         return (_map_terrain_tex[i][j]&0x0F) != 0;
     }
 
+    movementStepCost(from, to)
+    {
+        return _map.hasRoad && _map.hasRoad(from.i, from.j) && _map.hasRoad(to.i, to.j) ? 0.5 : 1;
+    }
+
+    nextUnitMovementCoord(k)
+    {
+        if (_units[k].gotoPath.length) return _units[k].gotoPath[0];
+        var next = null;
+        if (_units[k].gotoCoord != undefined) {
+            _control.mapLine(
+                _units[k].coord.i, _units[k].coord.j,
+                _units[k].gotoCoord.i, _units[k].gotoCoord.j,
+                function(i, j, ni, nj) { next = new Coord(ni, nj); }, k, 1
+            );
+        }
+        return next;
+    }
+
     resolveUnitCombat(k, fromCoord)
     {
         if (typeof _military === 'undefined' || !_military || !_military.resolveAttackOnTile || !_units[k]) {
@@ -471,25 +493,25 @@ const _game = new class
             }
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
                 var prev = _units[k].coord;
-                var steps = Math.max(1, _units[k].speed || 1);
+                var movementBudget = Math.max(1, Number(_units[k].speed) || 1);
+                var movementSpent = 0;
+                var steps = Math.max(1, Math.floor(movementBudget * 2));
                 var attackerRemoved = false;
                 for (var step=0; step < steps; step++) {
                     var stepPrev = _units[k].coord;
-                    if (_units[k].gotoPath.length) {
-                        var nextCoord = _units[k].gotoPath.shift();
-                        if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
-                            _units[k].coord = nextCoord;
-                        }
-                        else {
-                            _units[k].gotoPath = [];
-                            _units[k].gotoCoord = null;
-                            break;
-                        }
+                    var nextCoord = this.nextUnitMovementCoord(k);
+                    if (!nextCoord) break;
+                    var stepCost = this.movementStepCost(stepPrev, nextCoord);
+                    if (movementSpent + stepCost > movementBudget + 0.000001) break;
+                    if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
+                        if (_units[k].gotoPath.length) _units[k].gotoPath.shift();
+                        _units[k].coord = nextCoord;
+                        movementSpent += stepCost;
                     }
                     else {
-                        _control.mapLine(_units[k].coord.i, _units[k].coord.j, _units[k].gotoCoord.i, _units[k].gotoCoord.j, function(i, j, ni, nj, arrow_num) {
-                            _units[k].coord = new Coord(ni, nj);
-                        }, k, 1);
+                        _units[k].gotoPath = [];
+                        _units[k].gotoCoord = null;
+                        break;
                     }
                     var combatResult = _units[k] && _units[k].coord != stepPrev ? this.resolveUnitCombat(k, stepPrev) : null;
                     if (combatResult && combatResult.combat) {
@@ -528,7 +550,8 @@ const _game = new class
                     continue;
                 }
                 if (_units[k].coord != prev) {
-                    _units[k].move_penalty = (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
+                    _units[k].move_penalty = _map.hasRoad(_units[k].coord.i, _units[k].coord.j)
+                        ? 0 : (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
                 }
                 else if (!_units[k].gotoPath.length && _units[k].gotoCoord != undefined) {
                     _units[k].gotoCoord = null;
@@ -570,25 +593,25 @@ const _game = new class
             if ((_units[k].gotoPath.length || _units[k].gotoCoord != undefined) && _units[k].move_penalty == 0) {
 //console.log("goto: " + k + " (" + _units[k].coord.i + "," + _units[k].coord.j + ") to (" + _units[k].gotoCoord.i + "," + _units[k].gotoCoord.j + ")");
                 var prev = _units[k].coord;
-                var steps = Math.max(1, _units[k].speed || 1);
+                var movementBudget = Math.max(1, Number(_units[k].speed) || 1);
+                var movementSpent = 0;
+                var steps = Math.max(1, Math.floor(movementBudget * 2));
                 var attackerRemoved = false;
                 for (var step=0; step < steps; step++) {
                     var stepPrev = _units[k].coord;
-                    if (_units[k].gotoPath.length) {
-                        var nextCoord = _units[k].gotoPath.shift();
-                        if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
-                            _units[k].coord = nextCoord;
-                        }
-                        else {
-                            _units[k].gotoPath = [];
-                            _units[k].gotoCoord = null;
-                            break;
-                        }
+                    var nextCoord = this.nextUnitMovementCoord(k);
+                    if (!nextCoord) break;
+                    var stepCost = this.movementStepCost(stepPrev, nextCoord);
+                    if (movementSpent + stepCost > movementBudget + 0.000001) break;
+                    if (this.canUnitEnterTile(k, nextCoord.i, nextCoord.j)) {
+                        if (_units[k].gotoPath.length) _units[k].gotoPath.shift();
+                        _units[k].coord = nextCoord;
+                        movementSpent += stepCost;
                     }
                     else {
-                        _control.mapLine(_units[k].coord.i, _units[k].coord.j, _units[k].gotoCoord.i, _units[k].gotoCoord.j, function(i, j, ni, nj, arrow_num) {
-                            _units[k].coord = new Coord(ni, nj);
-                        }, k, 1);
+                        _units[k].gotoPath = [];
+                        _units[k].gotoCoord = null;
+                        break;
                     }
                     var combatResult = _units[k] && _units[k].coord != stepPrev ? this.resolveUnitCombat(k, stepPrev) : null;
                     if (combatResult && combatResult.combat) {
@@ -620,7 +643,8 @@ const _game = new class
                     continue;
                 }
                 if (_units[k].coord != prev) {
-                    _units[k].move_penalty = (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
+                    _units[k].move_penalty = _map.hasRoad(_units[k].coord.i, _units[k].coord.j)
+                        ? 0 : (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
 //console.log(_units[k].move_penalty)
                 }
                 else if (!_units[k].gotoPath.length && _units[k].gotoCoord != undefined) {
@@ -769,7 +793,7 @@ const _game = new class
         this.makeTurn(false);
         var cityMoneyIncome = 0;
         if (typeof _city_economy !== 'undefined') {
-            cityMoneyIncome = _city_economy.processCities();
+            cityMoneyIncome = _city_economy.processOfflineCities();
         }
         if (typeof _economics !== 'undefined') {
             _economics.processTurn(cityMoneyIncome, _game_state, _units);
@@ -830,7 +854,7 @@ const _game = new class
         await this.makeTurnAnimated(false);
         var cityMoneyIncome = 0;
         if (typeof _city_economy !== 'undefined') {
-            cityMoneyIncome = _city_economy.processCities();
+            cityMoneyIncome = _city_economy.processOfflineCities();
         }
         if (typeof _economics !== 'undefined') {
             _economics.processTurn(cityMoneyIncome, _game_state, _units);

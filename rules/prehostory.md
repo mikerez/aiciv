@@ -12,7 +12,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-MOVE-005`: Land-nature units cannot move onto water terrain.
 - `PREHISTORY-MOVE-006`: Vertical diagonal movement is not available.
 - `PREHISTORY-MOVE-007`: Goto path search checks the best forward tile and one alternate forward tile before stopping on blocked terrain.
-- `PREHISTORY-MOVE-008`: A moving unit can consume up to its speed value in path tiles during one turn.
+- `PREHISTORY-MOVE-008`: A moving unit can consume up to its speed value in movement points during one turn.
+- `PREHISTORY-MOVE-009`: A normal movement step costs one movement point. A step costs one-half movement point only when both its source and destination Tiles contain roads, allowing up to twice as many connected-road steps per turn.
 
 ## Unit State Rules
 
@@ -48,7 +49,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 | Knight | land | 6 | 5 | 2 | 3 | Engineering | 85 | Horses |
 | Pikeman | land | 4 | 6 | 1 | 2 | Iron Working | 55 | Iron |
 | Longbow | land | 5 | 3 | 1 | 3 | Archery | 55 | none |
-| Fencer | land | 4 | 3 | 2 | 2 | Bronze Working | 45 | none |
+| Fencer | land | 4 | 3 | 2 | 2 | Bronze Working | 45 | Copper or Iron |
 | Swordsman | land | 7 | 5 | 1 | 2 | Iron Working | 75 | Iron |
 
 ## Building State Rules
@@ -64,7 +65,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-BUILD-009`: A built city starts with road and irrigation modifiers on its tile, but the city-created irrigation gives extra city-tile food only if fresh water is in a neighboring tile.
 - `PREHISTORY-BUILD-010`: A City with five movable units on its Tile pauses ready unit production without consuming points or advancing its backlog. It retries after a later turn when capacity may be available.
 - `PREHISTORY-BUILD-011`: Strategic resources count for production only when their Tile is connected to the City by a contiguous road path.
-- `PREHISTORY-BUILD-012`: Horseman and Chariot require Horses; Knight requires Horses and Iron; Elephant requires Ivory; Spearman requires Copper/Bronze; Pikeman and Swordsman require Iron.
+- `PREHISTORY-BUILD-012`: Horseman and Chariot require Horses; Knight requires Horses and Iron; Elephant requires Ivory; Spearman, Fencer, and Catapult require either Copper/Bronze or Iron; Pikeman and Swordsman require Iron.
+- `PREHISTORY-BUILD-013`: Building a City automatically chops forest on its Tile without awarding Worker chop production.
 
 ## Turn Processing Rules
 
@@ -73,6 +75,8 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-TURN-003`: Layer unit and building state rules are re-applied after base turn processing.
 - `PREHISTORY-TURN-004`: End Turn selects and centers the view on the next movable unit without a task.
 - `PREHISTORY-TURN-005`: A movable unit is without a task when it has no active route, no target, and its layer state is `ready`.
+- `PREHISTORY-TURN-006`: `Disband` permanently removes the selected owned movable unit. Server games validate and apply it authoritatively with the next aggregated turn request.
+- `PREHISTORY-TURN-007`: A locally selected Worker improvement command and its remaining build turns survive polling and page reload until PHP accepts or rejects the build.
 - `PREHISTORY-TURN-006`: When End Turn makes a movable unit finish its task, that newly idle unit is selected before scanning for the next idle unit.
 - `PREHISTORY-TURN-007`: End Turn selects and centers the view on the first city with no active production before movable unit prompts so the production status shows that it produces nothing.
 - `PREHISTORY-TURN-008`: End Turn is blocked while the current selected movable unit is idle and has no Goto path, route, target, or modified state task.
@@ -102,6 +106,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-STATE-001`: Goto enters a map targeting mode, previews arrows until the next map click, and stores that preview path on the unit.
 - `PREHISTORY-STATE-002`: Fortificate changes the unit state to `fortified` and consumes the unit's next turn.
 - `PREHISTORY-WORKER-BUILDING-011`: A Worker may build the Fortification improvement after Construction is known. Fortification is persisted as a Tile modifier and contributes its defence bonus to every defending unit on that Tile.
+- `PREHISTORY-WORKER-BUILDING-012`: Every Worker or WorkBoat terrain improvement waits two client turns before JS submits its build request. PHP validates the Tile only when that delayed request arrives.
 - `PREHISTORY-STATE-003`: Wait changes the unit state to `waiting`.
 - `PREHISTORY-STATE-004`: Road, Road-to, Irrigate, Chop forest, Pasture, Cottage, Workshop, Mine, and Fortification are worker-only unit states.
 - `PREHISTORY-STATE-005`: Explore, Patrol, and Automate are auto-routing unit states.
@@ -123,7 +128,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-CHOP-001`: Chopping forest can be performed only by a worker in `chop_forest` state.
 - `PREHISTORY-CHOP-002`: Chopping can progress only while the worker stands on a forest terrain tile.
 - `PREHISTORY-CHOP-003`: Forest terrain is terrain type `6`; `hills1` and `hills5` are forested hill variants and are also available for chopping.
-- `PREHISTORY-CHOP-004`: Chopping takes the forest tile wildity level stored in terrain `D1 D0` bits plus two turns, because the current turn-processing pass decrements progress immediately.
+- `PREHISTORY-CHOP-004`: Chopping jungle/forest takes four client turns before its authoritative build order is submitted.
 - `PREHISTORY-CHOP-005`: When chopping completes, a base forest tile becomes base grass terrain.
 - `PREHISTORY-CHOP-006`: If the unit is not on forest terrain, the chop order is cancelled.
 - `PREHISTORY-CHOP-007`: A unit cannot enter `chop_forest` state unless it is already standing on forest terrain.
@@ -132,7 +137,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-CHOP-010`: Completed chopping gives exactly 10 production once to the nearest same-team City.
 - `PREHISTORY-CHOP-011`: Chop production is credited only when the nearest City has an active production task; idle Cities store no production.
 - `PREHISTORY-CHOP-012`: Workers cannot start forest chopping while standing on a city tile.
-- `PREHISTORY-WATER-001`: A WorkBoat can build one Network improvement on a water Tile; Network construction is unavailable on land.
+- `PREHISTORY-WATER-001`: A WorkBoat can build one Nets improvement on a shallow-water Tile; Nets construction is unavailable on land and deep water.
 
 ## Start View Rules
 
@@ -147,18 +152,18 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-AUTO-003`: Automate chooses a nearby available land route.
 - `PREHISTORY-AUTO-004`: Auto-routing runs before authoritative command capture when a unit has a persistent auto-routing mode and no active route.
 - `PREHISTORY-AUTO-005`: Explore, Patrol, and Automate keep their mode after a route ends and immediately calculate their next route.
-- `PREHISTORY-AUTO-006`: Worker Automate checks its current tile and then a 5x5 neighborhood for legal improvements, using the same terrain, resource, technology, and city-tile restrictions as manual commands.
+- `PREHISTORY-AUTO-006`: Worker Automate checks its current tile and then a 10x10-scale neighborhood for useful improvements, prioritizes opened resource improvements, and does not replace an existing primary improvement merely to stay busy.
 
 ## Road Building Rules
 
 - `PREHISTORY-ROAD-001`: Only workers in `road` state can build roads.
 - `PREHISTORY-ROAD-002`: Roads are land terrain modifiers and cannot be built on water.
-- `PREHISTORY-ROAD-003`: Road building cost is two times terrain wildity stored in terrain `D` bits.
+- `PREHISTORY-ROAD-003`: Road building takes two client turns before its authoritative build request is submitted.
 - `PREHISTORY-ROAD-004`: Completed road building sets the road terrain modifier on the worker tile.
 - `PREHISTORY-ROAD-005`: Mixed grass-water terrain type `7` cannot receive roads until `Construction` is discovered.
 - `PREHISTORY-ROAD-006`: Workers cannot build roads before `Wheel` is discovered.
 - `PREHISTORY-ROAD-007`: Road-to uses the same path preview and path assignment as Goto, but is available only to Workers after `Wheel`.
-- `PREHISTORY-ROAD-008`: A Worker in Road-to state lays a road on every supported tile it leaves or enters while following its path.
+- `PREHISTORY-ROAD-008`: A Worker in Road-to state pauses on every supported path tile, spends the normal two turns building there through the authoritative server, and resumes its saved route only after the road succeeds.
 - `PREHISTORY-ROAD-009`: Workers cannot build roads on city tiles. A newly built city may still create its own starting road directly.
 
 
@@ -172,14 +177,14 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-WORKER-BUILDING-006`: Mine can be built only on hills terrain type `4` or mountains/rocks terrain type `5`.
 - `PREHISTORY-WORKER-BUILDING-007`: If the worker tile has an opened resource and its required improvement is currently buildable, the worker menu suggests only that resource improvement from the worker tile-building list.
 - `PREHISTORY-WORKER-BUILDING-008`: Land worker tile buildings are not supported on water tiles; Fishing Boats is supported only on water resource tiles.
-- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 30 turns and a Village after 60 total turns.
+- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 100 turns and a Village after 200 total turns.
 - `PREHISTORY-WORKER-BUILDING-010`: Workers cannot start Pasture, Farm, Plantation, Camp, Fishing Boats, Quarry, Winery, Cottage, Workshop, Mine, or Fortification while standing on a city tile.
 
 ## Irrigation Rules
 
 - `PREHISTORY-IRRIGATION-001`: Only workers in `irrigate` state can build irrigation.
 - `PREHISTORY-IRRIGATION-002`: Irrigation is a land terrain modifier and cannot be built on water.
-- `PREHISTORY-IRRIGATION-003`: Irrigation takes twice the terrain wildity stored in terrain `D` bits, with a minimum of two turns.
+- `PREHISTORY-IRRIGATION-003`: Irrigation takes two client turns before its authoritative build request is submitted.
 - `PREHISTORY-IRRIGATION-004`: Completed irrigation sets the irrigation terrain modifier on the worker tile.
 - `PREHISTORY-IRRIGATION-005`: PHP validates irrigation with a breadth-first route search. The requested Tile is the origin, existing irrigation Tiles are the route, and the route must reach mixed grass-water, an `A`-bit water source, or shallow fresh water.
 - `PREHISTORY-IRRIGATION-006`: JS checks Worker, technology, City, grass, and existing-modifier restrictions but deliberately does not check water connectivity. A disconnected authoritative request returns `status: IMPOSSIBLE`, resets the Worker to ready, and is shown by the client.

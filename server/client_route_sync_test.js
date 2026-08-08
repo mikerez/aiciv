@@ -39,6 +39,10 @@ const context = {
     _units: [localUnit],
     _current_user: 7,
     _selection: 0,
+    _map: {
+        roads: new Set(),
+        hasRoad(i, j) { return this.roads.has(i + ':' + j); },
+    },
     localStorage: {
         values: {},
         getItem(key) { return this.values[key] || null; },
@@ -60,18 +64,27 @@ assert.deepEqual(
     [{i: 5, j: 4}],
     'captureTurn must submit only one atomic segment for a speed-one unit'
 );
+context._map.roads.add('4:4');
+context._map.roads.add('5:4');
+context._map.roads.add('6:4');
+const roadSubmission = game.captureTurn(7);
+assert.deepEqual(
+    JSON.parse(JSON.stringify(roadSubmission.commands[0].path)),
+    [{i: 5, j: 4}, {i: 6, j: 4}],
+    'captureTurn must submit two connected-road steps for a speed-one unit'
+);
 assert.equal(localUnit.gotoPath.length, 2, 'capturing a turn must not consume the client-owned route');
 localUnit.gotoPath = [];
 localUnit.gotoCoord = null;
 
-function update(turn, i, j, properties) {
+function update(turn, i, j, properties, unitType = 'warrior', state = 'ready') {
     game.applyUnitUpdates(7, {
         turn,
         units: [{
-            id: 12, client_key: 'route-unit', owner_id: 7, unit_type_id: 'warrior',
-            unit_class: 2, name: 'Warrior', texture: 258, can_move: true, nature: 'land',
+            id: 12, client_key: 'route-unit', owner_id: 7, unit_type_id: unitType,
+            unit_class: unitType == 'worker' ? 1 : 2, name: unitType == 'worker' ? 'Worker' : 'Warrior', texture: 258, can_move: true, nature: 'land',
             i, j, attack: 2, defense: 1, speed: 1, view_range: 2,
-            state: 'ready', health: 100, max_health: 100, experience: 1,
+            state, health: 100, max_health: 100, experience: 1,
             move_penalty: 0, properties,
         }],
         owned_unit_ids: [12],
@@ -96,6 +109,24 @@ assert.deepEqual(
 update(5, 6, 4, {});
 assert.equal(context._units[0].gotoPath.length, 0,
     'the client route must clear after its final destination is reached');
+context._units[0].unitTypeId = 'worker';
+context._units[0].type = 1;
+context._units[0].state = 'cottage';
+context._units[0].clientImprovementTurnsLeft = 2;
+game.saveClientRoutes(7);
+update(6, 6, 4, {}, 'worker', 'ready');
+assert.equal(context._units[0].state, 'cottage',
+    'an older server snapshot must not erase a newly selected improvement command');
+assert.equal(context._units[0].clientImprovementTurnsLeft, 2,
+    'an older server snapshot must preserve the local improvement countdown');
+const storedImprovement = JSON.parse(context.localStorage.values[game.clientRouteStorageKey(7)])[0];
+assert.equal(storedImprovement.improvement_state, 'cottage',
+    'reload persistence must include the improvement command, not only its countdown');
+context._units[0].unitTypeId = 'warrior';
+context._units[0].type = 2;
+context._units[0].state = 'ready';
+delete context._units[0].clientImprovementTurnsLeft;
+game.saveClientRoutes(7);
 context._units[0].gotoPath = [new Coord(7, 4)];
 context._units[0].gotoCoord = new Coord(7, 4);
 game.saveClientRoutes(7);

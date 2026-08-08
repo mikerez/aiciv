@@ -1,4 +1,6 @@
-var _server_game_secret = 'cbc6e026e751525dfcd0e42b9542e5d7817ef925c2d0830427817d0e5f0bd0ca';
+var _server_game_secret = typeof process != 'undefined' && process.env && process.env.AICIV_TEST_SECRET
+    ? process.env.AICIV_TEST_SECRET
+    : 'cbc6e026e751525dfcd0e42b9542e5d7817ef925c2d0830427817d0e5f0bd0ca';
 var _client_turn_timeout_ms = 5000;
 var _server_turn_grace_ms = 0;
 var _client_update_poll_ms = 2000;
@@ -292,19 +294,19 @@ const _server_game = new class
         }
         if (result.turn != undefined) this.serverTurn = result.turn;
         if (result.revision != undefined) this.serverRevision = Math.max(this.serverRevision, result.revision);
-        if (result.turn_seconds_remaining != undefined && isFinite(Number(result.turn_seconds_remaining))) {
+        if (result.deadline_at) {
+            var parsedDeadline = new Date(result.deadline_at).getTime() - _server_turn_grace_ms;
+            var deadlineMs = isFinite(parsedDeadline)
+                ? parsedDeadline - Date.now() - 750
+                : _client_turn_timeout_ms;
+            this.deadlineAt = Date.now() + Math.max(0, Math.min(_client_turn_timeout_ms, deadlineMs));
+        }
+        else if (result.turn_seconds_remaining != undefined && isFinite(Number(result.turn_seconds_remaining))) {
             var remainingMs = Math.max(0, Math.min(
                 _client_turn_timeout_ms,
-                Number(result.turn_seconds_remaining) * 1000
+                Number(result.turn_seconds_remaining) * 1000 - 750
             ));
             this.deadlineAt = Date.now() + remainingMs;
-        }
-        else if (result.deadline_at) {
-            var parsedDeadline = new Date(result.deadline_at).getTime() - _server_turn_grace_ms;
-            var fallbackMs = isFinite(parsedDeadline)
-                ? parsedDeadline - Date.now()
-                : _client_turn_timeout_ms;
-            this.deadlineAt = Date.now() + Math.max(0, Math.min(_client_turn_timeout_ms, fallbackMs));
         }
     }
 
@@ -333,11 +335,13 @@ const _server_game = new class
         }
     }
 
-    storedClientRoute(playerId, unit)
+    storedClientRoute(playerId, unit, serverId, clientKey)
     {
         var routes = this.loadClientRoutes(playerId);
         for (var n=0; n < routes.length; n++) {
-            if ((unit.serverId && routes[n].server_id == unit.serverId)
+            if ((serverId && routes[n].server_id == serverId)
+                || (clientKey && routes[n].client_key == clientKey)
+                || (unit.serverId && routes[n].server_id == unit.serverId)
                 || (unit.serverClientKey && routes[n].client_key == unit.serverClientKey)) {
                 return routes[n];
             }
@@ -352,15 +356,26 @@ const _server_game = new class
         var routes = [];
         for (var n=0; n < list.length; n++) {
             var unit = list[n];
-            if (!unit.gotoPath || !unit.gotoPath.length) continue;
+            if (unit.pendingDisband) continue;
+            var hasPath = unit.gotoPath && unit.gotoPath.length;
+            var hasImprovementCountdown = this.activeWorkerModifier(unit)
+                && Number.isFinite(Number(unit.clientImprovementTurnsLeft));
+            if (!hasPath && !unit.automationMode && !hasImprovementCountdown) continue;
             routes.push({
                 server_id: unit.serverId || null,
                 client_key: unit.serverClientKey || null,
                 origin: unit.coord ? { i: unit.coord.i, j: unit.coord.j } : null,
-                path: unit.gotoPath.map(function(point) { return { i: point.i, j: point.j }; }),
-                destination: unit.gotoCoord
+                path: hasPath ? unit.gotoPath.map(function(point) { return { i: point.i, j: point.j }; }) : [],
+                destination: hasPath && unit.gotoCoord
                     ? { i: unit.gotoCoord.i, j: unit.gotoCoord.j }
-                    : { i: unit.gotoPath[unit.gotoPath.length - 1].i, j: unit.gotoPath[unit.gotoPath.length - 1].j },
+                    : hasPath
+                        ? { i: unit.gotoPath[unit.gotoPath.length - 1].i, j: unit.gotoPath[unit.gotoPath.length - 1].j }
+                        : null,
+                automation_mode: unit.automationMode || null,
+                road_to_building: !!unit.roadToBuilding,
+                improvement_turns_left: hasImprovementCountdown
+                    ? Math.max(0, Number(unit.clientImprovementTurnsLeft)) : null,
+                improvement_state: hasImprovementCountdown ? this.activeWorkerModifier(unit) : null,
                 interaction_intent: unit.interactionIntent || null,
                 target_owner_id: unit.interactionTargetOwnerId == undefined
                     ? null : unit.interactionTargetOwnerId,
@@ -381,6 +396,7 @@ const _server_game = new class
             name: true, texture: true, can_move: true, nature: true, attack: true, defense: true, speed: true,
             viewRange: true, state: true, health: true, maxHealth: true, experience: true, move_penalty: true,
             gotoPath: true, gotoCoord: true, pendingServerPath: true, pendingImmediateBuild: true,
+            clientImprovementTurnsLeft: true, pendingDisband: true,
             interactionIntent: true, interactionTargetOwnerId: true, attackTargetOwnerId: true,
         };
         var result = {};
@@ -424,8 +440,9 @@ const _server_game = new class
     captureTurn(playerId)
     {
         var list = _units_by_user[playerId] || [];
-        if (_units === list && typeof _city_economy != 'undefined') {
-            _city_economy.processCities(this.serverTurn);
+        if (_units === list && typeof _city_economy != 'undefined'
+            && _city_economy.queueServerGrowthRequests) {
+            _city_economy.queueServerGrowthRequests(this.serverTurn);
         }
         // Registered clients do not run local turn rules before submission. Renew
         // persistent automatic routes while this player's unit list is active.
@@ -435,6 +452,7 @@ const _server_game = new class
         var commands = [];
         for (var k=0; k < list.length; k++) {
             var unit = list[k];
+            if (unit.pendingDisband) continue;
             var command = {
                 unit_id: unit.serverId || undefined,
                 client_key: this.ensureClientKey(unit, playerId),
@@ -443,10 +461,11 @@ const _server_game = new class
                 payload: {},
             };
             var route = unit.gotoPath;
-            var movementLimit = Math.max(0, Math.floor(Number(unit.speed) || 0));
-            if (unit.can_move && movementLimit > 0 && route && route.length) {
+            var activeModifier = this.activeWorkerModifier(unit);
+            var movementPath = this.movementPathForTurn(unit, route);
+            if (unit.can_move && movementPath.length && !activeModifier) {
                 command.command = 'move';
-                command.path = route.slice(0, movementLimit).map(function(point) {
+                command.path = movementPath.map(function(point) {
                     return { i: point.i, j: point.j };
                 });
                 command.payload.client_path_source = 'client_goto_path';
@@ -465,10 +484,22 @@ const _server_game = new class
                 command.command = 'hold';
             }
             else if (unit.state && unit.state != 'ready') {
-                var completedModifier = this.activeWorkerModifier(unit);
+                var completedModifier = activeModifier;
                 if (completedModifier) {
-                    command.command = 'build';
-                    command.payload = { modifier: completedModifier };
+                    if (this.advanceImprovementCountdown(unit, completedModifier)) {
+                        if (completedModifier == 'chop_forest') {
+                            command.command = 'build';
+                            command.payload = { modifier: completedModifier };
+                        }
+                        else {
+                            this.buildImprovement(unit, completedModifier);
+                            command.command = 'hold';
+                        }
+                    }
+                    else {
+                        command.command = 'set_state';
+                        command.payload = { state: unit.state };
+                    }
                 }
                 else {
                     command.command = 'set_state';
@@ -500,6 +531,33 @@ const _server_game = new class
             // Production clients never bootstrap terrain or units. PHP owns both.
             bootstrap: null,
         };
+    }
+
+    roadMovementStepCost(from, to)
+    {
+        if (typeof _map != 'undefined' && _map && _map.hasRoad
+            && _map.hasRoad(from.i, from.j) && _map.hasRoad(to.i, to.j)) {
+            return 0.5;
+        }
+        return 1;
+    }
+
+    movementPathForTurn(unit, route)
+    {
+        if (!unit || !unit.can_move || !route || !route.length || !unit.coord) return [];
+        var budget = Math.max(0, Number(unit.speed) || 0);
+        var spent = 0;
+        var from = unit.coord;
+        var path = [];
+        for (var n=0; n < route.length && n < Math.floor(budget * 2); n++) {
+            var point = route[n];
+            var cost = this.roadMovementStepCost(from, point);
+            if (spent + cost > budget + 0.000001) break;
+            path.push(point);
+            spent += cost;
+            from = point;
+        }
+        return path;
     }
 
     queueCityHealing(playerId)
@@ -567,12 +625,21 @@ const _server_game = new class
     {
         if (unit.unitTypeId == 'workboat' && unit.state == 'network') return 'network';
         if (unit.unitTypeId != 'worker') return null;
+        if (unit.automationMode == 'road_to' && unit.roadToBuilding) return 'road';
         if (unit.state == 'road') return 'road';
         if (unit.state == 'irrigate') return 'irrigation';
         if (unit.state == 'chop_forest') return 'chop_forest';
         if (['fortification', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats',
             'quarry', 'winery', 'cottage', 'workshop', 'mine'].indexOf(unit.state) != -1) return unit.state;
         return null;
+    }
+
+    advanceImprovementCountdown(unit, modifier)
+    {
+        var turns = Number(unit.clientImprovementTurnsLeft);
+        if (!Number.isFinite(turns) || turns <= 0) turns = modifier == 'chop_forest' ? 4 : 2;
+        unit.clientImprovementTurnsLeft = Math.max(0, turns - 1);
+        return unit.clientImprovementTurnsLeft == 0;
     }
 
     applyUnitIdMap(mapping)
@@ -636,6 +703,7 @@ const _server_game = new class
         delete found.unit.road_turns_left;
         delete found.unit.irrigation_turns_left;
         delete found.unit.building_turns_left;
+        delete found.unit.clientImprovementTurnsLeft;
         return true;
     }
 
@@ -674,9 +742,17 @@ const _server_game = new class
             this.applyUnitIdMap(result.unit_id_map);
             this.applyRejectedMovements(submission.playerId, result.rejected_movements || []);
             this.applyCombatUnitUpdates(result.combat_units || [], false);
-            this.applyTurnActionResults(submission.playerId, submission.actions || [], result.action_results || []);
             if (!options.hidden) this.awaitingTurnByPlayer[submission.playerId] = result.submitted_turn;
             if (result.updates) await this.applyCombinedUpdates(submission.playerId, result.updates, options);
+            // Apply action outcomes after the authoritative snapshot. A rejected
+            // build must clear a stale server-side improvement state instead of
+            // allowing that snapshot to restart the client countdown.
+            this.applyTurnActionResults(
+                submission.playerId,
+                submission.actions || [],
+                result.action_results || [],
+                options.hidden
+            );
             if (!options.deferUpdates && !result.updates) {
                 await this.loadUpdates(submission.playerId, { hidden: options.hidden });
             }
@@ -710,7 +786,7 @@ const _server_game = new class
         }
     }
 
-    applyTurnActionResults(playerId, submittedActions, results)
+    applyTurnActionResults(playerId, submittedActions, results, hidden)
     {
         var byId = {};
         for (var n=0; n < submittedActions.length; n++) {
@@ -719,13 +795,23 @@ const _server_game = new class
         for (var resultIndex=0; resultIndex < results.length; resultIndex++) {
             var result = results[resultIndex] || {};
             var action = byId[String(result.client_action_id)] || {};
+            var actionPayload = result.result || {};
             var unitId = action.worker_unit_id || action.settler_unit_id || action.city_unit_id;
             var found = unitId ? this.findUnit(playerId, Number(unitId), null) : null;
             if (action.type == 'build' && found) {
                 found.unit.pendingImmediateBuild = false;
-                if (result.ok) found.unit.state = 'ready';
+                if (result.ok) {
+                    if (actionPayload.tile) this.applyAuthoritativeBuildTile(actionPayload.tile);
+                    var handledRoadTo = action.building_type == 'road'
+                        && typeof _current_game != 'undefined'
+                        && _current_game.completeRoadToBuild
+                        && _current_game.completeRoadToBuild(found.unit, true);
+                    if (!handledRoadTo) {
+                        found.unit.state = 'ready';
+                        delete found.unit.clientImprovementTurnsLeft;
+                    }
+                }
             }
-            var actionPayload = result.result || {};
             if (action.type == 'build' && result.ok && actionPayload.status == 'IMPOSSIBLE') {
                 if (found) this.clearRejectedWorkerBuild(playerId, Number(unitId));
                 var impossibleMessage = 'IMPOSSIBLE: ' + String(actionPayload.reason || 'building_not_supported')
@@ -739,23 +825,50 @@ const _server_game = new class
                 }
             }
             if (action.type == 'build_city' && found) found.unit.serverActionPending = false;
+            if (action.type == 'disband_unit' && found && !result.ok) found.unit.pendingDisband = false;
             if (action.type == 'grow_city' && found) {
                 found.unit.growthPending = false;
-                if (!result.ok && found.unit.economy) {
-                    found.unit.economy.foodStored += Math.max(0, Number(action.food_stored) || 0);
-                    found.unit.cityFoodStored = found.unit.economy.foodStored;
-                }
             }
             if (result.ok) continue;
-            if (action.type == 'build' && found) this.clearRejectedWorkerBuild(playerId, Number(unitId));
+            if (action.type == 'build' && found) {
+                var handledRoadFailure = action.building_type == 'road'
+                    && typeof _current_game != 'undefined'
+                    && _current_game.completeRoadToBuild
+                    && _current_game.completeRoadToBuild(found.unit, false);
+                if (!handledRoadFailure) this.clearRejectedWorkerBuild(playerId, Number(unitId));
+            }
             if (action.type == 'build') this.landscapeRevisionByPlayer[playerId] = 0;
             if (action.type == 'select_production' || action.type == 'remove_production') {
                 this.unitRevisionByPlayer[playerId] = 0;
             }
+            if (action.type == 'optimize_city') this.unitRevisionByPlayer[playerId] = 0;
             var error = result.error || {};
-            this.log('Batched ' + (action.type || result.type || 'action') + ' rejected: '
-                + (error.message || error.code || 'unknown error'));
+            var rejectedMessage = 'Batched ' + (action.type || result.type || 'action') + ' rejected: '
+                + (error.message || error.code || 'unknown error');
+            this.log(rejectedMessage);
+            if (action.type == 'build' && playerId == _current_user && !hidden && !this.hiddenActions) {
+                var workerMessage = 'Worker #' + (unitId || '?') + ': '
+                    + (error.message || error.code || 'building was rejected');
+                if (typeof _one_turn_message != 'undefined') _one_turn_message = workerMessage;
+                if (typeof window != 'undefined' && typeof window.alert == 'function') window.alert(workerMessage);
+            }
         }
+        this.saveClientRoutes(playerId);
+    }
+
+    applyAuthoritativeBuildTile(tile)
+    {
+        if (!tile || tile.i == undefined || tile.j == undefined
+            || typeof _map_terrain_tex == 'undefined' || typeof _map_terrain_mod == 'undefined') return false;
+        var i = Number(tile.i);
+        var j = Number(tile.j);
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
+        _map_terrain_tex[i][j] = Number(tile.terrain_tex);
+        _map_terrain_mod[i][j] = Object.assign({}, tile.modifiers || {});
+        if (typeof _map != 'undefined' && _map.prepareTerrainModifierSprites) {
+            _map.prepareTerrainModifierSprites();
+        }
+        return true;
     }
 
     buildImprovement(worker, modifier)
@@ -766,6 +879,22 @@ const _server_game = new class
             worker_unit_id: worker.serverId,
             building_type: modifier,
         }, 'build:' + worker.serverId);
+        return Promise.resolve({ queued: true });
+    }
+
+    disbandUnit(unit)
+    {
+        if (!unit || !unit.serverId || !unit.can_move) {
+            return Promise.reject(new Error('Only an authoritative movable unit can be disbanded'));
+        }
+        if (unit.pendingDisband) return Promise.resolve({ queued: true });
+        unit.pendingDisband = true;
+        this.queueTurnAction(unit.team, 'disband_unit', {
+            unit_id: unit.serverId,
+        }, 'disband:' + unit.serverId);
+        var message = 'Unit #' + unit.serverId + ' will be disbanded at End Turn.';
+        this.log(message);
+        if (typeof _one_turn_message != 'undefined') _one_turn_message = message;
         return Promise.resolve({ queued: true });
     }
 
@@ -805,6 +934,19 @@ const _server_game = new class
             city_unit_id: city.serverId,
             queue_index: queueIndex,
         });
+        return Promise.resolve({ queued: true });
+    }
+
+    optimizeCity(city, optimization)
+    {
+        if (!city || !city.serverId) return Promise.reject(new Error('City has no authoritative server id'));
+        if (['food', 'production', 'gold'].indexOf(optimization) == -1) {
+            return Promise.reject(new Error('Unsupported City optimization'));
+        }
+        this.queueTurnAction(city.team, 'optimize_city', {
+            city_unit_id: city.serverId,
+            optimization: optimization,
+        }, 'optimize_city:' + city.serverId);
         return Promise.resolve({ queued: true });
     }
 
@@ -876,7 +1018,7 @@ const _server_game = new class
         // The waiting countdown and playable-turn countdown share timerId. Stop
         // the old owner before exposing the resolved turn, otherwise it can render
         // the deleted pending turn as NaN and expire without starting a new turn.
-        this.stopAwaitingCountdown();
+        this.stopAwaitingCountdown(true);
         if (this.pollIds[playerId]) {
             clearTimeout(this.pollIds[playerId]);
             delete this.pollIds[playerId];
@@ -895,13 +1037,13 @@ const _server_game = new class
         return true;
     }
 
-    stopAwaitingCountdown()
+    stopAwaitingCountdown(preserveDeadline)
     {
         if (this.timerMode != 'waiting') return;
         if (this.timerId) clearInterval(this.timerId);
         this.timerId = null;
         this.timerMode = null;
-        this.deadlineAt = null;
+        if (!preserveDeadline) this.deadlineAt = null;
     }
 
     updateWaitingUi(playerId)
@@ -1191,6 +1333,7 @@ const _server_game = new class
         if (result.player_state && typeof _game_state_by_user != 'undefined') {
             if (!_game_state_by_user[viewerId]) _game_state_by_user[viewerId] = new GameState();
             Object.assign(_game_state_by_user[viewerId], result.player_state);
+            _game_state_by_user[viewerId].serverEconomyLoaded = true;
             _game_state_by_user[viewerId].grantAllTechnologies();
             if (_current_user == viewerId) _game_state = _game_state_by_user[viewerId];
             var hiddenSnapshot = typeof _multiplayer != 'undefined'
@@ -1241,7 +1384,8 @@ const _server_game = new class
             if (!found) _units_by_user[update.owner_id].push(unit);
             if (update.owner_id != viewerId) this.setUnitVisibilityForViewer(unit, viewerId, true);
             var ownUnit = update.owner_id == viewerId;
-            var storedRoute = ownUnit ? this.storedClientRoute(viewerId, unit) : null;
+            var storedRoute = ownUnit
+                ? this.storedClientRoute(viewerId, unit, update.id, update.client_key) : null;
             var localGotoPath = ownUnit && unit.gotoPath && unit.gotoPath.length
                 ? unit.gotoPath.map(function(point) { return new Coord(point.i, point.j); })
                 : storedRoute && storedRoute.path
@@ -1258,6 +1402,18 @@ const _server_game = new class
                 ? unit.interactionIntent : storedRoute ? storedRoute.interaction_intent : null;
             var localInteractionTarget = ownUnit && unit.interactionTargetOwnerId != undefined
                 ? unit.interactionTargetOwnerId : storedRoute ? storedRoute.target_owner_id : null;
+            var localAutomationMode = ownUnit && unit.automationMode
+                ? unit.automationMode : storedRoute ? storedRoute.automation_mode : null;
+            var localRoadToBuilding = ownUnit && unit.roadToBuilding != undefined
+                ? !!unit.roadToBuilding : !!(storedRoute && storedRoute.road_to_building);
+            var localImprovementTurns = ownUnit && Number.isFinite(Number(unit.clientImprovementTurnsLeft))
+                ? Number(unit.clientImprovementTurnsLeft)
+                : storedRoute && Number.isFinite(Number(storedRoute.improvement_turns_left))
+                    ? Number(storedRoute.improvement_turns_left) : null;
+            var localImprovementState = ownUnit ? this.activeWorkerModifier(unit) : null;
+            if (!localImprovementState && storedRoute && storedRoute.improvement_state) {
+                localImprovementState = storedRoute.improvement_state;
+            }
             unit.serverId = update.id;
             unit.serverClientKey = update.client_key || unit.serverClientKey;
             unit.team = update.owner_id;
@@ -1277,10 +1433,24 @@ const _server_game = new class
             unit.maxHealth = update.max_health;
             unit.experience = update.experience;
             unit.move_penalty = update.move_penalty;
+            unit.automationMode = localAutomationMode;
             var properties = update.properties || {};
             for (var key in properties) {
-                if (key == 'gotoPath' || key == 'gotoCoord' || key == 'pendingServerPath') continue;
+                if (key == 'gotoPath' || key == 'gotoCoord' || key == 'pendingServerPath'
+                    || key == 'automationMode' || key == 'roadToBuilding'
+                    || key == 'automateTarget' || key == 'automateBuild'
+                    || key == 'clientImprovementTurnsLeft' || key == 'pendingImmediateBuild') continue;
                 unit[key] = properties[key];
+            }
+            if (ownUnit && localAutomationMode == 'road_to') {
+                unit.roadToBuilding = localRoadToBuilding;
+            }
+            if (ownUnit && localImprovementState && localImprovementTurns != null) {
+                unit.state = localImprovementState == 'irrigation' ? 'irrigate' : localImprovementState;
+                unit.clientImprovementTurnsLeft = Math.max(0, localImprovementTurns);
+            }
+            else {
+                delete unit.clientImprovementTurnsLeft;
             }
             if (ownUnit && localGotoPath.length) {
                 var reachedIndex = -1;
@@ -1384,6 +1554,9 @@ const _server_game = new class
             if (typeof _unit_stack_menu != 'undefined' && _unit_stack_menu.refresh) {
                 _unit_stack_menu.refresh();
             }
+            if (typeof _current_game != 'undefined' && _current_game.applyMenuRules) {
+                _current_game.applyMenuRules();
+            }
         }
     }
 
@@ -1478,3 +1651,7 @@ const _server_game = new class
         if (typeof console != 'undefined' && console.log) console.log(message);
     }
 }();
+
+if (typeof module != 'undefined' && module.exports) {
+    module.exports = { serverGame: _server_game };
+}

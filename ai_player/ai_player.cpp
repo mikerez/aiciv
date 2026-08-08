@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 
@@ -640,6 +641,36 @@ OutputSignal DensePerceptronEngine::forwardFromHidden(const std::vector<float>& 
     return output;
 }
 
+void DensePerceptronEngine::loadBinary(const std::string& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        throw std::runtime_error("could not read model database: " + path);
+    }
+    BinaryModelHeader header{};
+    in.read(reinterpret_cast<char*>(&header), sizeof(header));
+    if (!in || std::string(header.magic, header.magic + 7) != "AICIVAI"
+        || header.version != 2 || header.layer_count != kLayerCount
+        || header.activation != 1 || header.weight_layout != 1
+        || header.reserved[0] != static_cast<uint32_t>(layers_[0].inputWidth)
+        || header.reserved[1] != kOutputWidth) {
+        throw std::runtime_error("unsupported model database: " + path);
+    }
+    for (int layer = 0; layer < kLayerCount; ++layer) {
+        Layer& current = layers_[layer];
+        if (header.reserved[2 + layer] != static_cast<uint32_t>(current.outputWidth)) {
+            throw std::runtime_error("model layer width mismatch: " + path);
+        }
+        in.read(reinterpret_cast<char*>(current.weights.data()),
+                static_cast<std::streamsize>(current.weights.size() * sizeof(float)));
+        in.read(reinterpret_cast<char*>(current.bias.data()),
+                static_cast<std::streamsize>(current.bias.size() * sizeof(float)));
+    }
+    if (!in || in.peek() != std::ifstream::traits_type::eof()) {
+        throw std::runtime_error("model database size mismatch: " + path);
+    }
+}
+
 void DensePerceptronEngine::saveBinary(const std::string& path) const
 {
     std::ofstream out(path, std::ios::binary);
@@ -918,9 +949,14 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
     if (sharedCandidateScorer_) {
         const float candidateLearningRate = std::min(learningRate, 0.005f);
         TrainingReport report;
+        std::vector<size_t> order(examples.size());
+        std::iota(order.begin(), order.end(), 0);
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             float trainLoss = 0.0f;
-            for (const TrainingExample& example : examples) {
+            std::mt19937 shuffleGenerator(0xA1C1u + static_cast<uint32_t>(epoch));
+            std::shuffle(order.begin(), order.end(), shuffleGenerator);
+            for (size_t exampleIndex : order) {
+                const TrainingExample& example = examples[exampleIndex];
                 if (schema_.kind == EngineKind::Action) {
                     trainLoss += network_.trainSharedCandidateScores(example, candidateLearningRate);
                     trainLoss += network_.trainDecisionSlots(example, candidateLearningRate * 4.0f);
@@ -975,9 +1011,14 @@ TrainingReport AIEngine::train(const std::vector<TrainingExample>& examples, int
     };
 
     TrainingReport report;
+    std::vector<size_t> order(cached.size());
+    std::iota(order.begin(), order.end(), 0);
     for (int epoch = 1; epoch <= epochs; ++epoch) {
         float loss = 0.0f;
-        for (const CachedExample& item : cached) {
+        std::mt19937 shuffleGenerator(0xA1C1u + static_cast<uint32_t>(epoch));
+        std::shuffle(order.begin(), order.end(), shuffleGenerator);
+        for (size_t exampleIndex : order) {
+            const CachedExample& item = cached[exampleIndex];
             loss += network_.trainDecisionSlotsFromHidden(*item.example, item.hidden, learningRate);
         }
         report = evaluateCached();

@@ -15,7 +15,8 @@ const expected = [
 
 for (const [id, name, unitClass, texture, attack, defense, speed, view, technology, cost, nature] of expected) {
     const resource = id === 'frigate' || id === 'pikeman' || id === 'swordsman' ? "'Iron'"
-        : id === 'knight' ? "'Horses'" : 'null';
+        : id === 'knight' ? "'Horses'"
+        : id === 'fencer' ? "'Copper or Iron'" : 'null';
     const natureArguments = nature === 'water' ? ", true, 'water'" : '';
     const definition = `new UnitType('${id}', '${name}', ${unitClass}, ${texture}, ${attack}, ${defense}, ${speed}, ${view}, '${technology}', ${cost}, ${resource}${natureArguments})`;
     assert.ok(source.includes(definition), `missing client definition for ${id}`);

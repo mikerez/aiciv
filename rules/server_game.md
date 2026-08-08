@@ -4,7 +4,7 @@
 
 `SERVER-GAME-001`: The browser keeps speculative local map and unit arrays for immediate rendering. `server_game.php` stores the authoritative shared map, units, fog, turn orders, and collision results. A server update overrides conflicting local state.
 
-`SERVER-GAME-002`: Every gameplay request contains the development `secret`, `game_id`, `player_id`, and a supported action such as `make_turn`, update requests, `build`, `build_city`, `grow_city`, `heal_units`, or `select_production`. A registered player also supplies the current account session by JSON `access_token`, Bearer authorization, or game cookie, plus the logged-in human `user_id`. Development administration additionally provides `map_diagnostics`, `regenerate_map`, and confirmed `reset_game`.
+`SERVER-GAME-002`: Every gameplay request contains the development `secret`, `game_id`, `player_id`, and a supported action such as `make_turn`, update requests, `build`, `build_city`, `grow_city`, `heal_units`, `disband_unit`, or `select_production`. A registered player also supplies the current account session by JSON `access_token`, Bearer authorization, or game cookie, plus the logged-in human `user_id`. Development administration additionally provides `map_diagnostics`, `regenerate_map`, and confirmed `reset_game`.
 
 `SERVER-GAME-002C`: `user_id` must equal the authenticated human session. `player_id` is the acting account and must identify either that human or an AI whose `parent_id` is that human. This permits one client to submit two independent player turns without permitting it to control unrelated players.
 
@@ -102,17 +102,19 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-PRODUCTION-001`: Every newly produced unit starts with `100` health, `100` maximum health, and `1.0` experience, and the client replaces its local values with the server response.
 
-`SERVER-ORDER-004`: Worker buildings and terrain improvements use the immediate `build` request with `worker_unit_id` and `building_type` as soon as the command is selected or captured. The server locks the tile, validates the Worker and terrain, creates the nonmoving building in `server_game_units`, resets the Worker state, and updates the tile modifier in one transaction. Only the first request can occupy a tile; a later duplicate returns `ALREADY_BUILT` and releases its Worker without creating another improvement.
+`SERVER-ORDER-004`: Worker buildings and terrain improvements use the immediate `build` request with `worker_unit_id` and `building_type` as soon as the command is selected or captured. The server locks the tile, validates the Worker and terrain, creates the nonmoving building in `server_game_units`, resets the Worker state, and updates the tile modifier in one transaction. Repeating the same improvement returns `ALREADY_BUILT`; building a different primary improvement atomically removes the previous one. Road uses independent occupancy and coexists with the primary improvement.
 
 `SERVER-ORDER-005`: Drawing or assigning a route saves the complete route in browser storage. Incremental server polling cannot erase it. Turn capture sends only the next speed-limited atomic segment; PHP never stores the remaining route.
 
 `SERVER-ORDER-006`: If a speculative or stale client submits a route whose first point is no longer adjacent to the authoritative unit coordinate, the server computes a legal route from its stored coordinate to the submitted destination. It applies only the unit's allowed steps and saves the remainder. A stale client path is not treated as permission to jump, and it is not rejected as an apparent rollback when the destination remains reachable.
 
-`SERVER-ORDER-007`: `build_city` is immediate and atomic. It validates an owned living Settler on land, creates one City with road and irrigation on that tile, and marks the Settler deleted in the same server revision. A tile cannot contain two living cities.
+`SERVER-ORDER-007`: `build_city` is immediate and atomic. It validates an owned living Settler on land, splits a supertile when needed, automatically chops forest without a production award, creates one City with road and irrigation on that tile, and marks the Settler deleted in the same server revision. A tile cannot contain two living cities.
 
 `SERVER-ORDER-008`: `select_production` appends a validated unit type to an owned City's production backlog. A null unit type clears the backlog while preserving accumulated production. `remove_production` removes one validated queue index.
 
 `SERVER-ORDER-009`: Every resolved turn adds the City's authoritative `productionPerTurn` to the first backlog item. The browser sends `complete_production` when it observes enough points; PHP rechecks ownership, budget, points, cost, and spawn location, creates the unit, subtracts cost, and advances the queue.
+
+`SERVER-ORDER-010`: `disband_unit` locks and validates an owned movable non-City unit, sets its health to zero, clears occupancy, and returns its authoritative deleted state. The browser normally includes this operation in the aggregated End Turn action list.
 
 `SERVER-ORDER-009A`: If five movable units occupy the producing City's Tile, `complete_production` returns HTTP 200 with `status: "PAUSE"`, preserves all production points and backlog state, and provides a later retry turn. The JS client does not treat this as an error and retries after the indicated turn.
 

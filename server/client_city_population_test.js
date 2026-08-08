@@ -54,9 +54,14 @@ assert.equal(city.economy.lastIncome.money, -1, "signed authoritative Workshop g
 
 const candidateCity = {coord: new Coord(1, 1)};
 const candidateKeys = new Set(economy.economicTileCandidates(candidateCity).map((coord) => `${coord.i}:${coord.j}`));
-assert(candidateKeys.has("3:1"), "nearby Tile must be eligible without a road");
+assert(candidateKeys.has("3:1"), "a road-connected Tile must be eligible");
 assert(candidateKeys.has("6:1"), "continuous roads must extend the City's economic reach");
+assert(candidateKeys.has("2:2"), "an adjacent unroaded Tile must contribute");
+assert(!candidateKeys.has("2:3"), "non-adjacent unroaded land must not contribute");
 assert(!candidateKeys.has("10:10"), "remote disconnected Tile must not contribute");
+modifiers[2][2].network = true;
+const networkKeys = new Set(economy.economicTileCandidates(candidateCity).map((coord) => `${coord.i}:${coord.j}`));
+assert(networkKeys.has("2:2"), "a nearby Tile with Nets must contribute without a road");
 
 const ruinedCity = {
     type: 3, unitTypeId: "city", name: "City", texture: 602, can_move: false,

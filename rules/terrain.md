@@ -46,6 +46,7 @@ Terrain is stored as one byte per map cell:
 - `S` marks terrain that belongs to a 4-cell supertile of similar type.
 - Supertiles are used by map enhancement/rendering to select larger or combined terrain textures.
 - The supertile is formed from neighboring cells of compatible terrain type and compatible `D1 D0` level.
+- `TERRAIN-SUPER-001`: Before one member of a 4-cell supertile is modified, the full supertile is split back into four ordinary terrain cells; the requested change then applies only to its target cell.
 - `A` marks an alternative visual variant of the same terrain data. For water-related terrain, `A` also indicates that a water source exists.
 - `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
 
@@ -56,4 +57,5 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-MOD-003`: Roads are drawn as `images/road.png` overlays above terrain.
 - `TERRAIN-MOD-004`: Irrigation is drawn as `images/irrigation.png` overlays above terrain.
 - `TERRAIN-MOD-005`: Pasture, farm, plantation, camp, fishing boats, network, quarry, winery, fortification, cottage, hamlet, village, workshop, and mine are drawn as full `220x160` overlay sprites above terrain.
-- `TERRAIN-MOD-006`: Cottage uses `images/cottage.png` before 10 turns, `images/hamlet.png` from 10 turns, and `images/village.png` from 20 turns.
+- `TERRAIN-MOD-006`: Cottage uses `images/cottage.png` before 100 turns, `images/hamlet.png` from turn 100, and `images/village.png` from turn 200.
+- `TERRAIN-MOD-007`: A Tile can have one primary improvement. Building a different primary improvement removes the previous one; `road` is infrastructure and can coexist with any primary improvement.

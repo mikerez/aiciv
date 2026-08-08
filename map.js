@@ -147,6 +147,48 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         }
     }
 
+    supertileAnchorAt(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return null;
+        var isLowerTile = (_map_terrain_tex[i][j] & 0x40) != 0;
+        var candidates = isLowerTile
+            ? [[i - 1, j], [i - 1, j - 1], [i, j], [i, j - 1]]
+            : [[i, j], [i, j - 1], [i - 1, j], [i - 1, j - 1]];
+        for (var n=0; n < candidates.length; n++) {
+            var ai = candidates[n][0];
+            var aj = candidates[n][1];
+            if (ai < 0 || aj < 0 || ai + 1 >= _map_size || aj + 1 >= _map_size) continue;
+            var topLeft = _map_terrain_tex[ai][aj];
+            var topRight = _map_terrain_tex[ai][aj + 1];
+            var bottomLeft = _map_terrain_tex[ai + 1][aj];
+            var bottomRight = _map_terrain_tex[ai + 1][aj + 1];
+            var base = topLeft & 0x3F;
+            if ((bottomLeft & 0x40) == 0 || (bottomRight & 0x40) == 0) continue;
+            if ((topRight & 0x3F) != base || (bottomLeft & 0x3F) != base || (bottomRight & 0x3F) != base) continue;
+            return { i: ai, j: aj };
+        }
+        return null;
+    }
+
+    splitSupertileAt(i, j)
+    {
+        var anchor = this.supertileAnchorAt(i, j);
+        if (!anchor) return [];
+        var changed = [];
+        for (var di=0; di <= 1; di++) {
+            for (var dj=0; dj <= 1; dj++) {
+                var ti = anchor.i + di;
+                var tj = anchor.j + dj;
+                if ((_map_terrain_tex[ti][tj] & 0x40) != 0) {
+                    _map_terrain_tex[ti][tj] &= ~0x40;
+                }
+                changed.push({ i: ti, j: tj });
+            }
+        }
+        _fulldraw = 1;
+        return changed;
+    }
+
     prepareTerrainModifierSprites()
     {
         this.terrainModifierSprites = [];
@@ -166,7 +208,7 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 }
                 if (_map_terrain_mod[i][j].cottage) {
                     var cottageAge = _map_terrain_mod[i][j].cottageAge || 0;
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 60 ? 870 : (cottageAge >= 30 ? 869 : 854) });
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 200 ? 870 : (cottageAge >= 100 ? 869 : 854) });
                 }
                 if (_map_terrain_mod[i][j].workshop) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 855 });
@@ -204,12 +246,36 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || _map_terrain_mod[i][j][modifier]) {
             return false;
         }
+        if (modifier != 'road') this.replacePrimaryTerrainModifier(i, j, modifier);
         _map_terrain_mod[i][j][modifier] = true;
         this.prepareTerrainModifierSprites();
         if (typeof _economics !== 'undefined' && _economics.registerTerrainImprovement) {
             _economics.registerTerrainImprovement(modifier, i, j);
         }
         return true;
+    }
+
+    primaryTerrainModifiers()
+    {
+        return ['irrigation', 'pasture', 'fortification', 'cottage', 'workshop', 'mine', 'farm',
+            'plantation', 'camp', 'fishing_boats', 'quarry', 'winery', 'network'];
+    }
+
+    replacePrimaryTerrainModifier(i, j, replacement)
+    {
+        var modifiers = _map_terrain_mod[i][j];
+        var primary = this.primaryTerrainModifiers();
+        for (var n=0; n < primary.length; n++) {
+            var modifier = primary[n];
+            if (modifier == replacement || !modifiers[modifier]) continue;
+            modifiers[modifier] = false;
+            if (typeof _economics !== 'undefined' && _economics.removeTerrainImprovementUnitsAt) {
+                _economics.removeTerrainImprovementUnitsAt(i, j, modifier);
+            }
+        }
+        delete modifiers.cottageAge;
+        delete modifiers.cottageStage;
+        modifiers.irrigationCityFood = false;
     }
 
     hasTerrainModifier(i, j, modifier)
@@ -249,6 +315,7 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
             }
             return false;
         }
+        this.replacePrimaryTerrainModifier(i, j, 'irrigation');
         _map_terrain_mod[i][j].irrigation = true;
         _map_terrain_mod[i][j].irrigationCityFood = enablesFood;
         this.prepareTerrainModifierSprites();
@@ -345,10 +412,10 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 if (_map_terrain_mod[i][j].cottage) {
                     var previousAge = _map_terrain_mod[i][j].cottageAge || 0;
                     _map_terrain_mod[i][j].cottageAge = previousAge + 1;
-                    if (previousAge < 30 && _map_terrain_mod[i][j].cottageAge >= 30) {
+                    if (previousAge < 100 && _map_terrain_mod[i][j].cottageAge >= 100) {
                         changed = true;
                     }
-                    if (previousAge < 60 && _map_terrain_mod[i][j].cottageAge >= 60) {
+                    if (previousAge < 200 && _map_terrain_mod[i][j].cottageAge >= 200) {
                         changed = true;
                     }
                 }
@@ -451,9 +518,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
     {
         this.genMap(14, 20, 32, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 2, 0);  // grass
         this.genMap(10, 10, 4, 4, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 1, 1);  // sand
-        this.genMap(12, 2, 4, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks
-        this.genMap(16, 12, 6, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
-        this.genMap(40, 12, 12, 6, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 6, 1);  // forest
+        this.genMap(24, 12, 6, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
+        this.genMap(56, 12, 12, 6, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 6, 1);  // forest
+        this.genMap(20, 2, 4, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks/mountains
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[1]+(_map_view[3]-_map_view[1])/10, 3, 1);  // snow
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[3]-(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3], 3, 1);  // snow
         this.fixMap();  // before mod tiles

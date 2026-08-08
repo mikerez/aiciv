@@ -443,16 +443,21 @@ const _multiplayer = new class
 
     async submitHumanAndHiddenAiTurn(humanSubmission)
     {
-        var hiddenTurn = this.startBackgroundAiTurn(humanSubmission.turn);
         // The human atomic commands must enter the current server turn without
         // waiting for model inference, which can outlast the five-second window.
         var humanTurn = _server_game.submitTurn(humanSubmission, {
             deferUpdates: true,
             deferPolling: true,
         });
-        var settled = await Promise.allSettled([humanTurn, hiddenTurn]);
-        if (settled[0].status == 'rejected') throw settled[0].reason;
-        var result = settled[0].value;
+        // Start model work only after submitTurn has had a chance to begin its
+        // fetch. Some AI preparation runs synchronously before its first await.
+        var self = this;
+        Promise.resolve().then(function() {
+            return self.startBackgroundAiTurn(humanSubmission.turn);
+        }).catch(function(error) {
+            _server_game.log('Hidden AI turn failed after human submission: ' + error.message);
+        });
+        var result = await humanTurn;
         var update = await _server_game.loadUpdates(this.humanUserId);
         if (update.turn <= result.submitted_turn) {
             _server_game.pollForResolution(this.humanUserId, result.submitted_turn);

@@ -24,5 +24,13 @@ assert.doesNotMatch(layer, /productionPoints = city\.cityProperties\.productionS
     "client layer must not roll idle production into a task");
 assert.match(game, /city\.production = new CityProductionState\(city\.productionQueue\[0\]\);[\s\S]*?productionPoints = 0;/,
     "offline queue progression must start the next item from zero");
+assert.match(layer, /availableGold < this\.unitGoldUpkeep\(unitType\.id\)/,
+    "the City production menu must hide units whose one-turn gold upkeep is unaffordable");
+assert.match(php, /production_gold_upkeep_required/,
+    "the authoritative production endpoint must reject unaffordable gold upkeep");
+assert.match(php, /\$points = min\(\$cost, \(float\) \$production\['production_points'\] \+ \$perTurn\)/,
+    "ready production must be capped at its cost instead of accumulating hidden overflow");
+assert.match(php, /lastMoneyIncome[\s\S]*lastTechnologyExpense[\s\S]*lastAvailableMoney[\s\S]*lastScienceIncome/,
+    "turn submissions must preserve every server-authoritative economy summary field");
 
 console.log("PASS production points are isolated to one active backlog item");

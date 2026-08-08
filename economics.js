@@ -55,7 +55,7 @@ const _economics = new class
             workshop: {},
             mine: { production: 2.00 },
             fortification: {},
-            network: { food: 1.50 },
+            network: { food: 2.00 },
         };
     }
 
@@ -63,11 +63,11 @@ const _economics = new class
     {
         var table = {
             bananas:[2,0,0], cattle:[2,1,0], copper:[0,2,1], crabs:[2,0,1], deer:[1,1,0],
-            fish:[1,0,0], rice:[2,0,0], sheep:[1,1,0], stone:[0,2,0], wheat:[2,0,0],
+            fish:[2,0,0], rice:[2,0,0], sheep:[1,1,0], stone:[0,2,0], wheat:[2,0,0],
             amber:[0,0,1], citrus:[1,0,1], cotton:[0,0,1], dyes:[0,0,1], diamonds:[0,0,2],
             furs:[0,1,1], gypsum:[0,2,0], honey:[1,0,1], incense:[0,0,1], ivory:[0,1,1],
             marble:[0,2,1], olives:[1,0,1], pearls:[0,0,1], salt:[1,0,1], silk:[0,0,1],
-            silver:[0,0,1], spices:[1,0,1], sugar:[1,0,1], tea:[0,0,1], turtles:[1,0,1],
+            silver:[0,0,1], spices:[1,0,1], sugar:[1,0,1], tea:[0,0,1], turtles:[2,0,0],
             whales:[1,1,1], wine:[1,0,1], horses:[0,1,1], iron:[0,2,0], gold:[0,0,2], gems:[0,0,2]
         };
         var values = table[resourceId] || [0,0,0];
@@ -75,6 +75,9 @@ const _economics = new class
         var required = this.resourceImprovementRequirements()[resourceId];
         if ((required == 'plantation' || required == 'winery') && modifiers && modifiers[required]) {
             result.money = 2;
+        }
+        if (required == 'camp' && modifiers && modifiers.camp) {
+            result.money = Math.max(1, result.money);
         }
         return result;
     }
@@ -94,7 +97,7 @@ const _economics = new class
             var multipliers = table[improvement];
             if (improvement == 'cottage') {
                 var age = modifiers.cottageAge || 0;
-                multipliers = { money: age >= 60 ? 4 : (age >= 30 ? 3 : 2) };
+                multipliers = { money: age >= 200 ? 4 : (age >= 100 ? 3 : 2) };
             }
             for (var field in multipliers) {
                 income[field] = Math.ceil((income[field] || 0) * multipliers[field]);
@@ -112,7 +115,7 @@ const _economics = new class
             return;
         }
         gameState.money = gameState.money || 0;
-        gameState.food = gameState.food == undefined ? 100 : gameState.food;
+        gameState.food = gameState.food == undefined ? 200 : gameState.food;
         gameState.lastGrossMoneyIncome = gameState.lastGrossMoneyIncome || 0;
         gameState.lastMaintenance = gameState.lastMaintenance || 0;
         gameState.lastTechnologyExpense = gameState.lastTechnologyExpense || 0;
@@ -175,6 +178,23 @@ const _economics = new class
             _units.push(unit);
         }
         return unit;
+    }
+
+    removeTerrainImprovementUnitsAt(i, j, modifier)
+    {
+        if (typeof _units_by_user == 'undefined') return;
+        for (var team in _units_by_user) {
+            var list = _units_by_user[team] || [];
+            for (var k=list.length - 1; k >= 0; k--) {
+                var unit = list[k];
+                if (!unit || !unit.coord || unit.coord.i != i || unit.coord.j != j) continue;
+                if (unit.economicClass != 'terrain_improvement' || unit.improvementType != modifier) continue;
+                list.splice(k, 1);
+            }
+        }
+        if (typeof _current_user != 'undefined' && _units_by_user[_current_user]) {
+            _units = _units_by_user[_current_user];
+        }
     }
 
     syncTerrainImprovementUnits(team)
@@ -262,6 +282,7 @@ const _economics = new class
     {
         gameState = gameState || (typeof _game_state == 'undefined' ? null : _game_state);
         units = units || (typeof _units == 'undefined' ? [] : _units);
+        if (this.isServerAuthoritative(gameState)) return this.serverEconomyResult(gameState);
         var result = this.processTurnIncome(gameState, grossMoney, this.countMaintenance(units));
         this.applyNegativeBudgetPenalty(gameState, units);
         return result;
@@ -272,6 +293,7 @@ const _economics = new class
         if (!gameState) {
             return null;
         }
+        if (this.isServerAuthoritative(gameState)) return this.serverEconomyResult(gameState);
         this.ensureState(gameState);
         grossMoney = Math.max(0, Math.floor(grossMoney || 0));
         maintenance = Math.max(0, Math.floor(maintenance || 0));
@@ -293,6 +315,24 @@ const _economics = new class
             available: preview.available,
             science: preview.science,
             account: preview.account,
+        };
+    }
+
+    isServerAuthoritative(gameState)
+    {
+        return !!(gameState && typeof _authenticated_player_id != 'undefined'
+            && _authenticated_player_id != null && typeof _server_game != 'undefined');
+    }
+
+    serverEconomyResult(gameState)
+    {
+        return {
+            grossMoney: Number(gameState.lastGrossMoneyIncome) || 0,
+            maintenance: Number(gameState.lastMaintenance) || 0,
+            technology: Number(gameState.lastTechnologyExpense) || 0,
+            available: Number(gameState.lastAvailableMoney) || 0,
+            science: Number(gameState.lastScienceIncome) || 0,
+            account: Number(gameState.lastAccountIncome) || 0,
         };
     }
 
@@ -416,6 +456,8 @@ const _economics = new class
     {
         gameState = gameState || (typeof _game_state == 'undefined' ? null : _game_state);
         if (!gameState || typeof document == 'undefined') return;
+        if (typeof _authenticated_player_id != 'undefined' && _authenticated_player_id != null
+            && !gameState.serverEconomyLoaded) return;
         this.ensureState(gameState);
         var food = document.getElementById('foodCounterValue');
         var gold = document.getElementById('goldCounterValue');

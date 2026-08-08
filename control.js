@@ -97,17 +97,28 @@ const _control = new class
     drawGoto(i1, j1, i2, j2, k, existingContext)
     {
         var ctx = existingContext || _draw.clear();
-        var path = [];
-        this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
-//console.log(":::" + i + ":" + j)
-//                    _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), 514+arrow_num, _screenZoom);
-            path.push(new Coord(ni, nj));
-            _control.drawMovementArrow(ctx, i, j, arrow_num);
-        }, k, 30)
+        var path = this.drawGotoPath(ctx, i1, j1, i2, j2, k);
         _units[k].gotoPath = path;
         _units[k].gotoCoord = path.length ? path[path.length - 1] : null;
         _units[k].pendingServerPath = [];
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+    }
+
+    drawGotoPath(ctx, i1, j1, i2, j2, k)
+    {
+        var path = [];
+        this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
+            path.push(new Coord(ni, nj));
+            _control.drawMovementArrow(ctx, i, j, arrow_num);
+        }, k, 30);
+        return path;
+    }
+
+    drawGotoPreview(i1, j1, i2, j2, k, existingContext)
+    {
+        var ctx = existingContext || _draw.clear();
+        if (!existingContext) this.drawMovementOrders(ctx);
+        return this.drawGotoPath(ctx, i1, j1, i2, j2, k);
     }
 
     drawGotoGroup(indices, i2, j2)
@@ -118,6 +129,18 @@ const _control = new class
             var k = indices[n];
             if (!_units[k] || !_units[k].can_move || _units[k].type != 2) continue;
             this.drawGoto(_units[k].coord.i, _units[k].coord.j, i2, j2, k, ctx);
+        }
+    }
+
+    drawGotoGroupPreview(indices, i2, j2)
+    {
+        var ctx = _draw.clear();
+        this.drawMovementOrders(ctx);
+        indices = Array.isArray(indices) ? indices : [];
+        for (var n=0; n < indices.length; n++) {
+            var k = indices[n];
+            if (!_units[k] || !_units[k].can_move || _units[k].type != 2) continue;
+            this.drawGotoPreview(_units[k].coord.i, _units[k].coord.j, i2, j2, k, ctx);
         }
     }
 

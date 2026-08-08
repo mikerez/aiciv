@@ -21,10 +21,15 @@ vm.runInContext(fs.readFileSync('control.js', 'utf8') + '\nglobalThis.control = 
 const routeBefore = JSON.stringify(sandbox._units[0].gotoPath);
 const emptyHit = sandbox.control.click(9000, 9000, {i: 20, j: 20}, false, null);
 assert.equal(emptyHit, false);
-assert.equal(vm.runInContext('_selection', sandbox), 0, 'empty map click must preserve selection');
+assert.equal(vm.runInContext('_selection', sandbox), 0, 'hit testing preserves selection until pointer release classifies the gesture');
 assert.equal(JSON.stringify(sandbox._units[0].gotoPath), routeBefore, 'empty map click must preserve Goto');
 
 const unitHit = sandbox.control.click(505, 495, {i: 5, j: 5}, false, null);
 assert.equal(unitHit, true);
 assert.equal(vm.runInContext('_selection', sandbox), 1, 'clicking another unit must select it');
-console.log('PASS empty-map click preserves selection and Goto while unit clicks still select');
+const html = fs.readFileSync('index.html', 'utf8');
+assert.match(html, /_pending_ground_tap = !unitSelected/,
+    'ground taps must be tracked separately from map drags');
+assert.match(html, /groundTap && !groundTap\.moved[\s\S]*?clearGameSelection\(\)/,
+    'a released stationary ground tap must clear selection like Escape');
+console.log('PASS ground release clears selection without treating a map drag as a click');

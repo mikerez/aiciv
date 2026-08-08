@@ -55,8 +55,12 @@ void printWrongExamples(const Engine& engine, const std::vector<TrainingExample>
 
 template <typename Engine>
 void runEngine(Engine& engine, const std::vector<TrainingExample>& examples, const std::string& sourcePath,
-               const std::string& modelPath, int epochs, float learningRate)
+               const std::string& modelPath, int epochs, float learningRate, bool resume)
 {
+    if (resume) {
+        engine.loadModel(modelPath);
+        std::cout << "Resuming " << engine.schema().name << " from " << modelPath << "\n";
+    }
     printSchema(engine.schema(), std::cout);
     printExampleNotes(engine.schema().name, examples);
     std::cout << "\nTraining " << engine.schema().name << " on " << examples.size()
@@ -125,13 +129,19 @@ std::string joinPaths(const std::vector<std::string>& paths)
 
 std::vector<TrainingExample> loadActionSituationSet(std::string& usedPath)
 {
-    try {
-        usedPath = "ai_player/action-runtime.situations";
-        return loadTrainingExamples(usedPath);
-    } catch (const std::runtime_error&) {
-    }
     std::vector<TrainingExample> examples;
     std::vector<std::string> usedPaths;
+    try {
+        appendExamples(examples, loadTrainingExamples("ai_player/action-runtime.situations"));
+        usedPaths.push_back("ai_player/action-runtime.situations");
+    } catch (const std::runtime_error&) {
+    }
+    tryLoadInto("ai_player/action-feedback.situations", "action-feedback.situations", examples, usedPaths);
+    if (!examples.empty() && !usedPaths.empty()
+        && usedPaths.front().find("action-runtime.situations") != std::string::npos) {
+        usedPath = joinPaths(usedPaths);
+        return examples;
+    }
     const std::vector<std::string> splitNames = {
         "action-bootstrap.situations",
         "action-settlers.situations",
@@ -245,6 +255,8 @@ int main(int argc, char** argv)
     if (argc > 3) {
         engineFilter = argv[3];
     }
+    const bool resume = argc > 4 && std::string(argv[4]) == "--resume";
+    const bool skipTests = argc > 5 && std::string(argv[5]) == "--skip-tests";
 
     StrategyEngine strategy;
     ActionEngine action;
@@ -254,7 +266,7 @@ int main(int argc, char** argv)
     std::string actionPath;
     std::string economicsPath;
     std::vector<TrainingExample> strategyExamples =
-        loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations", "strategy-landscape.situations", "strategy-budget.situations", "strategy-workers.situations" },
+        loadSplitSituationSet({ "strategy.situations", "strategy-demands.situations", "strategy-technology.situations", "strategy-landscape.situations", "strategy-budget.situations", "strategy-workers.situations", "strategy-feedback.situations" },
                               "strategy.situations", strategyPath);
     std::vector<TrainingExample> actionExamples = loadActionSituationSet(actionPath);
     const std::vector<std::string> actionTestPaths = {
@@ -277,32 +289,43 @@ int main(int argc, char** argv)
     };
     economicsPath = "ai_player/economics-runtime.situations";
     std::vector<TrainingExample> economicsExamples = makeEconomicsSimulationTrainingExamples(economicsTestPaths);
+    try {
+        appendExamples(economicsExamples, loadTrainingExamples("ai_player/economics-feedback.situations"));
+        economicsPath += ", ai_player/economics-feedback.situations";
+    } catch (const std::runtime_error&) {
+    }
 
     if (engineFilter == "all" || engineFilter == "strategy") {
-        runEngine(strategy, strategyExamples, strategyPath, modelPathBesideSituations(strategyPath, "strategy"), epochs, learningRate);
-        const StrategyTestSummary strategyTests = runStrategyTests(strategy, {
-            "ai_player/strategy-technology.test",
-            "ai_player/strategy-landscape.test",
-            "ai_player/strategy-budget.test",
-            "ai_player/strategy-workers.test",
-            "ai_player/strategy-demands.test",
-        }, std::cout);
-        if (strategyTests.passed != strategyTests.total) {
-            return 4;
+        runEngine(strategy, strategyExamples, strategyPath, modelPathBesideSituations(strategyPath, "strategy"), epochs, learningRate, resume);
+        if (!skipTests) {
+            const StrategyTestSummary strategyTests = runStrategyTests(strategy, {
+                "ai_player/strategy-technology.test",
+                "ai_player/strategy-landscape.test",
+                "ai_player/strategy-budget.test",
+                "ai_player/strategy-workers.test",
+                "ai_player/strategy-demands.test",
+            }, std::cout);
+            if (strategyTests.passed != strategyTests.total) {
+                return 4;
+            }
         }
     }
     if (engineFilter == "all" || engineFilter == "action") {
-        runEngine(action, actionExamples, actionPath, modelPathBesideSituations(actionPath, "action"), epochs, learningRate);
-        const ActionTestSummary actionTests = runActionTests(action, actionTestPaths, std::cout);
-        if (actionTests.passed != actionTests.total) {
-            return 2;
+        runEngine(action, actionExamples, actionPath, modelPathBesideSituations(actionPath, "action"), epochs, learningRate, resume);
+        if (!skipTests) {
+            const ActionTestSummary actionTests = runActionTests(action, actionTestPaths, std::cout);
+            if (actionTests.passed != actionTests.total) {
+                return 2;
+            }
         }
     }
     if (engineFilter == "all" || engineFilter == "economics") {
-        runEngine(economics, economicsExamples, economicsPath, modelPathBesideSituations(economicsPath, "economics"), epochs, learningRate);
-        const EconomicsTestSummary economicsTests = runEconomicsTests(economics, economicsTestPaths, std::cout);
-        if (economicsTests.passed != economicsTests.total) {
-            return 3;
+        runEngine(economics, economicsExamples, economicsPath, modelPathBesideSituations(economicsPath, "economics"), epochs, learningRate, resume);
+        if (!skipTests) {
+            const EconomicsTestSummary economicsTests = runEconomicsTests(economics, economicsTestPaths, std::cout);
+            if (economicsTests.passed != economicsTests.total) {
+                return 3;
+            }
         }
     }
 
