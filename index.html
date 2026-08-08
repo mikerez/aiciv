@@ -292,9 +292,9 @@
         </div>
     </div>
     <div id="turnControls">
-        <div id="foodCounter" class="economy-counter" title="Food storage"><span id="foodCounterValue">100</span></div>
+        <div id="foodCounter" class="economy-counter" title="Food storage"><span id="foodCounterValue">-</span></div>
         <button id="endTurnButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">End Turn (6s)</button>
-        <div id="goldCounter" class="economy-counter" title="Gold storage"><span id="goldCounterValue">500</span></div>
+        <div id="goldCounter" class="economy-counter" title="Gold storage"><span id="goldCounterValue">-</span></div>
     </div>
     <button id="logoutButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Log Out</button>
     <script>
@@ -320,7 +320,7 @@
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
     <script src="mobile_ui.js?v=20260805i"></script>
-    <script src="menu_unit.js?v=20260807e"></script>
+    <script src="menu_unit.js?v=20260807h"></script>
     <script src="draw.js?v=20260806d"></script>
     <script src="control.js?v=20260807f"></script>
     <script src="birdsview.js?v=20260805a"></script>
@@ -334,13 +334,13 @@
             });
         }
     </script>
-    <script src="game.js?v=20260807f"></script>
+    <script src="game.js?v=20260807j"></script>
     <script src="military.js?v=20260807e"></script>
-    <script src="economics.js?v=20260807e"></script>
+    <script src="economics.js?v=20260807j"></script>
     <script src="multiplayer.js?v=20260807b"></script>
-    <script src="server_game.js?v=20260807f"></script>
-    <script src="city.js?v=20260807e"></script>
-    <script src="menu_tile.js?v=20260807e"></script>
+    <script src="server_game.js?v=20260808a"></script>
+    <script src="city.js?v=20260807i"></script>
+    <script src="menu_tile.js?v=20260807f"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
     <script src="menu_technology.js"></script>
@@ -353,7 +353,7 @@
     <script src="game_events.js?v=20260805b"></script>
     <script src="menu_stack.js?v=20260807f"></script>
     <script src="menu_civilizations.js?v=20260807e"></script>
-    <script src="map.js?v=20260807e"></script>
+    <script src="map.js?v=20260807h"></script>
     <script src="screen.js?v=20260807d"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
@@ -459,7 +459,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260807f"></script>
+    <script src="game_prehistory.js?v=20260808a"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
@@ -481,6 +481,11 @@
         var _last_hover_coord = null;
         var _pending_phone_action_tap = null;
         var _pending_phone_map_command_tap = null;
+        var _phone_touch_context = null;
+        var _last_phone_tap = null;
+        var _suppress_phone_touch_end = false;
+        var _pending_ground_tap = null;
+        var _map_pinch = null;
         var _turn_in_progress = 0;
         var _step = 0;
         var _in_drawing = 0;
@@ -510,6 +515,21 @@
         function isGameInputTarget(target)
         {
             return target == _canvas || target == document.getElementById('canvas2D') || target == document.body || target == window;
+        }
+
+        function clearGameSelection()
+        {
+            if (typeof hideMainMenus === 'function') hideMainMenus();
+            _selection = -1;
+            _multi_selection = [];
+            _selection_by_user[_current_user] = -1;
+            if (typeof _prehistory_command_mode !== 'undefined') _prehistory_command_mode = null;
+            if (typeof _unit_stack_menu !== 'undefined') _unit_stack_menu.hide();
+            if (typeof _menu_tile !== 'undefined') _menu_tile.hide();
+            _current_game.applyMenuRules();
+            _draw.clear();
+            _fulldraw = 1;
+            drawScene(0);
         }
 
         async function endTurn(forcedByTimeout)
@@ -611,17 +631,78 @@
             return event;
         }
 
-        function handlePointerDown(event) {
-            if (!isGameInputTarget(event.target)) {
-                return;
+        function cancelGamePointerForPinch()
+        {
+            _mousedown = 0;
+            _dragging_unit_path = 0;
+            _dragging_unit_path_moved = 0;
+            _panning_map = 0;
+            _last_pointer_point = null;
+            _pending_ground_tap = null;
+            _pending_phone_action_tap = null;
+            _pending_phone_map_command_tap = null;
+            _phone_touch_context = null;
+        }
+
+        function touchCenterAndDistance(touches)
+        {
+            var first = touches[0];
+            var second = touches[1];
+            var dx = second.clientX - first.clientX;
+            var dy = second.clientY - first.clientY;
+            return {
+                clientX: (first.clientX + second.clientX) / 2,
+                clientY: (first.clientY + second.clientY) / 2,
+                distance: Math.max(1, Math.sqrt(dx*dx + dy*dy)),
+            };
+        }
+
+        function setMapZoomAtPoint(zoom, point, mapCoord)
+        {
+            _screenZoom = Math.max(1, Math.min(5, zoom));
+            _screenOffsetX = (
+                mapCoord.i*_cell_height + mapCoord.j*_cell_width - Xtox1(point.x)*_screenZoom
+            )/(2*_ratio);
+            _screenOffsetY = (
+                mapCoord.i*_cell_height - mapCoord.j*_cell_width - Ytoy1(point.y)*_screenZoom
+            )/(2*_ratio);
+            _draw.clear();
+            _fulldraw = 1;
+            if (!_in_drawing) drawScene(0);
+        }
+
+        function useMapPinch(event)
+        {
+            if (event.type.indexOf('touch') !== 0) return false;
+            if (event.touches && event.touches.length >= 2) {
+                event.preventDefault();
+                var gesture = touchCenterAndDistance(event.touches);
+                var centerInput = {clientX: gesture.clientX, clientY: gesture.clientY};
+                if (!_map_pinch) {
+                    cancelGamePointerForPinch();
+                    _map_pinch = {
+                        distance: gesture.distance,
+                        zoom: _screenZoom,
+                        mapCoord: eventToMapCoord(centerInput),
+                    };
+                }
+                var point = eventToCanvas(centerInput);
+                setMapZoomAtPoint(
+                    _map_pinch.zoom * _map_pinch.distance / gesture.distance,
+                    point,
+                    _map_pinch.mapCoord
+                );
+                return true;
             }
+            if (!_map_pinch) return false;
             event.preventDefault();
-            const input = primaryInput(event);
-            const point = eventToCanvas(input);
-            const coord = eventToMapCoord(input);
-            _last_hover_coord = coord;
-            if (event.button == 2 && _selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
-                _menu_tile.show(coord.i, coord.j);
+            if (!event.touches || event.touches.length == 0) _map_pinch = null;
+            return true;
+        }
+
+        function applySecondaryMapAction(coord)
+        {
+            if (_selection != -1 && _units[_selection] != undefined && _units[_selection].can_move) {
                 if (_current_game.prepareManualMovement) {
                     _current_game.prepareManualMovement(_selection);
                 }
@@ -636,8 +717,57 @@
                 }
                 return;
             }
+            _menu_tile.show(coord.i, coord.j);
+        }
+
+        function handlePointerDown(event) {
+            if (useMapPinch(event)) return;
+            if (!isGameInputTarget(event.target)) {
+                return;
+            }
+            event.preventDefault();
+            const input = primaryInput(event);
+            const point = eventToCanvas(input);
+            const coord = eventToMapCoord(input);
+            _last_hover_coord = coord;
+            if (event.button != 2 && typeof _menu_tile != 'undefined') _menu_tile.hide();
+            var phoneTouch = event.type === 'touchstart' && document.body.classList.contains('phone-ui');
+            if (phoneTouch && _last_phone_tap) {
+                var doubleTapRect = _canvas.getBoundingClientRect();
+                var doubleTapDistance = 28*_canvas.width/Math.max(1, doubleTapRect.width);
+                var doubleTapDx = point.x - _last_phone_tap.x;
+                var doubleTapDy = point.y - _last_phone_tap.y;
+                if (Date.now() - _last_phone_tap.time <= 360
+                    && doubleTapDx*doubleTapDx + doubleTapDy*doubleTapDy <= doubleTapDistance*doubleTapDistance) {
+                    _selection = _last_phone_tap.selection;
+                    if (typeof _multi_selection != 'undefined') {
+                        _multi_selection = _last_phone_tap.multiSelection.slice();
+                    }
+                    if (typeof _selection_by_user != 'undefined') _selection_by_user[_current_user] = _selection;
+                    _last_phone_tap = null;
+                    _phone_touch_context = null;
+                    _pending_phone_action_tap = null;
+                    _pending_phone_map_command_tap = null;
+                    _mousedown = 0;
+                    _dragging_unit_path = 0;
+                    _panning_map = 0;
+                    _suppress_phone_touch_end = true;
+                    applySecondaryMapAction(coord);
+                    drawScene(0);
+                    return;
+                }
+            }
+            if (phoneTouch) {
+                _phone_touch_context = {
+                    x: point.x,
+                    y: point.y,
+                    moved: false,
+                    selection: _selection,
+                    multiSelection: typeof _multi_selection != 'undefined' ? _multi_selection.slice() : []
+                };
+            }
             if (event.button == 2) {
-                _menu_tile.show(coord.i, coord.j);
+                applySecondaryMapAction(coord);
                 return;
             }
             var deferPhoneMapCommand = event.type === 'touchstart'
@@ -668,6 +798,12 @@
                 Xtox1(point.x), Ytoy1(point.y), coord, event.detail >= 2,
                 deferPhoneStack ? point : null
             );
+            _pending_ground_tap = !unitSelected ? {
+                x: point.x,
+                y: point.y,
+                moved: false
+            } : null;
+            if (_phone_touch_context) _phone_touch_context.unitSelected = unitSelected;
             if (deferPhoneStack) {
                 if (_current_game.dismissActionMenu) {
                     _current_game.dismissActionMenu();
@@ -712,6 +848,7 @@
         }
 
         function handlePointerMove(event) {
+            if (useMapPinch(event)) return;
             if (!_mousedown && !isGameInputTarget(event.target)) {
                 return;
             }
@@ -719,6 +856,26 @@
             const point = eventToCanvas(input);
             const coord = eventToMapCoord(input);
             _last_hover_coord = coord;
+            if (_phone_touch_context) {
+                var phoneMoveRect = _canvas.getBoundingClientRect();
+                var phoneMoveThreshold = 12*_canvas.width/Math.max(1, phoneMoveRect.width);
+                var phoneMoveDx = point.x - _phone_touch_context.x;
+                var phoneMoveDy = point.y - _phone_touch_context.y;
+                if (phoneMoveDx*phoneMoveDx + phoneMoveDy*phoneMoveDy
+                    >= phoneMoveThreshold*phoneMoveThreshold) {
+                    _phone_touch_context.moved = true;
+                }
+            }
+            if (_pending_ground_tap) {
+                var groundTapRect = _canvas.getBoundingClientRect();
+                var groundTapThreshold = 12*_canvas.width/Math.max(1, groundTapRect.width);
+                var groundTapDx = point.x - _pending_ground_tap.x;
+                var groundTapDy = point.y - _pending_ground_tap.y;
+                if (groundTapDx*groundTapDx + groundTapDy*groundTapDy
+                    >= groundTapThreshold*groundTapThreshold) {
+                    _pending_ground_tap.moved = true;
+                }
+            }
             if (_pending_phone_map_command_tap) {
                 var commandCanvasRect = _canvas.getBoundingClientRect();
                 var commandDragThreshold = 12*_canvas.width/Math.max(1, commandCanvasRect.width);
@@ -770,10 +927,20 @@
         }
 
         function handlePointerUp(event) {
+            if (useMapPinch(event)) return;
             if (!_mousedown && !isGameInputTarget(event.target)) {
                 return;
             }
             event.preventDefault();
+            if (_suppress_phone_touch_end && event.type === 'touchend') {
+                _suppress_phone_touch_end = false;
+                _phone_touch_context = null;
+                return;
+            }
+            var phoneTouchContext = _phone_touch_context;
+            _phone_touch_context = null;
+            var groundTap = _pending_ground_tap;
+            _pending_ground_tap = null;
             var mapCommandTap = _pending_phone_map_command_tap;
             _pending_phone_map_command_tap = null;
             if (mapCommandTap) {
@@ -812,6 +979,18 @@
             _dragging_unit_path_moved = 0;
             _panning_map = 0;
             _last_pointer_point = null;
+            if (event.type === 'touchend' && phoneTouchContext && !phoneTouchContext.moved) {
+                _last_phone_tap = {
+                    time: Date.now(),
+                    x: phoneTouchContext.x,
+                    y: phoneTouchContext.y,
+                    selection: phoneTouchContext.selection,
+                    multiSelection: phoneTouchContext.multiSelection
+                };
+            }
+            if (groundTap && !groundTap.moved && event.type !== 'touchcancel') {
+                clearGameSelection();
+            }
         }
 
         window.onmousedown = handlePointerDown;
@@ -841,17 +1020,9 @@
                 _ctrl_pressed = 0;
             }
             if (event.code === 'Escape') {
-                if (typeof hideMainMenus === 'function') hideMainMenus();
-                _selection = -1;
-                _multi_selection = [];
-                _selection_by_user[_current_user] = -1;
-                if (typeof _prehistory_command_mode !== 'undefined') _prehistory_command_mode = null;
-                if (typeof _unit_stack_menu !== 'undefined') _unit_stack_menu.hide();
-                if (typeof _menu_tile !== 'undefined') _menu_tile.hide();
-                _current_game.applyMenuRules();
-                _draw.clear();
-                _fulldraw = 1;
-                drawScene(0);
+                _last_phone_tap = null;
+                _pending_ground_tap = null;
+                clearGameSelection();
                 return;
             }
             if (event.code === 'Enter') {
@@ -906,20 +1077,20 @@
         document.addEventListener("wheel", (event) => {
           event.preventDefault();
           event.stopPropagation();
+
+          if (event.ctrlKey || _ctrl_pressed) {
+              var zoomAnchor = eventToCanvas(event);
+              var zoomMapCoord = eventToMapCoord(event);
+              setMapZoomAtPoint(
+                  _screenZoom + (event.deltaY > 0 ? 0.2 : -0.2),
+                  zoomAnchor,
+                  zoomMapCoord
+              );
+              return;
+          }
+
           _draw.clear();
 
-          if (_ctrl_pressed) {
-              _screenZoom -= event.deltaY>0?-0.2:0.2;
-              if (_screenZoom < 1) {
-                  _screenZoom = 1;
-              }
-              if (_screenZoom > 5) {
-                  _screenZoom = 5;
-              }
-              _fulldraw = 1;
-//              _redraw = 1;
-          }
-          else
           for (var k=0; k<_scroll_step; ++k) {
               if (!_shift_pressed) {
                   _screenOffsetY -= event.deltaY>0?-_screenZoom/5:_screenZoom/5;
