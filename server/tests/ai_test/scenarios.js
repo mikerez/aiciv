@@ -6,10 +6,10 @@ const PLAYER_ID = 8301;
 const ENEMY_ID = 8302;
 const SIZE = 14;
 
-function map(terrain = 2) {
+function map(terrain = 2, size = SIZE) {
     const tiles = [];
-    for (let i = 0; i < SIZE; i++) {
-        for (let j = 0; j < SIZE; j++) {
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
             tiles.push(tile(i, j, terrain));
         }
     }
@@ -110,6 +110,7 @@ function scenarios(variant = 0) {
         at(s.tiles, 6, 6, 2, {resourceType: 2});
         s.units = [gameCity(PLAYER_ID, 4, 4, 'pasture'), gameUnit('worker', PLAYER_ID, 5, 6, `pasture-worker-${variant}`),
             gameUnit('warrior', PLAYER_ID, 4, 4, 'pasture-guard')];
+        s.revealedResources = [{i: 6, j: 6}];
         s.expect = {modifier: {i: 6, j: 6, name: 'pasture'}, improvementBy: 16};
         result.push(s);
     }
@@ -121,6 +122,7 @@ function scenarios(variant = 0) {
         at(s.tiles, 7, 6, 4, {resourceType: 3});
         s.units = [gameCity(PLAYER_ID, 5, 5, 'mine'), gameUnit('worker', PLAYER_ID, 6, 6, `mine-worker-${variant}`),
             gameUnit('warrior', PLAYER_ID, 5, 5, 'mine-guard')];
+        s.revealedResources = [{i: 7, j: 6}];
         s.expect = {modifier: {i: 7, j: 6, name: 'mine'}, improvementBy: 16};
         result.push(s);
     }
@@ -196,4 +198,54 @@ function scenarios(variant = 0) {
     });
 }
 
-module.exports = {PLAYER_ID, ENEMY_ID, SIZE, scenarios};
+function developmentScenario(variant = 0) {
+    const size = 20;
+    const s = base(`long_development_${variant}`, 120,
+        'A civilization starting with one Settler and Explorers must compound into three well-spaced Cities, military, Workers, improvements, and broad exploration.');
+    s.size = size;
+    s.technologies = ['Mining', 'Pottery', 'Animal Husbandry', 'Irrigation', 'Masonry',
+        'Archery', 'Bronze Working', 'Wheel', 'Construction'];
+    s.tiles = map(2, size);
+    for (let i = 0; i < size; i++) {
+        at(s.tiles, i, 0, 0, {depth: 2});
+        at(s.tiles, i, size - 1, 0, {depth: 2});
+        at(s.tiles, 0, i, 0, {depth: 2});
+        at(s.tiles, size - 1, i, 0, {depth: 2});
+    }
+    for (const [i, j] of [[7, 8], [8, 8], [12, 11], [13, 11], [14, 10]]) {
+        at(s.tiles, i, j, 6);
+    }
+    at(s.tiles, 10, 10, 2, {waterSource: true, resourceType: 7});
+    at(s.tiles, 10, 11, 7, {waterSource: true});
+    at(s.tiles, 4, 4, 2, {waterSource: true, resourceType: 2});
+    at(s.tiles, 4, 5, 7, {waterSource: true});
+    at(s.tiles, 15, 15, 2, {waterSource: true, resourceType: 10});
+    at(s.tiles, 15, 14, 7, {waterSource: true});
+    at(s.tiles, 8, 10, 4, {resourceType: 3});
+    at(s.tiles, 13, 14, 4, {resourceType: 9});
+    s.units = [
+        gameUnit('settlers', PLAYER_ID, 10, 10, `long-settler-${variant}`),
+        gameUnit('explorer', PLAYER_ID, 10, 10, `long-explorer-a-${variant}`),
+        gameUnit('explorer', PLAYER_ID, 10, 10, `long-explorer-b-${variant}`),
+    ];
+    s.revealedResources = [
+        {i: 10, j: 10}, {i: 4, j: 4}, {i: 15, j: 15}, {i: 8, j: 10}, {i: 13, j: 14},
+    ];
+    s.money = 100;
+    s.food = 500;
+    s.expect = {
+        cityMin: 3,
+        cityBy: 90,
+        militaryMin: 3,
+        militaryBy: 120,
+        workersMin: 2,
+        workersBy: 100,
+        improvementsMin: 3,
+        exploredMin: 180,
+        goodCitySites: true,
+        minimumCitySpacing: 5,
+    };
+    return s;
+}
+
+module.exports = {PLAYER_ID, ENEMY_ID, SIZE, scenarios, developmentScenario};

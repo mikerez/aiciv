@@ -184,6 +184,7 @@ function createBrowserClient({size, playerId, gameId, tiles, units, unitsByUser 
             createResourceVisibility() { return matrix(size, () => true); },
             updateTurnLabel() {},
             isResourceVisible(i, j, userId) {
+                if (userId === undefined || userId === null) userId = context._current_user;
                 return !!(context._map_resource_visibility_by_user[userId]
                     && context._map_resource_visibility_by_user[userId][i]
                     && context._map_resource_visibility_by_user[userId][i][j]);

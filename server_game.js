@@ -798,6 +798,13 @@ const _server_game = new class
             var actionPayload = result.result || {};
             var unitId = action.worker_unit_id || action.settler_unit_id || action.city_unit_id;
             var found = unitId ? this.findUnit(playerId, Number(unitId), null) : null;
+            var impossibleBuild = action.type == 'build'
+                && ((result.ok && actionPayload.status == 'IMPOSSIBLE') || !result.ok);
+            if (impossibleBuild && found && found.unit.automationMode == 'automate' && found.unit.coord) {
+                if (!found.unit.automationBlockedActions) found.unit.automationBlockedActions = {};
+                var blockedKey = found.unit.coord.i + ':' + found.unit.coord.j + ':' + action.building_type;
+                found.unit.automationBlockedActions[blockedKey] = (Number(this.serverTurn) || 0) + 10;
+            }
             if (action.type == 'build' && found) {
                 found.unit.pendingImmediateBuild = false;
                 if (result.ok) {
@@ -1445,7 +1452,10 @@ const _server_game = new class
             if (ownUnit && localAutomationMode == 'road_to') {
                 unit.roadToBuilding = localRoadToBuilding;
             }
-            if (ownUnit && localImprovementState && localImprovementTurns != null) {
+            // A zero countdown means the command was submitted. Do not restore
+            // that stale client state over PHP's authoritative ready state.
+            if (ownUnit && localImprovementState && localImprovementTurns != null
+                && localImprovementTurns > 0) {
                 unit.state = localImprovementState == 'irrigation' ? 'irrigate' : localImprovementState;
                 unit.clientImprovementTurnsLeft = Math.max(0, localImprovementTurns);
             }

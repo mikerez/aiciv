@@ -266,6 +266,10 @@ const _city_economy = new class
             income.food = 5;
             income.money = 2;
         }
+        if (this.isCityTile(i, j)) {
+            income.production = Math.max(1, income.production || 0);
+            income.money = Math.max(1, income.money || 0);
+        }
         return income;
     }
 
@@ -316,7 +320,11 @@ const _city_economy = new class
                 || String(improvement.unitTypeId || '').replace(/^building_/, '');
             if (type != 'road' && type != 'workshop') continue;
             if (this.parentCityForImprovement(improvement) !== city) continue;
-            if (type == 'road') costs.roads++;
+            var isCityCenterRoad = type == 'road'
+                && improvement.coord.i == city.coord.i && improvement.coord.j == city.coord.j;
+            if (type == 'road') {
+                if (!isCityCenterRoad) costs.roads++;
+            }
             else costs.workshops++;
         }
         return costs;

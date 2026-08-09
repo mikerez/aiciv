@@ -30,6 +30,7 @@ City economy is implemented by `city.js`.
 - `CITY-INCOME-010`: A City works its own Tile and land Tiles connected to it by a contiguous road. A water Tile within three hex steps is also eligible when it has Nets.
 - `CITY-INCOME-011`: Shallow water gives 1 food. Fish or Turtles add 2 food, raising their unimproved shallow-water total to 3 food.
 - `CITY-INCOME-012`: A WorkBoat may build Nets on shallow water. Nets raise ordinary shallow water to 2 food and raise Fish or Turtles to exactly 5 food and 2 gold.
+- `CITY-INCOME-013`: Every living City center yields at least one production and one gold before civilization expenses. This prevents a valid first City from entering a permanent zero-production, zero-research state on a poor starting Tile.
 
 ## Turn Processing
 
@@ -41,6 +42,7 @@ City economy is implemented by `city.js`.
 - `CITY-TURN-006`: A city may intentionally produce nothing. This state is stored separately from an unassigned production task so the end-turn idle-city selector does not keep reopening the city.
 - `CITY-TURN-007`: If the civilization money account is negative, cities cannot start or progress unit production until the account is non-negative again.
 - `CITY-TURN-008`: Each road assigned to a parent City consumes 1 of that City's production per turn. Net City production cannot become negative.
+- `CITY-TURN-008A`: The mandatory road on the City center has no production upkeep. Only roads extending beyond the City center consume production.
 - `CITY-TURN-009`: PHP applies negative net City food authoritatively: one population is removed and food storage resets to zero. The starvation event is shown in the top-left turn-message line.
 
 ## Civilization Storage

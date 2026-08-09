@@ -2,7 +2,7 @@
 'use strict';
 
 const {
-    assert, resetDatabase, bootstrap, mapTiles, unit, rows, setPlayerState, gameDatabaseId,
+    assert, resetDatabase, bootstrap, mapTiles, unit, rows, sql, setPlayerState, gameDatabaseId,
 } = require('./test_client');
 const {createBrowserClient, localUnit, runClientTurn} = require('./browser_client');
 
@@ -86,6 +86,13 @@ function modifiersByPoint(gameDbId) {
             serverTurn: fixture.result.turn,
         });
         const gameDbId = gameDatabaseId(fixture.gameId);
+        for (const target of targets) {
+            sql(`INSERT INTO server_game_visibility `
+                + `(game_id, player_id, i, j, visibility_level, resource_visible, revision) `
+                + `VALUES (${gameDbId}, ${fixture.playerId}, ${target.i}, ${target.j}, 1, 1, 1) `
+                + `ON DUPLICATE KEY UPDATE visibility_level=GREATEST(visibility_level, 1), `
+                + `resource_visible=1, revision=revision+1`);
+        }
         setPlayerState(gameDbId, fixture.playerId, {food: 5000, money: 0});
         client._game_state.food = 5000;
         const buildStart = new Map();
@@ -118,6 +125,11 @@ function modifiersByPoint(gameDbId) {
             for (const worker of client._units_by_user[fixture.playerId].filter(item => item.unitTypeId === 'worker')) {
                 assert.equal(worker.automationMode, 'automate',
                     `scenario ${scenario}: Automate must persist after movement/build updates`);
+                if (worker.state === 'chop_forest') {
+                    const terrain = client._map_terrain_tex[worker.coord.i][worker.coord.j];
+                    assert.ok(client.currentGame.isChoppableForestTerrain(terrain),
+                        `scenario ${scenario}: Worker must leave chop_forest immediately after PHP chops its Tile`);
+                }
             }
         }
 

@@ -227,18 +227,56 @@ const _military = new class
         };
     }
 
-    hasCityAt(coord)
+    cityAt(coord)
     {
-        if (!coord) return false;
+        if (!coord) return null;
         var lists = this.unitLists();
         for (var n=0; n < lists.length; n++) {
             for (var k=0; k < lists[n].list.length; k++) {
                 var unit = lists[n].list[k];
                 if (this.isCity(unit) && this.canFight(unit) && unit.coord
-                    && unit.coord.i == coord.i && unit.coord.j == coord.j) return true;
+                    && unit.coord.i == coord.i && unit.coord.j == coord.j) return unit;
             }
         }
-        return false;
+        return null;
+    }
+
+    hasCityAt(coord)
+    {
+        return this.cityAt(coord) != null;
+    }
+
+    cityDefensePercent(city)
+    {
+        var value = Number(city && city.cityDefensePercent);
+        return Math.max(0, Math.min(100, Number.isFinite(value) ? value : 100));
+    }
+
+    damageCityDefense(city, attacker)
+    {
+        if (!city || !attacker) return null;
+        var damage = attacker.unitTypeId == 'catapult' ? 1
+            : attacker.unitTypeId == 'trebuchet' ? 2 : 0;
+        if (!damage) return null;
+        var before = this.cityDefensePercent(city);
+        city.cityDefensePercent = Math.max(0, before - damage);
+        return { before: before, after: city.cityDefensePercent, damage: damage };
+    }
+
+    repairCityDefenses()
+    {
+        var lists = this.unitLists();
+        for (var n=0; n < lists.length; n++) {
+            for (var k=0; k < lists[n].list.length; k++) {
+                var city = lists[n].list[k];
+                if (!this.isCity(city) || !this.canFight(city)) continue;
+                var before = this.cityDefensePercent(city);
+                if (before >= 100) continue;
+                city.cityDefensePercent = Math.min(100, before + 2);
+                this.logCombat('City #' + (city.serverId || k) + ' defense repaired to '
+                    + city.cityDefensePercent + '%.');
+            }
+        }
     }
 
     battleChanceInputs(attacker, defender)
@@ -266,7 +304,8 @@ const _military = new class
         var buildingBonus = hasFortification ? this.fortificationDefenseBonus : 0;
         if (row.buildingBonus == 'ranged') {
             if (hasFortification) buildingBonus += 0.30;
-            if (this.hasCityAt(defender.coord)) buildingBonus += 0.30;
+            var city = this.cityAt(defender.coord);
+            if (city) buildingBonus += 0.30 * this.cityDefensePercent(city) / 100;
         }
         var stateBonus = defender.state == 'fortified' ? this.fortifiedDefenseBonus : 0;
         return {
@@ -572,6 +611,7 @@ const _military = new class
         var damage = this.calculateDamage(attacker, defender.unit);
         attacker.health = Math.max(0, Math.round((attacker.health || this.defaultHealth) - damage.attackerDamage));
         defender.unit.health = Math.max(0, Math.round((defender.unit.health || this.defaultHealth) - damage.defenderDamage));
+        var cityDefenseChange = cityRecord ? this.damageCityDefense(cityRecord.unit, attacker) : null;
 
         var attackerDead = attacker.health <= 0;
         var defenderDead = defender.unit.health <= 0;
@@ -593,6 +633,8 @@ const _military = new class
             + ' at (' + toCoord.i + ',' + toCoord.j + '), damage A=' + damage.attackerDamage
             + ' D=' + damage.defenderDamage + ', health A=' + attacker.health
             + ' D=' + defender.unit.health;
+        if (cityDefenseChange) message += '; city defense ' + cityDefenseChange.before
+            + '%->' + cityDefenseChange.after + '%';
 
         if (defenderDead) {
             this.removeRecord(defender);

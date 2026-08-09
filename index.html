@@ -31,7 +31,7 @@
             gap: 8px;
         }
         .economy-counter {
-            width: 126px;
+            width: 154px;
             min-height: 46px;
             box-sizing: border-box;
             display: flex;
@@ -40,15 +40,21 @@
             border: 1px solid rgba(0,0,0,0.35);
             border-radius: 8px;
             background-color: rgba(255,255,255,0.58);
-            background-position: 9px center;
+            --counter-frame-image: none;
+            --counter-icon-image: none;
+            background-image: var(--counter-frame-image), var(--counter-icon-image);
+            background-position: center, 9px center;
             background-repeat: no-repeat;
-            background-size: 30px 30px;
+            background-size: 100% 100%, 30px 30px;
             color: #111;
             font: bold 24px Arial;
+            font-variant-numeric: tabular-nums;
             text-shadow: 0 1px rgba(255,255,255,0.8);
         }
-        #foodCounter { background-image: url('images/food.png'); }
-        #goldCounter { background-image: url('images/money.png'); }
+        .economy-counter.counter-wide { font-size: 20px; }
+        .economy-counter.counter-very-wide { font-size: 16px; }
+        #foodCounter { --counter-icon-image: url('images/food.png'); }
+        #goldCounter { --counter-icon-image: url('images/money.png'); }
         #logoutButton {
             position: fixed;
             right: 76px;
@@ -173,13 +179,15 @@
             border-radius: 6px !important;
         }
         body.phone-ui .economy-counter {
-            width: 80px;
+            width: 104px;
             min-height: 34px;
             padding: 4px 5px 4px 30px;
-            background-size: 22px 22px;
-            background-position: 5px center;
+            background-size: 100% 100%, 22px 22px;
+            background-position: center, 5px center;
             font-size: 18px;
         }
+        body.phone-ui .economy-counter.counter-wide { font-size: 15px; }
+        body.phone-ui .economy-counter.counter-very-wide { font-size: 12px; }
         body.phone-ui #logoutButton {
             right: calc(env(safe-area-inset-right, 0px) + 72px) !important;
             bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
@@ -324,7 +332,7 @@
     <script src="draw.js?v=20260806d"></script>
     <script src="control.js?v=20260808a"></script>
     <script src="birdsview.js?v=20260805a"></script>
-    <script src="ai.js?v=20260808b"></script>
+    <script src="ai.js?v=20260809c"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -334,12 +342,12 @@
             });
         }
     </script>
-    <script src="game.js?v=20260808b"></script>
-    <script src="military.js?v=20260807e"></script>
-    <script src="economics.js?v=20260808b"></script>
+    <script src="game.js?v=20260809a"></script>
+    <script src="military.js?v=20260809a"></script>
+    <script src="economics.js?v=20260809a"></script>
     <script src="multiplayer.js?v=20260808d"></script>
-    <script src="server_game.js?v=20260808e"></script>
-    <script src="city.js?v=20260808b"></script>
+    <script src="server_game.js?v=20260809b"></script>
+    <script src="city.js?v=20260809c"></script>
     <script src="menu_tile.js?v=20260808b"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
@@ -449,7 +457,7 @@
         _screen.loadTexture('money5.png', 865);
         _screen.loadTexture('fishing_boats.png', 866);
         _screen.loadTexture('destroyed_city.png', 869);
-        _screen.loadTexture('network.png', 870);
+        _screen.loadTexture('nets.png', 870);
         _screen.loadTexture('quarry.png', 867);
         _screen.loadTexture('winery.png', 868);
         _screen.loadTexture('hamlet.png', 869);
@@ -459,7 +467,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260808e"></script>
+    <script src="game_prehistory.js?v=20260809c"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);

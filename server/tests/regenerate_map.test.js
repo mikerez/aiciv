@@ -13,5 +13,7 @@ const {assert, serverGame, resetDatabase, bootstrap, unit, value, gameDatabaseId
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND deleted_at IS NULL`)), 1);
     assert.ok(Number(value(`SELECT (terrain_tex & 15) FROM server_game_map m JOIN server_game_units u ON u.game_id=m.game_id AND u.i=m.i AND u.j=m.j WHERE u.id=${fixture.unitIds.worker}`)) > 0,
         'preserved units are repositioned onto land');
+    assert.ok(Number(value(`SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId} AND resource_type=33`)) >= 6,
+        'generated worlds enforce a playable Horses minimum');
     console.log('PASS regenerate_map replaces only terrain and repositions preserved units on the regenerated world');
 })().catch(error => { console.error(error); process.exitCode = 1; });

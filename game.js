@@ -790,6 +790,10 @@ const _game = new class
             layer.applyForestChoppingRules();
         }
 
+        if ((typeof _server_game === 'undefined' || !_server_game.initialized)
+            && typeof _military !== 'undefined' && _military.repairCityDefenses) {
+            _military.repairCityDefenses();
+        }
         this.makeTurn(false);
         var cityMoneyIncome = 0;
         if (typeof _city_economy !== 'undefined') {
@@ -850,6 +854,10 @@ const _game = new class
         }
         if (layer.applyTerrainModifierRules) {
             layer.applyTerrainModifierRules();
+        }
+        if ((typeof _server_game === 'undefined' || !_server_game.initialized)
+            && typeof _military !== 'undefined' && _military.repairCityDefenses) {
+            _military.repairCityDefenses();
         }
         await this.makeTurnAnimated(false);
         var cityMoneyIncome = 0;

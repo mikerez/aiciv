@@ -32,7 +32,7 @@ const _resource_types = [
     { id: 'turtles', name: 'Turtles', texture: 834, sprite: 'resource_turtles.png', gives: 'food and luxury from water tiles', terrains: [0], chance: 0.006 },
     { id: 'whales', name: 'Whales', texture: 835, sprite: 'resource_whales.png', gives: 'food, production, and luxury from water tiles', terrains: [0], chance: 0.005 },
     { id: 'wine', name: 'Wine', texture: 836, sprite: 'resource_wine.png', gives: 'luxury and culture value from grass or hills', terrains: [2, 4], chance: 0.007 },
-    { id: 'horses', name: 'Horses', texture: 837, sprite: 'resource_horses.png', gives: 'strategic animal resource for horse units', terrains: [2, 1], chance: 0.010 },
+    { id: 'horses', name: 'Horses', texture: 837, sprite: 'resource_horses.png', gives: 'strategic animal resource for horse units', terrains: [2, 1, 7], chance: 0.010 },
     { id: 'iron', name: 'Iron', texture: 838, sprite: 'resource_iron.png', gives: 'strategic metal for iron weapons and units', terrains: [1, 4, 5], chance: 0.040 },
     { id: 'gold', name: 'Gold', texture: 844, sprite: 'resource_gold.png', gives: 'commerce and trade value', terrains: [4, 5, 1], chance: 0.007 },
     { id: 'gems', name: 'Gems', texture: 845, sprite: 'resource_gems.png', gives: 'valuable minerals for luxury and trade', terrains: [4, 5], chance: 0.006 },
@@ -70,18 +70,18 @@ _screen.loadTexture('Spearman.png', 262);
 _screen.loadTexture('Horseman.png', 263);
 _screen.loadTexture('Chariot.png', 264);
 _screen.loadTexture('WarElephant.png', 265);
-_screen.loadTexture('unit_catapult.png', 266);
+_screen.loadTexture('Catapult.png', 266);
 _screen.loadTexture('Trebuchet.png', 267);
 _screen.loadTexture('unit_galley.png', 268);
 _screen.loadTexture('unit_galleon.png', 269);
 _screen.loadTexture('worker.png', 270);
-_screen.loadTexture('WorkBoat.png', 271);
+_screen.loadTexture('Workboat.png', 271);
 _screen.loadTexture('Frigate.png', 272);
 _screen.loadTexture('Knight.png', 273);
 _screen.loadTexture('Pikeman.png', 274);
 _screen.loadTexture('Longbow.png', 275);
 _screen.loadTexture('Fencer.png', 276);
-_screen.loadTexture('Swordsman.png', 277);
+_screen.loadTexture('Swordman.png', 277);
 _screen.loadTexture('Trireme.png', 278);
 _screen.loadTexture('blue.png', 900);
 _screen.loadTexture('green.png', 901);
@@ -541,7 +541,7 @@ const _game_prehistory = new class
 
     tileUnitStackState(movingUnit, i, j)
     {
-        var state = { count: 0, hasVisibleForeignDefender: false };
+        var state = { count: 0, hasVisibleForeignDefender: false, hasOwnedCity: false };
         var movingTeam = movingUnit.team == undefined ? _current_user : movingUnit.team;
         var lists = typeof _units_by_user != 'undefined' ? _units_by_user : { current: _units };
         var seen = [];
@@ -559,6 +559,7 @@ const _game_prehistory = new class
                     && occupant.serverVisibilityByUser[movingTeam] === false))) continue;
                 var isMovable = occupant.can_move !== false && occupant.type != 3;
                 if (isMovable) state.count++;
+                if (!isForeign && occupant.type == 3) state.hasOwnedCity = true;
                 if (isForeign && (isMovable || occupant.type == 3)) {
                     state.hasVisibleForeignDefender = true;
                 }
@@ -574,13 +575,15 @@ const _game_prehistory = new class
         }
         var isWater = this.isWaterTerrain(i, j);
         var unitType = this.unitTypesById[_units[k].unitTypeId];
+        var movingUnit = _units[k];
+        var startsOnWater = this.isWaterTerrain(movingUnit.coord.i, movingUnit.coord.j);
+        var stack = this.tileUnitStackState(movingUnit, i, j);
         var terrainAllowed;
         if (this.isWaterUnitType(unitType)) {
-            // PREHISTORY-MOVE-004, rules/prehostory.md: water units move only on water.
-            terrainAllowed = isWater;
+            // A ship may use its own City as a harbor, but it cannot attack land from water.
+            terrainAllowed = isWater || stack.hasOwnedCity;
         }
         else {
-            var startsOnWater = this.isWaterTerrain(_units[k].coord.i, _units[k].coord.j);
             if (!isWater) {
                 // A carried land unit can always disembark onto adjacent land.
                 terrainAllowed = true;
@@ -596,10 +599,9 @@ const _game_prehistory = new class
             }
         }
         if (!terrainAllowed) return false;
+        if (startsOnWater && !isWater && stack.hasVisibleForeignDefender) return false;
         // PREHISTORY-MOVE-006: a full Tile blocks ordinary movement, but never
         // prevents a military unit from issuing an attack against its occupants.
-        var movingUnit = _units[k];
-        var stack = this.tileUnitStackState(movingUnit, i, j);
         return stack.count < _tile_movable_unit_limit
             || (movingUnit.type == 2 && stack.hasVisibleForeignDefender);
     }
@@ -1182,7 +1184,9 @@ const _game_prehistory = new class
                 var j = _units[k].coord.j + dj;
                 if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) continue;
                 if ((di != 0 || dj != 0) && this.workerAutomationTargetReserved(k, i, j)) continue;
-                var options = this.workerAutomationOptionsAt(k, i, j);
+                var options = this.workerAutomationOptionsAt(k, i, j).filter(function(action) {
+                    return !this.workerAutomationActionBlocked(k, i, j, action);
+                }, this);
                 if (!options.length) continue;
                 var isCurrent = di == 0 && dj == 0;
                 var path = isCurrent ? [] : this.buildPath(k, new Coord(i, j));
@@ -1214,6 +1218,21 @@ const _game_prehistory = new class
         var destination = best.path[best.path.length - 1];
         _units[k].automateTarget = new Coord(destination.i, destination.j);
         this.assignPath(k, best.path);
+        return true;
+    }
+
+    workerAutomationActionBlocked(k, i, j, action)
+    {
+        var unit = _units[k];
+        if (!unit || !unit.automationBlockedActions) return false;
+        if (action == 'irrigate') action = 'irrigation';
+        var key = i + ':' + j + ':' + action;
+        var untilTurn = Number(unit.automationBlockedActions[key]);
+        var currentTurn = typeof _server_game != 'undefined' ? Number(_server_game.serverTurn) || 0 : 0;
+        if (!Number.isFinite(untilTurn) || untilTurn <= currentTurn) {
+            delete unit.automationBlockedActions[key];
+            return false;
+        }
         return true;
     }
 
@@ -1253,6 +1272,12 @@ const _game_prehistory = new class
     {
         for (var k=0; k < _units.length; k++) {
             if (!_units[k].can_move) continue;
+            // A completed server-side chop may arrive before the saved client
+            // task is reconciled. Clear it as soon as the Tile is no longer forest.
+            if (_units[k].unitTypeId == 'worker' && _units[k].state == 'chop_forest'
+                && !this.canChopForest(k)) {
+                this.setUnitState(k, 'ready', true);
+            }
             var mode = _units[k].automationMode || _units[k].state;
             if (mode == 'road_to' && _units[k].unitTypeId == 'worker') {
                 if (this.prepareRoadToTurn(k)) continue;
