@@ -463,6 +463,9 @@ function drawScene(loop)
         var labelContext = labelCanvas.getContext('2d');
         labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
         _draw.drawUnitOwnerLabels(labelContext);
+        if (_draw.drawUnitArrivalEffects) {
+            _draw.drawUnitArrivalEffects(labelContext);
+        }
         if (_draw.drawUnitStatusLines) {
             _draw.drawUnitStatusLines(labelContext);
         }

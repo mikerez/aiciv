@@ -14,6 +14,8 @@ Military combat is implemented by `military.js`.
 - `MILITARY-UNIT-008`: Hills add 25% defence and forest adds 50%; forested hills receive both. Horseman, Chariot, and Knight additionally lose 50% in forest or high hills and gain 30% in fields or low unforested hills.
 - `MILITARY-UNIT-009`: Archer and Longbow gain 30% in a City and another 30% on a Fortification. The ordinary 50% Fortification bonus still applies.
 - `MILITARY-UNIT-010`: Spearman and Pikeman gain 30% against Horseman and Knight. Horseman and Knight gain 30% against Catapult and Trebuchet; Chariot gains 15% against Catapult; Elephant loses 15% against Catapult and Trebuchet.
+- `MILITARY-UNIT-011`: Fortification defence starts at 100%, repairs 2 percentage points per turn, and loses 1 point to each Catapult attack or 2 points to each Trebuchet attack. Its effective defence bonus scales by the remaining percentage.
+- `MILITARY-UNIT-012`: A damaged friendly movable unit on its owner's Fortification heals 10% of maximum health per turn.
 
 ## War State
 
@@ -44,3 +46,5 @@ Military combat is implemented by `military.js`.
 - `MILITARY-COMBAT-014`: When an attacking military unit survives and no other hostile unit remains on the City tile, the City is captured without further health loss and its ownership changes to the attacker's player. Killing one member of a stacked garrison cannot capture the City.
 - `MILITARY-COMBAT-016`: One attack resolves against one defending unit. Surviving stacked defenders remain in place for later turns; they are not consumed by the same movement order.
 - `MILITARY-COMBAT-015`: An unarmed civilian cannot resist a military entrant or shield an ungarrisoned City. A hostile Settler on the entered tile is removed without damaging the military unit.
+- `MILITARY-COMBAT-017`: A Catapult or Trebuchet deals collateral damage to every additional hostile non-building unit on the attacked Tile. Damage scales linearly with experience from 0% at experience 1 to 10% of each target's maximum health at experience 2 or greater.
+- `MILITARY-COMBAT-018`: A surviving military unit occupying an enemy improvement at war destroys that improvement and immediately transfers its configured food and gold loot to the attacking civilization.

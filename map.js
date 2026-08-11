@@ -346,7 +346,9 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
 
     addFortification(i, j)
     {
-        return this.addTerrainModifier(i, j, 'fortification');
+        if (!this.addTerrainModifier(i, j, 'fortification')) return false;
+        _map_terrain_mod[i][j].fortificationDefensePercent = 100;
+        return true;
     }
 
     addCottage(i, j)
@@ -527,9 +529,35 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         this.genMap(16, 20, 4, 4, _map_view[0], _map_view[1], _map_view[2], _map_view[3], -1, 2);  // mods
         this.genMap(10, 20, 1, 1, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 0+(1<<4), 0);  // wide rivers
         this.genMap(6, 10, 1, 1, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/10, 7+(3<<4), 1);  // narrow rivers
+        this.addMountainClusters(Math.max(8, Math.round(_map_size/8)));
         this.enhMap();
         this.prepareTerrainModifierSprites();
         this.genResources();
+    }
+
+    addMountainClusters(count)
+    {
+        for (var cluster=0; cluster<count; cluster++) {
+            var centerI = 8 + Math.floor(Math.random()*Math.max(1, _map_size-16));
+            var centerJ = 8 + Math.floor(Math.random()*Math.max(1, _map_size-16));
+            if ((_map_terrain_tex[centerI][centerJ]&0x0F) == 0) {
+                cluster--;
+                continue;
+            }
+            var radius = 5 + Math.floor(Math.random()*5);
+            for (var di=-radius; di<=radius; di++) {
+                for (var dj=-radius; dj<=radius; dj++) {
+                    var i = centerI + di;
+                    var j = centerJ + dj;
+                    if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) continue;
+                    var distance = Math.sqrt(di*di + dj*dj);
+                    if (distance > radius || Math.random() > 0.88-distance/(radius*3)) continue;
+                    var height = distance <= radius*0.28 ? 3 : (distance <= radius*0.62 ? 2 : 1);
+                    _map_terrain_tex[i][j] = 5 | (height<<4) | (Math.random() < (height == 3 ? 0.20 : 0.09) ? 0x80 : 0);
+                }
+            }
+            _map_terrain_tex[centerI][centerJ] = 5 | (3<<4) | (Math.random() < 0.30 ? 0x80 : 0);
+        }
     }
 
     closeMap(i1, j1)

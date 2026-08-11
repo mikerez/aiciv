@@ -94,7 +94,7 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ORDER-002`: A movement command is an atomic list of adjacent map coordinates for the current turn only. Before recording the player's submission, PHP requires a living owned movable unit, no movement penalty, at least one step, no more steps than the unit's speed, in-map adjacency, and matching land/water nature. An invalid movement becomes a hold for only that unit and is returned in `rejected_movements`; other valid commands still enter the turn.
 
-`SERVER-ORDER-002A`: At most five living movable units may occupy one Tile; Cities and terrain-improvement rows do not count. PHP rejects a non-attack move into an already full Tile and reserves capacity deterministically for simultaneous arrivals. A military move targeting a foreign defender bypasses the capacity check so a full stack remains attackable.
+`SERVER-ORDER-002A`: At most five living movable units may occupy one Tile; Cities and terrain-improvement rows do not count. PHP stops a multi-step non-attack move at the furthest available preceding Tile when its destination is full, and blocks it at the origin only when its first step is full. Capacity is reserved deterministically for simultaneous arrivals. A military move targeting a foreign defender bypasses the capacity check when it has explicit attack intent or the civilizations are already at war, so a full enemy stack remains attackable.
 
 `SERVER-ORDER-003`: Server movement, collision, fog, ownership, health, and coordinates have priority over client calculations. Other properties are preserved in `properties_json`, except client route fields (`gotoPath`, `gotoCoord`, and `pendingServerPath`), which are always removed.
 
@@ -122,7 +122,7 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ORDER-009C`: A completed road or Workshop stores its nearest same-owner City as `parentCityId`. Legacy improvements are assigned during turn processing. A road with no possible parent City is deleted together with its Tile modifier and emits an owner-visible event.
 
-`SERVER-ORDER-010`: The browser calculates a City's worked-tile food each turn. When stored food reaches `20 + population * 10`, it calls `grow_city`. PHP locks the owned City, checks that reported food reaches its authoritative population threshold, increments population once, resets stored food to zero, and returns the updated City.
+`SERVER-ORDER-010`: The browser observes authoritative City food each turn. When stored food reaches `80 + population * 40`, it calls `grow_city`. PHP locks the owned City, checks the threshold, increments population once, subtracts the growth cost, and returns the updated City.
 
 `SERVER-ORDER-011`: During turn capture, the browser sends one sequential `heal_units` request for each owned City containing damaged friendly movable units. Sequential execution prevents many Cities from creating concurrent PHP workers waiting on the same game-row lock. PHP locks the City and requested units, verifies that every unit is alive, movable, owned by the same player, and on the City's exact Tile, then restores 10% of each unit's maximum health without exceeding maximum health. The client applies each returned HP snapshot immediately. A City records `last_healed_turn`, so retries cannot heal its occupants more than once in one authoritative turn.
 
@@ -156,7 +156,9 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 ## Incremental Updates
 
-`SERVER-LOAD-001`: Authenticated page startup uses `load_full`. It returns one authoritative snapshot containing every map tile, the player's complete living unit list, currently fully visible foreign units, fog/resource visibility, player state, civilization statistics, and `last_event_id`.
+`SERVER-LOAD-001`: Authenticated page startup uses `load_full`. It returns one authoritative `100x100` aligned terrain window from the `300x300` world, the player's complete living unit list with world coordinates, currently fully visible foreign units inside the window, fog/resource visibility, player state, civilization statistics, and `last_event_id`.
+
+`SERVER-LOAD-001A`: Map update requests carry `map_origin_i` and `map_origin_j` aligned to 10 Tiles. Returned Tile coordinates are local to the window and include `world_i`/`world_j`; the server clamps every window to world bounds and returns no missing cells.
 
 `SERVER-LOAD-002`: `load_full` does not expose foreign units outside full visibility. Reloading starts from the current snapshot, discards pending events for that audience, and never replays old combat.
 
@@ -168,7 +170,13 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-003`: End Turn sends one `make_turn` containing atomic unit orders and all queued turn actions. Its response includes the first combined update snapshot. If the turn is unresolved, each poll uses one `load_update`; events are animated before unit removals are applied.
 
-`SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for hidden AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
+`SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for shared AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
+
+`SERVER-AI-001`: `claim_ai_batch` leases up to eight random, living, movable units of the one global AI for the current turn. Active leases and units that already have an order are excluded, so browsers normally work on different units.
+
+`SERVER-AI-002`: `submit_ai_batch` accepts commands and build/found-city actions only for ids in the caller's live lease. It upserts those unit orders and never creates `server_game_submissions`; the AI cannot delay turn resolution.
+
+`SERVER-AI-003`: AI leases expire and are deleted at turn resolution. Commands accepted before resolution remain ordinary authoritative orders; unfinished inference after resolution is rejected as stale without delaying the human client.
 
 `SERVER-ECONOMY-001`: End-turn resolution calculates worked-Tile food, production, and gold in PHP using tables mirrored by `city.js` and `economics.js`; client-reported balances and city food cannot overwrite these values.
 
@@ -176,9 +184,15 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ECONOMY-003`: A population-one starving City becomes a replaceable `destroyed_city` unit. It has no movement, economy, fog, control-zone, production, or combat behavior.
 
+`SERVER-ECONOMY-004`: Military food upkeep is four times the base unit size tier, gold-consuming military types use the mirrored 6/12 gold tiers, each Workshop consumes two City food, and population growth costs `80 + population * 40`.
+
+`SERVER-ECONOMY-005`: Cities above population 10 lose 5% of positive food excess and stored gold per additional citizen, capped at 50% at population 20; this compounds with applicable distance loss.
+
 `SERVER-PRODUCTION-001`: Production points accrue by the exact authoritative city production yield. Unit creation occurs only for a City that submitted `produce`, after PHP validates cost, road-connected resources, nature/spawn location, and the five-unit stack limit.
 
-`SERVER-PRODUCTION-002`: Authoritative City yield uses only nearby or road-connected worked Tiles. Parent roads each subtract one production, while parent Workshops each subtract one food and one gold and set their worked Tile to four production.
+`SERVER-PRODUCTION-002`: Authoritative City yield uses only nearby or road-connected worked Tiles. Parent roads and Nets each subtract one production, while parent Workshops each subtract two food, consume no gold, and set their worked Tile to four production.
+
+`SERVER-MAP-004`: Resource ids are assigned only when an empty map is generated. Turn processing and schema upgrades never create, remove, or relocate resources in an existing map; resource visibility may still be discovered separately.
 
 `SERVER-PRODUCTION-003`: Production points belong only to the current backlog item. Selecting the first item starts at zero; cancelling, removing, or completing it discards its balance and the next item also starts at zero.
 
@@ -200,7 +214,13 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-CIV-005`: End Turn accepts the current player's directional `friend`, `enemy`, or `neutral` preferences and returns each known civilization's directional relation plus its authoritative food and gold balances.
 
+`SERVER-CIV-006`: A changed directional Friend or Enemy preference produces a turn event for both affected players. The global AI also declares war and emits an event when a foreign civilization owns a living building within a 5-by-5 area centered on Copper, Iron, Gold, Gems, or Diamonds.
+
 `SERVER-MOVE-005`: A movement command may include `interaction_intent` (`attack` or `coexist`) and `target_owner_id`. Explicit attack permits combat and declares the attacker's enemy preference; explicit coexist suppresses combat unless the other side attacks.
+
+`SERVER-RESPAWN-001`: Unitless players are not respawned during ordinary load or turn resolution. Responses set `respawn_required`; the visible client waits indefinitely for a minimap coordinate and then sends `respawn_player`. PHP removes all of that player's units, Cities, production queues, improvements, City-center infrastructure, pending orders, and old visibility before creating one Settler and three Explorers on the nearest valid unoccupied grass/river Tile and returning a full snapshot.
+
+`SERVER-RESPAWN-002`: A player may request the same complete civilization replacement before elimination by sending `force_respawn: true` after choosing a minimap coordinate. Without this explicit flag, `respawn_player` continues to reject players that have surviving movable units.
 
 ## Request Example
 

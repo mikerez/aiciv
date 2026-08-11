@@ -20,7 +20,8 @@ for (const [id, name, unitClass, texture, attack, defense, speed, view, technolo
     const natureArguments = nature === 'water' ? ", true, 'water'" : '';
     const definition = `new UnitType('${id}', '${name}', ${unitClass}, ${texture}, ${attack}, ${defense}, ${speed}, ${view}, '${technology}', ${cost}, ${resource}${natureArguments})`;
     assert.ok(source.includes(definition), `missing client definition for ${id}`);
-    assert.ok(source.includes(`_screen.loadTexture('${name}.png', ${texture});`), `missing texture for ${id}`);
+    const imageName = id === 'workboat' ? 'Workboat' : id === 'swordsman' ? 'Swordman' : name;
+    assert.ok(source.includes(`_screen.loadTexture('${imageName}.png', ${texture});`), `missing texture for ${id}`);
 }
 
 console.log('PASS new client unit definitions and textures');

@@ -38,13 +38,12 @@ const _draw = new class
         if (!ctx) {
             return;
         }
-        const text = this.technologyStatusText();
         const message = (typeof _one_turn_message !== 'undefined' && _one_turn_message)
             ? _one_turn_message
             : (typeof _game_state !== 'undefined' && _game_state && _game_state.oneTurnMessage)
             ? _game_state.oneTurnMessage
             : '';
-        if (!text && !message) {
+        if (!message) {
             return;
         }
         const mobile = document.body && document.body.classList && document.body.classList.contains('mobile-ui');
@@ -60,22 +59,61 @@ const _draw = new class
         ctx.font = 'bold ' + fontSize + 'px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
-        const height = y + fontSize + (message ? lineGap : 0);
+        const height = y + fontSize;
         ctx.clearRect(0, 0, ctx.canvas.width, height + 8);
-        if (text) {
-            ctx.fillStyle = 'rgba(0,0,0,0.92)';
-            ctx.fillText(text, x + 2, y + 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.96)';
-            ctx.fillText(text, x, y);
-        }
-        if (message) {
-            var messageY = y + lineGap;
-            ctx.fillStyle = 'rgba(0,0,0,0.92)';
-            ctx.fillText(message, x + 2, messageY + 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.96)';
-            ctx.fillText(message, x, messageY);
+        ctx.fillStyle = 'rgba(0,0,0,0.92)';
+        ctx.fillText(message, x + 2, y + 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.96)';
+        ctx.fillText(message, x, y);
+        ctx.restore();
+    }
+
+    drawUnitArrivalEffects(ctx)
+    {
+        if (!ctx || typeof visibleUnitsForCurrentUser !== 'function') return;
+        var now = typeof performance != 'undefined' ? performance.now() : Date.now();
+        var units = visibleUnitsForCurrentUser();
+        var active = false;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (var k=0; k<units.length; k++) {
+            var effect = units[k] && units[k].arrivalEffect;
+            if (!effect || !units[k].coord) continue;
+            var age = now - effect.startedAt;
+            if (age >= effect.duration) {
+                delete units[k].arrivalEffect;
+                continue;
+            }
+            active = true;
+            var progress = Math.max(0, Math.min(1, age/effect.duration));
+            var fromX = x1toX(ijtox1(effect.from.i, effect.from.j));
+            var fromY = y1toY(ijtoy1(effect.from.i, effect.from.j));
+            var toX = x1toX(ijtox1(units[k].coord.i, units[k].coord.j));
+            var toY = y1toY(ijtoy1(units[k].coord.i, units[k].coord.j));
+            var tail = 0.12 + progress*0.88;
+            var x = fromX + (toX-fromX)*tail;
+            var y = fromY + (toY-fromY)*tail;
+            ctx.strokeStyle = 'rgba(255,255,220,' + (0.55*(1-progress)) + ')';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,' + (0.35*(1-progress)) + ')';
+            ctx.beginPath();
+            ctx.arc(x, y, 5 + progress*5, 0, Math.PI*2);
+            ctx.fill();
         }
         ctx.restore();
+        if (active && !this.arrivalFramePending && typeof requestAnimationFrame == 'function') {
+            this.arrivalFramePending = true;
+            var self = this;
+            requestAnimationFrame(function() {
+                self.arrivalFramePending = false;
+                if (typeof _fulldraw != 'undefined') _fulldraw = 1;
+                if (typeof drawScene == 'function' && (typeof _in_drawing == 'undefined' || !_in_drawing)) drawScene(0);
+            });
+        }
     }
 
     drawUnitOwnerLabels(ctx)
@@ -126,6 +164,23 @@ const _draw = new class
             ctx.fillText(label, x + 1, y + 1, maxWidth);
             ctx.fillStyle = 'rgba(255,255,255,0.92)';
             ctx.fillText(label, x, y, maxWidth);
+        }
+
+        ctx.textBaseline = 'top';
+        ctx.font = 'bold ' + fontSize + 'px Arial';
+        for (var cityIndex=0; cityIndex < units.length; cityIndex++) {
+            var city = units[cityIndex];
+            if (!city || !city.coord || city.type != 3) continue;
+            var cityX = x1toX(ijtox1(city.coord.i, city.coord.j));
+            var cityY = y1toY(ijtoy1(city.coord.i, city.coord.j)) + Math.max(30, 68/_screenZoom);
+            var population = Math.max(1, Number(city.cityPopulation) || 1);
+            var cityName = city.name && city.name != 'City' ? city.name : 'City';
+            var cityLabel = population + ' ' + cityName;
+            var cityMaxWidth = Math.max(100, 210/_screenZoom);
+            ctx.fillStyle = 'rgba(0,0,0,0.88)';
+            ctx.fillText(cityLabel, cityX + 1, cityY + 1, cityMaxWidth);
+            ctx.fillStyle = 'rgba(255,255,255,0.96)';
+            ctx.fillText(cityLabel, cityX, cityY, cityMaxWidth);
         }
         ctx.restore();
     }

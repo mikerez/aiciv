@@ -277,6 +277,80 @@ const _military = new class
                     + city.cityDefensePercent + '%.');
             }
         }
+        this.repairFortificationDefenses();
+        this.healFortificationUnits();
+    }
+
+    fortificationModifiersAt(coord)
+    {
+        if (!coord || typeof _map_terrain_mod == 'undefined'
+            || !_map_terrain_mod[coord.i]) return null;
+        var modifiers = _map_terrain_mod[coord.i][coord.j];
+        return modifiers && modifiers.fortification ? modifiers : null;
+    }
+
+    damageFortificationDefense(coord, attacker)
+    {
+        var modifiers = this.fortificationModifiersAt(coord);
+        var damage = attacker && attacker.unitTypeId == 'catapult' ? 1
+            : attacker && attacker.unitTypeId == 'trebuchet' ? 2 : 0;
+        if (!modifiers || !damage) return null;
+        var before = Number(modifiers.fortificationDefensePercent);
+        if (!Number.isFinite(before)) before = 100;
+        modifiers.fortificationDefensePercent = Math.max(0, before - damage);
+        return { before: before, after: modifiers.fortificationDefensePercent, damage: damage };
+    }
+
+    repairFortificationDefenses()
+    {
+        if (typeof _map_terrain_mod == 'undefined') return;
+        for (var i=0; i < _map_terrain_mod.length; i++) {
+            if (!_map_terrain_mod[i]) continue;
+            for (var j=0; j < _map_terrain_mod[i].length; j++) {
+                var modifiers = _map_terrain_mod[i][j];
+                if (!modifiers || !modifiers.fortification) continue;
+                var before = Number(modifiers.fortificationDefensePercent);
+                if (!Number.isFinite(before)) before = 100;
+                modifiers.fortificationDefensePercent = Math.min(100, before + 2);
+            }
+        }
+    }
+
+    healFortificationUnits()
+    {
+        var lists = this.unitLists();
+        for (var n=0; n < lists.length; n++) {
+            for (var k=0; k < lists[n].list.length; k++) {
+                var unit = lists[n].list[k];
+                if (!unit || !unit.can_move || !unit.coord || !this.fortificationModifiersAt(unit.coord)) continue;
+                this.ensureUnit(unit);
+                if (unit.health <= 0 || unit.health >= unit.maxHealth) continue;
+                unit.health = Math.min(unit.maxHealth, unit.health + unit.maxHealth*0.10);
+            }
+        }
+    }
+
+    applySiegeCollateral(attacker, primaryDefender, coord)
+    {
+        if (!attacker || (attacker.unitTypeId != 'catapult' && attacker.unitTypeId != 'trebuchet')) return [];
+        var factor = Math.max(0, Math.min(1, Number(attacker.experience || 1) - 1));
+        if (!factor) return [];
+        var damaged = [];
+        var lists = this.unitLists();
+        for (var n=0; n < lists.length; n++) {
+            for (var k=lists[n].list.length - 1; k >= 0; k--) {
+                var unit = lists[n].list[k];
+                if (!unit || unit === attacker || unit === primaryDefender || this.isCity(unit)
+                    || unit.type == 4 || !unit.coord || !this.isAtWar(attacker.team || 0, unit.team || lists[n].userId)
+                    || unit.coord.i != coord.i || unit.coord.j != coord.j) continue;
+                this.ensureUnit(unit);
+                var amount = Math.max(1, unit.maxHealth*0.10*factor);
+                unit.health = Math.max(0, unit.health - amount);
+                damaged.push(unit);
+                if (unit.health <= 0) lists[n].list.splice(k, 1);
+            }
+        }
+        return damaged;
     }
 
     battleChanceInputs(attacker, defender)
@@ -301,9 +375,13 @@ const _military = new class
         var hasFortification = !!(defender.coord && typeof _map_terrain_mod != 'undefined'
             && _map_terrain_mod[defender.coord.i] && _map_terrain_mod[defender.coord.i][defender.coord.j]
             && _map_terrain_mod[defender.coord.i][defender.coord.j].fortification);
-        var buildingBonus = hasFortification ? this.fortificationDefenseBonus : 0;
+        var fortificationPercent = hasFortification
+            ? Number(_map_terrain_mod[defender.coord.i][defender.coord.j].fortificationDefensePercent) : 100;
+        if (!Number.isFinite(fortificationPercent)) fortificationPercent = 100;
+        fortificationPercent = Math.max(0, Math.min(100, fortificationPercent));
+        var buildingBonus = hasFortification ? this.fortificationDefenseBonus*fortificationPercent/100 : 0;
         if (row.buildingBonus == 'ranged') {
-            if (hasFortification) buildingBonus += 0.30;
+            if (hasFortification) buildingBonus += 0.30*fortificationPercent/100;
             var city = this.cityAt(defender.coord);
             if (city) buildingBonus += 0.30 * this.cityDefensePercent(city) / 100;
         }
@@ -612,6 +690,8 @@ const _military = new class
         attacker.health = Math.max(0, Math.round((attacker.health || this.defaultHealth) - damage.attackerDamage));
         defender.unit.health = Math.max(0, Math.round((defender.unit.health || this.defaultHealth) - damage.defenderDamage));
         var cityDefenseChange = cityRecord ? this.damageCityDefense(cityRecord.unit, attacker) : null;
+        var fortificationDefenseChange = this.damageFortificationDefense(toCoord, attacker);
+        var collateral = this.applySiegeCollateral(attacker, defender.unit, toCoord);
 
         var attackerDead = attacker.health <= 0;
         var defenderDead = defender.unit.health <= 0;
@@ -635,6 +715,9 @@ const _military = new class
             + ' D=' + defender.unit.health;
         if (cityDefenseChange) message += '; city defense ' + cityDefenseChange.before
             + '%->' + cityDefenseChange.after + '%';
+        if (fortificationDefenseChange) message += '; fortification defense '
+            + fortificationDefenseChange.before + '%->' + fortificationDefenseChange.after + '%';
+        if (collateral.length) message += '; collateral damage to ' + collateral.length + ' units';
 
         if (defenderDead) {
             this.removeRecord(defender);

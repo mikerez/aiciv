@@ -56,6 +56,7 @@ const _ai_player = new class
         this.batchSize = 8;
         this.batchCursors = {};
         this.actionCandidateCursors = {};
+        this.forcedActionUnitServerId = null;
         this.economicsCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
         this.settlerBuildCityTurnLimit = 20;
@@ -227,7 +228,7 @@ const _ai_player = new class
         if (this.backgroundWorkerReady) return Promise.resolve(true);
         if (this.backgroundWorkerLoadPromise) return this.backgroundWorkerLoadPromise;
         if (typeof Worker == 'undefined') {
-            return Promise.reject(new Error('Web Workers are not supported by this browser'));
+            return this.ensureDefaultModelsLoaded(false);
         }
 
         var self = this;
@@ -268,6 +269,9 @@ const _ai_player = new class
         await this.ensureBackgroundModelsLoaded();
         if (!(input instanceof Float32Array)) {
             throw new Error('Background AI input must be a Float32Array');
+        }
+        if (!this.backgroundWorkerReady || !this.backgroundWorker) {
+            return await this.infer(kind, input);
         }
         var requestId = this.backgroundWorkerRequestId++;
         var transferableInput = new Float32Array(input);
@@ -1053,6 +1057,17 @@ const _ai_player = new class
         return input;
     }
 
+    buildActionInputForUnit(ownerTeam, unitServerId, strategyFocus = null)
+    {
+        this.forcedActionUnitServerId = Number(unitServerId);
+        try {
+            return this.buildActionInput(ownerTeam, strategyFocus);
+        }
+        finally {
+            this.forcedActionUnitServerId = null;
+        }
+    }
+
     encodeActionCandidate(input, base, k, candidate, ownerTeam, strategyFocus)
     {
         var unit = _units[k];
@@ -1207,8 +1222,11 @@ const _ai_player = new class
         var self = this;
         var all = this.sortedUnits(function(unit) {
             return unit && unit.type != 3 && (unit.team || 0) == ownerTeam
-                && unit.coord && self.isTileSeenByUser(unit.coord.i, unit.coord.j, ownerTeam);
+                && unit.coord && self.isTileSeenByUser(unit.coord.i, unit.coord.j, ownerTeam)
+                && (self.forcedActionUnitServerId == null
+                    || Number(unit.serverId) == self.forcedActionUnitServerId);
         });
+        if (this.forcedActionUnitServerId != null) return all.slice(0, 1);
         var selected = [];
         var used = {};
         function addWhere(predicate) {

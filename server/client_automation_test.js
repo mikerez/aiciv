@@ -37,12 +37,18 @@ assert.equal(firstSubmission.commands[0].command, 'move');
 assert.deepEqual(JSON.parse(JSON.stringify(firstSubmission.commands[0].path)), [{i: 5, j: 4}]);
 assert.equal(firstSubmission.commands[1].command, 'set_state', 'first improvement turn only persists Worker state');
 assert.equal(firstSubmission.actions.length, 0, 'first improvement turn must not contact the build endpoint');
-assert.equal(worker.clientImprovementTurnsLeft, 1);
-const secondSubmission = sandbox.serverGame.captureTurn(7);
-assert.equal(secondSubmission.commands[1].command, 'hold', 'completed client countdown uses the action batch');
-assert.equal(secondSubmission.actions.length, 1, 'second improvement turn submits one build request');
-assert.equal(secondSubmission.actions[0].type, 'build');
-assert.equal(secondSubmission.actions[0].building_type, 'cottage');
+assert.equal(worker.clientImprovementTurnsLeft, 4);
+for (let turnsLeft = 3; turnsLeft >= 1; turnsLeft--) {
+    const waitingSubmission = sandbox.serverGame.captureTurn(7);
+    assert.equal(waitingSubmission.commands[1].command, 'set_state');
+    assert.equal(waitingSubmission.actions.length, 0);
+    assert.equal(worker.clientImprovementTurnsLeft, turnsLeft);
+}
+const fifthSubmission = sandbox.serverGame.captureTurn(7);
+assert.equal(fifthSubmission.commands[1].command, 'hold', 'completed client countdown uses the action batch');
+assert.equal(fifthSubmission.actions.length, 1, 'fifth Cottage turn submits one build request');
+assert.equal(fifthSubmission.actions[0].type, 'build');
+assert.equal(fifthSubmission.actions[0].building_type, 'cottage');
 const chopper = {unitTypeId: 'worker', state: 'chop_forest'};
 assert.equal(sandbox.serverGame.advanceImprovementCountdown(chopper, 'chop_forest'), false);
 assert.equal(chopper.clientImprovementTurnsLeft, 3);

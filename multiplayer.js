@@ -39,16 +39,17 @@ const _multiplayer = new class
             var playerId = parseInt(players[n].player_id, 10);
             _user_types[playerId] = players[n].user_type || 'human';
             if (_user_types[playerId] == 'human' && playerId == humanId) humanId = playerId;
-            if (_user_types[playerId] == 'ai' && parseInt(players[n].parent_id, 10) == humanId && aiId == null) {
+            if (_user_types[playerId] == 'ai' && aiId == null) {
                 aiId = playerId;
             }
         }
         _user_types[humanId] = 'human';
-        _user_ids = aiId == null ? [humanId] : [humanId, aiId];
+        _user_ids = [humanId];
         this.humanUserId = humanId;
         this.hiddenAiUserId = aiId;
         _hidden_ai_user_id = aiId;
-        for (var index=0; index < _user_ids.length; index++) this.ensureUser(_user_ids[index]);
+        this.ensureUser(humanId);
+        if (aiId != null) this.ensureUser(aiId);
     }
 
     initUsers(userIds)
@@ -249,6 +250,8 @@ const _multiplayer = new class
             terrainTextures: this.cloneNumberGrid(_map_terrain_tex, 0),
             terrainModifiers: this.cloneObjectGrid(_map_terrain_mod, {}),
             resources: this.cloneObjectGrid(_map_resource, { type: 0, hidden: true }),
+            mapOriginI: _map_origin_i,
+            mapOriginJ: _map_origin_j,
             fullDraw: _fulldraw,
         };
     }
@@ -281,6 +284,9 @@ const _multiplayer = new class
 
     restoreClientContext(context)
     {
+        if (typeof _server_game != 'undefined' && _server_game.setMapWindowOrigin) {
+            _server_game.setMapWindowOrigin(context.mapOriginI, context.mapOriginJ, false);
+        }
         _units = context.units;
         _current_user = context.currentUser;
         current_user = context.publicCurrentUser;
@@ -349,73 +355,101 @@ const _multiplayer = new class
         }
     }
 
-    async prepareHiddenAiPlan(expectedTurn)
+    async prepareAiUnitOrder(aiId, snapshot, unitId, strategyFocus)
     {
-        var aiId = this.hiddenAiUserId;
-        await _ai_player.ensureBackgroundModelsLoaded();
-        var snapshot = await _server_game.fetchFullPlayer(aiId, false);
-        var snapshotTurn = snapshot.turn == undefined ? _server_game.serverTurn : parseInt(snapshot.turn, 10);
-        if (expectedTurn != undefined && snapshotTurn != expectedTurn) return null;
-
-        var strategyStage = this.withHiddenSnapshot(aiId, snapshot, function() {
+        var stage = this.withHiddenSnapshot(aiId, snapshot, function() {
             return {
-                input: _ai_player.buildStrategyInput(aiId),
+                input: _ai_player.buildActionInputForUnit(aiId, unitId, strategyFocus),
                 adapter: _multiplayer.captureAiAdapterState(),
+                hasUnit: _ai_player.lastActionUnitIndices.length > 0,
             };
         });
-        var strategyOutput = await _ai_player.inferBackground('strategy', strategyStage.input);
-
-        var inputStage = this.withHiddenSnapshot(aiId, snapshot, function() {
-            _multiplayer.restoreAiAdapterState(strategyStage.adapter);
-            var strategyDecision = _ai_player.decodeStrategyOutput(strategyOutput, aiId);
-            _ai_player.lastStrategyFocuses = strategyDecision.focuses;
-            _ai_player.lastStrategyMilitaryFocus = strategyDecision.maxMilitaryFocus;
-            _ai_player.lastStrategyProductionDemands = strategyDecision.productionDemands;
-            var economicsInput = _ai_player.buildEconomicsInput(aiId, strategyDecision.productionDemands);
-            _ai_player.advanceSettlerTurnCounters(aiId);
-            var actionInput = _ai_player.buildActionInput(aiId, strategyDecision.maxMilitaryFocus);
-            return {
-                strategyDecision: strategyDecision,
-                economicsInput: economicsInput,
-                actionInput: actionInput,
-                adapter: _multiplayer.captureAiAdapterState(),
-            };
+        if (!stage.hasUnit) return null;
+        var output = await _ai_player.inferBackground('action', stage.input);
+        return this.withHiddenSnapshot(aiId, snapshot, function() {
+            _multiplayer.restoreAiAdapterState(stage.adapter);
+            var found = _server_game.findUnit(aiId, Number(unitId), null);
+            var automatic = found && found.unit
+                && ['automate', 'road_to', 'explore', 'patrol'].indexOf(
+                    found.unit.automationMode || found.unit.state
+                ) != -1;
+            if (!automatic) _ai_player.applyActionOutput(output, aiId);
+            if (found && found.unit) _multiplayer.routeExcessMilitaryToStrategicResource(found.unit);
+            return _server_game.captureTurn(aiId, [unitId]);
         });
-        var outputs = await Promise.all([
-            _ai_player.inferBackground('economics', inputStage.economicsInput),
-            _ai_player.inferBackground('action', inputStage.actionInput),
-        ]);
-        return {
-            ownerTeam: aiId,
-            turn: snapshotTurn,
-            snapshot: snapshot,
-            adapter: inputStage.adapter,
-            strategyOutput: strategyOutput,
-            economicsOutput: outputs[0],
-            actionOutput: outputs[1],
-        };
     }
 
-    async applyAndSubmitHiddenAiPlan(plan)
+    routeExcessMilitaryToStrategicResource(unit)
     {
-        if (!plan || plan.turn != _server_game.serverTurn) return null;
-        var aiId = plan.ownerTeam;
-        var submission = this.withHiddenSnapshot(aiId, plan.snapshot, function() {
-            _multiplayer.restoreAiAdapterState(plan.adapter);
-            _ai_player.log('U' + aiId + ' background AI turn applying worker results');
-            _ai_player.applyStrategyOutput(plan.strategyOutput, aiId);
-            _ai_player.applyEconomicsOutput(plan.economicsOutput, aiId);
-            _ai_player.advanceSettlerTurnCounters(aiId);
-            _ai_player.applyActionOutput(plan.actionOutput, aiId);
-            return _server_game.captureTurn(aiId);
-        });
-        await _server_game.waitForHiddenActions();
-        if (plan.turn != _server_game.serverTurn) return null;
-        return await _server_game.submitTurn(submission, {
-            hidden: true,
-            deferUpdates: true,
-            deferPolling: true,
-        });
+        if (!unit || unit.type != 2 || unit.guardResource || !unit.coord
+            || typeof _resource_types == 'undefined' || typeof _current_game == 'undefined') return false;
+        var strategicIds = { copper: true, iron: true, gold: true, gems: true, diamonds: true };
+        var best = null;
+        for (var i=0; i<_map_size; i++) {
+            for (var j=0; j<_map_size; j++) {
+                var resource = _map_resource[i] && _map_resource[i][j];
+                var definition = resource && resource.type ? _resource_types[resource.type] : null;
+                if (!definition || !strategicIds[definition.id]) continue;
+                var distance = Math.abs(i-unit.coord.i) + Math.abs(j-unit.coord.j);
+                if (!best || distance < best.distance) best = { i: i, j: j, distance: distance };
+            }
+        }
+        if (!best || best.distance <= 1) {
+            unit.state = 'fortified';
+            unit.gotoPath = [];
+            unit.gotoCoord = null;
+            return !!best;
+        }
+        var unitIndex = _units.indexOf(unit);
+        if (unitIndex < 0) return false;
+        var path = _current_game.buildPath(unitIndex, new Coord(best.i, best.j));
+        if (!path.length) return false;
+        _current_game.assignPath(unitIndex, path);
+        unit.state = 'ready';
+        return true;
+    }
+
+    async contributeAiBatches(expectedTurn)
+    {
+        var aiId = this.hiddenAiUserId;
+        if (aiId == null || typeof _ai_player == 'undefined') return null;
+        await _ai_player.ensureBackgroundModelsLoaded();
+        var snapshot = null;
+        var batches = 0;
+        while (_server_game.serverTurn == expectedTurn
+            && !_turn_in_progress && Date.now() + 350 < _server_game.deadlineAt) {
+            // Every lease can come from a different 100x100 world sector.
+            var batch = await _server_game.claimAiBatch(true);
+            if (batch.turn != expectedTurn || !batch.unit_ids || !batch.unit_ids.length) break;
+            if (batch.snapshot) snapshot = batch.snapshot;
+            if (!snapshot) break;
+            aiId = Number(batch.ai_player_id);
+            this.hiddenAiUserId = aiId;
+            var commands = [];
+            var actions = [];
+            for (var n=0; n < batch.unit_ids.length; n++) {
+                if (_server_game.serverTurn != expectedTurn || _turn_in_progress) break;
+                var submission = await this.prepareAiUnitOrder(
+                    aiId, snapshot, batch.unit_ids[n], _ai_player.lastStrategyMilitaryFocus
+                );
+                if (!submission) continue;
+                commands = commands.concat(submission.commands || []);
+                actions = actions.concat(submission.actions || []);
+                // Stream small chunks so useful work reaches a six-second turn
+                // even when eight Action inferences cannot all finish in time.
+                if (commands.length >= 2) {
+                    await _server_game.submitAiBatch(batch, { commands: commands, actions: actions });
+                    commands = [];
+                    actions = [];
+                }
+            }
+            if (commands.length || actions.length) {
+                await _server_game.submitAiBatch(batch, { commands: commands, actions: actions });
+            }
+            batches++;
+            await new Promise(function(resolve) { setTimeout(resolve, 0); });
+        }
+        return { batches: batches };
     }
 
     startBackgroundAiTurn(expectedTurn)
@@ -426,10 +460,9 @@ const _multiplayer = new class
         this.backgroundAiTurn = expectedTurn;
         this.hiddenTurnRunning = true;
         var self = this;
-        this.backgroundAiPromise = this.prepareHiddenAiPlan(expectedTurn)
-            .then(function(plan) { return self.applyAndSubmitHiddenAiPlan(plan); })
+        this.backgroundAiPromise = this.contributeAiBatches(expectedTurn)
             .catch(function(error) {
-                _server_game.log('Hidden AI background turn failed: ' + error.message);
+                _server_game.log('Shared AI contribution failed: ' + error.message);
                 return null;
             })
             .finally(function() { self.hiddenTurnRunning = false; });
@@ -443,21 +476,11 @@ const _multiplayer = new class
 
     async submitHumanAndHiddenAiTurn(humanSubmission)
     {
-        // The human atomic commands must enter the current server turn without
-        // waiting for model inference, which can outlast the five-second window.
-        var humanTurn = _server_game.submitTurn(humanSubmission, {
+        // Shared AI work is opportunistic and must never delay the human turn.
+        var result = await _server_game.submitTurn(humanSubmission, {
             deferUpdates: true,
             deferPolling: true,
         });
-        // Start model work only after submitTurn has had a chance to begin its
-        // fetch. Some AI preparation runs synchronously before its first await.
-        var self = this;
-        Promise.resolve().then(function() {
-            return self.startBackgroundAiTurn(humanSubmission.turn);
-        }).catch(function(error) {
-            _server_game.log('Hidden AI turn failed after human submission: ' + error.message);
-        });
-        var result = await humanTurn;
         var update = await _server_game.loadUpdates(this.humanUserId);
         if (update.turn <= result.submitted_turn) {
             _server_game.pollForResolution(this.humanUserId, result.submitted_turn);

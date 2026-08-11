@@ -9,11 +9,11 @@ const {assert, serverGame, resetDatabase, bootstrap, value, expectRequestError} 
     global._map_size = 100;
     const response = await serverGame.request('reset_game', {player_id: fixture.playerId, confirm: 'RESET'});
     assert.equal(response.turn, 0);
-    assert.equal(response.map_size, 100);
+    assert.equal(response.map_size, 300);
     assert.equal(Number(value('SELECT COUNT(*) FROM server_games')), 1);
-    assert.equal(Number(value('SELECT COUNT(*) FROM server_game_map')), 10000);
+    assert.equal(Number(value('SELECT COUNT(*) FROM server_game_map')), 90000);
     assert.equal(Number(value('SELECT COUNT(*) FROM server_game_orders')), 0);
     assert.equal(Number(value('SELECT COUNT(*) FROM server_game_events')), 0);
     assert.equal(Number(value('SELECT COUNT(*) FROM server_game_submissions')), 0);
-    console.log('PASS reset_game requires confirmation and recreates a clean 100x100 world without gameplay history');
+    console.log('PASS reset_game requires confirmation and recreates a clean 300x300 world without gameplay history');
 })().catch(error => { console.error(error); process.exitCode = 1; });

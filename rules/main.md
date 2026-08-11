@@ -29,7 +29,7 @@
 - `MAIN-MENU-013`: A bottom-right Civilizations button opens the known-player list with civilization identity, coat of arms, directional Friend/Enemy controls, food, gold, living forces, kills, and City statistics.
 - `MAIN-MENU-014`: On phones, the Civilizations list expands between the screen safe-area insets and the Civilizations button, using the available width and height with internal scrolling and enlarged player rows.
 - `MAIN-MENU-015`: On phones, a selected tile containing multiple units exposes a Units toggle directly below the white statistics and message lines. Its half-viewport-width selector starts below that toggle, uses a stable pixel height calculated from the live viewport, expands downward, scrolls internally, and retracts after a unit is selected.
-- `MAIN-MENU-016`: With the main toolbar disabled, the live turn countdown is part of the compact top-edge End Turn button. The two top-left status lines are raised approximately 15 pixels toward the screen corner.
+- `MAIN-MENU-016`: With the main toolbar disabled, the live turn countdown is part of the compact top-edge End Turn button. The top-left display uses one raised status line for current turn messages; the obsolete technology-progress line is not drawn.
 - `MAIN-MOBILE-003`: On phones, touching a Tile with multiple units selects its top unit immediately so a held drag can issue movement. The unit-stack panel opens only when the gesture ends as a tap within 500 milliseconds and without moving at least 12 CSS pixels.
 - `MAIN-MOBILE-004`: The phone unit action panel follows the same confirmed-tap rule as the unit-stack panel. It remains hidden during a held movement-path drag and opens after touch release only for a tap within 500 milliseconds and 12 CSS pixels.
 - `MAIN-MOBILE-005`: After Goto or Road-to is selected from the phone action panel, the next stationary map touch assigns its destination on touch release. Moving at least 12 CSS pixels cancels that destination tap without panning the map or leaving command targeting mode.
@@ -68,6 +68,14 @@
 - `MAIN-RESOURCE-001`: Map tile state contains a resource type id in `_map_resource[i][j]`.
 - `MAIN-RESOURCE-002`: Resource overlay sprites are prepared as a full-map resource sprite list and drawn above terrain and below units.
 - `MAIN-BIRDSVIEW-001`: `birdsview.js` builds the `50x50` strategic world projection described in `rules/birdsview.md` from the current map size, terrain, resources, and user-indexed unit lists.
+- `MAIN-BIRDSVIEW-002`: A primary click inside the visible birdsview projection recenters the main world view on the corresponding map coordinate.
+- `MAIN-MAP-001`: The authoritative world is `300x300`; a browser holds and renders one aligned `100x100` terrain window. Unit routes retain world coordinates independently of the loaded terrain window.
+- `MAIN-MAP-002`: Selecting a unit shifts the loaded window only when that unit is within 10 Tiles of a current `100x100` window border. A normal shift advances by 10 Tiles, preserves the overlapping 90-Tile terrain, visibility, resources, modifiers, units, and routes, then fills the exposed strip from the server without blanking the current map.
+- `MAIN-MAP-003`: Every authoritative coordinate update, including combat snapshots, draws a 900 ms final-step arrival streak and glow from the source direction without delaying state application.
+- `MAIN-MOVE-001`: Goto preview, stored route, and submitted atomic movement use one deterministic bounded A* route. The route has no repeated Tiles, prefers continuous roads, penalizes hills and mountains, and respects the selected unit's land/water entry rules.
+- `MAIN-RESPAWN-001`: A defeated player receives a large `Click on minimap to select respawn point` prompt and remains in selection mode without a countdown. Only a birdsview/minimap click submits the requested point; PHP chooses the nearest valid unoccupied land Tile and the browser centers there after respawn.
+- `MAIN-RESPAWN-002`: The bottom-right `Options` button opens a centered menu containing `Log out`, `Respawn`, and `Back to game`. Manual Respawn enters the same minimap-selection flow even while the civilization still has units.
+- `MAIN-CITY-008`: PHP assigns each newly built City the next unused name from its civilization list. The map draws `<population> <city name>` in bold below the City sprite.
 
 ## AI Player Rules
 
@@ -85,10 +93,11 @@
 - `MAIN-AI-007B`: Because every technology is temporarily open, Economics training includes simultaneous improvement-technology signals. Existing Worker count and Strategy demand must outweigh those signals once the civilization has enough Workers; available improvements are not a permanent Worker-production order.
 - `MAIN-AI-010`: Action receives Strategy focus coordinates as dx/dy relative to the current unit and normalized by the 9x9 window radius, not as absolute map coordinates.
 - `MAIN-AI-008`: AI model fully connected layer widths reduce from input values to `72` output values through eight tanh layers. Strategy currently starts at `3524` input values; other engines currently start at `1024`.
-- `MAIN-AI-009`: Demo multiplayer mode can run both users as AI players; the human advances time by clicking End Turn and observes the visible prepared AI orders.
-- `MAIN-AI-012`: Each authenticated browser controls one visible human and one hidden AI account. It submits their turns independently in human-then-AI order, runs the AI against only that AI's server-visible snapshot, and restores the human client context without drawing or recentering AI actions.
-- `MAIN-AI-013`: The hidden AI account retains stable server ownership of its units and state when adopted by a newly online human whose client will drive it.
-- `MAIN-AI-014`: Hidden AI neural-network inference runs in a Web Worker concurrently with the human turn. The human countdown never terminates AI inference; ending the human turn waits for an unfinished AI result, then submits both independent player states without showing or centering AI actions.
+- `MAIN-AI-009`: A game has exactly one global AI civilization. Legacy per-human AI accounts are discarded when the development game is reset.
+- `MAIN-AI-012`: Every authenticated browser may contribute work to the global AI during its human turn. PHP leases a random batch of eight unassigned movable AI units, and separate browsers receive disjoint batches.
+- `MAIN-AI-013`: The Action model evaluates each unit in a leased batch independently. The client submits only current-turn atomic commands and immediate actions for the leased ids; PHP merges them by unit without creating an AI turn submission.
+- `MAIN-AI-014`: Shared AI inference runs concurrently with the human turn and stops when that turn ends. End Turn never waits for AI inference, an AI lease, or AI command submission.
+- `MAIN-AI-015`: Generated Iron, Copper, Gold, Gems, and Diamonds deposits receive one global-AI force containing five Settlers, five Explorers, ten Archers, and one automated Worker, spread according to the five-unit Tile limit. Automated Workers improve and road-connect guarded resources after an owned City exists nearby.
 
 ## Server Game Rules
 

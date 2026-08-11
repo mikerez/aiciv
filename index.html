@@ -40,12 +40,10 @@
             border: 1px solid rgba(0,0,0,0.35);
             border-radius: 8px;
             background-color: rgba(255,255,255,0.58);
-            --counter-frame-image: none;
-            --counter-icon-image: none;
-            background-image: var(--counter-frame-image), var(--counter-icon-image);
-            background-position: center, 9px center;
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(208,218,221,0.72));
+            background-position: center;
             background-repeat: no-repeat;
-            background-size: 100% 100%, 30px 30px;
+            background-size: 100% 100%;
             color: #111;
             font: bold 24px Arial;
             font-variant-numeric: tabular-nums;
@@ -53,13 +51,64 @@
         }
         .economy-counter.counter-wide { font-size: 20px; }
         .economy-counter.counter-very-wide { font-size: 16px; }
-        #foodCounter { --counter-icon-image: url('images/food.png'); }
-        #goldCounter { --counter-icon-image: url('images/money.png'); }
-        #logoutButton {
+        #foodCounter {
+            background-image: url('images/food.png'), linear-gradient(180deg, rgba(255,255,255,0.86), rgba(197,225,185,0.76));
+            background-position: 9px center, center;
+            background-size: 30px 30px, 100% 100%;
+        }
+        #goldCounter {
+            background-image: url('images/money.png'), linear-gradient(180deg, rgba(255,255,255,0.86), rgba(239,221,151,0.78));
+            background-position: 9px center, center;
+            background-size: 30px 30px, 100% 100%;
+        }
+        #optionsButton {
             position: fixed;
             right: 76px;
             bottom: 12px;
             z-index: 9;
+        }
+        #optionsMenu {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            display: none;
+            width: min(320px, calc(100vw - 32px));
+            box-sizing: border-box;
+            padding: 18px;
+            border: 1px solid rgba(0,0,0,0.45);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.82);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.28);
+            text-align: center;
+        }
+        #optionsMenu h2 { margin: 0 0 14px; font: bold 20px Arial; }
+        #optionsMenu button {
+            display: block;
+            width: 100%;
+            min-height: 40px;
+            margin-top: 8px;
+            border: 1px solid rgba(0,0,0,0.35);
+            border-radius: 5px;
+            background: rgba(255,255,255,0.82);
+            font: 15px Arial;
+            cursor: pointer;
+        }
+        #respawnPrompt {
+            position: fixed;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%);
+            z-index: 29;
+            display: none;
+            width: min(900px, calc(100vw - 32px));
+            pointer-events: none;
+            color: white;
+            text-align: center;
+            font: bold 34px Arial;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+                -2px 2px 0 #000, 2px 2px 0 #000;
         }
         #tileInfoMenu {
             position: fixed;
@@ -104,7 +153,7 @@
             font-size: 28px !important;
         }
         body.mobile-ui #endTurnButton,
-        body.mobile-ui #logoutButton {
+        body.mobile-ui #optionsButton {
             padding: 16px 24px !important;
             font-size: 28px !important;
             border-radius: 12px !important;
@@ -168,7 +217,7 @@
             height: calc(var(--phone-button-size) - 9px) !important;
         }
         body.phone-ui #endTurnButton,
-        body.phone-ui #logoutButton {
+        body.phone-ui #optionsButton {
             max-width: calc((var(--phone-vw) - 24px) / 2);
             min-height: 30px !important;
             padding: 5px 9px !important;
@@ -188,10 +237,14 @@
         }
         body.phone-ui .economy-counter.counter-wide { font-size: 15px; }
         body.phone-ui .economy-counter.counter-very-wide { font-size: 12px; }
-        body.phone-ui #logoutButton {
+        body.phone-ui #optionsButton {
             right: calc(env(safe-area-inset-right, 0px) + 72px) !important;
             bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
         }
+        body.phone-ui #optionsMenu { padding: 14px; }
+        body.phone-ui #optionsMenu h2 { font-size: 24px; }
+        body.phone-ui #optionsMenu button { min-height: 48px; }
+        body.phone-ui #respawnPrompt { top: 38%; font-size: 28px; }
         body.phone-ui #foreground {
             top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 50px) !important;
             right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
@@ -304,7 +357,14 @@
         <button id="endTurnButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">End Turn (6s)</button>
         <div id="goldCounter" class="economy-counter" title="Gold storage"><span id="goldCounterValue">-</span></div>
     </div>
-    <button id="logoutButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Log Out</button>
+    <button id="optionsButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Options</button>
+    <div id="optionsMenu" role="dialog" aria-modal="true" aria-labelledby="optionsMenuTitle">
+        <h2 id="optionsMenuTitle">Options</h2>
+        <button id="optionsLogoutButton" type="button">Log out</button>
+        <button id="optionsRespawnButton" type="button">Respawn</button>
+        <button id="optionsBackButton" type="button">Back to game</button>
+    </div>
+    <div id="respawnPrompt">Click on minimap to select respawn point</div>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -313,6 +373,9 @@
 
         // we dont use class members to do not always write "this." since we use only one object of any type
         const _map_size = 100;
+        var _world_map_size = 100;
+        var _map_origin_i = 0;
+        var _map_origin_j = 0;
         const _cell_width = 200;  // by X, already multiplied by sqrt2/2
         const _cell_height = 200;  // by Y, already multiplied by sqrt2/2
         const _map_view = [_map_size/2*_cell_width,-_map_size/2*_cell_height,
@@ -328,11 +391,11 @@
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
     <script src="mobile_ui.js?v=20260805i"></script>
-    <script src="menu_unit.js?v=20260808c"></script>
-    <script src="draw.js?v=20260806d"></script>
-    <script src="control.js?v=20260808a"></script>
-    <script src="birdsview.js?v=20260805a"></script>
-    <script src="ai.js?v=20260809c"></script>
+    <script src="menu_unit.js?v=20260809d"></script>
+    <script src="draw.js?v=20260811a"></script>
+    <script src="control.js?v=20260811a"></script>
+    <script src="birdsview.js?v=20260809b"></script>
+    <script src="ai.js?v=20260810a"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -342,12 +405,12 @@
             });
         }
     </script>
-    <script src="game.js?v=20260809a"></script>
-    <script src="military.js?v=20260809a"></script>
-    <script src="economics.js?v=20260809a"></script>
-    <script src="multiplayer.js?v=20260808d"></script>
-    <script src="server_game.js?v=20260809b"></script>
-    <script src="city.js?v=20260809c"></script>
+    <script src="game.js?v=20260810c"></script>
+    <script src="military.js?v=20260809b"></script>
+    <script src="economics.js?v=20260809b"></script>
+    <script src="multiplayer.js?v=20260810c"></script>
+    <script src="server_game.js?v=20260811b"></script>
+    <script src="city.js?v=20260811c"></script>
     <script src="menu_tile.js?v=20260808b"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
@@ -359,10 +422,10 @@
     <script src="menu_main.js"></script>
     -->
     <script src="game_events.js?v=20260805b"></script>
-    <script src="menu_stack.js?v=20260807f"></script>
+    <script src="menu_stack.js?v=20260809g"></script>
     <script src="menu_civilizations.js?v=20260807e"></script>
-    <script src="map.js?v=20260808b"></script>
-    <script src="screen.js?v=20260807d"></script>
+    <script src="map.js?v=20260810c"></script>
+    <script src="screen.js?v=20260810c"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -456,7 +519,7 @@
         _screen.loadTexture('money.png', 864);
         _screen.loadTexture('money5.png', 865);
         _screen.loadTexture('fishing_boats.png', 866);
-        _screen.loadTexture('destroyed_city.png', 869);
+        _screen.loadTexture('destroyed_city.png', 871);
         _screen.loadTexture('nets.png', 870);
         _screen.loadTexture('quarry.png', 867);
         _screen.loadTexture('winery.png', 868);
@@ -467,7 +530,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260809c"></script>
+    <script src="game_prehistory.js?v=20260811c"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
@@ -542,6 +605,8 @@
 
         async function endTurn(forcedByTimeout)
         {
+            if (typeof _server_game !== 'undefined'
+                && _server_game.isRespawnSelecting(_current_user)) return;
             if (typeof _server_game !== 'undefined' && _server_game.isAwaitingResolution(_current_user)) {
                 _server_game.updateWaitingUi(_current_user);
                 return;
@@ -553,6 +618,9 @@
                 && !_current_game.canEndTurnWithCurrentSelection()) {
                 return;
             }
+            var selectedCityMenu = _current_game.captureSelectedCityMenu
+                ? _current_game.captureSelectedCityMenu() : null;
+            var selectedCityMenuRestored = false;
             _turn_in_progress = 1;
             var endTurnButton = document.getElementById('endTurnButton');
             if (endTurnButton) {
@@ -595,10 +663,16 @@
                     }
                     await _multiplayer.endCurrentUserTurn();
                 }
+                if (_current_game.restoreSelectedCityMenu) {
+                    selectedCityMenuRestored = _current_game.restoreSelectedCityMenu(selectedCityMenu);
+                }
                 _fulldraw = 1;
                 drawScene(0);
             }
             finally {
+                if (!selectedCityMenuRestored && _current_game.restoreSelectedCityMenu) {
+                    _current_game.restoreSelectedCityMenu(selectedCityMenu);
+                }
                 _turn_in_progress = 0;
                 var awaitingServer = typeof _server_game !== 'undefined'
                     && _server_game.isAwaitingResolution(_current_user);
@@ -622,10 +696,31 @@
             endTurn();
         };
 
-        document.getElementById('logoutButton').onclick = function(event) {
+        function setOptionsMenuVisible(visible) {
+            document.getElementById('optionsMenu').style.display = visible ? 'block' : 'none';
+        }
+
+        document.getElementById('optionsButton').onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var menu = document.getElementById('optionsMenu');
+            setOptionsMenuVisible(menu.style.display != 'block');
+        };
+        document.getElementById('optionsLogoutButton').onclick = function(event) {
             event.preventDefault();
             event.stopPropagation();
             _server_game.logout(this);
+        };
+        document.getElementById('optionsRespawnButton').onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setOptionsMenuVisible(false);
+            _server_game.beginRespawnSelection(_current_user, true, false);
+        };
+        document.getElementById('optionsBackButton').onclick = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setOptionsMenuVisible(false);
         };
 
         function primaryInput(event)
@@ -741,6 +836,25 @@
             const point = eventToCanvas(input);
             const coord = eventToMapCoord(input);
             _last_hover_coord = coord;
+            var minimapCoord = event.button != 2 && typeof _birdsview != 'undefined'
+                && _birdsview.screenPointToMapCoord
+                ? _birdsview.screenPointToMapCoord(point.x, point.y, document.getElementById('canvas2D'))
+                : null;
+            if (minimapCoord) {
+                if (typeof _server_game != 'undefined' && _server_game.isRespawnSelecting(_current_user)) {
+                    _server_game.selectRespawnPoint(_current_user, minimapCoord);
+                }
+                else {
+                    _birdsview.centerViewAt(minimapCoord);
+                }
+                _mousedown = 0;
+                return;
+            }
+            if (event.button != 2 && typeof _server_game != 'undefined'
+                && _server_game.isRespawnSelecting(_current_user)) {
+                _mousedown = 0;
+                return;
+            }
             if (event.button != 2 && typeof _menu_tile != 'undefined') _menu_tile.hide();
             var phoneTouch = event.type === 'touchstart' && document.body.classList.contains('phone-ui');
             if (phoneTouch && _last_phone_tap) {
@@ -1035,6 +1149,10 @@
                 _ctrl_pressed = 0;
             }
             if (event.code === 'Escape') {
+                if (document.getElementById('optionsMenu').style.display == 'block') {
+                    setOptionsMenuVisible(false);
+                    return;
+                }
                 _last_phone_tap = null;
                 _pending_ground_tap = null;
                 clearGameSelection();

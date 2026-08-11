@@ -35,6 +35,7 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-TURN-003`: A penalty of `0` means the unit can continue moving on the next turn.
 - `TERRAIN-TURN-004`: A penalty greater than `0` delays future movement while the penalty is decremented by turn processing.
 - `TERRAIN-TURN-005`: Water terrain is currently blocked for normal land movement.
+- `TERRAIN-TURN-006`: Mounted and wheeled units (Horseman, Chariot, Knight, and Elephant) cannot enter a maximum-height mountain Tile (`T=5`, `D=3`). Other land units entering it receive a three-turn future movement delay.
 
 ## Generation
 
@@ -49,6 +50,7 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-SUPER-001`: Before one member of a 4-cell supertile is modified, the full supertile is split back into four ordinary terrain cells; the requested change then applies only to its target cell.
 - `A` marks an alternative visual variant of the same terrain data. For water-related terrain, `A` also indicates that a water source exists.
 - `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
+- `TERRAIN-GEN-004`: Generation adds many radial mountain clusters. Each cluster has a guaranteed maximum-height center, falls toward lower surrounding heights, and may contain local mountain water sources through the `A` bit.
 
 ## Terrain Modifiers
 

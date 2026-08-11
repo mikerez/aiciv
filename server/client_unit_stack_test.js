@@ -31,8 +31,8 @@ const sandbox = {
     console,
     document: {body, createElement: element},
     _units: [
-        {serverId: 10, type: 0, name: 'Settlers', health: 100, coord: {i: 4, j: 5}},
-        {serverId: 11, type: 1, name: 'Explorer', health: 80, coord: {i: 4, j: 5}},
+        {serverId: 10, type: 0, can_move:true, name: 'Settlers', health: 100, coord: {i: 4, j: 5}},
+        {serverId: 11, type: 1, can_move:true, name: 'Explorer', health: 80, coord: {i: 4, j: 5}},
     ],
     _selection: 0,
     _multi_selection: [],
@@ -85,11 +85,11 @@ assert.equal(menu.finishDeferredPhoneTap(false), false, 'touch cancellation must
 assert.equal(menu.panel.style.display, 'none');
 
 sandbox._units.splice(0, sandbox._units.length,
-    {serverId: 20, type: 2, name: 'Warrior', health: 100, coord: {i: 7, j: 8}},
-    {serverId: 21, type: 3, name: 'City', health: 100, coord: {i: 7, j: 8}},
-    {serverId: 22, type: 2, name: 'Archer', health: 100, coord: {i: 7, j: 8}},
-    {serverId: 23, type: 1, name: 'Worker', health: 100, coord: {i: 7, j: 8}},
-    {serverId: 24, type: 4, name: 'Road', health: 100, hiddenOnMap: true, coord: {i: 7, j: 8}});
+    {serverId: 20, type: 2, can_move:true, name: 'Warrior', health: 100, coord: {i: 7, j: 8}},
+    {serverId: 21, type: 3, can_move:false, name: 'City', health: 100, coord: {i: 7, j: 8}},
+    {serverId: 22, type: 2, can_move:true, name: 'Archer', health: 100, coord: {i: 7, j: 8}},
+    {serverId: 23, type: 1, can_move:true, name: 'Worker', health: 100, coord: {i: 7, j: 8}},
+    {serverId: 24, type: 4, can_move:false, name: 'Road', health: 100, hiddenOnMap: true, coord: {i: 7, j: 8}});
 menu.show([0, 1, 2, 3], {i: 7, j: 8});
 assert.equal(menu.panel.children[2].children[0].textContent, 'CITY', 'City must be first in the stack');
 sandbox._units.splice(0, 4,

@@ -550,8 +550,10 @@ const _game = new class
                     continue;
                 }
                 if (_units[k].coord != prev) {
+                    var arrivedTerrain = _map_terrain_tex[_units[k].coord.i][_units[k].coord.j];
                     _units[k].move_penalty = _map.hasRoad(_units[k].coord.i, _units[k].coord.j)
-                        ? 0 : (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
+                        ? 0 : ((arrivedTerrain&0x0F) == 5 && ((arrivedTerrain>>4)&0x03) == 3
+                            ? 4 : (arrivedTerrain>>4)&0x3);
                 }
                 else if (!_units[k].gotoPath.length && _units[k].gotoCoord != undefined) {
                     _units[k].gotoCoord = null;
@@ -643,8 +645,10 @@ const _game = new class
                     continue;
                 }
                 if (_units[k].coord != prev) {
+                    var arrivedTerrain = _map_terrain_tex[_units[k].coord.i][_units[k].coord.j];
                     _units[k].move_penalty = _map.hasRoad(_units[k].coord.i, _units[k].coord.j)
-                        ? 0 : (_map_terrain_tex[_units[k].coord.i][_units[k].coord.j]>>4)&0x3;
+                        ? 0 : ((arrivedTerrain&0x0F) == 5 && ((arrivedTerrain>>4)&0x03) == 3
+                            ? 4 : (arrivedTerrain>>4)&0x3);
 //console.log(_units[k].move_penalty)
                 }
                 else if (!_units[k].gotoPath.length && _units[k].gotoCoord != undefined) {

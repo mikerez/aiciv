@@ -40,6 +40,7 @@ var tennysonQuote = hereDoc(function() {/*!
 <a data-menu-command="optimize_city:food" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';">Optimize for food</a><br>
 <a data-menu-command="optimize_city:production" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';">Optimize for production</a><br>
 <a data-menu-command="optimize_city:gold" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';">Optimize for gold</a><br>
+<a data-menu-command="optimize_city:balanced" onmouseover="this.style.backgroundColor='orange';" onmouseout="this.style.backgroundColor='';">Optimize for all</a><br>
 </div>
 <div data-menu-option="city_production_queue" style="display:none;color:darkblue;font:14px 'Courier New';margin-top:12px;"></div>
 */});

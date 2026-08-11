@@ -47,7 +47,7 @@ function command(unitId, name, path = [], payload = {}) {
     const captureTiles = mapTiles(8);
     const ironTile = captureTiles.find(tile => tile.i === 3 && tile.j === 4);
     ironTile.resource_type = 34;
-    ironTile.modifiers = {road: true};
+    ironTile.modifiers = {road: true, mine: true};
     const capture = await bootstrap({gameId: 'test-captured-city-resources', players: [7001, 7002],
         tiles: captureTiles, units: [
             unit({client_key: 'capturer', owner_id: 7001, unit_type_id: 'warrior', unit_class: 2,

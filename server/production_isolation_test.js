@@ -8,8 +8,8 @@ const php = fs.readFileSync("server_game.php", "utf8");
 const layer = fs.readFileSync("game_prehistory.js", "utf8");
 const game = fs.readFileSync("game.js", "utf8");
 
-assert.match(php, /SERVER_GAME_SCHEMA_VERSION = 14/,
-    "schema migration must reset legacy production balances once");
+assert.match(php, /SERVER_GAME_SCHEMA_VERSION = 19/,
+    "current schema must retain the legacy production-balance migration");
 assert.match(php, /UPDATE productions SET production_points = 0/,
     "existing active balances must be reset during migration");
 assert.match(php, /\$points = \$existingProduction[\s\S]*?: 0\.0;/,

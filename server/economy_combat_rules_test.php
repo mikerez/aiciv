@@ -15,6 +15,7 @@ function testUnit(string $type, int $i = 1, int $j = 1): array
         'unit_type_id' => $type, 'unit_class' => 2, 'can_move' => 1,
         'i' => $i, 'j' => $j, 'state' => 'ready', 'health' => 100,
         'max_health' => 100, 'experience' => 1, 'defense_value' => 4,
+        'attack_value' => 2, 'nature' => 'land', 'speed' => 1, 'owner_id' => 1, 'id' => 1,
     ];
 }
 
@@ -33,17 +34,28 @@ check(abs($bonus['unit_bonus'] - 0.30) < 0.0001, 'pikeman must defend 30% better
 $bonus = serverBattleChanceInputs(testUnit('trebuchet'), testUnit('elephant'), $tiles);
 check(abs($bonus['unit_bonus'] + 0.15) < 0.0001, 'elephant must defend 15% worse against trebuchet');
 
-check(serverUnitFoodUpkeep(testUnit('warrior')) === 1, 'warrior food upkeep');
-check(serverUnitFoodUpkeep(testUnit('horseman')) === 2, 'horseman food upkeep');
-check(serverUnitFoodUpkeep(testUnit('knight')) === 3, 'knight food upkeep');
-check(serverUnitGoldUpkeep(testUnit('longbow')) === 1, 'longbow gold upkeep');
-check(serverUnitGoldUpkeep(testUnit('frigate')) === 2, 'frigate gold upkeep');
+check(serverUnitFoodUpkeep(testUnit('warrior')) === 4, 'warrior food upkeep is doubled again');
+check(serverUnitFoodUpkeep(testUnit('horseman')) === 8, 'horseman food upkeep is doubled again');
+check(serverUnitFoodUpkeep(testUnit('knight')) === 12, 'knight food upkeep is doubled again');
+check(serverUnitGoldUpkeep(testUnit('longbow')) === 6, 'longbow gold upkeep is tripled');
+check(serverUnitGoldUpkeep(testUnit('frigate')) === 12, 'frigate gold upkeep is tripled');
+
+$summit = ['terrain_tex' => 0x35, 'modifiers_json' => '{}'];
+check(serverIsMaximumMountain($summit), 'height-three rock is a maximum mountain');
+check(serverIsMountedOrWheelUnit(testUnit('knight')), 'Knight is a mounted unit');
+check(serverTerrainMovePenalty(testUnit('warrior'), $summit) === 3, 'summit costs other units three turns');
+$mountainPathDiagnostic = null;
+$mountainTiles = ['1:1' => $plain, '2:1' => $summit];
+check(validatePath(testUnit('knight'), [['i' => 2, 'j' => 1]], $mountainTiles, 4, $mountainPathDiagnostic) === [],
+    'mounted units cannot enter a maximum mountain');
+check(($mountainPathDiagnostic['stopped']['reason'] ?? '') === 'maximum_mountain_forbidden',
+    'maximum mountain rejection is diagnostic');
 $workshop = testUnit('building_workshop');
 $workshop['can_move'] = 0;
 check(serverUnitGoldUpkeep($workshop) === 0, 'Workshop cost belongs to its parent City, not generic unit upkeep');
 
 $income = serverTileIncome(['terrain_tex' => 2, 'resource_type' => 10, 'modifiers_json' => '{"farm":true}']);
-check($income['food'] === 7.0, 'farm must multiply grass plus Wheat food');
+check($income['food'] === 5 && $income['money'] === 0, 'Farm gives exactly five food and no gold');
 $sand = ['terrain_tex' => 1, 'resource_type' => 0, 'modifiers_json' => '{}'];
 check(serverTileIncome($sand) === ['food' => 0, 'production' => 1, 'money' => 0], 'plain sand is barren');
 check(serverTileIncome(array_replace($sand, ['modifiers_json' => '{"irrigation":true}']))['food'] === 1, 'irrigated sand gives one food');
@@ -70,6 +82,8 @@ check(serverTileIncome(array_replace($shallowWater, ['resource_type' => 6, 'modi
     ['food' => 5, 'production' => 0, 'money' => 2], 'Fish with Nets gives five food and two gold');
 check(serverTileIncome(array_replace($shallowWater, ['resource_type' => 30, 'modifiers_json' => '{"network":true}'])) ===
     ['food' => 5, 'production' => 0, 'money' => 2], 'Turtles with Nets gives five food and two gold');
+check(serverTileIncome(['terrain_tex' => 7, 'resource_type' => 0, 'modifiers_json' => '{}'], true)['money'] === 0,
+    'a river City center gives no gold');
 $foodYield = ['food' => 5, 'production' => 1, 'money' => 0];
 $productionYield = ['food' => 1, 'production' => 5, 'money' => 0];
 $goldYield = ['food' => 1, 'production' => 1, 'money' => 4];
@@ -79,6 +93,21 @@ check(serverCityOptimizationScore($productionYield, 'production') > serverCityOp
     'production optimization prioritizes production');
 check(serverCityOptimizationScore($goldYield, 'gold') > serverCityOptimizationScore($foodYield, 'gold'),
     'gold optimization prioritizes gold');
+check(serverCityOptimizationScore(['food' => 3, 'production' => 3, 'money' => 3], 'balanced')
+    > serverCityOptimizationScore(['food' => 0, 'production' => 5, 'money' => 0], 'balanced'),
+    'all optimization uses balanced yield scoring');
+$economicTiles = [
+    '2:2' => ['terrain_tex' => 2, 'resource_type' => 0, 'modifiers_json' => '{"road":true}'],
+    '3:2' => ['terrain_tex' => 2, 'resource_type' => 0, 'modifiers_json' => '{"farm":true}'],
+    '2:3' => ['terrain_tex' => 2, 'resource_type' => 0, 'modifiers_json' => '{}'],
+];
+$economicCity = ['i' => 2, 'j' => 2];
+$economicKeys = serverCityEconomicTileKeys($economicCity, $economicTiles);
+check(!isset($economicKeys['3:2']), 'an adjacent improved Tile without its own road is disconnected');
+check(isset($economicKeys['2:3']), 'an adjacent bare Tile remains directly workable');
+$economicTiles['3:2']['modifiers_json'] = '{"farm":true,"road":true}';
+$economicKeys = serverCityEconomicTileKeys($economicCity, $economicTiles);
+check(isset($economicKeys['3:2']), 'an improved Tile contributes after a continuous City road connection');
 $cottageBase = array_replace($plain, ['terrain_tex' => 7]);
 $cottage99 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":99}']));
 $cottage100 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":100}']));
@@ -93,11 +122,13 @@ check(serverProductionResourceRequirements()['knight'] === ['horses', 'iron'], '
 check(serverProductionResourceRequirements()['fencer'] === [['copper', 'iron']], 'Fencer needs Copper or Iron');
 check(serverProductionResourceRequirements()['catapult'] === [['copper', 'iron']], 'Catapult needs Copper or Iron');
 check(serverProductionResourceRequirements()['spearman'] === [['copper', 'iron']], 'Spearman needs Copper or Iron');
+check(serverProductionResourceRequirements()['longbow'] === [['copper', 'iron']], 'Longbow needs Copper or Iron');
 $resourceDefinitions = serverResourceDefinitions();
 check($resourceDefinitions[9][1] === 0.024, 'Stone generation chance must be elevated');
 check($resourceDefinitions[21][1] === 0.014, 'Marble generation chance must be elevated');
 check($resourceDefinitions[3][1] === 0.020, 'Copper generation chance must be doubled');
-check($resourceDefinitions[34][1] === 0.040, 'Iron generation chance must be doubled');
+check($resourceDefinitions[34][1] === 0.020, 'Iron generation chance must be reduced by half');
+check($resourceDefinitions[20][1] === 0.003, 'Ivory generation chance must be reduced by half');
 check($resourceDefinitions[34][0] === [1, 4, 5], 'Iron must be eligible on sand, hills, and stone terrain');
 $generatedTiles = generateServerMapTilesCandidate(100, 'iron-minimum-regression');
 $playableCopper = count(array_filter($generatedTiles, static fn(array $tile): bool =>
@@ -108,8 +139,13 @@ $playableIron = count(array_filter($generatedTiles, static fn(array $tile): bool
     serverPlayableCoordinate((int) $tile['i'], (int) $tile['j'], 100)
     && (int) $tile['resource_type'] === 34
 ));
+$playableGold = count(array_filter($generatedTiles, static fn(array $tile): bool =>
+    serverPlayableCoordinate((int) $tile['i'], (int) $tile['j'], 100)
+    && (int) $tile['resource_type'] === 35
+));
 check($playableCopper >= serverMinimumCopperCount(100), 'generated worlds must contain the minimum playable Copper deposits');
 check($playableIron >= serverMinimumIronCount(100), 'generated worlds must contain the minimum playable Iron deposits');
+check($playableGold >= serverMinimumGoldCount(100), 'generated worlds must contain the minimum playable Gold deposits');
 
 $superTiles = [
     '10:10' => ['i' => 10, 'j' => 10, 'terrain_tex' => 0x36, 'modifiers_json' => '{}'],
@@ -140,10 +176,15 @@ $city = ['i' => 1, 'j' => 1];
 check(serverCityHasProductionResources($roadTiles, $city, 'horseman'), 'Horseman should use connected Horses');
 check(!serverCityHasProductionResources($roadTiles, $city, 'knight'), 'Knight should also require connected Iron');
 $metalRoadTiles = $roadTiles;
-$metalRoadTiles['3:1'] = array_replace($plain, ['resource_type' => 34, 'modifiers_json' => '{"road":true}']);
+$metalRoadTiles['3:1'] = array_replace($plain, ['resource_type' => 34, 'modifiers_json' => '{"road":true,"mine":true}']);
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'fencer'), 'Fencer accepts connected Iron instead of Copper');
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'spearman'), 'Spearman accepts connected Iron instead of Copper');
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'catapult'), 'Catapult accepts connected Iron instead of Copper');
+check(serverCityHasProductionResources($metalRoadTiles, $city, 'longbow'), 'Longbow accepts connected mined Iron');
+$unminedMetalRoadTiles = $metalRoadTiles;
+$unminedMetalRoadTiles['3:1']['modifiers_json'] = '{"road":true}';
+check(!serverCityHasProductionResources($unminedMetalRoadTiles, $city, 'longbow'),
+    'unmined Iron is not available for production even when road-connected');
 
 $economicTiles = [];
 for ($i = 10; $i <= 14; ++$i) {
@@ -163,6 +204,11 @@ check(isset($economicKeys['14:10']), 'remote plot produces through a continuous 
 check(isset($economicKeys['10:11']), 'adjacent unroaded land can be worked by the City');
 check(isset($economicKeys['11:11']), 'nearby water with Nets contributes without a road');
 check(!isset($economicKeys['20:20']), 'remote disconnected plot produces nothing for the City');
+$economicTiles['15:10'] = array_replace($plain, [
+    'i' => 15, 'j' => 10, 'modifiers_json' => '{"road":true}',
+]);
+$economicKeys = serverCityEconomicTileKeys(['i' => 10, 'j' => 10], $economicTiles);
+check(!isset($economicKeys['15:10']), 'City plots cannot extend beyond the 9x9 working rectangle');
 
 $fed = serverCityFoodResolution(3, 2, -1);
 check(!$fed['starved'] && $fed['population'] === 3 && $fed['stored_food'] === 1.0, 'stored food prevents starvation');
@@ -180,6 +226,15 @@ check(!serverPlansAllowCombat([1 => ['interaction_intent'=>'coexist', 'target_ow
     'explicit coexist suppresses combat against a stationary unit');
 check(serverPlansAllowCombat([1 => ['interaction_intent'=>'attack', 'target_owner_id'=>8]], $interactionUnits, 1, 2, []),
     'explicit attack permits combat from neutral state');
+$stackCombatUnits = [
+    1 => array_replace(testUnit('elephant', 3, 3), ['id'=>1, 'owner_id'=>7, 'unit_class'=>2]),
+    2 => array_replace(testUnit('warrior', 4, 3), ['id'=>2, 'owner_id'=>8, 'unit_class'=>2]),
+];
+$stackCombatPlans = [1 => ['interaction_intent'=>'auto', 'target_owner_id'=>0]];
+check(serverPlanAttacksTile($stackCombatPlans, $stackCombatUnits, 1, 4, 3, $warRelations),
+    'an automatic military move may attack a full Tile when civilizations are already at war');
+check(!serverPlanAttacksTile($stackCombatPlans, $stackCombatUnits, 1, 4, 3, []),
+    'an automatic military move does not attack a neutral full Tile');
 
 $transportUnits = [
     1 => array_replace(testUnit('galley', 2, 2), ['id'=>1, 'owner_id'=>7, 'nature'=>'water']),

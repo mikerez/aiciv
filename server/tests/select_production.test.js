@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-const {assert, serverGame, resetDatabase, bootstrap, city, unit, value, expectRequestError} = require('./test_client');
+const {
+    assert, serverGame, resetDatabase, bootstrap, city, unit, value, sql,
+    setPlayerState, gameDatabaseId, expectRequestError,
+} = require('./test_client');
 
 (async () => {
     resetDatabase();
@@ -22,5 +25,18 @@ const {assert, serverGame, resetDatabase, bootstrap, city, unit, value, expectRe
     });
     assert.equal(Number(value(`SELECT COUNT(*) FROM productions WHERE city_unit_id=${cityId}`)), 0);
     assert.equal(idle.city.properties.productionDisabled, true);
-    console.log('PASS select_production appends backlog items, rejects unknown units, and supports idle cities');
+    const gameDbId = gameDatabaseId(fixture.gameId);
+    setPlayerState(gameDbId, fixture.playerId, {money: 100, food: 200});
+    sql(`UPDATE server_game_map SET resource_type=34, modifiers_json='{"road":true}' `
+        + `WHERE game_id=${gameDbId} AND i=3 AND j=4`);
+    await expectRequestError('select_production', {
+        player_id: fixture.playerId, city_unit_id: cityId, unit_type_id: 'longbow',
+    }, 'connected_resource_required');
+    sql(`UPDATE server_game_map SET modifiers_json='{"road":true,"mine":true}' `
+        + `WHERE game_id=${gameDbId} AND i=3 AND j=4`);
+    await serverGame.request('select_production', {
+        player_id: fixture.playerId, city_unit_id: cityId, unit_type_id: 'longbow',
+    });
+    assert.equal(value(`SELECT unit_type_id FROM productions WHERE city_unit_id=${cityId}`), 'longbow');
+    console.log('PASS production queues, idle cities, and mined-metal Longbow requirements');
 })().catch(error => { console.error(error); process.exitCode = 1; });

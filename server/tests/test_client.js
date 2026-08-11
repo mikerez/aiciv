@@ -76,6 +76,7 @@ function resetDatabase() {
     sql(`SET FOREIGN_KEY_CHECKS=0;
          DELETE FROM productions;
          DELETE FROM server_game_events;
+         DELETE FROM server_game_ai_leases;
          DELETE FROM server_game_orders;
          DELETE FROM server_game_relations;
          DELETE FROM server_game_submissions;

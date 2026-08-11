@@ -29,7 +29,18 @@ const context = {
     _units: [worker, city, warrior],
     _current_user: 7,
     _game_state_by_user: {7: {money: 100}},
-    _city_economy: {processCities() {}},
+    _map_size: 10,
+    _map_origin_i: 100,
+    _map_origin_j: 200,
+    _map_terrain_tex: Array.from({length: 10}, () => Array(10).fill(2)),
+    _map_terrain_mod: Array.from({length: 10}, () => Array.from({length: 10}, () => ({}))),
+    _map: {prepareTerrainModifierSprites() {}},
+    Coord: class Coord { constructor(i, j) { this.i = i; this.j = j; } },
+    _city_economy: {
+        reoptimized: [],
+        processCities() {},
+        reoptimizeCitiesForTile(i, j, ownerId) { this.reoptimized.push({i, j, ownerId}); },
+    },
     _current_game: {applyAutoRoutingRules() {}},
     _fulldraw: 0,
 };
@@ -105,6 +116,19 @@ vm.runInContext(
     assert.equal(worker.state, "ready");
     assert.equal(worker.pendingImmediateBuild, false);
     assert.match(context.window.alerts[0], /IMPOSSIBLE: water not connected/);
+    worker.pendingImmediateBuild = true;
+    game.applyTurnActionResults(7, [{
+        client_action_id: 100, type: "build", worker_unit_id: 11, building_type: "farm",
+    }], [{
+        client_action_id: 100, type: "build", ok: true,
+        result: {
+            status: "BUILT",
+            tile: {i: 103, j: 203, terrain_tex: 2, modifiers: {road: true, farm: true}},
+        },
+    }]);
+    assert.deepEqual(context._city_economy.reoptimized, [{i: 3, j: 3, ownerId: 7}],
+        "a world-coordinate build response must re-optimize Cities at the changed local Tile");
+    assert.equal(context._map_terrain_mod[3][3].farm, true);
     await game.disbandUnit(warrior);
     const disbandSubmission = game.captureTurn(7);
     assert.ok(disbandSubmission.actions.some(action => action.type == 'disband_unit' && action.unit_id == 13));
