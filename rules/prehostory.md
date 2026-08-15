@@ -130,12 +130,12 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 
 - `PREHISTORY-CHOP-001`: Chopping forest can be performed only by a worker in `chop_forest` state.
 - `PREHISTORY-CHOP-002`: Chopping can progress only while the worker stands on a forest terrain tile.
-- `PREHISTORY-CHOP-003`: Forest terrain is terrain type `6`; `hills1` and `hills5` are forested hill variants and are also available for chopping.
+- `PREHISTORY-CHOP-003`: Forest terrain is terrain type `6`; `hills_forest_height1-00010100.png` and `hills_forest_height1_supertile-01010100.png` are forested hill variants and are also available for chopping.
 - `PREHISTORY-CHOP-004`: Chopping jungle/forest takes four client turns before its authoritative build order is submitted.
 - `PREHISTORY-CHOP-005`: When chopping completes, a base forest tile becomes base grass terrain.
 - `PREHISTORY-CHOP-006`: If the unit is not on forest terrain, the chop order is cancelled.
 - `PREHISTORY-CHOP-007`: A unit cannot enter `chop_forest` state unless it is already standing on forest terrain.
-- `PREHISTORY-CHOP-008`: When chopping completes, `hills1` becomes `hills` and `hills5` becomes `hills4`.
+- `PREHISTORY-CHOP-008`: When chopping completes, `hills_forest_height1-00010100.png` becomes `hills_clear_height0-00000100.png`, and its supertile variant is first split before the selected Tile becomes clear hills.
 - `PREHISTORY-CHOP-009`: Workers cannot chop forest before `Bronze Working` is discovered.
 - `PREHISTORY-CHOP-010`: Completed chopping gives exactly 10 production once to the nearest same-team City.
 - `PREHISTORY-CHOP-011`: Chop production is credited only when the nearest City has an active production task; idle Cities store no production.
