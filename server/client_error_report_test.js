@@ -64,9 +64,9 @@ vm.runInContext(fs.readFileSync('server_game.js', 'utf8') + '\nglobalThis.game =
     assert.equal(report.unsuccessful_action, 'move');
     assert.deepEqual(report.destination_point, {i: 8, j: 9});
     assert.equal(report.request_parameters.commands[0].unit_id, 42);
-    await sandbox.game.showServerErrorPopup(failure);
-    assert.deepEqual(sequence, ['source', 'report', 'popup']);
-    console.log('PASS client error report precedes popup and contains request, unit, action, and destination');
+    await sandbox.game.handleServerError(failure);
+    assert.deepEqual(sequence, ['source', 'report']);
+    console.log('PASS client error report contains request, unit, action, and destination without a popup');
 })().catch(error => {
     console.error(error);
     process.exitCode = 1;

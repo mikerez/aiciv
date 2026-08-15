@@ -119,6 +119,10 @@ check(!serverImprovementMatchesTileResource($plain, 'pasture'), 'Pasture require
 check(serverImprovementMatchesTileResource(array_replace($plain, ['resource_type' => 33]), 'pasture'), 'Horses accept Pasture');
 check(!serverImprovementMatchesTileResource(array_replace($plain, ['resource_type' => 33]), 'mine'), 'Horses reject Mine');
 check(serverProductionResourceRequirements()['knight'] === ['horses', 'iron'], 'Knight needs Horses and Iron');
+check(serverProductionResourceRequirements()['chariot'] === ['horses', 'copper'], 'Chariot needs Horses and Copper');
+check(serverProductionResourceRequirements()['elephant'] === ['ivory', 'copper'], 'Elephant needs Ivory and Copper');
+check(serverProductionResourceRequirements()['galleon'] === ['copper'], 'Galleon needs Copper');
+check(serverProductionResourceRequirements()['frigate'] === ['iron'], 'Frigate needs Iron');
 check(serverProductionResourceRequirements()['fencer'] === [['copper', 'iron']], 'Fencer needs Copper or Iron');
 check(serverProductionResourceRequirements()['catapult'] === [['copper', 'iron']], 'Catapult needs Copper or Iron');
 check(serverProductionResourceRequirements()['spearman'] === [['copper', 'iron']], 'Spearman needs Copper or Iron');
@@ -175,12 +179,31 @@ check(!empty($connected['horses']) && empty($connected['iron']), 'only road-conn
 $city = ['i' => 1, 'j' => 1];
 check(serverCityHasProductionResources($roadTiles, $city, 'horseman'), 'Horseman should use connected Horses');
 check(!serverCityHasProductionResources($roadTiles, $city, 'knight'), 'Knight should also require connected Iron');
+check(!serverCityHasProductionResources($roadTiles, $city, 'chariot'),
+    'Chariot should also require connected mined Copper');
+$copperRoadTiles = $roadTiles;
+$copperRoadTiles['4:1'] = array_replace($plain, [
+    'resource_type' => 3, 'modifiers_json' => '{"road":true,"mine":true}',
+]);
+check(serverCityHasProductionResources($copperRoadTiles, $city, 'chariot'),
+    'Chariot accepts connected Horses and mined Copper');
+check(serverCityHasProductionResources($copperRoadTiles, $city, 'galleon'),
+    'Galleon accepts connected mined Copper');
+$elephantRoadTiles = $copperRoadTiles;
+$elephantRoadTiles['2:2'] = array_replace($plain, [
+    'resource_type' => 20, 'modifiers_json' => '{"road":true,"camp":true}',
+]);
+check(serverCityHasProductionResources($elephantRoadTiles, $city, 'elephant'),
+    'Elephant accepts connected Ivory and mined Copper');
+check(!serverCityHasProductionResources($copperRoadTiles, $city, 'frigate'),
+    'Frigate rejects Copper when connected Iron is absent');
 $metalRoadTiles = $roadTiles;
 $metalRoadTiles['3:1'] = array_replace($plain, ['resource_type' => 34, 'modifiers_json' => '{"road":true,"mine":true}']);
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'fencer'), 'Fencer accepts connected Iron instead of Copper');
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'spearman'), 'Spearman accepts connected Iron instead of Copper');
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'catapult'), 'Catapult accepts connected Iron instead of Copper');
 check(serverCityHasProductionResources($metalRoadTiles, $city, 'longbow'), 'Longbow accepts connected mined Iron');
+check(serverCityHasProductionResources($metalRoadTiles, $city, 'frigate'), 'Frigate accepts connected mined Iron');
 $unminedMetalRoadTiles = $metalRoadTiles;
 $unminedMetalRoadTiles['3:1']['modifiers_json'] = '{"road":true}';
 check(!serverCityHasProductionResources($unminedMetalRoadTiles, $city, 'longbow'),
@@ -281,6 +304,21 @@ $irrigationTiles = [
     '3:1' => ['terrain_tex'=>0, 'modifiers_json'=>'{}'],
 ];
 check(serverIrrigationConnectedToWater($irrigationTiles, 1, 1), 'irrigation route reaches shallow fresh water');
+$cityConnectedIrrigation = [
+    '1:1' => ['terrain_tex'=>2, 'modifiers_json'=>'{}'],
+    // Every founded City center carries road and irrigation. It must bridge a
+    // neighboring field to fresh shallow water even when that lake has no sea.
+    '2:1' => ['terrain_tex'=>2, 'modifiers_json'=>'{"road":true,"irrigation":true}'],
+    '3:1' => ['terrain_tex'=>0, 'modifiers_json'=>'{}'],
+];
+check(serverIrrigationConnectedToWater($cityConnectedIrrigation, 1, 1),
+    'City-center irrigation bridges a Worker field to isolated shallow fresh water');
+$farmConnectedIrrigation = [
+    '1:1' => ['terrain_tex'=>1, 'modifiers_json'=>'{}'],
+    '2:1' => ['terrain_tex'=>2, 'modifiers_json'=>'{"farm":true}'],
+];
+check(serverIrrigationConnectedToWater($farmConnectedIrrigation, 1, 1),
+    'a completed Farm is a local source for a new sand irrigation origin');
 $disconnectedIrrigation = $irrigationTiles;
 $disconnectedIrrigation['2:1']['modifiers_json'] = '{}';
 check(!serverIrrigationConnectedToWater($disconnectedIrrigation, 1, 1), 'missing irrigation link disconnects water');

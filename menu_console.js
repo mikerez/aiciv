@@ -35,7 +35,7 @@ const _menu_console = new class
     panel.style.fontFamily = 'Courier New, monospace';
 
     var title = document.createElement('div');
-    title.textContent = 'AI Console';
+    title.textContent = vocabularyText('menu.ai_console');
     title.style.color = 'darkblue';
     title.style.fontSize = '22px';
     title.style.fontWeight = 'bold';
@@ -50,14 +50,14 @@ const _menu_console = new class
 
     var status = document.createElement('span');
     status.id = 'console_status';
-    status.textContent = 'Model decisions and applied orders';
+    status.textContent = vocabularyText('menu.ai_console_status');
     status.style.color = 'rgb(20,40,80)';
     status.style.fontSize = this.fontSize() + 'px';
     controls.appendChild(status);
 
     var clear = document.createElement('button');
     clear.type = 'button';
-    clear.textContent = 'Clear';
+    clear.textContent = vocabularyText('common.clear');
     clear.style.fontSize = this.fontSize() + 'px';
     clear.style.padding = '3px 8px';
     clear.addEventListener('click', function(event) {

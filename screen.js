@@ -22,7 +22,7 @@ const _screen = new class
         }
 
         if (!_gl) {
-            alert("Your browser does not support WebGL");
+            console.error("Your browser does not support WebGL");
         }
 
         this.shaderProgram = this.initShaderProgram();
@@ -46,10 +46,13 @@ const _screen = new class
             1.0, 0.0,
             1.0, 1.0,
         ]), _gl.STATIC_DRAW);
+        this.contextLost = false;
     }
 
     constructor()
     {
+        this.textureSources = {};
+        this.contextLost = false;
         // we need to put this persistent vars somewhere
 
         // Vertex shader program
@@ -107,8 +110,9 @@ const _screen = new class
         return shaderProgram;
     }
 
-    loadTexture(url, id, fallbackUrl)
+    loadTexture(url, id, fallbackUrl, ready)
     {
+        this.textureSources[id] = {url: url, id: id, fallbackUrl: fallbackUrl};
         function onLoadImage(image, texture) {
             const internalFormat = _gl.RGBA;
             const srcFormat = _gl.RGBA;
@@ -124,6 +128,7 @@ const _screen = new class
 //                    }
             _gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE_MINUS_SRC_ALPHA);
             _gl.enable(_gl.BLEND);
+            if (ready) ready();
         }
 
         _textures[id] = _gl.createTexture();
@@ -134,8 +139,38 @@ const _screen = new class
                 image.onerror = null;
                 image.src = "images/" + fallbackUrl;
             }
+            else if (ready) ready();
         }
         image.src = "images/" + url;
+    }
+
+    restoreContext()
+    {
+        this.init();
+        var sources = Object.keys(this.textureSources).map(function(id) {
+            return this.textureSources[id];
+        }, this);
+        var remaining = sources.length;
+        var redrawn = false;
+        var redraw = function() {
+            if (redrawn || --remaining > 0) return;
+            redrawn = true;
+            if (typeof _fulldraw != 'undefined') _fulldraw = 1;
+            if (typeof drawScene == 'function') requestAnimationFrame(function() { drawScene(0); });
+        };
+        for (var n=0; n<sources.length; n++) {
+            this.loadTexture(sources[n].url, sources[n].id, sources[n].fallbackUrl, redraw);
+        }
+        if (!sources.length) {
+            remaining = 1;
+            redraw();
+        }
+        // A missing image must not prevent recovery of all other terrain.
+        setTimeout(function() {
+            if (redrawn) return;
+            remaining = 1;
+            redraw();
+        }, 2000);
     }
 
 //            isPowerOf2(value) {
@@ -147,6 +182,24 @@ const _screen = new class
         _gl.bindBuffer(_gl.ARRAY_BUFFER, this.textureCoordBuffer);
         _gl.vertexAttribPointer(this.programInfo.attribLocations.textureCoord, 2, _gl.FLOAT, false, 0, 0);
         _gl.enableVertexAttribArray(this.programInfo.attribLocations.textureCoord);
+    }
+
+    terrainTextureId(encodedTerrain)
+    {
+        var exact = Number(encodedTerrain) & 0xff;
+        if (_textures[exact] !== undefined) return exact;
+
+        // A is both the water-source flag and an optional alternate image bit.
+        // Most terrain sets do not provide separate A-marked sprites.
+        var withoutAlternative = exact & ~0x80;
+        if (_textures[withoutAlternative] !== undefined) return withoutAlternative;
+
+        // Keep drawing a valid base Tile if an unsupported supertile
+        // combination reaches the client.
+        var withoutSupertile = exact & 0x3f;
+        if (_textures[withoutSupertile] !== undefined) return withoutSupertile;
+        var terrainType = exact & 0x0f;
+        return _textures[terrainType] !== undefined ? terrainType : 0;
     }
 
     setPositionBuffer(positions)
@@ -176,11 +229,96 @@ const _screen = new class
         }
         for (var k=0; k < _map.terrainModifierSprites.length; k++) {
             var modifier = _map.terrainModifierSprites[k];
-            if (modifier.i < start_i || modifier.i >= start_i + height_i || modifier.j < start_j || modifier.j > start_j + width_j) {
+            if (modifier.i < start_i || modifier.i >= start_i + height_i
+                || modifier.j < start_j || modifier.j >= start_j + width_j) {
                 continue;
             }
             var brightness = this.tileBrightness(modifier.i, modifier.j);
             this.drawSpriteWithBrightness(ijtox1(modifier.i, modifier.j), ijtoy1(modifier.i, modifier.j), modifier.texture, _screenZoom, brightness);
+        }
+    }
+
+    foregroundSpritesByTile(units, start_i, start_j, height_i, width_j, citizenTiles)
+    {
+        var result = {};
+        function tileAt(i, j) {
+            var key = i + ':' + j;
+            if (!result[key]) result[key] = {cities:[], improvements:[], roads:[], citizens:[], units:[]};
+            return result[key];
+        }
+        var modifiers = _map.terrainModifierSprites || [];
+        for (var modifierIndex=0; modifierIndex < modifiers.length; modifierIndex++) {
+            var modifier = modifiers[modifierIndex];
+            if (modifier.i < start_i || modifier.i >= start_i + height_i
+                || modifier.j < start_j || modifier.j >= start_j + width_j) continue;
+            var layer = modifier.modifier == 'road' || modifier.texture == 850
+                ? 'roads' : 'improvements';
+            tileAt(modifier.i, modifier.j)[layer].push(modifier);
+        }
+        for (var unitIndex=0; unitIndex < units.length; unitIndex++) {
+            var unit = units[unitIndex];
+            if (!unit || !unit.coord) continue;
+            var i = Math.round(unit.coord.i);
+            var j = Math.round(unit.coord.j);
+            if (i < start_i || i >= start_i + height_i
+                || j < start_j || j >= start_j + width_j) continue;
+            tileAt(i, j)[unit.type == 3 ? 'cities' : 'units'].push(unit);
+        }
+        citizenTiles = citizenTiles || [];
+        for (var citizenIndex=0; citizenIndex<citizenTiles.length; citizenIndex++) {
+            var citizen = citizenTiles[citizenIndex];
+            if (!citizen || citizen.i < start_i || citizen.i >= start_i + height_i
+                || citizen.j < start_j || citizen.j >= start_j + width_j) continue;
+            tileAt(citizen.i, citizen.j).citizens.push(citizen);
+        }
+        return result;
+    }
+
+    drawForegroundUnit(unit)
+    {
+        var visualCoord = typeof _draw !== 'undefined' && _draw.unitArrivalVisualCoord
+            ? _draw.unitArrivalVisualCoord(unit) : unit.coord;
+        this.drawSprite(ijtox1(visualCoord.i, visualCoord.j), ijtoy1(visualCoord.i, visualCoord.j),
+            unit.texture, _screenZoom);
+        var teamTexture = _team_color_textures[(unit.team || 0) % _team_color_textures.length];
+        this.drawSprite(ijtox1(visualCoord.i, visualCoord.j), ijtoy1(visualCoord.i, visualCoord.j),
+            teamTexture, _screenZoom);
+    }
+
+    drawForegroundSprites(units, start_i, start_j, height_i, width_j, citizenTiles)
+    {
+        var byTile = this.foregroundSpritesByTile(
+            units, start_i, start_j, height_i, width_j, citizenTiles
+        );
+        for (var i=start_i; i < start_i + height_i; i++) {
+            for (var j=start_j + width_j - 1; j >= start_j; j--) {
+                var tile = byTile[i + ':' + j];
+                if (!tile) continue;
+                for (var cityIndex=0; cityIndex < tile.cities.length; cityIndex++) {
+                    this.drawForegroundUnit(tile.cities[cityIndex]);
+                }
+                for (var improvementIndex=0; improvementIndex < tile.improvements.length; improvementIndex++) {
+                    var improvement = tile.improvements[improvementIndex];
+                    this.drawSpriteWithBrightness(ijtox1(i, j), ijtoy1(i, j), improvement.texture,
+                        _screenZoom, this.tileBrightness(i, j));
+                }
+                for (var roadIndex=0; roadIndex < tile.roads.length; roadIndex++) {
+                    var road = tile.roads[roadIndex];
+                    this.drawSpriteWithBrightness(ijtox1(i, j), ijtoy1(i, j), road.texture,
+                        _screenZoom, this.tileBrightness(i, j));
+                }
+                if (typeof _city_economy != 'undefined') {
+                    for (var citizenIndex=0; citizenIndex<tile.citizens.length; citizenIndex++) {
+                        var citizen = tile.citizens[citizenIndex];
+                        _city_economy.drawYieldCompositionMap(
+                            ijtox1(i, j), ijtoy1(i, j), citizen.income
+                        );
+                    }
+                }
+                for (var unitIndex=0; unitIndex < tile.units.length; unitIndex++) {
+                    this.drawForegroundUnit(tile.units[unitIndex]);
+                }
+            }
         }
     }
 
@@ -191,7 +329,8 @@ const _screen = new class
         }
         for (var k=0; k < _map.resourceSprites.length; k++) {
             var resource = _map.resourceSprites[k];
-            if (resource.i < start_i || resource.i >= start_i + height_i || resource.j < start_j || resource.j > start_j + width_j) {
+            if (resource.i < start_i || resource.i >= start_i + height_i
+                || resource.j < start_j || resource.j >= start_j + width_j) {
                 continue;
             }
             var brightness = this.tileBrightness(resource.i, resource.j);
@@ -256,7 +395,7 @@ const _screen = new class
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    drawSprite1(x, y, type, zoom)
+    drawTerrainSupertile(x, y, type, zoom, brightness)
     {
         var positions = [
             1/_canvas.width*(-420/zoom+x),  1/_canvas.height*(310/zoom-y),
@@ -267,10 +406,9 @@ const _screen = new class
         this.setPositionBuffer(positions);
 
         _gl.activeTexture(_gl.TEXTURE0);
-        //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
         _gl.bindTexture(_gl.TEXTURE_2D, _textures[type]);
-        _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);
-        _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, _screen.tileBrightness(i, j));
+        _gl.uniform1i(this.programInfo.uniformLocations.sampler, 0);
+        _gl.uniform1f(this.programInfo.uniformLocations.brightness, brightness);
 
         _gl.drawArrays(_gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -285,7 +423,8 @@ function drawSelectionStroke()
 
     const ctx = canvasSelection.getContext("2d");
     ctx.clearRect(0, 0, canvasSelection.width, canvasSelection.height);
-    if (_selection == -1 || _units[_selection] == undefined) {
+    if (_selection == -1 || _units[_selection] == undefined
+        || _units[_selection].outsideMapWindow) {
         return;
     }
 
@@ -307,7 +446,7 @@ function drawSelectionStroke()
 
 function isUnitVisibleToCurrentUser(unit)
 {
-    if (!unit || unit.hiddenOnMap || !unit.coord) {
+    if (!unit || unit.hiddenOnMap || unit.outsideMapWindow || !unit.coord) {
         return false;
     }
     var team = unit.team || 0;
@@ -347,6 +486,37 @@ function visibleUnitsForCurrentUser()
 
 function drawScene(loop)
 {
+    try {
+        drawSceneFrame(loop);
+    }
+    catch (error) {
+        _in_drawing = 0;
+        _fulldraw = 1;
+        if (typeof console != 'undefined' && console.error) {
+            console.error('Map render failed; scheduling a clean redraw.', error);
+        }
+        var now = Date.now();
+        if ((!_screen.lastRenderErrorAt || now-_screen.lastRenderErrorAt > 10000)
+            && typeof _server_game != 'undefined' && _server_game.reportHandledClientError) {
+            _screen.lastRenderErrorAt = now;
+            _server_game.reportHandledClientError('draw_scene', {
+                map_origin_i: typeof _map_origin_i == 'undefined' ? null : _map_origin_i,
+                map_origin_j: typeof _map_origin_j == 'undefined' ? null : _map_origin_j,
+                screen_zoom: typeof _screenZoom == 'undefined' ? null : _screenZoom,
+            }, error && error.message ? error.message : String(error), 'map_render_failed');
+        }
+        setTimeout(function() {
+            if (!_in_drawing) drawScene(loop ? 1 : 0);
+        }, 50);
+    }
+}
+
+function drawSceneFrame(loop)
+{
+    if (_screen.contextLost || (_gl.isContextLost && _gl.isContextLost())) {
+        if (loop) setTimeout(drawScene, 700, 1);
+        return;
+    }
     if (typeof _multiplayer != 'undefined' && _multiplayer.isHiddenSnapshotActive
         && _multiplayer.isHiddenSnapshotActive()) {
         if (loop) setTimeout(drawScene, 50, 1);
@@ -361,6 +531,7 @@ function drawScene(loop)
     }
     _in_drawing = 1;
 //            _gl.viewport(0, 0, _canvas.width*ratio, _canvas.height*ratio);
+    var completedFullDraw = !!_fulldraw;
     if (_fulldraw) {
         _gl.clearColor(0.2, 0.2, 0.2, 0.2);
         _gl.clear(_gl.COLOR_BUFFER_BIT/* | _gl.DEPTH_BUFFER_BIT*/);
@@ -400,15 +571,38 @@ function drawScene(loop)
     STARTX=220/_screenZoom
     STARTY=160/_screenZoom
     for (i=start_i; i < start_i + height_i; ++i) {
-        for (j=start_j + width_j; j >= start_j; --j) {
+        for (j=start_j + width_j - 1; j >= start_j; --j) {
 //                    if (j >= 0 && i >= 0 && j < _map_size && i < _map_size) 
 {
-//                         alert(i)
-//                         alert(j)
 //                    x = i*200+j*200;
 //                    y = i*200-j*200;
 //////////////                        _step++;
                 if (/*_map_terrain_tex[i][j]==(0+(1<<4))&&_step%2 ||*/ _fulldraw) {
+                    var supertileAnchor = _map.supertileAnchorAt(i, j);
+                    var supertileTextureId = supertileAnchor
+                        ? ((_map_terrain_tex[supertileAnchor.i][supertileAnchor.j] & 0x3f) | 0x40)
+                        : -1;
+                    if (supertileAnchor && _textures[supertileTextureId] !== undefined) {
+                        // The lower-left cell is drawn last in this painter order, so one
+                        // supersprite replaces all four ordinary cells without being covered.
+                        if (i == supertileAnchor.i + 1 && j == supertileAnchor.j) {
+                            var oppositeI = supertileAnchor.i + 1;
+                            var oppositeJ = supertileAnchor.j + 1;
+                            var supertileX = (ijtox1(supertileAnchor.i, supertileAnchor.j)
+                                + ijtox1(oppositeI, oppositeJ)) / 2;
+                            var supertileY = (ijtoy1(supertileAnchor.i, supertileAnchor.j)
+                                + ijtoy1(oppositeI, oppositeJ)) / 2;
+                            var supertileBrightness = Math.min(
+                                _screen.tileBrightness(supertileAnchor.i, supertileAnchor.j),
+                                _screen.tileBrightness(supertileAnchor.i, oppositeJ),
+                                _screen.tileBrightness(oppositeI, supertileAnchor.j),
+                                _screen.tileBrightness(oppositeI, oppositeJ)
+                            );
+                            _screen.drawTerrainSupertile(supertileX, supertileY,
+                                supertileTextureId, _screenZoom, supertileBrightness);
+                        }
+                        continue;
+                    }
                     // - _map_view[0]* /*20*/0*sqrt2
                     // - _map_view[1]* /*20*/0*sqrt2 
 
@@ -423,8 +617,8 @@ function drawScene(loop)
 
         _gl.activeTexture(_gl.TEXTURE0);
         //Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)<0?0:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)>3?3:Math.floor(3.5-((i-3)*(i-3)+(j-3)*(j-3))/5.5)
-//                if (_textures[_map_terrain_tex[i][j]/*&~(4<<4)*/] === undefined) alert("Undefined struct " + (_map_terrain_tex[i][j]/*&~(4<<4*/));
-        _gl.bindTexture(_gl.TEXTURE_2D, _textures[_map_terrain_tex[i][j]/*&~(4<<4)*/]);
+        var terrainTextureId = _screen.terrainTextureId(_map_terrain_tex[i][j]);
+        _gl.bindTexture(_gl.TEXTURE_2D, _textures[terrainTextureId]);
         _gl.uniform1i(_screen.programInfo.uniformLocations.sampler, 0);  // there is another same place!!!
         _gl.uniform1f(_screen.programInfo.uniformLocations.brightness, _screen.tileBrightness(i, j));
 
@@ -432,9 +626,6 @@ function drawScene(loop)
 
 
 //                            _screen.drawSprite(ijtox1(i,j), ijtoy1(i,j), /*(_map_terrain_tex[i][j]==(0+(1<<4))&&_step%2)?8<<4:*/_map_terrain_tex[i][j]&~(4<<4), _screenZoom);
-                    if (((_map_terrain_tex[i][j]>>4)&4) /*&& ((_map_terrain_tex[i-1][j]>>4)&4) == 0 && ((_map_terrain_tex[i][j-1]>>4)&4) == 0*/) {
-                        _screen.drawSprite1(ijtox1(i,j) - _cell_width/_screenZoom/3, ijtoy1(i,j) - _cell_height/_screenZoom/10, _map_terrain_tex[i][j], _screenZoom);
-                    }
 //, 1.0-(_map_terrain_bit>>8)
                 }
             }
@@ -442,21 +633,11 @@ function drawScene(loop)
     }
 
     if (_fulldraw) {
-        _screen.drawTerrainModifierSprites(start_i, start_j, height_i, width_j);
         _screen.drawResourceSprites(start_i, start_j, height_i, width_j);
-        if (typeof _city_economy !== 'undefined') {
-            _city_economy.drawCitizenTilesMap(start_i, start_j, height_i, width_j);
-        }
-
+        var citizenTiles = typeof _city_economy !== 'undefined'
+            ? _city_economy.citizenTilesMapData(start_i, start_j, height_i, width_j) : [];
         var visibleUnits = visibleUnitsForCurrentUser();
-        for (var k=0; k < visibleUnits.length; k++) {
-            var unit = visibleUnits[k];
-            _screen.drawSprite(ijtox1(unit.coord.i, unit.coord.j), ijtoy1(unit.coord.i, unit.coord.j),
-                               unit.texture, _screenZoom);
-            var teamTexture = _team_color_textures[(unit.team || 0) % _team_color_textures.length];
-            _screen.drawSprite(ijtox1(unit.coord.i, unit.coord.j), ijtoy1(unit.coord.i, unit.coord.j),
-                               teamTexture, _screenZoom);
-        }
+        _screen.drawForegroundSprites(visibleUnits, start_i, start_j, height_i, width_j, citizenTiles);
     }
     var labelCanvas = document.getElementById('canvasOwnerLabels');
     if (labelCanvas && typeof _draw !== 'undefined' && _draw.drawUnitOwnerLabels) {
@@ -496,4 +677,8 @@ function drawScene(loop)
         setTimeout(drawScene, 700, 1);
     }
     _in_drawing = 0;
+    if (completedFullDraw && typeof _server_game != 'undefined'
+        && _server_game.ensureMapWindowForViewport) {
+        _server_game.ensureMapWindowForViewport();
+    }
 }

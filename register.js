@@ -3,7 +3,7 @@ var _register_application_secret = 'cbc6e026e751525dfcd0e42b9542e5d7817ef925c2d0
 function registerCookie(name, value, maxAge)
 {
     document.cookie = name + '=' + encodeURIComponent(value)
-        + '; Path=/game/; Max-Age=' + maxAge + '; SameSite=Lax; Secure';
+        + '; Path=/; Max-Age=' + maxAge + '; SameSite=Lax; Secure';
 }
 
 function registerDeviceId()
@@ -37,7 +37,7 @@ async function apiRequest(payload)
     });
     var result = await response.json();
     if (!response.ok || !result.ok) {
-        throw new Error(result.error ? result.error.message : 'Registration failed.');
+        throw new Error(result.error ? result.error.message : vocabularyText('auth.registration_failed'));
     }
     return result;
 }
@@ -65,7 +65,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         });
         registerCookie('aiciv_player_id', session.user.id, 86400);
         if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
-            throw new Error('The browser rejected the game session cookie. Enable cookies for this site.');
+            throw new Error(vocabularyText('auth.cookie_rejected'));
         }
         window.location.replace('./');
     } catch (error) {

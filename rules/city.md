@@ -22,12 +22,13 @@ City economy is implemented by `city.js`.
 - `CITY-INCOME-004`: Resource income is added before improvement multipliers, so the correct resource improvement enhances the resource and terrain together.
 - `CITY-INCOME-004A`: An unimproved resource adds at most one gold, except Gold, Gems, and Diamonds, which add two. A matching Winery or Plantation sets that resource contribution to two gold.
 - `CITY-INCOME-005`: Cottage gives a 2x money multiplier before 100 turns, Hamlet gives 3x from turn 100, and Village gives 4x from turn 200. PHP owns age and returns modifier changes to clients.
-- `CITY-INCOME-011`: A City may work its own Tile and adjacent bare Tiles without a road. A land Tile carrying an improvement contributes only when that exact Tile has a road connected continuously to the City. Nets remain the roadless water exception.
+- `CITY-INCOME-011`: A City may work its own Tile and adjacent bare Tiles without a road. A land Tile carrying an improvement contributes when its exact Tile has a road connected continuously to the City. Nets remain the roadless water exception.
+- `CITY-INCOME-011A`: An improved land Tile may also be the final endpoint beside a continuously connected road Tile. This endpoint cannot extend the road network and does not count as an exactly road-connected strategic resource for unit production.
 - `CITY-INCOME-012`: The City menu labels `F` as gross food gathered from worked Tiles and shows citizen and Workshop consumption separately as `Eat`.
 - `CITY-INCOME-006`: City-tile irrigation gives food only after worker-built neighboring irrigation activates the city irrigation food flag.
 - `CITY-INCOME-007`: A land tile with the terrain `A` bit set contains a local water source. Sand with this bit is a lake and gives 2 food, or 4 with irrigation. Other land gains 1 food; hills or rocks/mountains also gain 1 production.
 - `CITY-INCOME-008`: Sand gives no food or gold. Irrigated sand gives 1 food unless it is a lake.
-- `CITY-INCOME-009`: A Workshop sets its worked Tile output to exactly 4 production. Each Workshop consumes 2 food and no gold from its nearest same-owner parent City per turn.
+- `CITY-INCOME-009`: A Workshop sets its worked Tile output to exactly 4 production. Each Workshop consumes 2 food and no gold from its nearest same-owner parent City only while that City has a production queue and positive net production per turn. A stalled `P=0` queue consumes no Workshop food.
 - `CITY-INCOME-010`: A City works only Tiles whose coordinates are within `+/-4` of the City on both map axes, forming a maximum `9x9` working rectangle. Inside it, land Tiles connect by road and water Tiles within three hex steps remain eligible when they have Nets.
 - `CITY-INCOME-011`: Shallow water gives 1 food. Fish or Turtles add 2 food, raising their unimproved shallow-water total to 3 food.
 - `CITY-INCOME-012`: A WorkBoat may build Nets on shallow water. Nets raise ordinary shallow water to 2 food and raise Fish or Turtles to exactly 5 food and 2 gold.
@@ -52,6 +53,14 @@ City economy is implemented by `city.js`.
 - `CITY-TURN-011`: For Cities below population five, positive food and gold transferred to civilization storage lose `0.9 * distance / 100`, capped at 90%. Distance is measured from the first City built after the latest respawn; local growth and production use full yield.
 - `CITY-TURN-012`: A City above population 10 loses 5% of its positive food excess and stored gold per additional citizen, capped at 50% from population 20. This loss compounds with the small distant-City storage loss.
 
+## City Buildings
+
+- `CITY-BUILDING-001`: A City may add Lazaret, Stable, Shooting-range, Barracks, Port, and Market to its production backlog. A completed City building is a nonmovable unit linked to its parent City and cannot be built there twice.
+- `CITY-BUILDING-002`: Lazaret adds 10 percentage points to the normal 10% per-turn healing of movable units inside its City, for 20% maximum-health healing per turn.
+- `CITY-BUILDING-003`: Stable gives newly produced Horseman, Chariot, Knight, and Elephant units 1.1 starting experience. Shooting-range gives the same starting experience to Slinger, Archer, and Longbow units.
+- `CITY-BUILDING-004`: Barracks gives newly produced Warrior, Spearman, Pikeman, Fencer, and Swordsman units 1.1 starting experience. Port gives the same starting experience to newly produced water units.
+- `CITY-BUILDING-005`: A Market transfers exactly one food per turn from civilization food storage to its City when a continuous road connects that City to another owned City. It creates no food and transfers nothing when global storage is empty.
+
 ## Civilization Storage
 
 - `CITY-MONEY-001`: `GameState.money` is the civilization money account.
@@ -64,7 +73,9 @@ City economy is implemented by `city.js`.
 - `CITY-MONEY-006`: Workshops do not consume gold; their parent City receives the worked Tile's full gold income.
 - `CITY-MONEY-007`: Civilization balances and their gross-income, upkeep, technology-expense, and net-income summaries are server-authoritative and cannot be overwritten by stale client turn submissions.
 - `CITY-MONEY-008`: In authenticated multiplayer, JS never increments food storage or the gold treasury. It queues growth from the last server-reported City food value and displays civilization balances only after a server state response.
-- `CITY-MENU-001`: An idle City reserves the same production-status height as a producing City, and a City selected when End Turn begins remains selected with its production menu visible after the turn update.
+- `CITY-MENU-001`: A City selected when End Turn begins remains selected with its production menu visible after the turn update. Production and backlog state do not insert a blank status row.
+- `CITY-MENU-002`: Every City production choice shows its sprite, production cost, attack, defence, speed, and authoritative per-turn food and gold upkeep.
+- `CITY-MENU-003`: Unbuilt City buildings appear among production choices with their pulled image assets. Completed buildings are removed from production choices and shown only in the completed-buildings list at the bottom of the City Actions window.
 
 ## Drawing
 

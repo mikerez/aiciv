@@ -34,25 +34,34 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value}
     const second = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'browser-b', include_snapshot: false,
     });
-    assert.equal(first.unit_ids.length, 8);
-    assert.equal(second.unit_ids.length, 8);
+    assert.equal(first.unit_ids.length, 1,
+        'stateful Worker development is leased atomically');
+    assert.equal(second.unit_ids.length, 1,
+        'another browser receives a different atomic Worker lease');
     assert.equal(first.ai_player_id, 9000);
     assert.ok(first.snapshot && first.snapshot.units.length >= 16);
     assert.equal(first.unit_ids.filter(id => second.unit_ids.includes(id)).length, 0,
         'concurrent browsers receive disjoint AI units');
 
-    for (const [clientKey, batch] of [['browser-a', first], ['browser-b', second]]) {
-        for (let offset = 0; offset < 8; offset += 4) {
-            const submitted = await serverGame.request('submit_ai_batch', {
-                player_id: 7001, client_key: clientKey, lease_token: batch.lease_token, turn,
-                commands: batch.unit_ids.slice(offset, offset + 4)
-                    .map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
-                actions: [],
-            });
-            assert.equal(submitted.accepted, true);
-            assert.equal(submitted.orders_stored, 4);
-        }
+    const pending = [['browser-a', first], ['browser-b', second]];
+    const submittedIds = [];
+    while (pending.length) {
+        const [clientKey, batch] = pending.shift();
+        const submitted = await serverGame.request('submit_ai_batch', {
+            player_id: 7001, client_key: clientKey, lease_token: batch.lease_token, turn,
+            commands: batch.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
+            actions: [],
+        });
+        assert.equal(submitted.accepted, true);
+        assert.equal(submitted.orders_stored, batch.unit_ids.length);
+        submittedIds.push(...batch.unit_ids);
+        const next = await serverGame.request('claim_ai_batch', {
+            player_id: 7001, client_key: clientKey, include_snapshot: false,
+        });
+        if (next.unit_ids.length) pending.push([clientKey, next]);
     }
+    assert.equal(new Set(submittedIds).size, 16,
+        'repeated short leases service every AI unit exactly once per turn');
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_orders WHERE turn_number=${turn} AND player_id=9000`)), 16);
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_submissions WHERE turn_number=${turn} AND player_id=9000`)), 0,
         'AI contributions do not become turn-blocking submissions');

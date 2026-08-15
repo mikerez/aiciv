@@ -211,6 +211,8 @@ function createBrowserClient({size, playerId, gameId, tiles, units, unitsByUser 
     else for (const name of technologies) context._game_state.openTechnologies[name] = true;
     context._game_state_by_user[playerId] = context._game_state;
     vm.createContext(context);
+    evaluate(context, 'vocabulary_EN.js');
+    evaluate(context, 'vocabulary.js');
     evaluate(context, 'economics.js', '\nglobalThis.economics = _economics;');
     context.economics.updateCounters = function() {};
     context.economics.registerTerrainImprovement = function() {};

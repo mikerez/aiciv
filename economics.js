@@ -18,7 +18,7 @@ const _economics = new class
             fishing_boats: 866,
             quarry: 867,
             winery: 868,
-            network: 870,
+            network: 872,
         };
     }
 
@@ -353,9 +353,14 @@ const _economics = new class
         var unit = units[index];
         var label = this.unitLabel(unit);
         this.removeUnitFromList(units, index);
-        var message = 'Unit "' + label + '" is destroyed due to lack of funds.';
+        var message = vocabularyText('message.unit_destroyed_funds', {name: label});
         gameState.oneTurnMessage = message;
-        if (typeof _one_turn_message !== 'undefined') {
+        if (typeof _server_game !== 'undefined' && _server_game.setOneTurnMessage) {
+            _server_game.setOneTurnMessage(
+                typeof _current_user == 'undefined' ? 0 : _current_user, message
+            );
+        }
+        else if (typeof _one_turn_message !== 'undefined') {
             _one_turn_message = message;
         }
         if (typeof appendConsoleLog === 'function') {

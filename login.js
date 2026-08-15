@@ -4,11 +4,11 @@ var _remembered_login_key = 'aiciv_remembered_login';
 var loginError = new URLSearchParams(window.location.search).get('error');
 if (loginError) {
     var loginMessages = {
-        session_replaced: 'This account was signed in on another device. Please log in again here to continue.',
-        session_expired: 'Your login session expired. Please log in again.',
-        invalid_session: 'Your login session is invalid. Please log in again.',
-        authentication_required: 'Please log in to continue.',
-        account_unavailable: 'This account is not currently available.'
+        session_replaced: vocabularyText('auth.session_replaced'),
+        session_expired: vocabularyText('auth.session_expired'),
+        invalid_session: vocabularyText('auth.invalid_session'),
+        authentication_required: vocabularyText('auth.authentication_required'),
+        account_unavailable: vocabularyText('auth.account_unavailable')
     };
     document.getElementById('message').textContent = loginMessages[loginError] || loginMessages.invalid_session;
 }
@@ -16,7 +16,7 @@ if (loginError) {
 function authCookie(name, value, maxAge)
 {
     document.cookie = name + '=' + encodeURIComponent(value)
-        + '; Path=/game/; Max-Age=' + maxAge + '; SameSite=Lax; Secure';
+        + '; Path=/; Max-Age=' + maxAge + '; SameSite=Lax; Secure';
 }
 
 function authDeviceId()
@@ -56,10 +56,10 @@ async function authenticatePlayer(login, password, rememberMe)
     });
     var result = await response.json();
     if (!response.ok || !result.ok) {
-        throw new Error(result.error ? result.error.message : 'Login failed.');
+        throw new Error(result.error ? result.error.message : vocabularyText('auth.login_failed'));
     }
     if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
-        throw new Error('The browser rejected the game session cookie. Enable cookies for this site.');
+        throw new Error(vocabularyText('auth.cookie_rejected'));
     }
     return result;
 }

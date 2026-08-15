@@ -18,10 +18,22 @@ for (const [id, name, unitClass, texture, attack, defense, speed, view, technolo
         : id === 'knight' ? "'Horses'"
         : id === 'fencer' ? "'Copper or Iron'" : 'null';
     const natureArguments = nature === 'water' ? ", true, 'water'" : '';
-    const definition = `new UnitType('${id}', '${name}', ${unitClass}, ${texture}, ${attack}, ${defense}, ${speed}, ${view}, '${technology}', ${cost}, ${resource}${natureArguments})`;
+    const definition = `new UnitType('${id}', vocabularyUnitName('${id}'), ${unitClass}, ${texture}, ${attack}, ${defense}, ${speed}, ${view}, '${technology}', ${cost}, ${resource}${natureArguments})`;
     assert.ok(source.includes(definition), `missing client definition for ${id}`);
     const imageName = id === 'workboat' ? 'Workboat' : id === 'swordsman' ? 'Swordman' : name;
-    assert.ok(source.includes(`_screen.loadTexture('${imageName}.png', ${texture});`), `missing texture for ${id}`);
+    const plain = `_screen.loadTexture('${imageName}.png', ${texture});`;
+    const versioned = `_screen.loadTexture('${imageName}.png' + _prehistory_unit_sprite_version, ${texture});`;
+    assert.ok(source.includes(plain) || source.includes(versioned), `missing texture for ${id}`);
+}
+
+for (const [unitTypeId, requirement] of [
+    ['chariot', "['horses', 'copper']"],
+    ['elephant', "['ivory', 'copper']"],
+    ['galleon', "['copper']"],
+    ['frigate', "['iron']"],
+]) {
+    assert.ok(source.includes(`${unitTypeId}: ${requirement}`),
+        `missing client production resources for ${unitTypeId}`);
 }
 
 console.log('PASS new client unit definitions and textures');

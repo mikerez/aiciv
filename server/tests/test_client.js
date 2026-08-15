@@ -93,6 +93,8 @@ function resetDatabase() {
     serverGame.unitRevisionByPlayer = {};
     serverGame.landscapeRevisionByPlayer = {};
     serverGame.eventIdByPlayer = {};
+    serverGame.appliedSnapshotRevisionByPlayer = {};
+    serverGame.seenEventIdsByPlayer = {};
     serverGame.pendingTurnActionsByPlayer = {};
     serverGame.nextTurnActionId = 1;
 }

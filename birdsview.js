@@ -311,13 +311,28 @@ const _birdsview = new class
 
     layoutForCanvas(canvas)
     {
-        var cell = (typeof document != 'undefined' && document.body
+        var preferredCell = (typeof document != 'undefined' && document.body
             && document.body.classList.contains('mobile-ui')) ? 4 : 3;
+        var visible = this.visibleCanvasRect(canvas);
+        var margin = 12;
+        var availableWidth = Math.max(1, visible.right-visible.left-margin*2);
+        var availableHeight = Math.max(1, visible.bottom-visible.top-margin*2);
+        var fittingCell = Math.floor(Math.min(availableWidth, availableHeight)
+            * Math.SQRT2 / this.size);
+        var cell = Math.max(1, Math.min(preferredCell, fittingCell));
         var sourceWidth = this.size * cell;
         var rotatedSize = Math.ceil(sourceWidth * Math.SQRT2);
-        var visible = this.visibleCanvasRect(canvas);
-        var x0 = visible.left + 12 - 50;
-        var y0 = Math.max(visible.top + 12, visible.bottom - rotatedSize - 12) + 50;
+        var clipSize = rotatedSize * 0.5;
+        var clipLeft = visible.left + margin;
+        var clipBottom = visible.bottom - margin;
+        var clipTop = clipBottom - clipSize;
+        if (clipTop < visible.top + margin) {
+            clipTop = visible.top + margin;
+            clipBottom = clipTop + clipSize;
+        }
+        var clipRight = clipLeft + clipSize;
+        var x0 = clipLeft - rotatedSize * 0.25;
+        var y0 = clipTop - rotatedSize * 0.25;
         return {
             cell: cell,
             sourceWidth: sourceWidth,
@@ -327,10 +342,10 @@ const _birdsview = new class
             y0: y0,
             centerX: x0 + rotatedSize / 2,
             centerY: y0 + rotatedSize / 2,
-            clipLeft: x0 + rotatedSize * 0.25,
-            clipRight: x0 + rotatedSize * 0.75,
-            clipTop: y0 + rotatedSize * 0.25,
-            clipBottom: y0 + rotatedSize * 0.75,
+            clipLeft: clipLeft,
+            clipRight: clipRight,
+            clipTop: clipTop,
+            clipBottom: clipBottom,
         };
     }
 
@@ -448,10 +463,10 @@ const _birdsview = new class
         var rect = canvas.getBoundingClientRect();
         var scaleX = rect.width ? canvas.width / rect.width : 1;
         var scaleY = rect.height ? canvas.height / rect.height : 1;
-        var left = Math.max(0, -rect.left * scaleX);
-        var top = Math.max(0, -rect.top * scaleY);
-        var right = Math.min(canvas.width, (window.innerWidth - rect.left) * scaleX);
-        var bottom = Math.min(canvas.height, (window.innerHeight - rect.top) * scaleY);
+        var left = Math.max(0, Math.min(canvas.width, -rect.left * scaleX));
+        var top = Math.max(0, Math.min(canvas.height, -rect.top * scaleY));
+        var right = Math.max(left, Math.min(canvas.width, (window.innerWidth - rect.left) * scaleX));
+        var bottom = Math.max(top, Math.min(canvas.height, (window.innerHeight - rect.top) * scaleY));
         return { left: left, top: top, right: right, bottom: bottom };
     }
 };

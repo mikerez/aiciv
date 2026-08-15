@@ -4,7 +4,7 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value,
 
 const definitions = {
     road: {valid: [1,2,3,4,5,6,7]},
-    irrigation: {valid: [2,7]},
+    irrigation: {valid: [1,2,7]},
     pasture: {valid: [1,2,3,4,5,6,7], resource: 2},
     fortification: {valid: [1,2,3,4,5,6,7]},
     cottage: {valid: [1,2,3,4,5,6,7], irrigation: true},
@@ -77,5 +77,42 @@ const definitions = {
         worker_unit_id: fixture.unitIds.builder,
         building_type: 'irrigation',
     }, 'building_not_supported');
+
+    sql(`DELETE FROM server_game_units WHERE game_id=${gameDbId} AND unit_class=4;
+         UPDATE server_game_map SET terrain_tex=4, resource_type=0, modifiers_json='{}'
+         WHERE game_id=${gameDbId} AND i=3 AND j=3;
+         UPDATE server_game_units SET unit_type_id='worker', nature='land', i=3, j=3,
+             state='fortification', properties_json='{"clientImprovementTurnsLeft":1,"clientImprovementState":"fortification"}',
+             deleted_at=NULL, health=100 WHERE id=${fixture.unitIds.builder};`);
+    await serverGame.request('build', {
+        player_id: fixture.playerId,
+        worker_unit_id: fixture.unitIds.builder,
+        building_type: 'fortification',
+    });
+    const completedWorkerProperties = JSON.parse(value(
+        `SELECT properties_json FROM server_game_units WHERE id=${fixture.unitIds.builder}`
+    ));
+    assert.equal(completedWorkerProperties.clientImprovementTurnsLeft, undefined,
+        'completed Fortification clears the client countdown from authoritative state');
+    assert.equal(completedWorkerProperties.clientImprovementState, undefined,
+        'completed Fortification clears its client improvement type from authoritative state');
+    await expectRequestError('build', {
+        player_id: fixture.playerId,
+        worker_unit_id: fixture.unitIds.builder,
+        building_type: 'mine',
+    }, 'fortification_protected');
+    assert.equal(JSON.parse(value(
+        `SELECT modifiers_json FROM server_game_map WHERE game_id=${gameDbId} AND i=3 AND j=3`
+    )).fortification, true, 'a rejected Worker replacement must preserve the Fortification modifier');
+    assert.equal(Number(value(
+        `SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} `
+        + `AND unit_type_id='building_fortification' AND deleted_at IS NULL`
+    )), 1, 'a rejected Worker replacement must preserve the Fortification unit');
+    const roadAtFort = await serverGame.request('build', {
+        player_id: fixture.playerId,
+        worker_unit_id: fixture.unitIds.builder,
+        building_type: 'road',
+    });
+    assert.equal(roadAtFort.status, 'BUILT', 'Road remains allowed because it coexists with Fortification');
     console.log('PASS build validates every immediate improvement against all 8 terrain types and verifies MySQL state');
 })().catch(error => { console.error(error); process.exitCode = 1; });

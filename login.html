@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Civilization Login</title>
+    <title data-vocabulary="app.login_title">AI Civilization Login</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #18211b; color: #172018; font: 15px Arial, sans-serif; }
@@ -22,21 +22,30 @@
 </head>
 <body>
 <main>
-    <h1>AI Civilization</h1>
+    <h1 data-vocabulary="auth.login_heading">AI Civilization</h1>
     <form id="loginForm">
-        <label for="login">Login or email</label>
+        <label for="login" data-vocabulary="auth.login_or_email">Login or email</label>
         <input id="login" name="login" autocomplete="username" required>
-        <label for="password">Password</label>
+        <label for="password" data-vocabulary="auth.password">Password</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required>
         <label class="remember-row" for="rememberMe">
             <input id="rememberMe" name="remember_me" type="checkbox">
-            <span>Remember me</span>
+            <span data-vocabulary="auth.remember_me">Remember me</span>
         </label>
-        <button id="submitButton" type="submit">Login</button>
+        <button id="submitButton" type="submit" data-vocabulary="auth.login">Login</button>
         <p id="message" role="alert"></p>
     </form>
-    <nav><a href="register.html">Register a new player</a></nav>
+    <nav><a href="register.html" data-vocabulary="auth.register_new">Register a new player</a></nav>
 </main>
-<script src="login.js?v=20260805c"></script>
+<script src="vocabulary_EN.js?v=20260812b"></script>
+<script src="vocabulary_FR.js?v=20260812b"></script>
+<script src="vocabulary_DE.js?v=20260812b"></script>
+<script src="vocabulary_SP.js?v=20260812b"></script>
+<script src="vocabulary_RU.js?v=20260812b"></script>
+<script src="vocabulary_IT.js?v=20260812b"></script>
+<script src="vocabulary_CH.js?v=20260812b"></script>
+<script src="vocabulary_JP.js?v=20260812b"></script>
+<script src="vocabulary.js?v=20260812c"></script>
+<script src="login.js?v=20260812a"></script>
 </body>
 </html>

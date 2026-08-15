@@ -57,6 +57,8 @@ const sandbox = {
     },
 };
 vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync('vocabulary_EN.js', 'utf8'), sandbox);
+vm.runInContext(fs.readFileSync('vocabulary.js', 'utf8'), sandbox);
 vm.runInContext(fs.readFileSync('economics.js', 'utf8') + '\nglobalThis.economics = _economics;', sandbox);
 vm.runInContext(fs.readFileSync('game_prehistory.js', 'utf8') + '\nglobalThis.layer = _game_prehistory;', sandbox);
 sandbox.layer.autoRoutePatrol(0);

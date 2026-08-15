@@ -1,27 +1,27 @@
 const _main_menu_buttons = [
   {
     id: 'technology',
-    title: 'Technology',
+    titleKey: 'menu.technology',
     icon: '<path d="M5 3h10v3H5zM4 8h12v9H4zM7 10h6M7 13h6"/>'
   },
   {
     id: 'politics',
-    title: 'Politics',
+    titleKey: 'menu.politics',
     icon: '<path d="M10 3l7 4H3zM5 8v7M10 8v7M15 8v7M3 17h14"/>'
   },
   {
     id: 'finance',
-    title: 'Finance',
+    titleKey: 'menu.finance',
     icon: '<circle cx="10" cy="10" r="7"/><path d="M10 6v8M7.5 8h3.5a2 2 0 0 1 0 4H9"/>'
   },
   {
     id: 'trade',
-    title: 'Trade',
+    titleKey: 'menu.trade',
     icon: '<path d="M4 7h10l-2-2M14 7l-2 2M16 13H6l2 2M6 13l2-2"/>'
   },
   {
     id: 'console',
-    title: 'AI Console',
+    titleKey: 'menu.ai_console',
     icon: '<path d="M4 5l4 5-4 5M10 15h6"/>'
   }
 ];
@@ -78,7 +78,7 @@ function createMainMenuButtons()
   _main_menu_buttons.forEach(function(config) {
     var button = document.createElement('button');
     button.type = 'button';
-    button.title = config.title;
+    button.title = vocabularyText(config.titleKey);
     button.dataset.mainMenuButton = config.id;
     button.style.width = document.body.classList.contains('mobile-ui') ? '40px' : '20px';
     button.style.height = document.body.classList.contains('mobile-ui') ? '40px' : '20px';

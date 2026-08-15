@@ -5,6 +5,7 @@ This file describes sprite image format rules for game art assets.
 ## Editor Sprite Format
 
 - `SPRITE-001`: The `400x300` sprite image format is a recommendation for creating an editor/source sprite.
+- `SPRITE-007`: The terrain `A` bit may identify a water source even when no dedicated alternative sprite exists. Rendering uses an exact encoded texture when available; otherwise it clears `A` and uses the depth-matched base terrain sprite.
 - `SPRITE-002`: The visible hexagon shape inside a sprite uses these image coordinates:
   - `(0, 99)`
   - `(199, 0)`

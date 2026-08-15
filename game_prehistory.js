@@ -1,41 +1,41 @@
 const _resource_types = [
     null,
-    { id: 'bananas', name: 'Bananas', texture: 801, sprite: 'resource_bananas.png', gives: 'food from tropical forest and grass tiles', terrains: [6, 2], chance: 0.012 },
-    { id: 'cattle', name: 'Cattle', texture: 802, sprite: 'resource_cattle.png', gives: 'food and production from grassland herds', terrains: [2], chance: 0.012 },
-    { id: 'copper', name: 'Copper', texture: 803, sprite: 'resource_copper.png', gives: 'early metal production and trade value', terrains: [4, 5], chance: 0.020 },
-    { id: 'crabs', name: 'Crabs', texture: 804, sprite: 'resource_crabs.png', gives: 'food from coastal water and river grass', terrains: [0, 7], chance: 0.010 },
-    { id: 'deer', name: 'Deer', texture: 805, sprite: 'resource_deer.png', gives: 'food and hides from forest or snow edge tiles', terrains: [6, 3], chance: 0.010 },
-    { id: 'fish', name: 'Fish', texture: 806, sprite: 'resource_fish.png', gives: 'food from water tiles', terrains: [0], chance: 0.012 },
-    { id: 'rice', name: 'Rice', texture: 807, sprite: 'resource_rice.png', gives: 'food from wet grass and river grass', terrains: [2, 7], chance: 0.012 },
-    { id: 'sheep', name: 'Sheep', texture: 808, sprite: 'resource_sheep.png', gives: 'food and wool from grass or hills', terrains: [2, 4], chance: 0.012 },
-    { id: 'stone', name: 'Stone', texture: 809, sprite: 'resource_stone.png', gives: 'production support for early buildings and construction', terrains: [4, 5], chance: 0.024 },
-    { id: 'wheat', name: 'Wheat', texture: 810, sprite: 'resource_wheat.png', gives: 'food support for city growth', terrains: [2, 7], chance: 0.012 },
-    { id: 'amber', name: 'Amber', texture: 811, sprite: 'resource_amber.png', gives: 'luxury and trade value from forested lands', terrains: [6, 3], chance: 0.007 },
-    { id: 'citrus', name: 'Citrus', texture: 812, sprite: 'resource_citrus.png', gives: 'food and luxury from warm grass or forest', terrains: [2, 6], chance: 0.008 },
-    { id: 'cotton', name: 'Cotton', texture: 815, sprite: 'resource_cotton.png', gives: 'luxury and textile value from open land', terrains: [2, 1], chance: 0.008 },
-    { id: 'dyes', name: 'Dyes', texture: 816, sprite: 'resource_dyes.png', gives: 'luxury and trade colorants from forests or grass', terrains: [6, 2], chance: 0.008 },
-    { id: 'diamonds', name: 'Diamonds', texture: 817, sprite: 'resource_diamonds.png', gives: 'high-value luxury from hills and rocks', terrains: [4, 5], chance: 0.005 },
-    { id: 'furs', name: 'Furs', texture: 818, sprite: 'resource_furs.png', gives: 'luxury from cold terrain and forests', terrains: [3, 6], chance: 0.007 },
-    { id: 'gypsum', name: 'Gypsum', texture: 819, sprite: 'resource_gypsum.png', gives: 'construction material from desert, hills, and rocks', terrains: [1, 4, 5], chance: 0.008 },
-    { id: 'honey', name: 'Honey', texture: 820, sprite: 'resource_honey.png', gives: 'food and luxury from forest and grass', terrains: [6, 2], chance: 0.008 },
-    { id: 'incense', name: 'Incense', texture: 821, sprite: 'resource_incense.png', gives: 'luxury and ceremonial trade value', terrains: [1, 4], chance: 0.007 },
-    { id: 'ivory', name: 'Ivory', texture: 822, sprite: 'resource_ivory.png', gives: 'luxury and strategic animal material', terrains: [2, 6], chance: 0.003 },
-    { id: 'marble', name: 'Marble', texture: 823, sprite: 'resource_marble.png', gives: 'luxury stone and building production value', terrains: [4, 5], chance: 0.014 },
-    { id: 'olives', name: 'Olives', texture: 825, sprite: 'resource_olives.png', gives: 'food and luxury from grass or hills', terrains: [2, 4], chance: 0.008 },
-    { id: 'pearls', name: 'Pearls', texture: 826, sprite: 'resource_pearls.png', gives: 'luxury from water tiles', terrains: [0], chance: 0.006 },
-    { id: 'salt', name: 'Salt', texture: 827, sprite: 'resource_salt.png', gives: 'food preservation and trade value', terrains: [1, 0, 4], chance: 0.008 },
-    { id: 'silk', name: 'Silk', texture: 828, sprite: 'resource_silk.png', gives: 'luxury textile value from forest regions', terrains: [6], chance: 0.006 },
-    { id: 'silver', name: 'Silver', texture: 829, sprite: 'resource_silver.png', gives: 'precious metal commerce and trade value', terrains: [4, 5], chance: 0.007 },
-    { id: 'spices', name: 'Spices', texture: 830, sprite: 'resource_spices.png', gives: 'luxury and food trade value', terrains: [6, 2], chance: 0.008 },
-    { id: 'sugar', name: 'Sugar', texture: 831, sprite: 'resource_sugar.png', gives: 'food and luxury from wet grass or river grass', terrains: [2, 7], chance: 0.008 },
-    { id: 'tea', name: 'Tea', texture: 832, sprite: 'resource_tea.png', gives: 'luxury from hills or forest', terrains: [4, 6], chance: 0.007 },
-    { id: 'turtles', name: 'Turtles', texture: 834, sprite: 'resource_turtles.png', gives: 'food and luxury from water tiles', terrains: [0], chance: 0.006 },
-    { id: 'whales', name: 'Whales', texture: 835, sprite: 'resource_whales.png', gives: 'food, production, and luxury from water tiles', terrains: [0], chance: 0.005 },
-    { id: 'wine', name: 'Wine', texture: 836, sprite: 'resource_wine.png', gives: 'luxury and culture value from grass or hills', terrains: [2, 4], chance: 0.007 },
-    { id: 'horses', name: 'Horses', texture: 837, sprite: 'resource_horses.png', gives: 'strategic animal resource for horse units', terrains: [2, 1, 7], chance: 0.010 },
-    { id: 'iron', name: 'Iron', texture: 838, sprite: 'resource_iron.png', gives: 'strategic metal for iron weapons and units', terrains: [1, 4, 5], chance: 0.020 },
-    { id: 'gold', name: 'Gold', texture: 844, sprite: 'resource_gold.png', gives: 'commerce and trade value', terrains: [4, 5, 1], chance: 0.007 },
-    { id: 'gems', name: 'Gems', texture: 845, sprite: 'resource_gems.png', gives: 'valuable minerals for luxury and trade', terrains: [4, 5], chance: 0.006 },
+    { id: 'bananas', texture: 801, sprite: 'resource_bananas.png', terrains: [6, 2], chance: 0.012 },
+    { id: 'cattle', texture: 802, sprite: 'resource_cattle.png', terrains: [2], chance: 0.012 },
+    { id: 'copper', texture: 803, sprite: 'resource_copper.png', terrains: [4, 5], chance: 0.020 },
+    { id: 'crabs', texture: 804, sprite: 'resource_crabs.png', terrains: [0, 7], chance: 0.010 },
+    { id: 'deer', texture: 805, sprite: 'resource_deer.png', terrains: [6, 3], chance: 0.010 },
+    { id: 'fish', texture: 806, sprite: 'resource_fish.png', terrains: [0], chance: 0.012 },
+    { id: 'rice', texture: 807, sprite: 'resource_rice.png', terrains: [2, 7], chance: 0.012 },
+    { id: 'sheep', texture: 808, sprite: 'resource_sheep.png', terrains: [2, 4], chance: 0.012 },
+    { id: 'stone', texture: 809, sprite: 'resource_stone.png', terrains: [4, 5], chance: 0.024 },
+    { id: 'wheat', texture: 810, sprite: 'resource_wheat.png', terrains: [2, 7], chance: 0.012 },
+    { id: 'amber', texture: 811, sprite: 'resource_amber.png', terrains: [6, 3], chance: 0.007 },
+    { id: 'citrus', texture: 812, sprite: 'resource_citrus.png', terrains: [2, 6], chance: 0.008 },
+    { id: 'cotton', texture: 815, sprite: 'resource_cotton.png', terrains: [2, 1], chance: 0.008 },
+    { id: 'dyes', texture: 816, sprite: 'resource_dyes.png', terrains: [6, 2], chance: 0.008 },
+    { id: 'diamonds', texture: 817, sprite: 'resource_diamonds.png', terrains: [4, 5], chance: 0.005 },
+    { id: 'furs', texture: 818, sprite: 'resource_furs.png', terrains: [3, 6], chance: 0.007 },
+    { id: 'gypsum', texture: 819, sprite: 'resource_gypsum.png', terrains: [1, 4, 5], chance: 0.008 },
+    { id: 'honey', texture: 820, sprite: 'resource_honey.png', terrains: [6, 2], chance: 0.008 },
+    { id: 'incense', texture: 821, sprite: 'resource_incense.png', terrains: [1, 4], chance: 0.007 },
+    { id: 'ivory', texture: 822, sprite: 'resource_ivory.png', terrains: [2, 6], chance: 0.003 },
+    { id: 'marble', texture: 823, sprite: 'resource_marble.png', terrains: [4, 5], chance: 0.014 },
+    { id: 'olives', texture: 825, sprite: 'resource_olives.png', terrains: [2, 4], chance: 0.008 },
+    { id: 'pearls', texture: 826, sprite: 'resource_pearls.png', terrains: [0], chance: 0.006 },
+    { id: 'salt', texture: 827, sprite: 'resource_salt.png', terrains: [1, 0, 4], chance: 0.008 },
+    { id: 'silk', texture: 828, sprite: 'resource_silk.png', terrains: [6], chance: 0.006 },
+    { id: 'silver', texture: 829, sprite: 'resource_silver.png', terrains: [4, 5], chance: 0.007 },
+    { id: 'spices', texture: 830, sprite: 'resource_spices.png', terrains: [6, 2], chance: 0.008 },
+    { id: 'sugar', texture: 831, sprite: 'resource_sugar.png', terrains: [2, 7], chance: 0.008 },
+    { id: 'tea', texture: 832, sprite: 'resource_tea.png', terrains: [4, 6], chance: 0.007 },
+    { id: 'turtles', texture: 834, sprite: 'resource_turtles.png', terrains: [0], chance: 0.006 },
+    { id: 'whales', texture: 835, sprite: 'resource_whales.png', terrains: [0], chance: 0.005 },
+    { id: 'wine', texture: 836, sprite: 'resource_wine.png', terrains: [2, 4], chance: 0.007 },
+    { id: 'horses', texture: 837, sprite: 'resource_horses.png', terrains: [2, 1, 7], chance: 0.010 },
+    { id: 'iron', texture: 838, sprite: 'resource_iron.png', terrains: [1, 4, 5], chance: 0.020 },
+    { id: 'gold', texture: 844, sprite: 'resource_gold.png', terrains: [4, 5, 1], chance: 0.007 },
+    { id: 'gems', texture: 845, sprite: 'resource_gems.png', terrains: [4, 5], chance: 0.006 },
 
     // Resources below are known only from medieval or later play and are disabled in prehistory.
     // not known in the Old World before the medieval era.
@@ -58,31 +58,54 @@ const _resource_types = [
     // { id: 'uranium', name: 'Uranium', texture: 843, sprite: 'resource_uranium.png', gives: 'strategic late-game energy and weapon resource', terrains: [4, 5, 1], chance: 0.004 },
 ];
 
+const _resource_categories = {
+    bananas:['food','crop'], cattle:['food','production','animal'], copper:['production','money','mineral'],
+    crabs:['food'], deer:['food','production','animal'], fish:['food'], rice:['food','crop'],
+    sheep:['food','production','animal'], stone:['production','stone'], wheat:['food','crop'],
+    amber:['money'], citrus:['food','money','crop'], cotton:['money','crop'], dyes:['money'],
+    diamonds:['production','money','mineral'], furs:['money','animal'], gypsum:['production','stone'],
+    honey:['food','money'], incense:['money'], ivory:['production','money','animal'],
+    marble:['production','money','stone'], olives:['food','money','crop'], pearls:['money'],
+    salt:['food','money'], silk:['money'], silver:['production','money','mineral'],
+    spices:['food','money','crop'], sugar:['food','money','crop'], tea:['money','crop'],
+    turtles:['food','money'], whales:['food','production','money','animal'], wine:['food','money','crop'],
+    horses:['production','animal'], iron:['production','mineral'], gold:['money','mineral'],
+    gems:['production','money','mineral']
+};
+for (var resourceVocabularyIndex=1; resourceVocabularyIndex < _resource_types.length; resourceVocabularyIndex++) {
+    var resourceVocabulary = _resource_types[resourceVocabularyIndex];
+    if (!resourceVocabulary) continue;
+    resourceVocabulary.name = vocabularyResourceName(resourceVocabulary.id);
+    resourceVocabulary.gives = vocabularyText('resource_description.' + resourceVocabulary.id);
+    resourceVocabulary.categories = _resource_categories[resourceVocabulary.id] || [];
+}
+
 const _resource_improvement_requirements = _economics.resourceImprovementRequirements();
+const _prehistory_unit_sprite_version = '?v=20260812b';
 
 _screen.loadTexture('settler.png', 256);
 _screen.loadTexture('explorer.png', 257);
-_screen.loadTexture('Warior.png', 258);
-_screen.loadTexture('city.png', 259);
-_screen.loadTexture('slinger.png', 260);
-_screen.loadTexture('Archer.png', 261);
-_screen.loadTexture('Spearman.png', 262);
-_screen.loadTexture('Horseman.png', 263);
-_screen.loadTexture('Chariot.png', 264);
+_screen.loadTexture('Warior.png' + _prehistory_unit_sprite_version, 258);
+_screen.loadTexture('City.png' + _prehistory_unit_sprite_version, 259);
+_screen.loadTexture('slinger.png' + _prehistory_unit_sprite_version, 260);
+_screen.loadTexture('Archer.png' + _prehistory_unit_sprite_version, 261);
+_screen.loadTexture('Spearman.png' + _prehistory_unit_sprite_version, 262);
+_screen.loadTexture('Horseman.png' + _prehistory_unit_sprite_version, 263);
+_screen.loadTexture('Chariot.png' + _prehistory_unit_sprite_version, 264);
 _screen.loadTexture('WarElephant.png', 265);
-_screen.loadTexture('Catapult.png', 266);
-_screen.loadTexture('Trebuchet.png', 267);
-_screen.loadTexture('unit_galley.png', 268);
-_screen.loadTexture('unit_galleon.png', 269);
+_screen.loadTexture('Catapult.png' + _prehistory_unit_sprite_version, 266);
+_screen.loadTexture('Trebuchet.png' + _prehistory_unit_sprite_version, 267);
+_screen.loadTexture('Galley.png' + _prehistory_unit_sprite_version, 268);
+_screen.loadTexture('Galleon.png' + _prehistory_unit_sprite_version, 269);
 _screen.loadTexture('worker.png', 270);
-_screen.loadTexture('Workboat.png', 271);
-_screen.loadTexture('Frigate.png', 272);
+_screen.loadTexture('Workboat.png' + _prehistory_unit_sprite_version, 271);
+_screen.loadTexture('Frigate.png' + _prehistory_unit_sprite_version, 272);
 _screen.loadTexture('Knight.png', 273);
-_screen.loadTexture('Pikeman.png', 274);
-_screen.loadTexture('Longbow.png', 275);
+_screen.loadTexture('Pikeman.png' + _prehistory_unit_sprite_version, 274);
+_screen.loadTexture('Longbow.png' + _prehistory_unit_sprite_version, 275);
 _screen.loadTexture('Fencer.png', 276);
-_screen.loadTexture('Swordman.png', 277);
-_screen.loadTexture('Trireme.png', 278);
+_screen.loadTexture('Swordman.png' + _prehistory_unit_sprite_version, 277);
+_screen.loadTexture('Trireme.png' + _prehistory_unit_sprite_version, 278);
 _screen.loadTexture('blue.png', 900);
 _screen.loadTexture('green.png', 901);
 _screen.loadTexture('yellow.png', 902);
@@ -90,29 +113,85 @@ _screen.loadTexture('magenta.png', 903);
 _screen.loadTexture('orange.png', 904);
 
 const _prehistory_unit_types = [
-    new UnitType('settlers', 'Settlers', 0, 256, 0, 1, 1, 2, null, 20, null),
-    new UnitType('worker', 'Worker', 1, 270, 0, 1, 1, 2, null, 20, null),
-    new UnitType('explorer', 'Explorer', 1, 257, 0, 1, 2, 4, null, 15, null),
-    new UnitType('warrior', 'Warrior', 2, 258, 2, 1, 1, 2, null, 20, null),
-    new UnitType('slinger', 'Slinger', 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
-    new UnitType('archer', 'Archer', 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
-    new UnitType('spearman', 'Spearman', 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper or Iron'),
-    new UnitType('horseman', 'Horseman', 2, 263, 4, 2, 2, 3, 'Horseback Riding', 50, 'Horses'),
-    new UnitType('chariot', 'Chariot', 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses'),
-    new UnitType('elephant', 'Elephant', 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Ivory'),
-    new UnitType('catapult', 'Catapult', 2, 266, 5, 1, 1, 2, 'Construction', 60, 'Copper or Iron'),
-    new UnitType('trebuchet', 'Trebuchet', 2, 267, 7, 1, 1, 2, 'Engineering', 80, null),
-    new UnitType('galley', 'Galley', 2, 268, 2, 2, 2, 3, 'Sailing', 40, null, true, 'water'),
-    new UnitType('galleon', 'Galleon', 2, 269, 5, 4, 3, 4, 'Navigation', 90, null, true, 'water'),
-    new UnitType('workboat', 'WorkBoat', 1, 271, 0, 1, 2, 3, 'Sailing', 30, null, true, 'water'),
-    new UnitType('frigate', 'Frigate', 2, 272, 6, 5, 3, 4, 'Shipbuilding', 100, 'Iron', true, 'water'),
-    new UnitType('knight', 'Knight', 2, 273, 6, 5, 2, 3, 'Engineering', 85, 'Horses'),
-    new UnitType('pikeman', 'Pikeman', 2, 274, 4, 6, 1, 2, 'Iron Working', 55, 'Iron'),
-    new UnitType('longbow', 'Longbow', 2, 275, 5, 3, 1, 3, 'Archery', 55, null),
-    new UnitType('fencer', 'Fencer', 2, 276, 4, 3, 2, 2, 'Bronze Working', 45, 'Copper or Iron'),
-    new UnitType('swordsman', 'Swordsman', 2, 277, 7, 5, 1, 2, 'Iron Working', 75, 'Iron'),
-    new UnitType('trireme', 'Trireme', 2, 278, 1, 1, 2, 3, 'Sailing', 30, null, true, 'water'),
+    new UnitType('settlers', vocabularyUnitName('settlers'), 0, 256, 0, 1, 1, 2, null, 20, null),
+    new UnitType('worker', vocabularyUnitName('worker'), 1, 270, 0, 1, 1, 2, null, 20, null),
+    new UnitType('explorer', vocabularyUnitName('explorer'), 1, 257, 0, 1, 2, 4, null, 15, null),
+    new UnitType('warrior', vocabularyUnitName('warrior'), 2, 258, 2, 1, 1, 2, null, 20, null),
+    new UnitType('slinger', vocabularyUnitName('slinger'), 2, 260, 2, 1, 1, 2, 'Archery', 25, null),
+    new UnitType('archer', vocabularyUnitName('archer'), 2, 261, 3, 1, 1, 2, 'Archery', 35, null),
+    new UnitType('spearman', vocabularyUnitName('spearman'), 2, 262, 2, 3, 1, 2, 'Bronze Working', 35, 'Copper or Iron'),
+    new UnitType('horseman', vocabularyUnitName('horseman'), 2, 263, 4, 2, 2, 3, 'Horseback Riding', 50, 'Horses'),
+    new UnitType('chariot', vocabularyUnitName('chariot'), 2, 264, 3, 2, 2, 3, 'Wheel', 45, 'Horses and Copper'),
+    new UnitType('elephant', vocabularyUnitName('elephant'), 2, 265, 5, 4, 2, 3, 'Horseback Riding', 70, 'Ivory and Copper'),
+    new UnitType('catapult', vocabularyUnitName('catapult'), 2, 266, 5, 1, 1, 2, 'Construction', 60, 'Copper or Iron'),
+    new UnitType('trebuchet', vocabularyUnitName('trebuchet'), 2, 267, 7, 1, 1, 2, 'Engineering', 80, null),
+    new UnitType('galley', vocabularyUnitName('galley'), 2, 268, 2, 2, 2, 3, 'Sailing', 40, null, true, 'water'),
+    new UnitType('galleon', vocabularyUnitName('galleon'), 2, 269, 5, 4, 3, 4, 'Navigation', 90, 'Copper', true, 'water'),
+    new UnitType('workboat', vocabularyUnitName('workboat'), 1, 271, 0, 1, 2, 3, 'Sailing', 30, null, true, 'water'),
+    new UnitType('frigate', vocabularyUnitName('frigate'), 2, 272, 6, 5, 3, 4, 'Shipbuilding', 100, 'Iron', true, 'water'),
+    new UnitType('knight', vocabularyUnitName('knight'), 2, 273, 6, 5, 2, 3, 'Engineering', 85, 'Horses'),
+    new UnitType('pikeman', vocabularyUnitName('pikeman'), 2, 274, 4, 6, 1, 2, 'Iron Working', 55, 'Iron'),
+    new UnitType('longbow', vocabularyUnitName('longbow'), 2, 275, 5, 3, 1, 3, 'Archery', 55, null),
+    new UnitType('fencer', vocabularyUnitName('fencer'), 2, 276, 4, 3, 2, 2, 'Bronze Working', 45, 'Copper or Iron'),
+    new UnitType('swordsman', vocabularyUnitName('swordsman'), 2, 277, 7, 5, 1, 2, 'Iron Working', 75, 'Iron'),
+    new UnitType('trireme', vocabularyUnitName('trireme'), 2, 278, 1, 1, 2, 3, 'Sailing', 30, null, true, 'water'),
 ];
+
+function prehistoryCityBuildingType(id, name, productionCost, sprite)
+{
+    var type = new UnitType(id, name, 4, 0, 0, 0, 0, 0, null, productionCost, null, false, 'land');
+    type.cityBuilding = true;
+    type.sprite = sprite;
+    return type;
+}
+
+const _prehistory_city_building_types = [
+    prehistoryCityBuildingType('lazaret', 'Lazaret', 60, 'lazaret.png'),
+    prehistoryCityBuildingType('stable', 'Stable', 50, 'stable.png'),
+    prehistoryCityBuildingType('shooting_range', 'Shooting-range', 50, 'shooting.png'),
+    prehistoryCityBuildingType('barracks', 'Barracks', 50, 'baraks.png'),
+    prehistoryCityBuildingType('port', 'Port', 60, 'port.png'),
+    prehistoryCityBuildingType('market', 'Market', 50, 'market.png'),
+];
+
+const _prehistory_unit_sprites = {
+    settlers: 'settler.png',
+    worker: 'worker.png',
+    explorer: 'explorer.png',
+    warrior: 'Warior.png',
+    slinger: 'slinger.png',
+    archer: 'Archer.png',
+    spearman: 'Spearman.png',
+    horseman: 'Horseman.png',
+    chariot: 'Chariot.png',
+    elephant: 'WarElephant.png',
+    catapult: 'Catapult.png',
+    trebuchet: 'Trebuchet.png',
+    galley: 'Galley.png',
+    galleon: 'Galleon.png',
+    workboat: 'Workboat.png',
+    frigate: 'Frigate.png',
+    knight: 'Knight.png',
+    pikeman: 'Pikeman.png',
+    longbow: 'Longbow.png',
+    fencer: 'Fencer.png',
+    swordsman: 'Swordman.png',
+    trireme: 'Trireme.png',
+};
+
+function prehistoryUnitSpriteUrl(unitTypeId)
+{
+    var filename = _prehistory_unit_sprites[unitTypeId];
+    return filename ? 'images/' + filename + _prehistory_unit_sprite_version : '';
+}
+
+function prehistoryProductionSpriteUrl(unitType)
+{
+    if (unitType && unitType.cityBuilding && unitType.sprite) {
+        return 'images/' + unitType.sprite + '?v=20260815a';
+    }
+    return prehistoryUnitSpriteUrl(unitType && unitType.id ? unitType.id : unitType);
+}
 
 // game settings
 _start_game_settlers = 1;
@@ -127,7 +206,7 @@ _prehistory_command_mode = null;
 _prehistory_action_menu_dismissed = false;
 
 
-_city = new Unit(new UnitType('city', 'City', 3, 259, 0, 8, 0, 3, null, 0, null, false));
+_city = new Unit(new UnitType('city', vocabularyUnitName('city'), 3, 259, 0, 8, 0, 3, null, 0, null, false));
 _city.can_move = false;
 _city.cityProperties = new CityProperties(5);
 
@@ -136,9 +215,13 @@ const _game_prehistory = new class
     constructor()
     {
         this.unitTypes = _prehistory_unit_types;
+        this.cityBuildingTypes = _prehistory_city_building_types;
         this.unitTypesById = {};
         for (var k=0; k < this.unitTypes.length; k++) {
             this.unitTypesById[this.unitTypes[k].id] = this.unitTypes[k];
+        }
+        for (var buildingIndex=0; buildingIndex < this.cityBuildingTypes.length; buildingIndex++) {
+            this.unitTypesById[this.cityBuildingTypes[buildingIndex].id] = this.cityBuildingTypes[buildingIndex];
         }
     }
 
@@ -252,9 +335,6 @@ const _game_prehistory = new class
 
     dismissActionMenu()
     {
-        if (!this.usesCompactActionMenu()) {
-            return;
-        }
         _prehistory_action_menu_dismissed = true;
         var menu = document.getElementById('foreground');
         if (menu) {
@@ -264,9 +344,6 @@ const _game_prehistory = new class
 
     showActionMenuForSelection()
     {
-        if (_selection != -1 && _units[_selection]) {
-            delete _units[_selection].suppressAutomationMenu;
-        }
         _prehistory_action_menu_dismissed = false;
         this.applyMenuRules(true);
     }
@@ -302,9 +379,6 @@ const _game_prehistory = new class
 
     applyMenuRules(showSuppressedAutomation)
     {
-        if (typeof _server_game != 'undefined' && _server_game.ensureMapWindowForSelectedUnit) {
-            _server_game.ensureMapWindowForSelectedUnit();
-        }
         var menu = document.getElementById('foreground');
         if (!menu) {
             return;
@@ -318,28 +392,23 @@ const _game_prehistory = new class
 
         // PREHISTORY-MENU-001, rules/prehostory.md: if no unit is selected, unit action menu options stay hidden.
         if (_selection == -1 || _units[_selection] == undefined) {
-            if (this.usesCompactActionMenu()) {
-                menu.style.display = 'none';
-                _prehistory_action_menu_dismissed = false;
-            }
+            menu.style.display = 'none';
+            _prehistory_action_menu_dismissed = false;
             return;
         }
 
         var unit = _units[_selection];
-        if (!showSuppressedAutomation && unit.unitTypeId == 'worker' && unit.suppressAutomationMenu
-            && (unit.automationMode == 'automate' || unit.automationMode == 'road_to')) {
+        if (menu.setAttribute) {
+            menu.setAttribute('data-city-production-menu', unit.type == 3 ? 'true' : 'false');
+        }
+        // PREHISTORY-MENU-011, rules/prehostory.md: an issued order or unrelated map click
+        // dismisses the whole action panel until a unit or city is explicitly selected again.
+        if (_prehistory_action_menu_dismissed) {
             menu.style.display = 'none';
             return;
         }
-
-        // PREHISTORY-MENU-011, rules/prehostory.md: an issued order dismisses the whole action panel until selection occurs again.
-        if (this.usesCompactActionMenu() && _prehistory_action_menu_dismissed) {
-            menu.style.display = 'none';
-            return;
-        }
-        if (showSuppressedAutomation || this.usesCompactActionMenu()) {
-            menu.style.display = 'block';
-        }
+        // A server refresh may rebuild selected-unit state, but it must not inherit a transient hidden style.
+        menu.style.display = 'block';
 
         var show = function(name) {
             var elements = menu.querySelectorAll('[data-menu-option="' + name + '"]');
@@ -350,7 +419,7 @@ const _game_prehistory = new class
 
         this.updateCityProductionMenu(menu, unit);
         this.updateUnitFeatureMenu(menu, unit);
-        show('unit_identity');
+        if (unit.type != 3) show('unit_identity');
 
         // PREHISTORY-MENU-002, rules/prehostory.md: movable units show movement-related commands.
         if (unit.can_move) {
@@ -400,7 +469,9 @@ const _game_prehistory = new class
             show('city_production_queue');
             show('city_production_options');
             show('city_optimization');
+            show('city_built_buildings');
         }
+        if (typeof decorateUnitActionMenu === 'function') decorateUnitActionMenu(menu);
     }
 
     updateUnitFeatureMenu(menu, unit)
@@ -409,8 +480,9 @@ const _game_prehistory = new class
         if (identity) {
             var group = this.commandSelectionIndices();
             identity.textContent = group.length > 1
-                ? 'Selected military units: ' + group.length
-                : 'Unit ID: ' + (unit && unit.serverId != undefined && unit.serverId != null ? unit.serverId : 'pending');
+                ? vocabularyText('unit.selected_military', {count: group.length})
+                : vocabularyText('unit.id', {id: unit && unit.serverId != undefined && unit.serverId != null
+                    ? unit.serverId : vocabularyText('unit.pending')});
         }
         var features = menu.querySelector('[data-menu-option="unit_features"]');
         if (!features) {
@@ -427,8 +499,10 @@ const _game_prehistory = new class
         var maxHealth = unit.maxHealth || 100;
         var health = unit.health == undefined ? maxHealth : unit.health;
         var experience = unit.experience == undefined ? 1 : unit.experience;
-        features.textContent = 'A:' + attack + ' D:' + defense + ' Steps:' + speed
-            + ' HP:' + health + '/' + maxHealth + ' XP:' + experience;
+        features.textContent = vocabularyText('unit.health_experience', {
+            features: vocabularyText('unit.features', {attack: attack, defense: defense, speed: speed}),
+            health: health, maxHealth: maxHealth, experience: experience
+        });
     }
 
     isWaterUnitType(unitType)
@@ -447,8 +521,12 @@ const _game_prehistory = new class
     canBuildNetwork(k)
     {
         if (k == -1 || !_units[k] || _units[k].unitTypeId != 'workboat') return false;
-        var i = _units[k].coord.i;
-        var j = _units[k].coord.j;
+        return this.canBuildNetworkAt(_units[k].coord.i, _units[k].coord.j);
+    }
+
+    canBuildNetworkAt(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
         var terrain = _map_terrain_tex[i][j];
         return this.isWaterTerrain(i, j) && ((terrain >> 4) & 0x03) <= 1
             && _game_state.isTechnologyOpen('Sailing')
@@ -499,6 +577,10 @@ const _game_prehistory = new class
 
     canCityProduceUnit(city, unitType)
     {
+        if (unitType.cityBuilding) {
+            return !this.cityHasBuilding(city, unitType.id)
+                && !this.cityBuildingIsQueued(city, unitType.id);
+        }
         // PREHISTORY-BUILD-008, rules/prehostory.md: technology-required units need their technology opened before production.
         if (unitType.technologyRequired && !_game_state.isTechnologyOpen(unitType.technologyRequired)) {
             return false;
@@ -511,11 +593,97 @@ const _game_prehistory = new class
         return this.isSeasideCity(city);
     }
 
+    cityBuildings(city)
+    {
+        if (!city || city.type != 3) return [];
+        var list = typeof _units_by_user != 'undefined' && _units_by_user[city.team]
+            ? _units_by_user[city.team] : _units;
+        var cityId = Number(city.serverId) || 0;
+        var result = [];
+        for (var k=0; k < list.length; k++) {
+            var building = list[k];
+            if (!building || building.type != 4 || !building.cityBuilding
+                || Number(building.health) <= 0) continue;
+            var sameParent = cityId > 0 && Number(building.parentCityId) == cityId;
+            var sameLocalCity = !cityId && building.coord && city.coord
+                && building.coord.i == city.coord.i && building.coord.j == city.coord.j;
+            if (sameParent || sameLocalCity) result.push(building);
+        }
+        result.sort(function(a, b) {
+            return String(a.name || a.unitTypeId).localeCompare(String(b.name || b.unitTypeId));
+        });
+        return result;
+    }
+
+    cityHasBuilding(city, buildingTypeId)
+    {
+        var buildings = this.cityBuildings(city);
+        for (var k=0; k < buildings.length; k++) {
+            if (buildings[k].unitTypeId == buildingTypeId) return true;
+        }
+        return false;
+    }
+
+    cityBuildingIsQueued(city, buildingTypeId)
+    {
+        var queue = city && Array.isArray(city.productionQueue) ? city.productionQueue : [];
+        return queue.indexOf(buildingTypeId) != -1;
+    }
+
+    cityHealingPercent(city)
+    {
+        return 10 + (this.cityHasBuilding(city, 'lazaret') ? 10 : 0);
+    }
+
+    producedUnitExperience(city, unitType)
+    {
+        if (!unitType || unitType.cityBuilding) return 1;
+        var mounted = ['horseman', 'chariot', 'knight', 'elephant'].indexOf(unitType.id) != -1;
+        var ranged = ['slinger', 'archer', 'longbow'].indexOf(unitType.id) != -1;
+        var melee = ['warrior', 'spearman', 'pikeman', 'fencer', 'swordsman'].indexOf(unitType.id) != -1;
+        var trained = (mounted && this.cityHasBuilding(city, 'stable'))
+            || (ranged && this.cityHasBuilding(city, 'shooting_range'))
+            || (melee && this.cityHasBuilding(city, 'barracks'))
+            || (unitType.nature == 'water' && this.cityHasBuilding(city, 'port'));
+        return trained ? 1.1 : 1;
+    }
+
     unitGoldUpkeep(unitTypeId)
     {
         if (['knight', 'trebuchet', 'frigate'].indexOf(unitTypeId) != -1) return 12;
         if (['pikeman', 'swordsman', 'longbow'].indexOf(unitTypeId) != -1) return 6;
         return 0;
+    }
+
+    unitFoodUpkeep(unitTypeId)
+    {
+        var base = 1;
+        if (['knight', 'pikeman', 'swordsman', 'trebuchet', 'frigate', 'elephant']
+            .indexOf(unitTypeId) != -1) base = 3;
+        else if (['horseman', 'chariot', 'catapult', 'galley', 'galleon']
+            .indexOf(unitTypeId) != -1) base = 2;
+        var unitType = this.unitTypesById[unitTypeId];
+        return unitType && unitType.type == 2 ? base*4 : base;
+    }
+
+    terrainImprovementUpkeep()
+    {
+        return {
+            road: {food:0, production:1, gold:0},
+            irrigation: {food:0, production:0, gold:0},
+            pasture: {food:0, production:0, gold:0},
+            fortification: {food:0, production:2, gold:0},
+            cottage: {food:0, production:0, gold:0},
+            workshop: {food:2, production:0, gold:0},
+            mine: {food:0, production:0, gold:0},
+            farm: {food:0, production:0, gold:0},
+            plantation: {food:0, production:0, gold:0},
+            camp: {food:0, production:0, gold:0},
+            fishing_boats: {food:0, production:0, gold:0},
+            quarry: {food:0, production:0, gold:0},
+            winery: {food:0, production:0, gold:0},
+            network: {food:0, production:1, gold:0},
+        };
     }
 
     productionResourceRequirements()
@@ -524,8 +692,10 @@ const _game_prehistory = new class
         return {
             horseman: ['horses'],
             knight: ['horses', 'iron'],
-            chariot: ['horses'],
-            elephant: ['ivory'],
+            chariot: ['horses', 'copper'],
+            elephant: ['ivory', 'copper'],
+            galleon: ['copper'],
+            frigate: ['iron'],
             spearman: [['copper', 'iron']],
             fencer: [['copper', 'iron']],
             catapult: [['copper', 'iron']],
@@ -563,6 +733,33 @@ const _game_prehistory = new class
             }
         }
         return found;
+    }
+
+    cityRoadConnectedToAnotherCity(city)
+    {
+        if (!city || !city.coord) return false;
+        var directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]];
+        var queue = [{i:city.coord.i, j:city.coord.j}];
+        var visited = {};
+        while (queue.length) {
+            var point = queue.shift();
+            var key = point.i + ':' + point.j;
+            if (visited[key] || point.i < 0 || point.j < 0
+                || point.i >= _map_size || point.j >= _map_size) continue;
+            var origin = point.i == city.coord.i && point.j == city.coord.j;
+            var modifiers = _map_terrain_mod[point.i] && _map_terrain_mod[point.i][point.j];
+            if (!origin && (!modifiers || !modifiers.road)) continue;
+            visited[key] = true;
+            for (var unitIndex=0; unitIndex < _units.length; unitIndex++) {
+                var other = _units[unitIndex];
+                if (!origin && other && other !== city && other.type == 3 && other.team == city.team
+                    && other.coord && other.coord.i == point.i && other.coord.j == point.j) return true;
+            }
+            for (var direction=0; direction < directions.length; direction++) {
+                queue.push({i:point.i + directions[direction][0], j:point.j + directions[direction][1]});
+            }
+        }
+        return false;
     }
 
     cityHasProductionResources(city, unitTypeId)
@@ -613,12 +810,15 @@ const _game_prehistory = new class
         return state;
     }
 
-    canUnitEnterTile(k, i, j)
+    canUnitEnterTile(k, i, j, traversalOptions)
     {
         if (k == -1 || _units[k] == undefined || i < 0 || i >= _map_size || j < 0 || j >= _map_size) {
             return false;
         }
         var isWater = this.isWaterTerrain(i, j);
+        // Road-to is construction routing, not ordinary transport movement.
+        // A carried Worker may cross water with a ship, but can never lay road there.
+        if (traversalOptions && traversalOptions.landOnly && isWater) return false;
         var unitType = this.unitTypesById[_units[k].unitTypeId];
         var movingUnit = _units[k];
         var terrain = _map_terrain_tex[i][j];
@@ -744,15 +944,17 @@ const _game_prehistory = new class
         if (typeof _city_economy !== 'undefined') {
             _city_economy.ensureCity(city);
         }
-        var perTurn = city.cityProperties ? city.cityProperties.productionPerTurn : 5;
-        return Math.max(1, Math.ceil((unitType.productionCost - city.production.productionPoints)/Math.max(1, perTurn)));
+        var remaining = Math.max(0, unitType.productionCost
+            - (Number(city.production.productionPoints) || 0));
+        var perTurn = Number(city.cityProperties && city.cityProperties.productionPerTurn);
+        if (remaining > 0 && (!Number.isFinite(perTurn) || perTurn <= 0)) return null;
+        return Math.max(1, Math.ceil(remaining/perTurn));
     }
 
     updateCityProductionMenu(menu, unit)
     {
         var status = menu.querySelector('[data-menu-option="city_production_status"]');
         if (status) {
-            var idleProduction = false;
             if (unit.type == 3 && unit.production != null && this.unitTypesById[unit.production.unitTypeId] != undefined) {
                 var unitType = this.unitTypesById[unit.production.unitTypeId];
                 var economyText = '';
@@ -760,36 +962,44 @@ const _game_prehistory = new class
                     _city_economy.ensureCity(unit);
                     var grossFood = unit.economy.lastGrossIncome
                         ? unit.economy.lastGrossIncome.food : unit.economy.lastIncome.food;
-                    economyText = ' Pop:' + unit.economy.citizens.length + ' F:' + grossFood + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    economyText = vocabularyText('production.city_economy', {
+                        population: unit.economy.citizens.length, food: grossFood,
+                        production: unit.economy.lastIncome.production, money: unit.economy.lastIncome.money,
+                        consumption: unit.economy.foodConsumption, growth: unit.economy.turnsToNewCitizen
+                    });
                 }
-                status.textContent = 'Producing: ' + unitType.name + ' (' + this.productionTurnsLeft(unit) + ' turns)' + economyText;
+                var turnsLeft = this.productionTurnsLeft(unit);
+                status.textContent = turnsLeft == null
+                    ? vocabularyText('production.paused_status', {
+                        name: vocabularyUnitName(unitType.id, unitType.name)
+                    }) + economyText
+                    : vocabularyText('production.status', {
+                        name: vocabularyUnitName(unitType.id, unitType.name), turns: turnsLeft
+                    }) + economyText;
             }
             else if (unit.type == 3) {
-                idleProduction = true;
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
                     var idleGrossFood = unit.economy.lastGrossIncome
                         ? unit.economy.lastGrossIncome.food : unit.economy.lastIncome.food;
-                    status.textContent = 'Producing: ' + (unit.productionDisabled ? 'none' : 'none selected') + ' Pop:' + unit.economy.citizens.length + ' F:' + idleGrossFood + ' P:' + unit.economy.lastIncome.production + ' M:' + unit.economy.lastIncome.money + ' Eat:' + unit.economy.foodConsumption + ' Growth:' + unit.economy.turnsToNewCitizen;
+                    status.textContent = (unit.productionDisabled ? vocabularyText('common.none') : vocabularyText('production.none_selected'))
+                        + vocabularyText('production.city_economy', {
+                            population: unit.economy.citizens.length, food: idleGrossFood,
+                            production: unit.economy.lastIncome.production, money: unit.economy.lastIncome.money,
+                            consumption: unit.economy.foodConsumption, growth: unit.economy.turnsToNewCitizen
+                        });
                 }
                 else {
-                    status.textContent = 'Producing: none';
+                    status.textContent = vocabularyText('common.none');
                 }
             }
             else {
                 status.textContent = '';
             }
             if (unit.type == 3) {
-                status.textContent += ' Focus:' + (unit.cityOptimization || 'balanced');
-                status.style.minHeight = '2.4em';
-                if (idleProduction) {
-                    status.appendChild(document.createElement('br'));
-                    status.appendChild(document.createTextNode('\xA0'));
-                }
+                status.textContent += vocabularyText('production.focus', {focus: unit.cityOptimization || 'balanced'});
             }
-            else {
-                status.style.minHeight = '';
-            }
+            status.style.minHeight = '';
         }
 
         var queueElement = menu.querySelector('[data-menu-option="city_production_queue"]');
@@ -800,16 +1010,21 @@ const _game_prehistory = new class
                 : unit.type == 3 && unit.production ? [unit.production.unitTypeId] : [];
             if (unit.type == 3) {
                 var queueTitle = document.createElement('div');
-                queueTitle.textContent = queue.length ? 'Backlog:' : 'Backlog: empty';
+                queueTitle.textContent = queue.length ? vocabularyText('production.backlog') : vocabularyText('production.backlog_empty');
                 queueElement.appendChild(queueTitle);
                 for (var queueIndex=0; queueIndex < queue.length; queueIndex++) {
                     var queuedType = this.unitTypesById[queue[queueIndex]];
                     var row = document.createElement('div');
                     row.style.cursor = 'context-menu';
                     row.style.whiteSpace = 'nowrap';
-                    row.textContent = (queueIndex + 1) + '. '
-                        + (queuedType ? queuedType.name : queue[queueIndex])
-                        + (queueIndex == 0 ? ' (current)' : '');
+                    var removeIcon = typeof createUnitActionIcon === 'function'
+                        ? createUnitActionIcon('produce_unit:none', vocabularyText('command.clear_backlog')) : null;
+                    if (removeIcon) row.appendChild(removeIcon);
+                    var queueText = document.createElement('span');
+                    queueText.textContent = (queueIndex + 1) + '. '
+                        + (queuedType ? vocabularyUnitName(queuedType.id, queuedType.name) : queue[queueIndex])
+                        + (queueIndex == 0 ? vocabularyText('production.current_suffix') : '');
+                    row.appendChild(queueText);
                     row.setAttribute('data-production-queue-index', queueIndex);
                     row.addEventListener('contextmenu', function(event) {
                         event.preventDefault();
@@ -819,6 +1034,39 @@ const _game_prehistory = new class
                         _current_game.applyMenuRules();
                     });
                     queueElement.appendChild(row);
+                }
+            }
+        }
+
+        var builtElement = menu.querySelector('[data-menu-option="city_built_buildings"]');
+        if (builtElement) {
+            builtElement.innerHTML = '';
+            if (unit.type == 3) {
+                var completedBuildings = this.cityBuildings(unit);
+                if (completedBuildings.length) {
+                    var builtTitle = document.createElement('div');
+                    builtTitle.style.fontWeight = 'bold';
+                    builtTitle.textContent = vocabularyText('production.built_buildings');
+                    builtElement.appendChild(builtTitle);
+                    for (var builtIndex=0; builtIndex < completedBuildings.length; builtIndex++) {
+                        var built = completedBuildings[builtIndex];
+                        var builtType = this.unitTypesById[built.unitTypeId];
+                        var builtRow = document.createElement('div');
+                        builtRow.style.display = 'flex';
+                        builtRow.style.alignItems = 'center';
+                        builtRow.style.gap = '6px';
+                        var builtImage = document.createElement('img');
+                        builtImage.className = 'unit-action-icon';
+                        builtImage.src = prehistoryProductionSpriteUrl(builtType);
+                        builtImage.alt = '';
+                        builtRow.appendChild(builtImage);
+                        var builtName = document.createElement('span');
+                        builtName.textContent = vocabularyUnitName(
+                            built.unitTypeId, builtType ? builtType.name : built.name
+                        );
+                        builtRow.appendChild(builtName);
+                        builtElement.appendChild(builtRow);
+                    }
                 }
             }
         }
@@ -839,14 +1087,14 @@ const _game_prehistory = new class
         none.style.marginBottom = '6px';
         none.onmouseover = function() { this.style.backgroundColor = 'orange'; };
         none.onmouseout = function() { this.style.backgroundColor = ''; };
-        none.textContent = 'Clear backlog';
+        none.textContent = vocabularyText('command.clear_backlog');
         options.appendChild(none);
 
         if (typeof _game_state !== 'undefined' && _game_state && _game_state.money < 0) {
             var blocked = document.createElement('div');
             blocked.style.marginTop = '6px';
             blocked.style.color = 'darkred';
-            blocked.textContent = 'Production blocked: negative money account';
+            blocked.textContent = vocabularyText('production.blocked_money');
             options.appendChild(blocked);
             return;
         }
@@ -865,13 +1113,68 @@ const _game_prehistory = new class
             }
             var link = document.createElement('a');
             link.setAttribute('data-menu-command', 'produce_unit:' + unitType.id);
-            link.style.display = 'block';
+            link.style.display = 'flex';
+            link.style.alignItems = 'center';
+            link.style.gap = '6px';
+            link.style.minHeight = '34px';
             link.style.cursor = 'pointer';
             link.style.marginBottom = '4px';
+            link.style.padding = '2px 0';
             link.onmouseover = function() { this.style.backgroundColor = 'orange'; };
             link.onmouseout = function() { this.style.backgroundColor = ''; };
-            link.textContent = unitType.name + ' (' + unitType.productionCost + ')';
+            var image = document.createElement('img');
+            image.className = 'unit-action-icon';
+            image.src = prehistoryProductionSpriteUrl(unitType);
+            image.alt = unitType.name;
+            image.title = vocabularyUnitName(unitType.id, unitType.name);
+            image.style.width = '44px';
+            image.style.height = '33px';
+            image.style.objectFit = 'contain';
+            image.style.flex = '0 0 auto';
+            var description = document.createElement('span');
+            description.style.lineHeight = '1.15';
+            description.textContent = vocabularyText('production.option', {
+                name: vocabularyUnitName(unitType.id, unitType.name), cost: unitType.productionCost,
+                attack: unitType.attack, defense: unitType.defense, speed: unitType.speed,
+                food: this.unitFoodUpkeep(unitType.id), gold: this.unitGoldUpkeep(unitType.id)
+            });
+            link.appendChild(image);
+            link.appendChild(description);
             options.appendChild(link);
+        }
+
+        for (var buildingIndex=0; buildingIndex < this.cityBuildingTypes.length; buildingIndex++) {
+            var buildingType = this.cityBuildingTypes[buildingIndex];
+            if (!this.canCityProduceUnit(unit, buildingType)) continue;
+            var buildingLink = document.createElement('a');
+            buildingLink.setAttribute('data-menu-command', 'produce_unit:' + buildingType.id);
+            buildingLink.style.display = 'flex';
+            buildingLink.style.alignItems = 'center';
+            buildingLink.style.gap = '6px';
+            buildingLink.style.minHeight = '34px';
+            buildingLink.style.cursor = 'pointer';
+            buildingLink.style.marginBottom = '4px';
+            buildingLink.style.padding = '2px 0';
+            buildingLink.onmouseover = function() { this.style.backgroundColor = 'orange'; };
+            buildingLink.onmouseout = function() { this.style.backgroundColor = ''; };
+            var buildingImage = document.createElement('img');
+            buildingImage.className = 'unit-action-icon';
+            buildingImage.src = prehistoryProductionSpriteUrl(buildingType);
+            buildingImage.alt = '';
+            buildingImage.title = vocabularyUnitName(buildingType.id, buildingType.name);
+            buildingImage.style.width = '44px';
+            buildingImage.style.height = '33px';
+            buildingImage.style.objectFit = 'contain';
+            buildingImage.style.flex = '0 0 auto';
+            var buildingDescription = document.createElement('span');
+            buildingDescription.style.lineHeight = '1.15';
+            buildingDescription.textContent = vocabularyText('production.building_option', {
+                name: vocabularyUnitName(buildingType.id, buildingType.name),
+                cost: buildingType.productionCost
+            });
+            buildingLink.appendChild(buildingImage);
+            buildingLink.appendChild(buildingDescription);
+            options.appendChild(buildingLink);
         }
     }
 
@@ -888,6 +1191,7 @@ const _game_prehistory = new class
             _units[k].automationMode = null;
         }
         if (state != 'road_to') delete _units[k].resumeAutomationAfterRoadTo;
+        if (state != 'road_to') delete _units[k].roadToDestination;
         if (state != 'chop_forest') {
             _units[k].chop_turns_left = undefined;
         }
@@ -902,6 +1206,11 @@ const _game_prehistory = new class
         }
         if (!this.isImprovementState(state)) {
             _units[k].clientImprovementTurnsLeft = undefined;
+            _units[k].clientImprovementState = undefined;
+            _units[k].pendingImmediateBuild = false;
+            delete _units[k].automationCommandAction;
+            delete _units[k].automationCommandTarget;
+            delete _units[k].automationCommandDeadline;
         }
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
     }
@@ -917,6 +1226,7 @@ const _game_prehistory = new class
         if (k == -1 || !_units[k]) return false;
         this.setUnitState(k, state, preserveAutomation);
         _units[k].clientImprovementTurnsLeft = this.improvementBuildTurns(state);
+        _units[k].clientImprovementState = state == 'irrigate' ? 'irrigation' : state;
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
         return true;
     }
@@ -935,7 +1245,13 @@ const _game_prehistory = new class
         }
         // PREHISTORY-STATE-007, rules/prehostory.md: manual movement clears any modified unit state.
         var indices = this.commandSelectionIndices();
-        for (var n=0; n < indices.length; n++) this.setUnitState(indices[n], 'ready');
+        for (var n=0; n < indices.length; n++) {
+            var unit = _units[indices[n]];
+            this.setUnitState(indices[n], 'ready');
+            if (typeof _server_game != 'undefined' && _server_game.persistUnitAutomationMode) {
+                _server_game.persistUnitAutomationMode(unit, null);
+            }
+        }
         this.applyMenuRules();
     }
 
@@ -959,24 +1275,41 @@ const _game_prehistory = new class
     {
         if (!coord) return;
         var indices = this.commandSelectionIndices();
+        var previewKey = _prehistory_command_mode + ':' + Math.round(coord.i) + ':' + Math.round(coord.j)
+            + ':' + indices.map(function(index) {
+                var unit = _units[index];
+                return (unit.serverId == undefined ? index : unit.serverId) + '@'
+                    + Math.round(unit.coord.i) + ':' + Math.round(unit.coord.j);
+            }).join(',');
+        if (this.commandPathPreviewKey == previewKey) return;
+        this.commandPathPreviewKey = previewKey;
         if (indices.length > 1) _control.drawGotoGroupPreview(indices, coord.i, coord.j);
         else if (indices.length == 1) {
             var k = indices[0];
-            _control.drawGotoPreview(_units[k].coord.i, _units[k].coord.j, coord.i, coord.j, k);
+            var traversalOptions = _prehistory_command_mode == 'road_to' ? {landOnly:true} : null;
+            _control.drawGotoPreview(
+                _units[k].coord.i, _units[k].coord.j, coord.i, coord.j, k, null, traversalOptions
+            );
         }
     }
 
     commitCommandPath(coord)
     {
         if (!coord) return;
+        this.commandPathPreviewKey = null;
         var indices = this.commandSelectionIndices();
         for (var n=0; n < indices.length; n++) {
             var k = indices[n];
-            this.assignPath(k, this.buildPath(k, coord));
+            if (_prehistory_command_mode == 'road_to') {
+                this.assignRoadToDestination(k, coord);
+            }
+            else {
+                this.assignPath(k, this.buildPath(k, coord));
+            }
         }
     }
 
-    buildPath(k, target)
+    buildPath(k, target, traversalOptions)
     {
         var path = [];
         if (k == -1 || _units[k] == undefined || target == undefined) {
@@ -984,8 +1317,76 @@ const _game_prehistory = new class
         }
         _control.mapLine(_units[k].coord.i, _units[k].coord.j, target.i, target.j, function(i, j, ni, nj, arrow_num) {
             path.push(new Coord(ni, nj));
-        }, k, 30);
+        }, k, 30, traversalOptions);
         return path;
+    }
+
+    buildRoadPath(k, target, allowPartial = false)
+    {
+        var path = this.buildPath(k, target, {landOnly:true});
+        if (allowPartial) return path;
+        var destination = path.length ? path[path.length - 1] : null;
+        return destination && destination.i == target.i && destination.j == target.j ? path : [];
+    }
+
+    assignRoadToDestination(k, target)
+    {
+        if (k == -1 || !_units[k] || _units[k].unitTypeId != 'worker' || !target) return false;
+        var unit = _units[k];
+        var destination = new Coord(Math.round(target.i), Math.round(target.j));
+        var sameTile = unit.coord.i == destination.i && unit.coord.j == destination.j;
+        var path = sameTile ? [] : this.buildRoadPath(k, destination, true);
+        if (!sameTile && !path.length) {
+            unit.state = 'ready';
+            unit.automationMode = null;
+            unit.roadToBuilding = false;
+            delete unit.roadToDestination;
+            if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
+            return false;
+        }
+        this.clearUnitPath(k);
+        unit.roadToDestination = destination;
+        if (path.length) this.assignPath(k, path);
+        unit.state = 'road_to';
+        unit.automationMode = 'road_to';
+        unit.roadToBuilding = false;
+        this.prepareRoadToTurn(k);
+        if (typeof _server_game != 'undefined') {
+            _server_game.saveClientRoutes(_current_user);
+            if (_server_game.persistUnitAutomationMode) {
+                _server_game.persistUnitAutomationMode(unit, 'road_to');
+            }
+        }
+        return true;
+    }
+
+    clearUnitPath(k)
+    {
+        if (k == -1 || !_units[k]) return;
+        _units[k].gotoPath = [];
+        _units[k].gotoCoord = null;
+        _units[k].pendingServerPath = [];
+    }
+
+    ensureRoadToLandPath(k)
+    {
+        var unit = _units[k];
+        if (!unit || unit.unitTypeId != 'worker') return false;
+        var path = unit.gotoPath || [];
+        var containsWater = false;
+        for (var n=0; n < path.length; n++) {
+            if (this.isWaterTerrain(path[n].i, path[n].j)) {
+                containsWater = true;
+                break;
+            }
+        }
+        if (!containsWater) return true;
+        var target = unit.roadToDestination || unit.gotoCoord || path[path.length - 1];
+        var replacement = target ? this.buildRoadPath(k, target, true) : [];
+        this.clearUnitPath(k);
+        if (!replacement.length) return false;
+        this.assignPath(k, replacement);
+        return true;
     }
 
     assignPath(k, path)
@@ -1075,6 +1476,7 @@ const _game_prehistory = new class
 
     nearestHiddenLandTarget(k)
     {
+        var pathSearches = 0;
         for (var r=1; r < 20; r++) {
             for (var di=-r; di <= r; di++) {
                 for (var dj=-r; dj <= r; dj++) {
@@ -1087,7 +1489,11 @@ const _game_prehistory = new class
                         continue;
                     }
                     if ((_map_terrain_bit[i][j]&0x4000) == 0) {
-                        var path = this.buildPath(k, new Coord(i, j));
+                        if (pathSearches++ >= 8) return null;
+                        var path = this.buildPath(k, new Coord(i, j), {
+                            pathMaximumExpanded: 384,
+                            pathMaximumMilliseconds: 3,
+                        });
                         if (path.length) {
                             return { target: new Coord(i, j), path: path };
                         }
@@ -1100,8 +1506,7 @@ const _game_prehistory = new class
 
     nearestCityOrSettlerExploreTarget(k)
     {
-        var best = null;
-        var bestDistance = Infinity;
+        var candidates = [];
         var lists = [];
         if (typeof _units_by_user != 'undefined') {
             for (var userId in _units_by_user) {
@@ -1118,26 +1523,36 @@ const _game_prehistory = new class
                 if (targetUnit == undefined || (targetUnit.type != 3 && targetUnit.unitTypeId != 'settlers')) {
                     continue;
                 }
-                if ((_map_terrain_bit[targetUnit.coord.i][targetUnit.coord.j]&0x4000) == 0) {
+                var targetCoord = targetUnit.coord;
+                if (!targetCoord || targetUnit.outsideMapWindow
+                    || !Number.isFinite(Number(targetCoord.i)) || !Number.isFinite(Number(targetCoord.j))
+                    || targetCoord.i < 0 || targetCoord.i >= _map_size
+                    || targetCoord.j < 0 || targetCoord.j >= _map_size
+                    || !_map_terrain_bit[targetCoord.i]
+                    || _map_terrain_bit[targetCoord.i][targetCoord.j] == undefined) {
                     continue;
                 }
-                var distance = Math.abs(targetUnit.coord.i - _units[k].coord.i)
-                    + Math.abs(targetUnit.coord.j - _units[k].coord.j);
+                if ((_map_terrain_bit[targetCoord.i][targetCoord.j]&0x4000) == 0) {
+                    continue;
+                }
+                var distance = Math.abs(targetCoord.i - _units[k].coord.i)
+                    + Math.abs(targetCoord.j - _units[k].coord.j);
                 if (distance <= 3) {
                     continue;
                 }
-                if (distance >= bestDistance) {
-                    continue;
-                }
-                var path = this.buildPath(k, targetUnit.coord);
-                if (!path.length) {
-                    continue;
-                }
-                bestDistance = distance;
-                best = { target: new Coord(targetUnit.coord.i, targetUnit.coord.j), path: path };
+                candidates.push({target:new Coord(targetCoord.i, targetCoord.j), distance:distance});
             }
         }
-        return best;
+        candidates.sort(function(a, b) { return a.distance-b.distance; });
+        for (var candidateIndex=0; candidateIndex<Math.min(4, candidates.length); candidateIndex++) {
+            var candidate = candidates[candidateIndex];
+            var path = this.buildPath(k, candidate.target, {
+                pathMaximumExpanded: 384,
+                pathMaximumMilliseconds: 3,
+            });
+            if (path.length) return {target:candidate.target, path:path};
+        }
+        return null;
     }
 
     autoRouteExplore(k)
@@ -1149,9 +1564,26 @@ const _game_prehistory = new class
         var route = first || second;
         if (route && route.path.length) {
             this.assignPath(k, route.path);
-            return;
+            return true;
         }
         this.autoRouteAutomate(k);
+        if (_units[k].gotoPath && _units[k].gotoPath.length) return true;
+
+        // Keep Explore active if no fog or city route is currently reachable.
+        // A deterministic adjacent fallback prevents repeated random failures
+        // from turning a persistent Explore order into Hold forever.
+        var turn = typeof _server_game != 'undefined' ? _server_game.serverTurn : 0;
+        var offset = ((_units[k].serverId || k) + turn) % 8;
+        var directions = [[1,0],[1,1],[0,1],[-1,0],[-1,-1],[0,-1],[-1,1],[1,-1]];
+        for (var n=0; n<directions.length; n++) {
+            var direction = directions[(offset+n)%directions.length];
+            var target = _units[k].coord.add(direction[0], direction[1]);
+            var path = this.buildPath(k, target);
+            if (!path.length) continue;
+            this.assignPath(k, path);
+            return true;
+        }
+        return false;
     }
 
     autoRoutePatrol(k)
@@ -1202,7 +1634,7 @@ const _game_prehistory = new class
         return best;
     }
 
-    workerAutomationOptionsAt(k, i, j, cityOrAllowGenericFarm = true)
+    workerAutomationOptionsAt(k, i, j, cityOrAllowGenericFarm = true, allowReplacement = false)
     {
         if (k == -1 || !_units[k] || _units[k].unitTypeId != 'worker') return [];
         var original = _units[k].coord;
@@ -1210,13 +1642,16 @@ const _game_prehistory = new class
         try {
             var available = this.workerTileBuildingMenuOptions(k);
             var resourceImprovement = this.openedResourceImprovementForTile(i, j);
-            if (resourceImprovement && available.indexOf(resourceImprovement) != -1) {
+            if (resourceImprovement && available.indexOf(resourceImprovement) != -1
+                && (allowReplacement
+                    || !this.workerActionReplacesImprovement(i, j, resourceImprovement))) {
                 return [resourceImprovement];
             }
             var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
                 ? _map_terrain_mod[i][j] : {};
             var primary = ['irrigation', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats',
-                'quarry', 'winery', 'cottage', 'workshop', 'fortification', 'mine'];
+                'quarry', 'winery', 'cottage', 'hamlet', 'village', 'workshop',
+                'fortification', 'mine'];
             var hasPrimary = false;
             for (var n=0; n < primary.length; n++) {
                 if (modifiers[primary[n]]) {
@@ -1227,32 +1662,92 @@ const _game_prehistory = new class
             var terrainType = _map_terrain_tex[i][j] & 0x0F;
             if (!hasPrimary && this.canChopForest(k)) return ['chop_forest'];
             var priorities = cityOrAllowGenericFarm && typeof cityOrAllowGenericFarm == 'object'
-                ? this.workerCityImprovementPriorities(cityOrAllowGenericFarm)
+                ? this.workerCityImprovementPriorities(cityOrAllowGenericFarm, _units[k])
                 : cityOrAllowGenericFarm ? ['farm', 'workshop', 'cottage'] : ['workshop', 'cottage'];
             if (modifiers.irrigation) {
                 for (var preparedIndex=0; preparedIndex < priorities.length; preparedIndex++) {
                     var prepared = priorities[preparedIndex];
                     if ((prepared == 'farm' || prepared == 'cottage')
-                        && available.indexOf(prepared) != -1) return [prepared];
+                        && available.indexOf(prepared) != -1
+                        && (allowReplacement
+                            || !this.workerActionReplacesImprovement(i, j, prepared))) return [prepared];
                 }
             }
             for (var priorityIndex=0; priorityIndex < priorities.length; priorityIndex++) {
                 var preferred = priorities[priorityIndex];
                 if (modifiers[preferred]) continue;
-                if (available.indexOf(preferred) != -1) return [preferred];
+                if (available.indexOf(preferred) != -1
+                    && (allowReplacement
+                        || !this.workerActionReplacesImprovement(i, j, preferred))) return [preferred];
+                var replaceWorkshopForFood = preferred == 'farm' && modifiers.workshop
+                    && typeof cityOrAllowGenericFarm == 'object'
+                    && !this.workerCityAllowsWorkshop(cityOrAllowGenericFarm, _units[k]);
                 if ((preferred == 'farm' || preferred == 'cottage')
+                    && (!hasPrimary || replaceWorkshopForFood)
                     && !modifiers.irrigation && this.canBuildIrrigation(k)
-                    && (this.isIrrigationWaterSource(i, j) || this.hasIrrigationSourceNear(i, j))) {
+                    && (this.isIrrigationWaterSource(i, j) || this.hasIrrigationSourceNear(i, j))
+                    && (allowReplacement || !this.workerActionReplacesImprovement(i, j, 'irrigate'))) {
                     return ['irrigate'];
                 }
             }
             if (!hasPrimary && (terrainType == 4 || terrainType == 5)
-                && available.indexOf('mine') != -1) return ['mine'];
+                && available.indexOf('mine') != -1
+                && (allowReplacement || !this.workerActionReplacesImprovement(i, j, 'mine'))) return ['mine'];
             return [];
         }
         finally {
             _units[k].coord = original;
         }
+    }
+
+    irrigationChainTileAllowed(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size || this.isCityTile(i, j)) {
+            return false;
+        }
+        var terrainType = _map_terrain_tex[i][j]&0x0F;
+        if (terrainType != 1 && terrainType != 2 && terrainType != 7) return false;
+        var modifiers = _map_terrain_mod[i][j] || {};
+        if (modifiers.fortification) return false;
+        var resourceImprovement = this.openedResourceImprovementForTile(i, j);
+        if (resourceImprovement && resourceImprovement != 'farm') return false;
+        var blocking = ['pasture', 'plantation', 'camp', 'fishing_boats', 'quarry',
+            'winery', 'cottage', 'workshop', 'mine'];
+        for (var n=0; n < blocking.length; n++) {
+            if (modifiers[blocking[n]]) return false;
+        }
+        return true;
+    }
+
+    nextResourceIrrigationChainTile(targetI, targetJ, maximumDistance = 12)
+    {
+        if (!_game_state.isTechnologyOpen('Irrigation')
+            || this.openedResourceImprovementForTile(targetI, targetJ) != 'farm'
+            || !this.irrigationChainTileAllowed(targetI, targetJ)) return null;
+        var queue = [{i:targetI, j:targetJ, distance:0}];
+        var visited = {};
+        var queued = {};
+        queued[targetI + ':' + targetJ] = true;
+        var directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]];
+        for (var cursor=0; cursor < queue.length; cursor++) {
+            var point = queue[cursor];
+            var key = point.i + ':' + point.j;
+            if (visited[key] || !this.irrigationChainTileAllowed(point.i, point.j)) continue;
+            visited[key] = true;
+            if (this.canBuildIrrigationAt(point.i, point.j)) {
+                return new Coord(point.i, point.j);
+            }
+            if (point.distance >= maximumDistance) continue;
+            for (var n=0; n < directions.length; n++) {
+                var ni = point.i + directions[n][0];
+                var nj = point.j + directions[n][1];
+                var neighborKey = ni + ':' + nj;
+                if (queued[neighborKey] || !this.irrigationChainTileAllowed(ni, nj)) continue;
+                queued[neighborKey] = true;
+                queue.push({i:ni, j:nj, distance:point.distance + 1});
+            }
+        }
+        return null;
     }
 
     hexDistance(di, dj)
@@ -1273,55 +1768,81 @@ const _game_prehistory = new class
                 ? Number(city.economy.lastIncome.food) : 0;
         if (!Number.isFinite(foodSurplus)) foodSurplus = 0;
 
-        var farmTiles = {};
+        var counts = this.workerCityImprovementCounts(city);
+        var foodSupport = counts.foodSupport + counts.pendingFoodSupport;
+        var workshopSupport = Math.ceil((counts.workshop + counts.pendingWorkshop) / 2);
+        return foodSupport < Math.max(desiredFarmCount, workshopSupport)
+            || (foodSurplus <= 1 && foodSupport < desiredFarmCount);
+    }
+
+    workerCityImprovementCounts(city)
+    {
+        var counts = {
+            farm: 0, irrigation: 0, foodSupport: 0, cottage: 0, workshop: 0,
+            pendingFoodSupport: 0, pendingWorkshop: 0,
+        };
+        if (!city || !city.coord) return counts;
         for (var di=-5; di <= 5; di++) {
             for (var dj=-5; dj <= 5; dj++) {
                 if (this.hexDistance(di, dj) > 5) continue;
                 var i = city.coord.i + di;
                 var j = city.coord.j + dj;
                 if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) continue;
-                if (_map_terrain_mod[i] && _map_terrain_mod[i][j]
-                    && _map_terrain_mod[i][j].farm) farmTiles[i + ':' + j] = true;
+                var tileCity = this.nearestOwnedCityForWorker({team: city.team, coord: new Coord(i, j)});
+                if (tileCity !== city) continue;
+                var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
+                    ? _map_terrain_mod[i][j] : {};
+                if (modifiers.farm) counts.farm++;
+                if (modifiers.irrigation && (i != city.coord.i || j != city.coord.j)) counts.irrigation++;
+                if (modifiers.farm || (modifiers.irrigation
+                    && (i != city.coord.i || j != city.coord.j))) counts.foodSupport++;
+                if (modifiers.cottage) counts.cottage++;
+                if (modifiers.workshop) counts.workshop++;
             }
         }
+        var pendingWorkshopTiles = {};
+        var pendingFoodTiles = {};
         for (var k=0; k < _units.length; k++) {
             var worker = _units[k];
-            if (!worker || worker.unitTypeId != 'worker'
+            if (!worker || worker.unitTypeId != 'worker' || !worker.coord
                 || Number(worker.team) != Number(city.team)) continue;
-            if (worker.automateBuild == 'farm' && worker.automateTarget) {
-                farmTiles[worker.automateTarget.i + ':' + worker.automateTarget.j] = true;
-            }
-            else if (worker.state == 'farm' && worker.coord) {
-                farmTiles[worker.coord.i + ':' + worker.coord.j] = true;
-            }
+            var action = worker.automateBuild || worker.clientImprovementState
+                || (worker.state == 'irrigate' ? 'irrigation' : worker.state);
+            var target = worker.automateTarget || worker.coord;
+            if (!target) continue;
+            var targetCity = this.nearestOwnedCityForWorker({team: worker.team, coord: target});
+            if (targetCity !== city) continue;
+            var key = target.i + ':' + target.j;
+            var targetModifiers = _map_terrain_mod[target.i] && _map_terrain_mod[target.i][target.j]
+                ? _map_terrain_mod[target.i][target.j] : {};
+            if (action == 'workshop' && !targetModifiers.workshop) pendingWorkshopTiles[key] = true;
+            if ((action == 'farm' || action == 'irrigation' || action == 'irrigate')
+                && !targetModifiers.farm && !targetModifiers.irrigation) pendingFoodTiles[key] = true;
         }
-        var farmCount = Object.keys(farmTiles).length;
-        return farmCount < 1 || (foodSurplus <= 1 && farmCount < desiredFarmCount);
+        counts.pendingWorkshop = Object.keys(pendingWorkshopTiles).length;
+        counts.pendingFoodSupport = Object.keys(pendingFoodTiles).length;
+        return counts;
     }
 
-    workerCityImprovementPriorities(city)
+    workerCityImprovementPriorities(city, worker)
     {
         if (!city) return ['workshop', 'farm', 'cottage'];
         var income = city.lastCityIncome || (city.economy && city.economy.lastIncome) || {};
         var population = Math.max(1, Number(city.cityPopulation)
             || (city.economy && city.economy.citizens ? city.economy.citizens.length : 1));
+        var hasFoodBalance = income.food != undefined && Number.isFinite(Number(income.food));
         var food = Number(income.food);
         var production = Number(income.production);
         var money = Number(income.money);
         if (!Number.isFinite(food)) food = 0;
         if (!Number.isFinite(production)) production = 0;
         if (!Number.isFinite(money)) money = 0;
-        var counts = {farm: 0, cottage: 0, workshop: 0};
-        for (var di=-5; di <= 5; di++) {
-            for (var dj=-5; dj <= 5; dj++) {
-                if (this.hexDistance(di, dj) > 5) continue;
-                var i = city.coord.i + di;
-                var j = city.coord.j + dj;
-                if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) continue;
-                var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
-                    ? _map_terrain_mod[i][j] : {};
-                for (var name in counts) if (modifiers[name]) counts[name]++;
-            }
+        var counts = this.workerCityImprovementCounts(city);
+        // A City with no food surplus must recover food before adding another
+        // Workshop. Farms remain uncapped during the emergency because the
+        // authoritative balance can include upkeep from many legacy Workshops.
+        if ((hasFoodBalance && food <= 0) || !this.workerCityAllowsWorkshop(city, worker, counts)) {
+            return ['farm', 'cottage'];
         }
         var scores = {
             // Low production receives extra weight so a weak City establishes
@@ -1340,12 +1861,38 @@ const _game_prehistory = new class
         });
     }
 
+    workerCityAllowsWorkshop(city, worker, counts)
+    {
+        if (!city) return true;
+        counts = counts || this.workerCityImprovementCounts(city);
+        var workerAlreadyPending = worker && (worker.automateBuild == 'workshop'
+            || worker.clientImprovementState == 'workshop' || worker.state == 'workshop');
+        var additionalWorkshop = workerAlreadyPending ? 0 : 1;
+        var futureWorkshops = counts.workshop + counts.pendingWorkshop + additionalWorkshop;
+        var futureFoodSupport = counts.foodSupport + counts.pendingFoodSupport;
+        // PREHISTORY-AUTO-010B: every two Workshops require at least one
+        // completed or pending non-city Farm/Irrigation support Tile.
+        var requiredFoodSupport = futureWorkshops <= 1 ? 0 : Math.ceil(futureWorkshops/2);
+        if (futureFoodSupport < requiredFoodSupport) return false;
+        var income = city.lastCityIncome || (city.economy && city.economy.lastIncome) || {};
+        var food = Number(income.food);
+        if (income.food == undefined || !Number.isFinite(food)) return true;
+        var population = Math.max(1, Number(city.cityPopulation)
+            || (city.economy && city.economy.citizens ? city.economy.citizens.length : 1));
+        var reserve = Math.max(2, Math.ceil(population/4));
+        var reportedWorkshopCost = Number(income.workshopFoodCost);
+        if (!Number.isFinite(reportedWorkshopCost)) reportedWorkshopCost = 0;
+        var projectedFood = food + reportedWorkshopCost - futureWorkshops*2;
+        return projectedFood >= reserve;
+    }
+
     tileHasRoadRequiredImprovement(i, j)
     {
         if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
         var modifiers = _map_terrain_mod[i][j] || {};
         var improvements = ['irrigation', 'pasture', 'farm', 'plantation', 'camp',
-            'fishing_boats', 'quarry', 'winery', 'fortification', 'cottage', 'workshop', 'mine'];
+            'fishing_boats', 'quarry', 'winery', 'fortification', 'cottage', 'hamlet',
+            'village', 'workshop', 'mine'];
         for (var n=0; n < improvements.length; n++) {
             if (modifiers[improvements[n]]) return true;
         }
@@ -1357,10 +1904,47 @@ const _game_prehistory = new class
         return this.tileHasRoadRequiredImprovement(i, j);
     }
 
+    workerReplaceableImprovementAt(i, j)
+    {
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return null;
+        var modifiers = _map_terrain_mod[i][j] || {};
+        var improvements = ['pasture', 'farm', 'plantation', 'camp', 'fishing_boats',
+            'quarry', 'winery', 'cottage', 'hamlet', 'village', 'workshop', 'mine'];
+        for (var n=0; n < improvements.length; n++) {
+            if (modifiers[improvements[n]]) return improvements[n];
+        }
+        return null;
+    }
+
+    workerActionReplacesImprovement(i, j, action)
+    {
+        var existing = this.workerReplaceableImprovementAt(i, j);
+        if (!existing) return false;
+        var normalized = action == 'irrigate' ? 'irrigation' : action;
+        return normalized != existing;
+    }
+
+    cityHasUnimprovedCitizenPlot(city)
+    {
+        var citizenCoords = this.cityCitizenCoords(city);
+        for (var n=0; n < citizenCoords.length; n++) {
+            var coord = citizenCoords[n];
+            if (this.isCityTile(coord.i, coord.j)) continue;
+            if (!this.tileHasPrimaryImprovement(coord.i, coord.j)) return true;
+        }
+        return false;
+    }
+
+    workerReplacementRandom()
+    {
+        return Math.random();
+    }
+
     ownedCitiesForWorker(worker)
     {
         return _units.filter(function(unit) {
             return unit && unit.type == 3 && unit.coord
+                && !unit.outsideMapWindow
                 && Number(unit.team) == Number(worker.team)
                 && unit.coord.i >= 0 && unit.coord.i < _map_size
                 && unit.coord.j >= 0 && unit.coord.j < _map_size;
@@ -1410,14 +1994,18 @@ const _game_prehistory = new class
     {
         var worker = _units[k];
         if (!worker || !action || i < 0 || i >= _map_size || j < 0 || j >= _map_size) return null;
+        // City Tiles can carry automatic road/irrigation modifiers but Workers
+        // cannot build or replace improvements there.
+        if (action != 'connect_road' && this.isCityTile(i, j)) return null;
         if ((i != worker.coord.i || j != worker.coord.j)
             && this.workerAutomationTargetReserved(k, i, j)) return null;
+        var normalizedAction = action == 'irrigate' ? 'irrigation' : action;
+        if (worker.automationSkipNextAction == normalizedAction) return null;
         if (this.workerAutomationActionBlocked(k, i, j, action)) return null;
-        var path = i == worker.coord.i && j == worker.coord.j
-            ? [] : this.buildPath(k, new Coord(i, j));
-        if ((i != worker.coord.i || j != worker.coord.j) && !path.length) return null;
         return {
-            path: path,
+            path: i == worker.coord.i && j == worker.coord.j ? [] : null,
+            workerIndex: k,
+            distance: this.hexDistance(i-worker.coord.i, j-worker.coord.j),
             target: new Coord(i, j),
             action: action,
             priority: priority,
@@ -1429,22 +2017,64 @@ const _game_prehistory = new class
     bestWorkerAutomationCandidate(candidates)
     {
         candidates.sort(function(a, b) {
-            if (a.path.length != b.path.length) return a.path.length-b.path.length;
+            if (a.distance != b.distance) return a.distance-b.distance;
             if (a.target.i != b.target.i) return a.target.i-b.target.i;
             return a.target.j-b.target.j;
         });
-        return candidates.length ? candidates[0] : null;
+        for (var n=0; n<candidates.length; n++) {
+            var candidate = candidates[n];
+            if (candidate.path == null) {
+                if (this.workerAutomationPathBudget <= 0) return null;
+                this.workerAutomationPathBudget--;
+                candidate.path = this.buildPath(candidate.workerIndex, candidate.target, {
+                    pathMaximumExpanded: 384,
+                    pathMaximumMilliseconds: 3,
+                });
+                if (!candidate.path.length) continue;
+            }
+            return candidate;
+        }
+        return null;
     }
 
     dispatchWorkerAutomationCandidate(k, candidate)
     {
         if (!candidate) return false;
         var worker = _units[k];
+        var intermediateResourceIrrigation = candidate.action == 'irrigate'
+            && candidate.resourceTarget
+            && (candidate.target.i != candidate.resourceTarget.i
+                || candidate.target.j != candidate.resourceTarget.j);
+        var foodRecoveryFollowup = candidate.action == 'irrigate' && !intermediateResourceIrrigation
+            && candidate.city
+            && !this.workerCityAllowsWorkshop(candidate.city, worker) ? 'farm' : null;
+        this.recordWorkerAutomationDecision(k, 'dispatch', {
+            action: candidate.action,
+            priority: candidate.priority,
+            target: candidate.target,
+            pathLength: candidate.path.length,
+            cityId: candidate.city ? candidate.city.serverId : null,
+            followupAction: candidate.followupAction || null,
+            resourceTarget: candidate.resourceTarget || null,
+        });
+        var normalizedAction = candidate.action == 'irrigate' ? 'irrigation' : candidate.action;
+        if (worker.automationSkipNextAction
+            && worker.automationSkipNextAction != normalizedAction) {
+            delete worker.automationSkipNextAction;
+        }
         worker.automationPriority = candidate.priority;
         if (candidate.action == 'connect_road') {
             return this.startAutomatedRoadConnection(
                 k, candidate.city, candidate.target, candidate.followupAction
             );
+        }
+        if (foodRecoveryFollowup) {
+            worker.automationFollowupAction = foodRecoveryFollowup;
+            worker.automationFollowupTarget = new Coord(candidate.target.i, candidate.target.j);
+        }
+        else {
+            delete worker.automationFollowupAction;
+            delete worker.automationFollowupTarget;
         }
         if (!candidate.path.length) {
             delete worker.automateBuild;
@@ -1493,14 +2123,14 @@ const _game_prehistory = new class
         worker.roadToFollowupAction = followupAction;
         worker.roadToFollowupTarget = new Coord(target.i, target.j);
         if (!startsConnected) {
-            var returnPath = this.buildPath(k, city.coord);
+            var returnPath = this.buildRoadPath(k, city.coord);
             if (!returnPath.length) return false;
             worker.automateBuild = 'connect_road';
             worker.automateTarget = new Coord(target.i, target.j);
             this.assignPath(k, returnPath);
             return true;
         }
-        var roadPath = this.buildPath(k, target);
+        var roadPath = this.buildRoadPath(k, target);
         if (!roadPath.length) return false;
         worker.state = 'road_to';
         worker.automationMode = 'road_to';
@@ -1515,8 +2145,40 @@ const _game_prehistory = new class
     autoRouteWorker(k)
     {
         var worker = _units[k];
+        this.workerAutomationPathBudget = 12;
         var nearestCity = this.nearestOwnedCityForWorker(worker);
-        if (!nearestCity) return false;
+        if (!nearestCity) {
+            this.recordWorkerAutomationDecision(k, 'idle_no_owned_city');
+            return false;
+        }
+        // PREHISTORY-AUTO-016: authoritative movement synchronization can finish
+        // a route without calling afterUnitRouteUpdated(). Consume the saved
+        // project before recalculating work, so arrival at forest starts chopping.
+        if (worker.automateBuild && worker.automateTarget
+            && worker.coord.i == worker.automateTarget.i
+            && worker.coord.j == worker.automateTarget.j) {
+            var arrivedAction = worker.automateBuild;
+            var arrivedActionAllowed = arrivedAction == 'chop_forest'
+                ? this.canChopForest(k)
+                : arrivedAction == 'irrigate'
+                    ? this.canBuildIrrigation(k)
+                    : this.canBuildWorkerTileBuilding(k, arrivedAction);
+            if (arrivedAction == 'workshop' && !this.workerCityAllowsWorkshop(nearestCity, worker)) {
+                arrivedActionAllowed = false;
+            }
+            if (arrivedActionAllowed) {
+                this.recordWorkerAutomationDecision(k, 'start_arrived_project', {
+                    action: arrivedAction,
+                    target: worker.automateTarget,
+                    cityId: nearestCity.serverId,
+                });
+                delete worker.automateBuild;
+                delete worker.automateTarget;
+                return this.startAutomatedWorkerAction(k, arrivedAction);
+            }
+            delete worker.automateBuild;
+            delete worker.automateTarget;
+        }
         var nearestCityDistance = this.hexDistance(
             worker.coord.i-nearestCity.coord.i, worker.coord.j-nearestCity.coord.j
         );
@@ -1527,6 +2189,10 @@ const _game_prehistory = new class
             delete worker.automateBuild;
             delete worker.automateTarget;
             this.assignPath(k, returnPath);
+            this.recordWorkerAutomationDecision(k, 'return_to_nearest_city', {
+                priority: 0, target: nearestCity.coord, pathLength: returnPath.length,
+                cityId: nearestCity.serverId,
+            });
             return true;
         }
         var candidates = [];
@@ -1561,10 +2227,23 @@ const _game_prehistory = new class
                 var required = this.openedResourceImprovementForTile(resourceI, resourceJ);
                 if (!required || (_map_terrain_mod[resourceI][resourceJ] || {})[required]) continue;
                 var resourceOptions = this.workerAutomationOptionsAt(k, resourceI, resourceJ, nearestCity);
+                var resourceTargetI = resourceI;
+                var resourceTargetJ = resourceJ;
+                if (!resourceOptions.length && required == 'farm') {
+                    // PREHISTORY-AUTO-017: extend Irrigation one legal segment at a
+                    // time toward a disconnected Farm resource, then revisit it.
+                    var irrigationStep = this.nextResourceIrrigationChainTile(resourceI, resourceJ);
+                    if (irrigationStep) {
+                        resourceOptions = ['irrigate'];
+                        resourceTargetI = irrigationStep.i;
+                        resourceTargetJ = irrigationStep.j;
+                    }
+                }
                 if (!resourceOptions.length) continue;
                 var resourceBuild = this.workerAutomationCandidate(
-                    k, resourceI, resourceJ, resourceOptions[0], 2, nearestCity, null
+                    k, resourceTargetI, resourceTargetJ, resourceOptions[0], 2, nearestCity, null
                 );
+                if (resourceBuild) resourceBuild.resourceTarget = new Coord(resourceI, resourceJ);
                 if (resourceBuild) candidates.push(resourceBuild);
             }
         }
@@ -1586,6 +2265,30 @@ const _game_prehistory = new class
         best = this.bestWorkerAutomationCandidate(candidates);
         if (best) return this.dispatchWorkerAutomationCandidate(k, best);
 
+        // Finish prepared Irrigation before preparing another Tile. Otherwise a
+        // City can accumulate Irrigation forever without completing any Farms.
+        candidates = [];
+        for (var preparedDi=-4; preparedDi <= 4; preparedDi++) {
+            for (var preparedDj=-4; preparedDj <= 4; preparedDj++) {
+                var preparedI = nearestCity.coord.i + preparedDi;
+                var preparedJ = nearestCity.coord.j + preparedDj;
+                if (preparedI < 0 || preparedI >= _map_size
+                    || preparedJ < 0 || preparedJ >= _map_size) continue;
+                var preparedModifiers = _map_terrain_mod[preparedI][preparedJ] || {};
+                if (!preparedModifiers.irrigation) continue;
+                var preparedOptions = this.workerAutomationOptionsAt(
+                    k, preparedI, preparedJ, nearestCity
+                ).filter(function(action) { return action != 'irrigate'; });
+                if (!preparedOptions.length) continue;
+                var preparedBuild = this.workerAutomationCandidate(
+                    k, preparedI, preparedJ, preparedOptions[0], 4, nearestCity, null
+                );
+                if (preparedBuild) candidates.push(preparedBuild);
+            }
+        }
+        best = this.bestWorkerAutomationCandidate(candidates);
+        if (best) return this.dispatchWorkerAutomationCandidate(k, best);
+
         // Priority 4: improve a Tile already assigned to this City's citizen.
         candidates = [];
         for (var workedIndex=0; workedIndex < citizenCoords.length; workedIndex++) {
@@ -1598,6 +2301,31 @@ const _game_prehistory = new class
                 k, workedCoord.i, workedCoord.j, workedOptions[0], 4, nearestCity, null
             );
             if (workedBuild) candidates.push(workedBuild);
+        }
+        best = this.bestWorkerAutomationCandidate(candidates);
+        if (best) return this.dispatchWorkerAutomationCandidate(k, best);
+
+        // Priority 4b: bootstrap a small City whose only citizen is on the City
+        // Tile. Without this pass every ordinary nearby Tile was ignored until
+        // population growth assigned a second citizen, leaving its Worker idle.
+        candidates = [];
+        for (var bootstrapDi=-4; bootstrapDi <= 4; bootstrapDi++) {
+            for (var bootstrapDj=-4; bootstrapDj <= 4; bootstrapDj++) {
+                var bootstrapI = nearestCity.coord.i + bootstrapDi;
+                var bootstrapJ = nearestCity.coord.j + bootstrapDj;
+                if (bootstrapI < 0 || bootstrapI >= _map_size
+                    || bootstrapJ < 0 || bootstrapJ >= _map_size
+                    || this.isCityTile(bootstrapI, bootstrapJ)
+                    || this.tileHasPrimaryImprovement(bootstrapI, bootstrapJ)) continue;
+                var bootstrapOptions = this.workerAutomationOptionsAt(
+                    k, bootstrapI, bootstrapJ, nearestCity
+                );
+                if (!bootstrapOptions.length) continue;
+                var bootstrapBuild = this.workerAutomationCandidate(
+                    k, bootstrapI, bootstrapJ, bootstrapOptions[0], 4.5, nearestCity, null
+                );
+                if (bootstrapBuild) candidates.push(bootstrapBuild);
+            }
         }
         best = this.bestWorkerAutomationCandidate(candidates);
         if (best) return this.dispatchWorkerAutomationCandidate(k, best);
@@ -1639,8 +2367,129 @@ const _game_prehistory = new class
         }
         best = this.bestWorkerAutomationCandidate(candidates);
         if (best) return this.dispatchWorkerAutomationCandidate(k, best);
+
+        // Priority 6b: before considering any replacement, search untouched
+        // Tiles belonging to every other owned City. This also gives a Worker
+        // useful work when its nearest City has no non-destructive task left.
+        candidates = [];
+        for (var remoteCityIndex=0; remoteCityIndex < cities.length; remoteCityIndex++) {
+            var remoteCity = cities[remoteCityIndex];
+            if (remoteCity === nearestCity) continue;
+            for (var remoteDi=-4; remoteDi <= 4; remoteDi++) {
+                for (var remoteDj=-4; remoteDj <= 4; remoteDj++) {
+                    var remoteI = remoteCity.coord.i + remoteDi;
+                    var remoteJ = remoteCity.coord.j + remoteDj;
+                    if (remoteI < 0 || remoteI >= _map_size
+                        || remoteJ < 0 || remoteJ >= _map_size
+                        || this.isCityTile(remoteI, remoteJ)
+                        || this.tileHasPrimaryImprovement(remoteI, remoteJ)) continue;
+                    var tileCity = this.nearestOwnedCityForWorker({
+                        team: worker.team,
+                        coord: new Coord(remoteI, remoteJ),
+                    });
+                    if (tileCity !== remoteCity) continue;
+                    var remoteOptions = this.workerAutomationOptionsAt(
+                        k, remoteI, remoteJ, remoteCity
+                    );
+                    if (!remoteOptions.length) continue;
+                    var remoteBuild = this.workerAutomationCandidate(
+                        k, remoteI, remoteJ, remoteOptions[0], 6.5, remoteCity, null
+                    );
+                    if (remoteBuild) candidates.push(remoteBuild);
+                }
+            }
+        }
+        best = this.bestWorkerAutomationCandidate(candidates);
+        if (best) return this.dispatchWorkerAutomationCandidate(k, best);
+
+        // Priority 7: replacing an established improvement is the final
+        // fallback. Any unimproved worked Tile blocks replacement globally,
+        // and one roll gates the whole automation cycle so many candidate
+        // Tiles cannot raise the configured 20% probability.
+        var hasUnimprovedCitizenPlot = cities.some(function(city) {
+            return this.cityHasUnimprovedCitizenPlot(city);
+        }, this);
+        var replacementAllowed = !hasUnimprovedCitizenPlot
+            && this.workerReplacementRandom() < 0.20;
+        if (replacementAllowed) {
+            candidates = [];
+            for (var replacementCityIndex=0;
+                replacementCityIndex < cities.length; replacementCityIndex++) {
+                var replacementCity = cities[replacementCityIndex];
+                for (var replacementDi=-4; replacementDi <= 4; replacementDi++) {
+                    for (var replacementDj=-4; replacementDj <= 4; replacementDj++) {
+                        var replacementI = replacementCity.coord.i + replacementDi;
+                        var replacementJ = replacementCity.coord.j + replacementDj;
+                        if (replacementI < 0 || replacementI >= _map_size
+                            || replacementJ < 0 || replacementJ >= _map_size
+                            || this.isCityTile(replacementI, replacementJ)
+                            || !this.workerReplaceableImprovementAt(replacementI, replacementJ)) continue;
+                        var replacementTileCity = this.nearestOwnedCityForWorker({
+                            team: worker.team,
+                            coord: new Coord(replacementI, replacementJ),
+                        });
+                        if (replacementTileCity !== replacementCity) continue;
+                        var replacementOptions = this.workerAutomationOptionsAt(
+                            k, replacementI, replacementJ, replacementCity, true
+                        );
+                        var replacementAction = null;
+                        for (var replacementOptionIndex=0;
+                            replacementOptionIndex < replacementOptions.length;
+                            replacementOptionIndex++) {
+                            if (this.workerActionReplacesImprovement(
+                                replacementI, replacementJ,
+                                replacementOptions[replacementOptionIndex]
+                            )) {
+                                replacementAction = replacementOptions[replacementOptionIndex];
+                                break;
+                            }
+                        }
+                        if (!replacementAction) continue;
+                        var replacementBuild = this.workerAutomationCandidate(
+                            k, replacementI, replacementJ, replacementAction,
+                            7, replacementCity, null
+                        );
+                        if (replacementBuild) candidates.push(replacementBuild);
+                    }
+                }
+            }
+            best = this.bestWorkerAutomationCandidate(candidates);
+            if (best) return this.dispatchWorkerAutomationCandidate(k, best);
+        }
+        // A one-shot exclusion must not leave a Worker idle forever when no
+        // alternative command is currently available.
+        delete worker.automationSkipNextAction;
         delete worker.automationPriority;
+        this.recordWorkerAutomationDecision(k, 'idle_no_available_work', {
+            cityId: nearestCity.serverId,
+            replacementBlockedByCitizen: hasUnimprovedCitizenPlot,
+            replacementRollAllowed: replacementAllowed,
+        });
         return false;
+    }
+
+    recordWorkerAutomationDecision(k, choice, details)
+    {
+        var unit = _units[k];
+        if (!unit || unit.unitTypeId != 'worker') return null;
+        details = details || {};
+        var point = function(coord) {
+            return coord && coord.i != undefined && coord.j != undefined
+                ? {i:Number(coord.i), j:Number(coord.j)} : null;
+        };
+        unit.lastAutomationDecision = {
+            choice: choice,
+            action: details.action || unit.automateBuild || unit.automationCommandAction || null,
+            priority: details.priority == undefined ? unit.automationPriority : details.priority,
+            origin: point(unit.coord),
+            target: point(details.target || unit.automateTarget || unit.automationCommandTarget || unit.gotoCoord),
+            path_length: details.pathLength == undefined
+                ? (unit.gotoPath ? unit.gotoPath.length : 0) : details.pathLength,
+            city_id: details.cityId == undefined ? null : details.cityId,
+            followup_action: details.followupAction || unit.roadToFollowupAction || null,
+            turn: typeof _server_game != 'undefined' ? Number(_server_game.serverTurn) || 0 : 0,
+        };
+        return unit.lastAutomationDecision;
     }
 
     workerAutomationActionBlocked(k, i, j, action)
@@ -1662,8 +2511,20 @@ const _game_prehistory = new class
     {
         for (var n=0; n < _units.length; n++) {
             if (n == k || !_units[n] || _units[n].unitTypeId != 'worker'
-                || _units[n].automationMode != 'automate' || !_units[n].automateTarget) continue;
-            if (_units[n].automateTarget.i == i && _units[n].automateTarget.j == j) return true;
+                || _units[n].automationMode != 'automate') continue;
+            var other = _units[n];
+            var target = other.automateTarget || other.automationCommandTarget;
+            if (!target) continue;
+            var active = !!(other.pendingImmediateBuild || other.automationCommandAction
+                || this.isImprovementState(other.state)
+                || (other.gotoPath && other.gotoPath.length)
+                || other.gotoCoord != undefined);
+            if (!active) {
+                delete other.automateBuild;
+                delete other.automateTarget;
+                continue;
+            }
+            if (target.i == i && target.j == j) return true;
         }
         return false;
     }
@@ -1671,7 +2532,63 @@ const _game_prehistory = new class
     startAutomatedWorkerAction(k, action)
     {
         if (!_units[k] || _units[k].pendingImmediateBuild) return true;
+        var unit = _units[k];
+        var normalizedAction = action == 'irrigate' ? 'irrigation' : action;
+        unit.automationCommandAction = normalizedAction;
+        unit.automationCommandTarget = new Coord(unit.coord.i, unit.coord.j);
+        var currentTurn = typeof _server_game != 'undefined'
+            ? Number(_server_game.serverTurn) || 0 : 0;
+        unit.automationCommandDeadline = currentTurn + 12;
         this.beginImprovement(k, action, true);
+        return true;
+    }
+
+    timeoutAutomatedWorkerCommand(k)
+    {
+        var unit = _units[k];
+        if (!unit || unit.unitTypeId != 'worker' || unit.automationMode != 'automate'
+            || unit.pendingImmediateBuild || !unit.automationCommandAction) return false;
+        var currentTurn = typeof _server_game != 'undefined'
+            ? Number(_server_game.serverTurn) || 0 : 0;
+        if (currentTurn < Number(unit.automationCommandDeadline || Infinity)) return false;
+        var target = unit.automationCommandTarget || unit.coord;
+        if (!unit.automationBlockedActions) unit.automationBlockedActions = {};
+        unit.automationBlockedActions[target.i + ':' + target.j + ':' + unit.automationCommandAction]
+            = currentTurn + 20;
+        unit.automationSkipNextAction = unit.automationCommandAction;
+        this.recordWorkerAutomationDecision(k, 'command_timeout', {
+            action: unit.automationCommandAction, target: target,
+        });
+        this.setUnitState(k, 'ready', true);
+        unit.automationMode = 'automate';
+        delete unit.automateBuild;
+        delete unit.automateTarget;
+        delete unit.automationCommandAction;
+        delete unit.automationCommandTarget;
+        delete unit.automationCommandDeadline;
+        return true;
+    }
+
+    completeAutomatedWorkerCommand(unit, succeeded)
+    {
+        if (!unit || unit.unitTypeId != 'worker') return false;
+        var followup = unit.automationFollowupAction;
+        var followupTarget = unit.automationFollowupTarget;
+        if (!succeeded && unit.automationCommandAction) {
+            unit.automationSkipNextAction = unit.automationCommandAction;
+        }
+        delete unit.automationCommandAction;
+        delete unit.automationCommandTarget;
+        delete unit.automationCommandDeadline;
+        delete unit.automationFollowupAction;
+        delete unit.automationFollowupTarget;
+        if (succeeded && followup && followupTarget && unit.coord
+            && unit.coord.i == followupTarget.i && unit.coord.j == followupTarget.j) {
+            var index = _units.indexOf(unit);
+            if (index != -1 && this.workerTileBuildingMenuOptions(index).indexOf(followup) != -1) {
+                return this.startAutomatedWorkerAction(index, followup);
+            }
+        }
         return true;
     }
 
@@ -1681,9 +2598,16 @@ const _game_prehistory = new class
             this.autoRouteWorker(k);
             return;
         }
-        for (var n=0; n < 20; n++) {
+        if (_units[k].unitTypeId == 'workboat') {
+            this.autoRouteWorkBoat(k);
+            return;
+        }
+        for (var n=0; n < 4; n++) {
             var target = _game.random_point(0, _units[k].coord.add(-8, -8), _units[k].coord.add(8, 8));
-            var path = this.buildPath(k, target);
+            var path = this.buildPath(k, target, {
+                pathMaximumExpanded: 384,
+                pathMaximumMilliseconds: 3,
+            });
             if (path.length) {
                 this.assignPath(k, path);
                 return;
@@ -1691,10 +2615,105 @@ const _game_prehistory = new class
         }
     }
 
+    workBoatAutomationTargetReserved(k, i, j)
+    {
+        for (var n=0; n < _units.length; n++) {
+            if (n == k || !_units[n] || _units[n].unitTypeId != 'workboat'
+                || _units[n].automationMode != 'automate' || !_units[n].automateTarget) continue;
+            if (_units[n].automateTarget.i == i && _units[n].automateTarget.j == j) return true;
+        }
+        return false;
+    }
+
+    workBoatAutomationCandidate(k, i, j, priority)
+    {
+        var workBoat = _units[k];
+        if (!workBoat || !this.canBuildNetworkAt(i, j)
+            || this.workBoatAutomationTargetReserved(k, i, j)) return null;
+        return {
+            target: new Coord(i, j),
+            path: i == workBoat.coord.i && j == workBoat.coord.j ? [] : null,
+            workerIndex: k,
+            distance: this.hexDistance(i-workBoat.coord.i, j-workBoat.coord.j),
+            priority: priority,
+        };
+    }
+
+    autoRouteWorkBoat(k)
+    {
+        var workBoat = _units[k];
+        if (!workBoat || workBoat.unitTypeId != 'workboat') return false;
+        this.workerAutomationPathBudget = 12;
+        var candidates = [];
+        // Visible water resources are improved before ordinary worked water Tiles.
+        for (var i=0; i<_map_size; i++) {
+            for (var j=0; j<_map_size; j++) {
+                var resource = _map_resource[i] && _map_resource[i][j];
+                if (!resource || !resource.type || (_map.isResourceVisible
+                    && !_map.isResourceVisible(i, j))) continue;
+                var resourceCandidate = this.workBoatAutomationCandidate(k, i, j, 1);
+                if (resourceCandidate) candidates.push(resourceCandidate);
+            }
+        }
+        var best = this.bestWorkerAutomationCandidate(candidates);
+        if (!best) {
+            candidates = [];
+            var cities = this.ownedCitiesForWorker(workBoat);
+            for (var cityIndex=0; cityIndex<cities.length; cityIndex++) {
+                var citizenCoords = this.cityCitizenCoords(cities[cityIndex]);
+                for (var citizenIndex=0; citizenIndex<citizenCoords.length; citizenIndex++) {
+                    var coord = citizenCoords[citizenIndex];
+                    var citizenCandidate = this.workBoatAutomationCandidate(k, coord.i, coord.j, 2);
+                    if (citizenCandidate) candidates.push(citizenCandidate);
+                }
+            }
+            best = this.bestWorkerAutomationCandidate(candidates);
+        }
+        if (!best) {
+            delete workBoat.automationPriority;
+            delete workBoat.automateBuild;
+            delete workBoat.automateTarget;
+            return false;
+        }
+        workBoat.automationPriority = best.priority;
+        if (!best.path.length) {
+            delete workBoat.automateBuild;
+            delete workBoat.automateTarget;
+            this.beginImprovement(k, 'network', true);
+            return true;
+        }
+        workBoat.automateBuild = 'network';
+        workBoat.automateTarget = new Coord(best.target.i, best.target.j);
+        this.assignPath(k, best.path);
+        return true;
+    }
+
     applyAutoRoutingRules()
     {
+        var automaticRoutesStarted = 0;
+        var automaticRouteLimit = 4;
         for (var k=0; k < _units.length; k++) {
-            if (!_units[k].can_move) continue;
+            if (!_units[k].can_move || _units[k].outsideMapWindow) continue;
+            if (_units[k].unitTypeId == 'worker'
+                && (_units[k].roadToBuilding || _units[k].roadToDestination)
+                && (_units[k].automationMode != 'road_to' || _units[k].state != 'road_to')) {
+                // Road-to is a persistent client order. An AI pass or stale
+                // server state cannot demote it while its destination exists.
+                _units[k].automationMode = 'road_to';
+                _units[k].state = 'road_to';
+            }
+            this.timeoutAutomatedWorkerCommand(k);
+            if (_units[k].unitTypeId == 'worker'
+                && (_units[k].automationMode == 'automate' || _units[k].state == 'automate')
+                && (!(_units[k].gotoPath && _units[k].gotoPath.length))
+                && _units[k].gotoCoord != undefined) {
+                this.recordWorkerAutomationDecision(k, 'recover_stale_destination', {
+                    target: _units[k].gotoCoord,
+                });
+                this.clearUnitPath(k);
+                delete _units[k].automateBuild;
+                delete _units[k].automateTarget;
+            }
             // A completed server-side chop may arrive before the saved client
             // task is reconciled. Clear it as soon as the Tile is no longer forest.
             if (_units[k].unitTypeId == 'worker' && _units[k].state == 'chop_forest'
@@ -1710,18 +2729,22 @@ const _game_prehistory = new class
                 || _units[k].gotoPath.length || _units[k].gotoCoord != undefined) {
                 continue;
             }
+            if (automaticRoutesStarted >= automaticRouteLimit) continue;
             // PREHISTORY-AUTO-001, rules/prehostory.md: explore alternates between nearby fog and nearest known city.
             if (mode == 'explore') {
+                automaticRoutesStarted++;
                 _units[k].state = 'explore';
                 this.autoRouteExplore(k);
             }
             // PREHISTORY-AUTO-002, rules/prehostory.md: patrol routes around its patrol origin.
             if (mode == 'patrol') {
+                automaticRoutesStarted++;
                 _units[k].state = 'patrol';
                 this.autoRoutePatrol(k);
             }
             // PREHISTORY-AUTO-003, rules/prehostory.md: automate chooses a nearby available land route.
             if (mode == 'automate') {
+                automaticRoutesStarted++;
                 _units[k].state = 'automate';
                 this.autoRouteAutomate(k);
             }
@@ -2011,6 +3034,7 @@ const _game_prehistory = new class
         }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
+        if (_map.hasTerrainModifier(i, j, 'fortification')) return false;
         // PREHISTORY-CHOP-012, rules/prehostory.md: Workers cannot chop on city tiles.
         if (this.isCityTile(i, j)) {
             return false;
@@ -2082,6 +3106,25 @@ const _game_prehistory = new class
         unit.state = 'road_to';
         unit.automationMode = 'road_to';
         if (unit.pendingImmediateBuild || unit.roadToBuilding) return true;
+        if (!this.ensureRoadToLandPath(k)) {
+            unit.state = 'ready';
+            unit.automationMode = null;
+            delete unit.roadToDestination;
+            return false;
+        }
+        if ((!unit.gotoPath || !unit.gotoPath.length) && unit.gotoCoord
+            && (unit.coord.i != unit.gotoCoord.i || unit.coord.j != unit.gotoCoord.j)) {
+            var rebuiltRoadPath = this.buildRoadPath(
+                k, unit.roadToDestination || unit.gotoCoord, true
+            );
+            if (rebuiltRoadPath.length) this.assignPath(k, rebuiltRoadPath);
+        }
+        if ((!unit.gotoPath || !unit.gotoPath.length) && unit.roadToDestination
+            && (unit.coord.i != unit.roadToDestination.i
+                || unit.coord.j != unit.roadToDestination.j)) {
+            var nextRoadPath = this.buildRoadPath(k, unit.roadToDestination, true);
+            if (nextRoadPath.length) this.assignPath(k, nextRoadPath);
+        }
         if (this.canBuildRoadAt(unit.coord.i, unit.coord.j)) {
             unit.roadToBuilding = true;
             unit.clientImprovementTurnsLeft = this.improvementBuildTurns('road');
@@ -2110,6 +3153,7 @@ const _game_prehistory = new class
         unit.pendingImmediateBuild = false;
         unit.roadToBuilding = false;
         delete unit.clientImprovementTurnsLeft;
+        delete unit.clientImprovementState;
         if (!succeeded) {
             if (unit.resumeAutomationAfterRoadTo) {
                 unit.state = 'automate';
@@ -2122,12 +3166,24 @@ const _game_prehistory = new class
             }
             unit.gotoPath = [];
             unit.gotoCoord = null;
+            delete unit.roadToDestination;
             return true;
         }
-        if (unit.gotoPath && unit.gotoPath.length) {
+        if ((unit.gotoPath && unit.gotoPath.length) || (unit.gotoCoord
+            && (unit.coord.i != unit.gotoCoord.i || unit.coord.j != unit.gotoCoord.j))) {
+            unit.state = 'road_to';
+        }
+        else if (unit.roadToDestination
+            && (unit.coord.i != unit.roadToDestination.i
+                || unit.coord.j != unit.roadToDestination.j)) {
+            var continuedIndex = _units.indexOf(unit);
+            var continuedPath = continuedIndex == -1 ? []
+                : this.buildRoadPath(continuedIndex, unit.roadToDestination, true);
+            if (continuedPath.length) this.assignPath(continuedIndex, continuedPath);
             unit.state = 'road_to';
         }
         else if (unit.resumeAutomationAfterRoadTo) {
+            delete unit.roadToDestination;
             unit.state = 'automate';
             unit.automationMode = 'automate';
             delete unit.resumeAutomationAfterRoadTo;
@@ -2150,6 +3206,7 @@ const _game_prehistory = new class
         else {
             unit.state = 'ready';
             unit.automationMode = null;
+            delete unit.roadToDestination;
         }
         return true;
     }
@@ -2204,6 +3261,9 @@ const _game_prehistory = new class
 
     isIrrigationWaterSource(i, j)
     {
+        // PREHISTORY-IRRIGATION-014, rules/prehostory.md: a completed Farm is
+        // itself a local irrigation source, even without an older water chain.
+        if (_map.hasTerrainModifier(i, j, 'farm')) return true;
         var terrain = _map_terrain_tex[i][j];
         var terrainType = terrain&0x0F;
         var depth = (terrain>>4)&0x3;
@@ -2232,9 +3292,43 @@ const _game_prehistory = new class
                 if (this.isIrrigationWaterSource(ni, nj) && !this.isSeaConnectedWaterSource(ni, nj)) {
                     return true;
                 }
-                // PREHISTORY-IRRIGATION-006, rules/prehostory.md: irrigation can extend from neighboring irrigation.
-                if (_map.hasIrrigation(ni, nj)) {
+                // PREHISTORY-IRRIGATION-006 and PREHISTORY-IRRIGATION-014,
+                // rules/prehostory.md: irrigation can extend through irrigation,
+                // and a completed Farm is itself a local source.
+                if (_map.hasIrrigation(ni, nj) || _map.hasTerrainModifier(ni, nj, 'farm')) {
                     return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    irrigationConnectedToWater(originI, originJ)
+    {
+        var queue = [new Coord(originI, originJ)];
+        var visited = {};
+        var directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]];
+        for (var cursor=0; cursor < queue.length; cursor++) {
+            var point = queue[cursor];
+            if (point.i < 0 || point.i >= _map_size || point.j < 0 || point.j >= _map_size) continue;
+            var key = point.i + ':' + point.j;
+            if (visited[key]) continue;
+            var origin = point.i == originI && point.j == originJ;
+            if (!origin && !_map.hasIrrigation(point.i, point.j)
+                && !_map.hasTerrainModifier(point.i, point.j, 'farm')) continue;
+            visited[key] = true;
+            var terrainType = _map_terrain_tex[point.i][point.j]&0x0F;
+            if (this.isIrrigationWaterSource(point.i, point.j)
+                && (terrainType != 0 || !this.isSeaConnectedWaterSource(point.i, point.j))) return true;
+            for (var n=0; n < directions.length; n++) {
+                var ni = point.i + directions[n][0];
+                var nj = point.j + directions[n][1];
+                if (ni < 0 || ni >= _map_size || nj < 0 || nj >= _map_size) continue;
+                var neighborType = _map_terrain_tex[ni][nj]&0x0F;
+                if (this.isIrrigationWaterSource(ni, nj)
+                    && (neighborType != 0 || !this.isSeaConnectedWaterSource(ni, nj))) return true;
+                if (_map.hasIrrigation(ni, nj) || _map.hasTerrainModifier(ni, nj, 'farm')) {
+                    queue.push(new Coord(ni, nj));
                 }
             }
         }
@@ -2267,19 +3361,25 @@ const _game_prehistory = new class
         if (k == -1 || _units[k] == undefined || _units[k].unitTypeId != 'worker') {
             return false;
         }
+        return this.canBuildIrrigationAt(_units[k].coord.i, _units[k].coord.j);
+    }
+
+    canBuildIrrigationAt(i, j)
+    {
         // PREHISTORY-IRRIGATION-010, rules/prehostory.md: workers cannot build irrigation before Irrigation.
         if (!_game_state.isTechnologyOpen('Irrigation')) {
             return false;
         }
-        var i = _units[k].coord.i;
-        var j = _units[k].coord.j;
+        if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
+        if (_map.hasTerrainModifier(i, j, 'fortification')) return false;
         // PREHISTORY-IRRIGATION-013, rules/prehostory.md: Workers cannot build irrigation on city tiles.
         if (this.isCityTile(i, j)) {
             return false;
         }
         var terrainType = _map_terrain_tex[i][j]&0x0F;
-        // PREHISTORY-IRRIGATION-002 and PREHISTORY-IRRIGATION-008, rules/prehostory.md: irrigation can be built only on grass terrain.
-        if (terrainType != 2 && terrainType != 7) {
+        // PREHISTORY-IRRIGATION-002 and PREHISTORY-IRRIGATION-008,
+        // rules/prehostory.md: irrigation supports sand, grass, and river grass.
+        if (terrainType != 1 && terrainType != 2 && terrainType != 7) {
             return false;
         }
         if (_map.hasIrrigation(i, j)) {
@@ -2291,10 +3391,9 @@ const _game_prehistory = new class
         if (resourceImprovement && resourceImprovement != 'farm') {
             return false;
         }
-        // Connectivity is authoritative server work. The client deliberately
-        // allows the request; PHP returns IMPOSSIBLE when no irrigation route
-        // reaches fresh water.
-        return true;
+        // Mirror PHP's irrigation-network search so disconnected requests are
+        // rejected before a Worker spends turns repeating them.
+        return this.irrigationConnectedToWater(i, j);
     }
 
     enableNeighborCityIrrigationFood(i, j)
@@ -2414,6 +3513,7 @@ const _game_prehistory = new class
         }
         var modifiers = _map_terrain_mod[i] && _map_terrain_mod[i][j]
             ? _map_terrain_mod[i][j] : {};
+        if (modifiers.fortification && buildingName != 'fortification') return false;
         var resourceImprovement = this.openedResourceImprovementForTile(i, j);
         if (buildingName == 'mine' && (_map_terrain_tex[i][j]&0x0F) == 1
             && resourceImprovement != 'mine') return false;
@@ -2435,16 +3535,24 @@ const _game_prehistory = new class
         }
         var i = _units[k].coord.i;
         var j = _units[k].coord.j;
+        var result = [];
+        if (this.canBuildWorkerTileBuilding(k, 'fortification')) {
+            result.push('fortification');
+        }
         var resourceImprovement = this.openedResourceImprovementForTile(i, j);
         if (resourceImprovement) {
             // PREHISTORY-WORKER-BUILDING-007: a resource Tile exposes its matching
             // economic improvement; Fortification remains a separate defence command.
-            if (this.canBuildWorkerTileBuilding(k, resourceImprovement)) return [resourceImprovement];
-            if (resourceImprovement == 'farm' && this.canBuildIrrigation(k)) return ['irrigate'];
-            return [];
+            if (this.canBuildWorkerTileBuilding(k, resourceImprovement)
+                && result.indexOf(resourceImprovement) == -1) {
+                result.push(resourceImprovement);
+            }
+            if (resourceImprovement == 'farm' && this.canBuildIrrigation(k)) {
+                result.push('irrigate');
+            }
+            return result;
         }
-        var order = ['fortification', 'pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry', 'winery', 'cottage', 'workshop', 'mine'];
-        var result = [];
+        var order = ['pasture', 'farm', 'plantation', 'camp', 'fishing_boats', 'quarry', 'winery', 'cottage', 'workshop', 'mine'];
         for (var n=0; n < order.length; n++) {
             if (this.canBuildWorkerTileBuilding(k, order[n])) {
                 result.push(order[n]);
@@ -2580,8 +3688,7 @@ const _game_prehistory = new class
             if (taskStatesBefore[k] && _units[k].can_move && !this.unitHasTask(_units[k])) {
                 _selection = k;
                 this.centerViewOnUnit(k);
-                if (_units[k].suppressAutomationMenu) this.applyMenuRules();
-                else this.showActionMenuForSelection();
+                this.showActionMenuForSelection();
                 return true;
             }
         }
@@ -2598,8 +3705,7 @@ const _game_prehistory = new class
             if (_units[k].type == 3 && _units[k].production == null && !_units[k].productionDisabled) {
                 _selection = k;
                 this.centerViewOnUnit(k);
-                if (_units[k].suppressAutomationMenu) this.applyMenuRules();
-                else this.showActionMenuForSelection();
+                this.showActionMenuForSelection();
                 return;
             }
         }
@@ -2610,8 +3716,7 @@ const _game_prehistory = new class
             if (_units[k].can_move && !this.unitHasTask(_units[k])) {
                 _selection = k;
                 this.centerViewOnUnit(k);
-                if (_units[k].suppressAutomationMenu) this.applyMenuRules();
-                else this.showActionMenuForSelection();
+                this.showActionMenuForSelection();
                 return;
             }
         }
@@ -2625,16 +3730,22 @@ const _game_prehistory = new class
             var commandIndices = this.commandSelectionIndices();
             for (var commandIndex=0; commandIndex < commandIndices.length; commandIndex++) {
                 var selectedIndex = commandIndices[commandIndex];
-                var path = this.buildPath(selectedIndex, coord);
-                this.assignPath(selectedIndex, path);
+                if (_prehistory_command_mode == 'road_to') {
+                    this.assignRoadToDestination(selectedIndex, coord);
+                }
+                else {
+                    this.assignPath(selectedIndex, this.buildPath(selectedIndex, coord));
+                }
                 this.configureMovementIntent(selectedIndex, coord);
             }
-            if (_prehistory_command_mode == 'road_to' && _units[_selection].unitTypeId == 'worker') {
+            if (_prehistory_command_mode == 'road_to' && _units[_selection].unitTypeId == 'worker'
+                && (_units[_selection].gotoPath.length || _units[_selection].roadToBuilding)) {
                 _units[_selection].state = 'road_to';
                 _units[_selection].automationMode = 'road_to';
                 this.prepareRoadToTurn(_selection);
             }
             _prehistory_command_mode = null;
+            this.commandPathPreviewKey = null;
             _control.drawMovementOrders(_draw.clear());
             this.dismissActionMenu();
             return true;
@@ -2853,6 +3964,7 @@ const _game_prehistory = new class
         }
         if (command == 'goto' && commandIndices.length) {
             _prehistory_command_mode = 'goto';
+            this.commandPathPreviewKey = null;
             for (var gotoIndex=0; gotoIndex < commandIndices.length; gotoIndex++) {
                 this.setUnitState(commandIndices[gotoIndex], 'ready');
             }
@@ -2864,8 +3976,9 @@ const _game_prehistory = new class
         }
         if (command == 'road_to' && this.canUseRoadTo(_selection)) {
             _prehistory_command_mode = 'road_to';
-            this.setUnitState(_selection, 'road_to');
-            _units[_selection].automationMode = 'road_to';
+            this.commandPathPreviewKey = null;
+            // Commit the state only after a destination is chosen. Persisting a
+            // destinationless Road-to lets an incoming update erase the command.
             this.applyMenuRules();
             if (!this.usesCompactActionMenu() && typeof _last_hover_coord !== 'undefined' && _last_hover_coord) {
                 this.drawCommandPathPreview(_last_hover_coord);
@@ -2910,9 +4023,14 @@ const _game_prehistory = new class
                 var automatedUnitIndex = commandIndices[autoIndex];
                 this.setUnitState(automatedUnitIndex, command);
                 _units[automatedUnitIndex].automationMode = command;
+                if (typeof _server_game != 'undefined' && _server_game.persistUnitAutomationMode) {
+                    _server_game.persistUnitAutomationMode(_units[automatedUnitIndex], command);
+                }
                 if (command == 'explore') this.autoRouteExplore(automatedUnitIndex);
                 if (command == 'patrol') this.autoRoutePatrol(automatedUnitIndex);
-                if (command == 'automate') this.autoRouteAutomate(automatedUnitIndex);
+                if (command == 'automate') {
+                    this.autoRouteAutomate(automatedUnitIndex);
+                }
             }
         }
         this.applyBuildingStateRules(command);
@@ -2924,9 +4042,22 @@ const _game_prehistory = new class
     {
         var unit = _selection != -1 ? _units[_selection] : null;
         var unitId = unit ? (unit.serverId || unit.serverClientKey || '?') : '?';
-        var message = command.replaceAll('_', ' ') + ' is not available for Worker #' + unitId + ' on this Tile.';
-        if (typeof _one_turn_message != 'undefined') _one_turn_message = message;
+        var message = vocabularyText('message.worker_command_unavailable', {
+            command: vocabularyCommandName(command), id: unitId
+        });
+        if (typeof _server_game != 'undefined' && _server_game.setOneTurnMessage) {
+            _server_game.setOneTurnMessage(_current_user, message);
+        }
+        else if (typeof _one_turn_message != 'undefined') _one_turn_message = message;
         if (typeof _server_game != 'undefined' && _server_game.log) _server_game.log(message);
-        if (typeof window != 'undefined' && typeof window.alert == 'function') window.alert(message);
+        if (typeof _server_game != 'undefined' && _server_game.reportHandledClientError) {
+            _server_game.reportHandledClientError('worker_command', {
+                player_id: _current_user,
+                unit_id: unit && unit.serverId != undefined ? unit.serverId : null,
+                command: command,
+                i: unit && unit.coord ? unit.coord.i : null,
+                j: unit && unit.coord ? unit.coord.j : null,
+            }, message, 'worker_command_unavailable');
+        }
     }
 }

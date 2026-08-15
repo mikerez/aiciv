@@ -7,7 +7,8 @@ const _menu_tile = new class
 
     terrainName(type)
     {
-        return ['Water', 'Sand', 'Grass', 'Snow', 'Hills', 'Mountains', 'Forest', 'Grass with water'][type] || 'Unknown';
+        var terrainIds = ['water', 'sand', 'grass', 'snow', 'hills', 'mountains', 'forest', 'grasswater'];
+        return vocabularyText('terrain.' + (terrainIds[type] || 'unknown'));
     }
 
     tileDefenseBonus(i, j)
@@ -44,7 +45,7 @@ const _menu_tile = new class
         if (this.element) return this.element;
         var panel = document.createElement('div');
         panel.id = 'tileInfoMenu';
-        panel.innerHTML = '<button type="button" class="tile-info-close" title="Close">&times;</button><div class="tile-info-title"></div><div class="tile-info-body"></div>';
+        panel.innerHTML = '<button type="button" class="tile-info-close" title="' + vocabularyText('common.close') + '">&times;</button><div class="tile-info-title"></div><div class="tile-info-body"></div>';
         panel.querySelector('.tile-info-close').onclick = this.hide.bind(this);
         document.body.appendChild(panel);
         this.element = panel;
@@ -68,12 +69,12 @@ const _menu_tile = new class
         var current = _city_economy.tileIncomeAt(i, j);
         panel.querySelector('.tile-info-title').textContent = this.terrainName(terrainType) + ' (' + i + ', ' + j + ')';
         panel.querySelector('.tile-info-body').innerHTML = [
-            '<span>Defence <b>+' + this.tileDefenseBonus(i, j) + '%</b></span>',
-            '<span>Base <b>Food ' + basic.food + ' / Shields ' + basic.production + ' / Gold ' + basic.money + '</b></span>',
-            '<span>Resource <b>' + (resource ? resource.name : 'None') + '</b></span>',
-            '<span>Current <b>Food ' + current.food + ' / Shields ' + current.production + ' / Gold ' + current.money + '</b></span>',
-            '<span>Suggested <b>' + (suggestion ? suggestion.replace(/_/g, ' ') : 'None') + '</b></span>',
-            '<span>After <b>Food ' + projected.food + ' / Shields ' + projected.production + ' / Gold ' + projected.money + '</b></span>'
+            '<span>' + vocabularyText('tile.defence') + ' <b>+' + this.tileDefenseBonus(i, j) + '%</b></span>',
+            '<span>' + vocabularyText('tile.base') + ' <b>' + vocabularyText('tile.income', basic) + '</b></span>',
+            '<span>' + vocabularyText('tile.resource') + ' <b>' + (resource ? vocabularyResourceName(resource.id, resource.name) : vocabularyText('common.none')) + '</b></span>',
+            '<span>' + vocabularyText('tile.current') + ' <b>' + vocabularyText('tile.income', current) + '</b></span>',
+            '<span>' + vocabularyText('tile.suggested') + ' <b>' + (suggestion ? vocabularyCommandName(suggestion) : vocabularyText('common.none')) + '</b></span>',
+            '<span>' + vocabularyText('tile.after') + ' <b>' + vocabularyText('tile.income', projected) + '</b></span>'
         ].join('');
         panel.style.display = 'block';
     }

@@ -30,6 +30,9 @@
 - `MAIN-MENU-014`: On phones, the Civilizations list expands between the screen safe-area insets and the Civilizations button, using the available width and height with internal scrolling and enlarged player rows.
 - `MAIN-MENU-015`: On phones, a selected tile containing multiple units exposes a Units toggle directly below the white statistics and message lines. Its half-viewport-width selector starts below that toggle, uses a stable pixel height calculated from the live viewport, expands downward, scrolls internally, and retracts after a unit is selected.
 - `MAIN-MENU-016`: With the main toolbar disabled, the live turn countdown is part of the compact top-edge End Turn button. The top-left display uses one raised status line for current turn messages; the obsolete technology-progress line is not drawn.
+- `MAIN-MENU-017`: The bottom-right Costs button is always bound to the logged-in player's civilization, even while hidden AI processing temporarily changes the engine's active user. It groups that player's movable units and terrain improvements by type and shows per-item and total food, production, and gold upkeep from the authoritative economy tables.
+- `MAIN-MENU-018`: A top-left turn message remains visible through its originating turn and is cleared after the next resolved turn when that turn produces no new message.
+- `MAIN-MENU-019`: Client request and command errors are written through `report_cli_error`; they do not interrupt play with browser popup dialogs.
 - `MAIN-MOBILE-003`: On phones, touching a Tile with multiple units selects its top unit immediately so a held drag can issue movement. The unit-stack panel opens only when the gesture ends as a tap within 500 milliseconds and without moving at least 12 CSS pixels.
 - `MAIN-MOBILE-004`: The phone unit action panel follows the same confirmed-tap rule as the unit-stack panel. It remains hidden during a held movement-path drag and opens after touch release only for a tap within 500 milliseconds and 12 CSS pixels.
 - `MAIN-MOBILE-005`: After Goto or Road-to is selected from the phone action panel, the next stationary map touch assigns its destination on touch release. Moving at least 12 CSS pixels cancels that destination tap without panning the map or leaving command targeting mode.
@@ -64,14 +67,14 @@
 - `MAIN-CITY-007`: The production backlog is rendered after all City production choices so adding or removing backlog entries does not shift the choice list.
 - `MAIN-MARKUP-001`: `drawStroke()` control-zone markup is skipped during initial game setup.
 - `MAIN-MARKUP-002`: End-turn processing redraws control-zone markup once after layer hooks finish selection and recentering.
-- `MAIN-MARKUP-003`: Control-zone strokes use the same team color family as the unit team overlay.
+- `MAIN-MARKUP-003`: The old force control-zone color stripes are disabled; movement arrows, unit team markers, selection, and status lines remain active.
 - `MAIN-RESOURCE-001`: Map tile state contains a resource type id in `_map_resource[i][j]`.
 - `MAIN-RESOURCE-002`: Resource overlay sprites are prepared as a full-map resource sprite list and drawn above terrain and below units.
 - `MAIN-BIRDSVIEW-001`: `birdsview.js` builds the `50x50` strategic world projection described in `rules/birdsview.md` from the current map size, terrain, resources, and user-indexed unit lists.
 - `MAIN-BIRDSVIEW-002`: A primary click inside the visible birdsview projection recenters the main world view on the corresponding map coordinate.
 - `MAIN-MAP-001`: The authoritative world is `300x300`; a browser holds and renders one aligned `100x100` terrain window. Unit routes retain world coordinates independently of the loaded terrain window.
 - `MAIN-MAP-002`: Selecting a unit shifts the loaded window only when that unit is within 10 Tiles of a current `100x100` window border. A normal shift advances by 10 Tiles, preserves the overlapping 90-Tile terrain, visibility, resources, modifiers, units, and routes, then fills the exposed strip from the server without blanking the current map.
-- `MAIN-MAP-003`: Every authoritative coordinate update, including combat snapshots, draws a 900 ms final-step arrival streak and glow from the source direction without delaying state application.
+- `MAIN-MAP-003`: Every authoritative coordinate update, including combat snapshots, draws a 180 ms final-step unit arrival from the source direction without delaying state application.
 - `MAIN-MOVE-001`: Goto preview, stored route, and submitted atomic movement use one deterministic bounded A* route. The route has no repeated Tiles, prefers continuous roads, penalizes hills and mountains, and respects the selected unit's land/water entry rules.
 - `MAIN-RESPAWN-001`: A defeated player receives a large `Click on minimap to select respawn point` prompt and remains in selection mode without a countdown. Only a birdsview/minimap click submits the requested point; PHP chooses the nearest valid unoccupied land Tile and the browser centers there after respawn.
 - `MAIN-RESPAWN-002`: The bottom-right `Options` button opens a centered menu containing `Log out`, `Respawn`, and `Back to game`. Manual Respawn enters the same minimap-selection flow even while the civilization still has units.

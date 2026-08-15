@@ -32,12 +32,27 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('control.js', 'utf8') + '\nglobalThis.control = _control;', sandbox);
 const before = JSON.stringify(sandbox._units);
 sandbox.control.drawMovementOrders({});
-assert.equal(arrows.length, 5, 'persisted steps and a destination-only route should be redrawn');
+assert.equal(arrows.length, 3, 'only persisted route steps should be redrawn');
 assert.equal(JSON.stringify(sandbox._units), before, 'redrawing orders must not consume or change routes');
+assert.equal(sandbox.control.drawMovementOrder({}, sandbox._units[2], 2), false,
+    'destination-only state must not start pathfinding during rendering');
+const malformedRoute = [];
+for (let step = 1; step <= 5000; step++) malformedRoute.push({i: 40 + step, j: 40});
+sandbox._units.push({coord: {i: 40, j: 40}, type: 2, can_move: true, gotoPath: malformedRoute});
+const arrowsBeforeMalformed = arrows.length;
+sandbox.control.drawMovementOrder({}, sandbox._units[3], 3);
+assert.equal(arrows.length - arrowsBeforeMalformed, 30,
+    'arrow rendering must cap corrupted or oversized stored routes at 30 steps');
+sandbox._units[3].gotoPath = [{i: 41, j: 40}, {i: 40, j: 40}, {i: 41, j: 40}];
+const arrowsBeforeCycle = arrows.length;
+sandbox.control.drawMovementOrder({}, sandbox._units[3], 3);
+assert.equal(arrows.length - arrowsBeforeCycle, 1,
+    'arrow rendering must stop when a stored route loops back through its origin');
 const arrowsBeforeSelection = arrows.length;
 assert.equal(sandbox.control.forceDrawSelectedMovementOrder(), true,
     'selecting a unit with a destination must force route drawing');
-assert.equal(arrows.length, arrowsBeforeSelection + 2, 'selected destination should repaint both arrow steps');
+assert.equal(arrows.length, arrowsBeforeSelection,
+    'a destination without persisted steps must not calculate arrows during repaint');
 
 const routeBeforePreview = JSON.stringify(sandbox._units[0]);
 const arrowsBeforePreview = arrows.length;
@@ -70,22 +85,23 @@ assert.match(index, /unitSelected && _control\.forceDrawSelectedMovementOrder/,
 const menu = fs.readFileSync('menu_unit.js', 'utf8');
 const prehistory = fs.readFileSync('game_prehistory.js', 'utf8');
 assert.match(menu, /data-menu-option="unit_identity"/, 'Action panel must include unit identity');
-assert.match(prehistory, /Unit ID:.*serverId/s, 'Action panel identity must use authoritative serverId');
+assert.match(prehistory, /vocabularyText\('unit\.id',[\s\S]*?serverId/s,
+    'Action panel identity must pass authoritative serverId to vocabulary');
 assert.match(prehistory, /drawCommandPathPreview\(coord\)[\s\S]*?drawGotoPreview/,
     'Goto command mode must use the non-mutating realtime preview renderer');
 const serverGame = fs.readFileSync('server_game.js', 'utf8');
-assert.match(serverGame, /atomic_movement_rejected|showServerErrorPopup/,
-    'server turn failures must be routed to the immediate client popup');
+assert.match(serverGame, /atomic_movement_rejected|handleServerError/,
+    'server turn failures must be routed to report-only client handling');
 assert.match(serverGame, /applyRejectedMovements\(submission\.playerId, result\.rejected_movements/,
     'individually rejected movements must clear their client-owned routes');
 assert.match(serverGame, /isTerminalBuildError[\s\S]*clearRejectedWorkerBuild/,
     'terminal build conflicts must clear the Worker build state');
-assert.match(serverGame, /window\.alert\(lines\.join/,
-    'the movement rejection popup must be visible without opening a debug menu');
+assert.doesNotMatch(serverGame, /window\.alert|showServerErrorPopup/,
+    'server and action errors must not open blocking browser popups');
 assert.match(serverGame, /action: 'report_cli_error'/,
     'client request failures must be sent to the dedicated report endpoint');
-assert.match(serverGame, /async showServerErrorPopup\(error\)[\s\S]*await this\.reportClientError\(error\)[\s\S]*window\.alert/,
-    'the client report must finish or time out before the error popup is shown');
+assert.match(serverGame, /async handleServerError\(error\)[\s\S]*await this\.reportClientError\(error\)[\s\S]*this\.log/,
+    'handled server errors must be reported and retained only in the client log');
 const phpServer = fs.readFileSync('server_game.php', 'utf8');
 assert.match(phpServer, /completeReadyProductionsForPlayer[\s\S]*\(\$result\['status'\] \?\? ''\) === 'PAUSE'/,
     'the batched server completion pass must pause full-stack City production');

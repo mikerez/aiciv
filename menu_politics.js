@@ -16,7 +16,7 @@ function createPoliticsMenu()
   panel.style.padding = '14px';
   panel.style.overflow = 'auto';
   panel.style.fontFamily = 'Courier New, monospace';
-  panel.innerHTML = '<div style="color:darkblue;font-size:22px;font-weight:bold;">Politics</div>';
+  panel.innerHTML = '<div style="color:darkblue;font-size:22px;font-weight:bold;">' + vocabularyText('menu.politics') + '</div>';
   panel.addEventListener('mousedown', function(event) { event.stopPropagation(); });
   panel.addEventListener('click', function(event) { event.stopPropagation(); });
   document.body.appendChild(panel);

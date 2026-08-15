@@ -6,7 +6,7 @@ const GAME_AUTH_PLAYER_COOKIE = 'aiciv_player_id';
 const GAME_AUTH_DEVICE_COOKIE = 'aiciv_device_id';
 const GAME_AUTH_QUERY_PARAMETER = 'session';
 const GAME_AUTH_DEVICE_QUERY_PARAMETER = 'device';
-const GAME_AUTH_COOKIE_PATH = '/game/';
+const GAME_AUTH_COOKIE_PATH = '/';
 
 function gameAuthValidTokenFormat(string $token): bool
 {
@@ -105,7 +105,12 @@ function gameAuthClearCookies(): void
 
 function gameAuthEntryDescription(string $token, string $expiresAt, string $deviceId = ''): array
 {
-    $entryUrl = 'https://softmaximite.com/game/?'
+    $host = isset($_SERVER['HTTP_HOST']) && is_string($_SERVER['HTTP_HOST'])
+        ? trim($_SERVER['HTTP_HOST']) : '';
+    if ($host === '' || preg_match('/^[A-Za-z0-9.\[\]:-]+$/D', $host) !== 1) {
+        $host = '13.60.223.71';
+    }
+    $entryUrl = 'https://' . $host . GAME_AUTH_COOKIE_PATH . '?'
         . GAME_AUTH_QUERY_PARAMETER . '=' . rawurlencode($token);
     if ($deviceId !== '') {
         $entryUrl .= '&' . GAME_AUTH_DEVICE_QUERY_PARAMETER . '=' . rawurlencode($deviceId);

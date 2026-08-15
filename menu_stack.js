@@ -34,8 +34,8 @@ const _unit_stack_menu = new class
         var button = document.createElement('button');
         button.id = 'unitStackButton';
         button.type = 'button';
-        button.title = 'Units on selected tile';
-        button.setAttribute('aria-label', 'Units on selected tile');
+        button.title = vocabularyText('unit.units_at', {i: '', j: ''}).replace(/[, ]+$/, '');
+        button.setAttribute('aria-label', vocabularyText('unit.units_at', {i: '', j: ''}).replace(/[, ]+$/, ''));
         button.setAttribute('aria-expanded', 'false');
         button.style.position = 'fixed';
         button.style.left = '12px';
@@ -81,7 +81,7 @@ const _unit_stack_menu = new class
 
     isVisibleUnit(unit)
     {
-        return !!(unit && unit.coord && !unit.hiddenOnMap
+        return !!(unit && unit.coord && !unit.hiddenOnMap && !unit.outsideMapWindow
             && (unit.health == undefined || Number(unit.health) > 0)
             && (unit.can_move || unit.type == 3));
     }
@@ -190,7 +190,7 @@ const _unit_stack_menu = new class
         if (!preserveExpanded) this.expanded = true;
         this.panel.innerHTML = '';
         var title = document.createElement('div');
-        title.textContent = 'Units at ' + Math.round(coord.i) + ', ' + Math.round(coord.j);
+        title.textContent = vocabularyText('unit.units_at', {i: Math.round(coord.i), j: Math.round(coord.j)});
         title.style.fontWeight = 'bold';
         title.style.margin = '2px 4px 7px';
         this.panel.appendChild(title);
@@ -200,8 +200,8 @@ const _unit_stack_menu = new class
         if (militaryIndices.length) {
             var selectAll = document.createElement('button');
             selectAll.type = 'button';
-            selectAll.textContent = 'Select all';
-            selectAll.title = 'Select all military units on this Tile';
+            selectAll.textContent = vocabularyText('command.select_all');
+            selectAll.title = vocabularyText('command.select_all_title');
             selectAll.style.width = '100%';
             selectAll.style.margin = '0 0 6px';
             selectAll.style.padding = '6px';
@@ -245,17 +245,18 @@ const _unit_stack_menu = new class
             button.style.background = 'rgba(255,255,255,0.76)';
             button.style.cursor = 'pointer';
             var badge = document.createElement('span');
-            badge.textContent = unit.type == 3 ? 'CITY' : (unit.name || unit.unitTypeId || 'U').substring(0, 3).toUpperCase();
+            badge.textContent = unit.type == 3 ? vocabularyText('unit.city_badge')
+                : vocabularyUnitName(unit.unitTypeId, unit.name || unit.unitTypeId || 'U').substring(0, 3).toUpperCase();
             badge.style.font = 'bold 9px Arial';
             badge.style.textAlign = 'center';
             var name = document.createElement('span');
-            name.textContent = unit.name || unit.unitTypeId || 'Unit';
+            name.textContent = vocabularyUnitName(unit.unitTypeId, unit.name || unit.unitTypeId || vocabularyText('unit.generic'));
             name.style.textAlign = 'left';
             name.style.overflow = 'hidden';
             name.style.textOverflow = 'ellipsis';
             var health = document.createElement('span');
             health.textContent = Math.round(unit.health == undefined ? 100 : unit.health);
-            health.title = 'Health';
+            health.title = vocabularyText('common.health');
             button.appendChild(badge);
             button.appendChild(name);
             button.appendChild(health);
@@ -278,7 +279,7 @@ const _unit_stack_menu = new class
             self.panel.appendChild(button);
         });
         if (this.isPhone()) {
-            this.button.textContent = 'Units (' + indices.length + ')';
+            this.button.textContent = vocabularyText('unit.units_count', {count: indices.length});
             this.button.style.display = 'block';
             this.setExpanded(this.expanded);
         }

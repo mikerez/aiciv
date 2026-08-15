@@ -26,6 +26,9 @@ const _multiplayer = new class
         this.hiddenTurnRunning = false;
         this.backgroundAiTurn = null;
         this.backgroundAiPromise = null;
+        this.backgroundAiObjectLimit = 8;
+        this.backgroundAiSubmitChunkSize = 2;
+        this.backgroundAiProcessedByTurn = {};
         this.hiddenSnapshotDepth = 0;
     }
 
@@ -247,9 +250,9 @@ const _multiplayer = new class
             gameState: _game_state,
             selection: _selection,
             terrainBits: _map_terrain_bit,
-            terrainTextures: this.cloneNumberGrid(_map_terrain_tex, 0),
-            terrainModifiers: this.cloneObjectGrid(_map_terrain_mod, {}),
-            resources: this.cloneObjectGrid(_map_resource, { type: 0, hidden: true }),
+            terrainTextures: _map_terrain_tex,
+            terrainModifiers: _map_terrain_mod,
+            resources: _map_resource,
             mapOriginI: _map_origin_i,
             mapOriginJ: _map_origin_j,
             fullDraw: _fulldraw,
@@ -273,6 +276,9 @@ const _multiplayer = new class
         _map_terrain_bit_by_user[aiId] = this.cloneNumberGrid(null, 0xFF);
         _map_resource_visibility_by_user[aiId] = this.createResourceVisibility();
         _map_terrain_bit = _map_terrain_bit_by_user[aiId];
+        _map_terrain_tex = this.cloneNumberGrid(null, 0);
+        _map_terrain_mod = this.cloneObjectGrid(null, {});
+        _map_resource = this.cloneObjectGrid(null, { type: 0, hidden: true });
         for (var i=0; i < _map_size; i++) {
             for (var j=0; j < _map_size; j++) {
                 _map_terrain_tex[i][j] = 0;
@@ -284,8 +290,8 @@ const _multiplayer = new class
 
     restoreClientContext(context)
     {
-        if (typeof _server_game != 'undefined' && _server_game.setMapWindowOrigin) {
-            _server_game.setMapWindowOrigin(context.mapOriginI, context.mapOriginJ, false);
+        if (typeof _server_game != 'undefined' && _server_game.setHiddenMapWindowOrigin) {
+            _server_game.setHiddenMapWindowOrigin(context.mapOriginI, context.mapOriginJ);
         }
         _units = context.units;
         _current_user = context.currentUser;
@@ -293,17 +299,17 @@ const _multiplayer = new class
         _game_state = context.gameState;
         _selection = context.selection;
         _map_terrain_bit = context.terrainBits;
-        this.restoreGrid(_map_terrain_tex, context.terrainTextures);
-        this.restoreGrid(_map_terrain_mod, context.terrainModifiers);
-        this.restoreGrid(_map_resource, context.resources);
-        if (_map.prepareTerrainModifierSprites) _map.prepareTerrainModifierSprites();
-        if (_map.prepareResourceSprites) _map.prepareResourceSprites();
+        _map_terrain_tex = context.terrainTextures;
+        _map_terrain_mod = context.terrainModifiers;
+        _map_resource = context.resources;
         if (typeof _current_game != 'undefined' && _current_game && _current_game.applyMenuRules) {
             _current_game.applyMenuRules();
         }
         if (typeof _economics != 'undefined') {
             _economics.updateCounters(_game_state, _current_user, 'hidden-snapshot-restore');
         }
+        // Hidden snapshots do not touch renderer preparation. Preserve the
+        // draw state so each AI object cannot trigger a full WebGL clear.
         _fulldraw = context.fullDraw;
     }
 
@@ -334,6 +340,82 @@ const _multiplayer = new class
         for (var key in state) _ai_player[key] = this.clonePlain(state[key]);
     }
 
+    sharedAiWorkerTarget(task)
+    {
+        if (!task || !task.target || task.target.i == undefined || task.target.j == undefined) return null;
+        return new Coord(Number(task.target.i)-_map_origin_i, Number(task.target.j)-_map_origin_j);
+    }
+
+    resumeSharedAiWorkerTask(k)
+    {
+        var worker = _units[k];
+        var task = worker && worker.sharedAiTask;
+        if (!worker || worker.unitTypeId != 'worker' || !task || task.kind != 'worker') return false;
+        worker.automationMode = task.mode == 'road_to' ? 'road_to' : 'automate';
+        var target = this.sharedAiWorkerTarget(task);
+        var action = task.action || null;
+        if (!target && !action) return false;
+        var atTarget = target && worker.coord.i == target.i && worker.coord.j == target.j;
+        if (atTarget && action && Number.isFinite(Number(task.turns_left))) {
+            var countdownState = action == 'irrigation' ? 'irrigate'
+                : action == 'connect_road' ? 'road' : action;
+            worker.state = countdownState;
+            worker.clientImprovementState = action == 'connect_road' ? 'road' : action;
+            worker.clientImprovementTurnsLeft = Math.max(0, Number(task.turns_left));
+            worker.automationCommandAction = worker.clientImprovementState;
+            worker.automationCommandTarget = new Coord(target.i, target.j);
+            return true;
+        }
+        if (atTarget && action) {
+            var buildAction = action == 'irrigation' ? 'irrigate'
+                : action == 'connect_road' ? 'road' : action;
+            return !!(_current_game.startAutomatedWorkerAction
+                && _current_game.startAutomatedWorkerAction(k, buildAction));
+        }
+        if (!target || target.i < 0 || target.j < 0 || target.i >= _map_size || target.j >= _map_size) {
+            return false;
+        }
+        var path = action == 'connect_road' && _current_game.buildRoadPath
+            ? _current_game.buildRoadPath(k, target) : _current_game.buildPath(k, target);
+        if (!path || !path.length) return false;
+        worker.automateBuild = action;
+        worker.automateTarget = new Coord(target.i, target.j);
+        _current_game.assignPath(k, path);
+        if (action == 'connect_road') {
+            worker.state = 'road_to';
+            worker.automationMode = 'road_to';
+            worker.resumeAutomationAfterRoadTo = true;
+            if (_current_game.prepareRoadToTurn) _current_game.prepareRoadToTurn(k);
+        }
+        return true;
+    }
+
+    sharedAiWorkerTask(unit, submission)
+    {
+        if (!unit || unit.unitTypeId != 'worker') return null;
+        var completedBuild = (submission.actions || []).some(function(action) {
+            return action && action.type == 'build' && Number(action.worker_unit_id) == Number(unit.serverId);
+        });
+        if (completedBuild) return null;
+        var target = unit.automateTarget || unit.automationCommandTarget
+            || unit.roadToFollowupTarget || unit.gotoCoord || null;
+        var action = unit.automationCommandAction || unit.automateBuild
+            || _server_game.activeWorkerModifier(unit) || null;
+        if (action == 'irrigate') action = 'irrigation';
+        var task = {
+            kind: 'worker',
+            mode: unit.automationMode == 'road_to' ? 'road_to' : 'automate',
+            state: unit.state || 'automate',
+            action: action,
+            target: target ? {i:Number(target.i)+_map_origin_i, j:Number(target.j)+_map_origin_j} : null,
+            turns_left: Number.isFinite(Number(unit.clientImprovementTurnsLeft))
+                ? Math.max(0, Number(unit.clientImprovementTurnsLeft)) : null,
+            city_id: unit.lastAutomationDecision && unit.lastAutomationDecision.city_id != undefined
+                ? unit.lastAutomationDecision.city_id : null,
+        };
+        return task;
+    }
+
     withHiddenSnapshot(aiId, snapshot, callback)
     {
         var context = this.captureClientContext();
@@ -345,6 +427,7 @@ const _multiplayer = new class
             _server_game.applyFullSnapshot(aiId, snapshot, {
                 pruneForeignUnits: false,
                 preserveExistingForeignUnits: true,
+                reconcileClientRoutes: false,
             });
             return callback();
         }
@@ -355,34 +438,166 @@ const _multiplayer = new class
         }
     }
 
+    workerHasPersistentRoadTo(unit)
+    {
+        return !!(unit && unit.unitTypeId == 'worker'
+            && (unit.automationMode == 'road_to' || unit.state == 'road_to')
+            && (unit.roadToBuilding || unit.roadToDestination
+                || (unit.gotoPath && unit.gotoPath.length) || unit.gotoCoord != undefined
+                || unit.pendingImmediateBuild
+                || Number.isFinite(Number(unit.clientImprovementTurnsLeft))));
+    }
+
     async prepareAiUnitOrder(aiId, snapshot, unitId, strategyFocus)
     {
         var stage = this.withHiddenSnapshot(aiId, snapshot, function() {
+            var found = _server_game.findUnit(aiId, Number(unitId), null);
+            var unit = found && found.unit;
+            if (!unit) return {hasUnit: false};
+            if (unit.type == 3) {
+                return {
+                    kind: 'city',
+                    input: _ai_player.buildEconomicsInputForCity(
+                        aiId, unitId, _ai_player.lastStrategyProductionDemands
+                    ),
+                    adapter: _multiplayer.captureAiAdapterState(),
+                    hasUnit: true,
+                };
+            }
             return {
+                kind: unit.unitTypeId == 'settlers' ? 'settler'
+                    : unit.unitTypeId == 'worker' ? 'worker'
+                        : unit.unitTypeId == 'explorer' ? 'explorer' : 'action',
                 input: _ai_player.buildActionInputForUnit(aiId, unitId, strategyFocus),
                 adapter: _multiplayer.captureAiAdapterState(),
                 hasUnit: _ai_player.lastActionUnitIndices.length > 0,
             };
         });
         if (!stage.hasUnit) return null;
-        var output = await _ai_player.inferBackground('action', stage.input);
+        var output = null;
+        if (stage.kind == 'action' || stage.kind == 'city') {
+            output = await _ai_player.inferBackground(stage.kind == 'city' ? 'economics' : 'action', stage.input);
+        }
         return this.withHiddenSnapshot(aiId, snapshot, function() {
             _multiplayer.restoreAiAdapterState(stage.adapter);
             var found = _server_game.findUnit(aiId, Number(unitId), null);
-            var automatic = found && found.unit
-                && ['automate', 'road_to', 'explore', 'patrol'].indexOf(
-                    found.unit.automationMode || found.unit.state
-                ) != -1;
-            if (!automatic) _ai_player.applyActionOutput(output, aiId);
-            if (found && found.unit) _multiplayer.routeExcessMilitaryToStrategicResource(found.unit);
-            return _server_game.captureTurn(aiId, [unitId]);
+            if (!found || !found.unit) return null;
+            var unit = found.unit;
+            var decision = {kind: stage.kind, command: 'hold'};
+            if (stage.kind == 'city') {
+                var economics = _ai_player.applyEconomicsOutput(output, aiId);
+                if (!unit.production) _ai_player.applyDevelopmentProductionPolicies(aiId);
+                decision.command = unit.production ? 'produce_' + unit.production.unitTypeId : 'idle';
+                decision.model = economics;
+            }
+            else if (stage.kind == 'settler') {
+                var settlerPolicy = _ai_player.applySettlerExpansionPolicy(found.index, aiId);
+                decision = Object.assign({kind: 'settler'}, settlerPolicy);
+            }
+            else if (stage.kind == 'worker') {
+                var persistentRoadTo = this.workerHasPersistentRoadTo(unit);
+                if (persistentRoadTo) {
+                    unit.automationMode = 'road_to';
+                    unit.state = 'road_to';
+                    if (_current_game.prepareRoadToTurn) {
+                        _current_game.prepareRoadToTurn(found.index);
+                    }
+                }
+                else {
+                    unit.automationMode = 'automate';
+                }
+                if (!persistentRoadTo && !_ai_player.civilianPolicyHasActiveTask(unit)) {
+                    unit.state = 'automate';
+                    if (!_multiplayer.resumeSharedAiWorkerTask(found.index)
+                        && _current_game.autoRouteAutomate) _current_game.autoRouteAutomate(found.index);
+                }
+                decision.command = persistentRoadTo
+                    ? (unit.roadToBuilding ? 'build_road' : 'road_to')
+                    : unit.automateBuild || (unit.gotoPath && unit.gotoPath.length ? 'goto' : 'automate');
+            }
+            else if (stage.kind == 'explorer') {
+                unit.automationMode = 'explore';
+                if (!_ai_player.civilianPolicyHasActiveTask(unit)) {
+                    unit.state = 'explore';
+                    if (_current_game.autoRouteExplore) _current_game.autoRouteExplore(found.index);
+                }
+                decision.command = unit.gotoPath && unit.gotoPath.length ? 'goto' : 'explore';
+            }
+            else {
+                decision.model = _ai_player.applyActionOutput(output, aiId);
+            }
+            if (unit.type == 2) _multiplayer.routeExcessMilitaryToStrategicResource(unit);
+            var submission = _server_game.captureTurn(aiId, [unitId]);
+            var command = submission.commands && submission.commands[0];
+            if (command && (stage.kind == 'settler' || stage.kind == 'city')) {
+                command.payload = command.payload || {};
+                command.payload.ai_development_decision = {
+                    player_id: aiId,
+                    unit_id: unit.serverId || Number(unitId),
+                    unit_type_id: unit.unitTypeId,
+                    state: unit.state,
+                    command: command.command,
+                    decision: decision,
+                    queued_actions: (submission.actions || []).map(function(action) {
+                        return {type: action.type, unit_type_id: action.unit_type_id || null};
+                    }),
+                    position: unit.worldCoord || unit.coord,
+                };
+            }
+            if (unit.unitTypeId == 'worker'
+                && ['automate', 'road_to'].indexOf(unit.automationMode || unit.state) != -1) {
+                if (command) {
+                    command.payload = command.payload || {};
+                    command.payload.shared_ai_task = _multiplayer.sharedAiWorkerTask(unit, submission);
+                    command.payload.ai_worker_decision = {
+                        player_id: aiId,
+                        unit_id: unit.serverId || Number(unitId),
+                        mode: unit.automationMode || unit.state,
+                        state: unit.state,
+                        command: command.command,
+                        path: command.path || [],
+                        decision: unit.lastAutomationDecision || {
+                            choice: unit.roadToBuilding ? 'building_road'
+                                : unit.automateBuild ? 'continuing_' + unit.automateBuild
+                                    : unit.gotoPath && unit.gotoPath.length
+                                        ? 'continuing_route' : 'idle',
+                            action: unit.automateBuild || unit.automationCommandAction || null,
+                            target: unit.automateTarget || unit.automationCommandTarget
+                                || unit.gotoCoord || null,
+                            path_length: unit.gotoPath ? unit.gotoPath.length : 0,
+                        },
+                    };
+                }
+            }
+            return submission;
         });
     }
 
     routeExcessMilitaryToStrategicResource(unit)
     {
-        if (!unit || unit.type != 2 || unit.guardResource || !unit.coord
+        if (!unit || unit.type != 2 || !unit.coord
             || typeof _resource_types == 'undefined' || typeof _current_game == 'undefined') return false;
+        if (unit.guardResource) {
+            var guardTarget = unit.guardResource;
+            var guardDistance = Math.max(
+                Math.abs(unit.coord.i-guardTarget.i), Math.abs(unit.coord.j-guardTarget.j)
+            );
+            if (guardDistance <= 1) {
+                unit.state = 'fortified';
+                unit.gotoPath = [];
+                unit.gotoCoord = null;
+                return true;
+            }
+            var guardIndex = _units.indexOf(unit);
+            if (guardIndex < 0) return false;
+            var guardPath = _current_game.buildPath(
+                guardIndex, new Coord(guardTarget.i, guardTarget.j)
+            );
+            if (!guardPath.length) return false;
+            _current_game.assignPath(guardIndex, guardPath);
+            unit.state = 'ready';
+            return true;
+        }
         var strategicIds = { copper: true, iron: true, gold: true, gems: true, diamonds: true };
         var best = null;
         for (var i=0; i<_map_size; i++) {
@@ -416,8 +631,10 @@ const _multiplayer = new class
         await _ai_player.ensureBackgroundModelsLoaded();
         var snapshot = null;
         var batches = 0;
+        var processed = this.backgroundAiProcessedByTurn[expectedTurn] || 0;
         while (_server_game.serverTurn == expectedTurn
-            && !_turn_in_progress && Date.now() + 350 < _server_game.deadlineAt) {
+            && !_turn_in_progress && Date.now() + 1500 < _server_game.deadlineAt) {
+            if (processed >= this.backgroundAiObjectLimit) break;
             // Every lease can come from a different 100x100 world sector.
             var batch = await _server_game.claimAiBatch(true);
             if (batch.turn != expectedTurn || !batch.unit_ids || !batch.unit_ids.length) break;
@@ -425,31 +642,37 @@ const _multiplayer = new class
             if (!snapshot) break;
             aiId = Number(batch.ai_player_id);
             this.hiddenAiUserId = aiId;
-            var commands = [];
-            var actions = [];
+            var batchSubmission = {commands: [], actions: []};
+            var submitChunk = async function() {
+                if (!batchSubmission.commands.length && !batchSubmission.actions.length) return true;
+                var response = await _server_game.submitAiBatch(batch, batchSubmission);
+                batchSubmission = {commands: [], actions: []};
+                return !response || response.accepted !== false;
+            };
             for (var n=0; n < batch.unit_ids.length; n++) {
-                if (_server_game.serverTurn != expectedTurn || _turn_in_progress) break;
+                if (_server_game.serverTurn != expectedTurn
+                    || _turn_in_progress || Date.now() + 1500 >= _server_game.deadlineAt
+                    || processed >= this.backgroundAiObjectLimit) break;
+                processed++;
+                this.backgroundAiProcessedByTurn[expectedTurn] = processed;
                 var submission = await this.prepareAiUnitOrder(
                     aiId, snapshot, batch.unit_ids[n], _ai_player.lastStrategyMilitaryFocus
                 );
                 if (!submission) continue;
-                commands = commands.concat(submission.commands || []);
-                actions = actions.concat(submission.actions || []);
-                // Stream small chunks so useful work reaches a six-second turn
-                // even when eight Action inferences cannot all finish in time.
-                if (commands.length >= 2) {
-                    await _server_game.submitAiBatch(batch, { commands: commands, actions: actions });
-                    commands = [];
-                    actions = [];
+                Array.prototype.push.apply(batchSubmission.commands, submission.commands || []);
+                Array.prototype.push.apply(batchSubmission.actions, submission.actions || []);
+                if (batchSubmission.commands.length >= this.backgroundAiSubmitChunkSize
+                    || Date.now() + 1500 >= _server_game.deadlineAt) {
+                    if (!await submitChunk()) break;
                 }
+                // Yield between neural decisions so map rendering and input stay responsive.
+                await new Promise(function(resolve) { setTimeout(resolve, 0); });
             }
-            if (commands.length || actions.length) {
-                await _server_game.submitAiBatch(batch, { commands: commands, actions: actions });
-            }
+            await submitChunk();
             batches++;
             await new Promise(function(resolve) { setTimeout(resolve, 0); });
         }
-        return { batches: batches };
+        return { batches: batches, objects: processed };
     }
 
     startBackgroundAiTurn(expectedTurn)
@@ -457,16 +680,24 @@ const _multiplayer = new class
         var aiId = this.hiddenAiUserId;
         if (aiId == null || typeof _ai_player == 'undefined') return Promise.resolve(null);
         if (this.backgroundAiPromise && this.backgroundAiTurn == expectedTurn) return this.backgroundAiPromise;
+        if (this.backgroundAiTurn != expectedTurn) {
+            this.backgroundAiProcessedByTurn = {};
+            this.backgroundAiProcessedByTurn[expectedTurn] = 0;
+        }
         this.backgroundAiTurn = expectedTurn;
         this.hiddenTurnRunning = true;
         var self = this;
-        this.backgroundAiPromise = this.contributeAiBatches(expectedTurn)
+        var promise = this.contributeAiBatches(expectedTurn)
             .catch(function(error) {
                 _server_game.log('Shared AI contribution failed: ' + error.message);
                 return null;
             })
-            .finally(function() { self.hiddenTurnRunning = false; });
-        return this.backgroundAiPromise;
+            .finally(function() {
+                self.hiddenTurnRunning = false;
+                if (self.backgroundAiPromise === promise) self.backgroundAiPromise = null;
+            });
+        this.backgroundAiPromise = promise;
+        return promise;
     }
 
     async runHiddenAiTurn(expectedTurn)
@@ -498,7 +729,7 @@ const _multiplayer = new class
         }
         var button = document.getElementById('endTurnButton');
         if (button) {
-            button.textContent = 'Preparing AI User ' + _current_user + '...';
+            button.textContent = vocabularyText('message.preparing_ai', {id: _current_user});
         }
         try {
             var userId = _current_user;
@@ -524,7 +755,7 @@ const _multiplayer = new class
                 console.error('AI turn failed for user ' + _current_user, error);
             }
             if (button) {
-                button.textContent = 'AI User ' + _current_user + ' not ready';
+                button.textContent = vocabularyText('message.ai_not_ready', {id: _current_user});
             }
             if (typeof appendConsoleLog === 'function') {
                 appendConsoleLog('AI user ' + _current_user + ' failed: ' + error.message);
@@ -618,13 +849,16 @@ const _multiplayer = new class
                 remainingSeconds = _server_game.lastRemainingSeconds;
             }
             var label = _authenticated_player_id == null
-                ? ((_user_types[_current_user] == 'ai' ? 'End AI User ' : 'End User ') + _current_user + ' Turn')
-                : 'End Turn';
+                ? vocabularyText(_user_types[_current_user] == 'ai' ? 'turn.end_ai_user' : 'turn.end_user', {id: _current_user})
+                : vocabularyText('hud.end_turn');
             if (typeof _server_game !== 'undefined' && _server_game.isAwaitingResolution(_current_user)) {
-                label = 'Waiting';
+                label = vocabularyText('common.waiting');
                 button.disabled = true;
             }
-            button.textContent = label + ' (' + Math.max(0, remainingSeconds == undefined ? 5 : remainingSeconds) + 's)';
+            button.textContent = vocabularyText('hud.turn_seconds', {
+                action: label,
+                seconds: Math.max(0, remainingSeconds == undefined ? 5 : remainingSeconds)
+            });
         }
     }
 }();
