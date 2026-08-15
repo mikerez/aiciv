@@ -53,6 +53,8 @@ const _screen = new class
     {
         this.textureSources = {};
         this.textureDimensions = {};
+        this.textureRenderDimensions = {};
+        this.textureCacheVersions = {};
         this.contextLost = false;
         // we need to put this persistent vars somewhere
 
@@ -144,7 +146,18 @@ const _screen = new class
             }
             else if (ready) ready();
         }
-        image.src = "images/" + url;
+        var cacheVersion = this.textureCacheVersions[id];
+        image.src = "images/" + url + (cacheVersion ? "?v=" + encodeURIComponent(cacheVersion) : "");
+    }
+
+    setTextureRenderDimensions(id, width, height)
+    {
+        this.textureRenderDimensions[id] = {width: width, height: height};
+    }
+
+    setTextureCacheVersion(id, version)
+    {
+        this.textureCacheVersions[id] = version;
     }
 
     restoreContext()
@@ -400,7 +413,9 @@ const _screen = new class
 
     drawTerrainSupertile(x, y, type, zoom, brightness)
     {
-        var dimensions = this.textureDimensions[type] || {width: 420, height: 310};
+        var dimensions = this.textureRenderDimensions[type]
+            || this.textureDimensions[type]
+            || {width: 420, height: 310};
         var terrainWidth = Math.max(420, dimensions.width);
         var terrainHeight = Math.max(310, dimensions.height);
         var positions = [
