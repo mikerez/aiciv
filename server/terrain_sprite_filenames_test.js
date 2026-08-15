@@ -17,6 +17,16 @@ for (const match of terrainSprites) {
     assert.equal(filenameBits, textureBits,
         `${filename} must match its registered binary texture ID`);
     assert.equal(fs.existsSync('images/' + filename), true, `${filename} must exist`);
+    if (textureBits[0] === '1') {
+        const terrainType = parseInt(textureBits.slice(4), 2);
+        if (terrainType === 4 || terrainType === 5) {
+            assert.match(filename, /_has_water-[01]{8}\.png$/,
+                `${filename} must describe A as has_water on hills or mountains/stone`);
+        } else {
+            assert.match(filename, /_alt-[01]{8}\.png$/,
+                `${filename} must describe A as alt on ordinary terrain`);
+        }
+    }
     filenames.add(filename);
     textureIds.add(textureBits);
 }

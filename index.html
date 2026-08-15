@@ -514,7 +514,7 @@
     <script src="menu_civilizations.js?v=20260812a"></script>
     <script src="menu_costs.js?v=20260815a"></script>
     <script src="map.js?v=20260815a"></script>
-    <script src="screen.js?v=20260815b"></script>
+    <script src="screen.js?v=20260815c"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -571,8 +571,8 @@
         _screen.loadTexture('sand_depth0_supertile-01000001.png', 0b01000001);
         _screen.loadTexture('sand_dune_depth1_supertile-01010001.png', 0b01010001);
         _screen.loadTexture('sand_depth2_supertile-01100001.png', 0b01100001);
-        _screen.loadTexture('sand_depth2_water_source-10100001.png', 0b10100001);
-        _screen.loadTexture('sand_depth2_supertile_water_source-11100001.png', 0b11100001);
+        _screen.loadTexture('sand_depth2_alt-10100001.png', 0b10100001);
+        _screen.loadTexture('sand_depth2_supertile_alt-11100001.png', 0b11100001);
         _screen.loadTexture('grass_depth0-00000010.png', 0b00000010);
         _screen.loadTexture('grass_wet_depth1-00010010.png', 0b00010010);
         _screen.loadTexture('grass_offroad_depth2-00100010.png', 0b00100010);
@@ -588,8 +588,8 @@
         _screen.loadTexture('hills_clear_height0_supertile-01000100.png', 0b01000100);
         _screen.loadTexture('hills_forest_height1_supertile-01010100.png', 0b01010100);
         _screen.loadTexture('hills_clear_height2_supertile-01100100.png', 0b01100100);
-        _screen.loadTexture('hills_clear_height0_supertile_water_source-11000100.png', 0b11000100);
-        _screen.loadTexture('hills_forest_height1_supertile_water_source-11010100.png', 0b11010100);
+        _screen.loadTexture('hills_clear_height0_supertile_has_water-11000100.png', 0b11000100);
+        _screen.loadTexture('hills_forest_height1_supertile_has_water-11010100.png', 0b11010100);
         _screen.loadTexture('mountains_height0-00000101.png', 0b00000101);
         _screen.loadTexture('mountains_height1-00010101.png', 0b00010101);
         _screen.loadTexture('mountains_height2-00100101.png', 0b00100101);

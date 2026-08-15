@@ -52,6 +52,7 @@ const _screen = new class
     constructor()
     {
         this.textureSources = {};
+        this.textureDimensions = {};
         this.contextLost = false;
         // we need to put this persistent vars somewhere
 
@@ -113,12 +114,14 @@ const _screen = new class
     loadTexture(url, id, fallbackUrl, ready)
     {
         this.textureSources[id] = {url: url, id: id, fallbackUrl: fallbackUrl};
+        var self = this;
         function onLoadImage(image, texture) {
             const internalFormat = _gl.RGBA;
             const srcFormat = _gl.RGBA;
             const srcType = _gl.UNSIGNED_BYTE;
             _gl.bindTexture(_gl.TEXTURE_2D, texture);
             _gl.texImage2D(_gl.TEXTURE_2D, 0, internalFormat, srcFormat, srcType, image);
+            self.textureDimensions[id] = {width: image.width, height: image.height};
 //                    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
 //                        _gl.generateMipmap(_gl.TEXTURE_2D);
 //                    } else {
@@ -397,11 +400,14 @@ const _screen = new class
 
     drawTerrainSupertile(x, y, type, zoom, brightness)
     {
+        var dimensions = this.textureDimensions[type] || {width: 420, height: 310};
+        var terrainWidth = Math.max(420, dimensions.width);
+        var terrainHeight = Math.max(310, dimensions.height);
         var positions = [
-            1/_canvas.width*(-420/zoom+x),  1/_canvas.height*(310/zoom-y),
-            1/_canvas.width*(-420/zoom+x), 1/_canvas.height*(-310/zoom-y),
-            1/_canvas.width*(420/zoom+x),  1/_canvas.height*(310/zoom-y),
-            1/_canvas.width*(420/zoom+x), 1/_canvas.height*(-310/zoom-y),
+            1/_canvas.width*(-terrainWidth/zoom+x),  1/_canvas.height*(terrainHeight/zoom-y),
+            1/_canvas.width*(-terrainWidth/zoom+x), 1/_canvas.height*(-terrainHeight/zoom-y),
+            1/_canvas.width*(terrainWidth/zoom+x),  1/_canvas.height*(terrainHeight/zoom-y),
+            1/_canvas.width*(terrainWidth/zoom+x), 1/_canvas.height*(-terrainHeight/zoom-y),
         ];
         this.setPositionBuffer(positions);
 
