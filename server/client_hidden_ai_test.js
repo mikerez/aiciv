@@ -16,6 +16,8 @@ vm.createContext(sandbox);
 vm.runInContext(`
 class GameState {}
 const _map_size = 2;
+var _map_origin_i = 0;
+var _map_origin_j = 0;
 const _map_terrain_tex = [[11, 12], [13, 14]];
 var _map_terrain_bit = [[101, 102], [103, 104]];
 const _map_resource = [[{type: 1, hidden: false}, {type: 2, hidden: true}], [{type: 3, hidden: false}, {type: 4, hidden: true}]];
@@ -26,6 +28,7 @@ var _game_state_by_user = {7: new GameState()};
 var _game_state = _game_state_by_user[7];
 var _selection = 0;
 var _fulldraw = 9;
+var _turn_in_progress = false;
 var _current_game = { applyMenuRules() {} };
 var spriteRefreshes = 0;
 const _map = {
@@ -33,9 +36,11 @@ const _map = {
     prepareResourceSprites() { spriteRefreshes++; },
 };
 var submitted = null;
+var claimed = false;
 var hiddenTransitions = [];
 const _server_game = {
     serverTurn: 3,
+    deadlineAt: Date.now() + 2000,
     hiddenActions: false,
     setHiddenActions(value) { this.hiddenActions = value; hiddenTransitions.push(value); },
     async fetchFullPlayer(playerId, includeMap) {
@@ -43,7 +48,7 @@ const _server_game = {
         return {turn: 3, playerId};
     },
     applyFullSnapshot(playerId) {
-        _units_by_user[playerId] = [{team: playerId, name: 'AI settler', gotoPath: []}];
+        _units_by_user[playerId] = [{serverId:91, team: playerId, name: 'AI settler', type:0, gotoPath: []}];
         _units = _units_by_user[playerId];
         if (!_game_state_by_user[playerId]) _game_state_by_user[playerId] = new GameState();
         _game_state = _game_state_by_user[playerId];
@@ -52,7 +57,14 @@ const _server_game = {
         _map_resource[0][0] = {type: 9, hidden: false};
     },
     async waitForHiddenActions() {},
-    captureTurn(playerId) { return {playerId, turn: 3, commands: [], playerState: {}}; },
+    async claimAiBatch() {
+        if (claimed) return {turn:3, ai_player_id:91, unit_ids:[]};
+        claimed = true;
+        return {turn:3, ai_player_id:91, lease_token:'lease', unit_ids:[91], snapshot:{turn:3}};
+    },
+    async submitAiBatch(batch, submission) { submitted = {batch, submission}; return {ok:true}; },
+    findUnit() { return {unit:_units[0], index:0, list:_units}; },
+    captureTurn(playerId) { return {playerId, turn: 3, commands: [{unit_id:91, command:'hold'}], actions:[], playerState: {}}; },
     async submitTurn(submission, options) {
         submitted = {submission, options};
         return {resolved_turn: null};
@@ -71,7 +83,7 @@ const _ai_player = {
         return {focuses: [], maxMilitaryFocus: {}, maxWorkerFocus: {}, productionDemands: {military: 1}};
     },
     buildEconomicsInput() { this.lastEconomicsCityIndices = []; return new Float32Array(4); },
-    buildActionInput() { this.lastActionUnitIndices = [0]; return new Float32Array(4); },
+    buildActionInputForUnit() { this.lastActionUnitIndices = [0]; return new Float32Array(4); },
     advanceSettlerTurnCounters() {},
     async inferBackground(kind) {
         workerCalls.push(kind);
@@ -107,11 +119,8 @@ vm.runInContext(multiplayerSource, sandbox, {filename: 'multiplayer.js'});
         'worker inference must not leave the client switched to its hidden AI');
     await hiddenTurn;
 
-    assert.equal(sandbox.submitted.submission.playerId, 91);
-    assert.equal(sandbox.submitted.options.hidden, true);
-    assert.equal(sandbox.submitted.options.deferUpdates, true);
-    assert.equal(sandbox.submitted.options.deferPolling, true);
-    assert.equal(Array.from(sandbox.workerCalls).join(','), 'strategy,economics,action');
+    assert.equal(sandbox.submitted.batch.ai_player_id, 91);
+    assert.equal(Array.from(sandbox.workerCalls).join(','), 'action');
     assert.equal(vm.runInContext('_current_user', sandbox), 7);
     assert.equal(vm.runInContext('_selection', sandbox), 0);
     assert.equal(vm.runInContext('_units_by_user', sandbox), sandbox.__humanUnitsReference);

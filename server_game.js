@@ -4,6 +4,9 @@ var _server_game_secret = typeof process != 'undefined' && process.env && proces
 var _client_turn_timeout_ms = 5000;
 var _server_turn_grace_ms = 0;
 var _client_update_poll_ms = 2000;
+if (typeof _world_map_size == 'undefined') var _world_map_size = typeof _map_size == 'undefined' ? 100 : _map_size;
+if (typeof _map_origin_i == 'undefined') var _map_origin_i = 0;
+if (typeof _map_origin_j == 'undefined') var _map_origin_j = 0;
 
 const _server_game = new class
 {
@@ -22,6 +25,7 @@ const _server_game = new class
         this.initialized = false;
         this.clientUnitSequence = 1;
         this.deadlineAt = null;
+        this.deadlineFromServer = false;
         this.timerId = null;
         this.timerMode = null;
         this.timerEndTurn = null;
@@ -36,9 +40,15 @@ const _server_game = new class
         this.productionCompletionByCity = {};
         this.productionPauseUntilTurnByCity = {};
         this.healingRequestedTurnByPlayer = {};
+        this.respawnByPlayer = {};
+        this.respawnTimer = null;
         this.pendingTurnActionsByPlayer = {};
         this.nextTurnActionId = 1;
         this.lastRemainingSeconds = 5;
+        this.aiContributorKey = 'web-' + Date.now().toString(36) + '-'
+            + Math.random().toString(36).slice(2, 12);
+        this.mapWindowLoad = null;
+        this.selectedWorldBucket = null;
     }
 
     setEndTurnCallback(callback)
@@ -193,12 +203,18 @@ const _server_game = new class
     async request(action, body)
     {
         var requestBody = body || {};
-        var payload = Object.assign({
+        var defaults = {
             action: action,
             secret: _server_game_secret,
             game_id: this.gameId,
             user_id: typeof _authenticated_player_id == 'undefined' ? undefined : _authenticated_player_id,
-        }, requestBody);
+        };
+        if (this.initialized || action != 'load_full') {
+            defaults.map_origin_i = typeof _map_origin_i == 'undefined' ? 0 : _map_origin_i;
+            defaults.map_origin_j = typeof _map_origin_j == 'undefined' ? 0 : _map_origin_j;
+            defaults.map_window_size = typeof _map_size == 'undefined' ? 100 : _map_size;
+        }
+        var payload = Object.assign(defaults, requestBody);
         try {
             var response = await fetch(this.endpoint, {
                 method: 'POST',
@@ -281,7 +297,7 @@ const _server_game = new class
         catch (error) {
             if (button) {
                 button.disabled = false;
-                button.textContent = 'Log Out';
+                button.textContent = 'Log out';
             }
             this.log('Logout failed: ' + error.message);
         }
@@ -289,25 +305,123 @@ const _server_game = new class
 
     updateServerClock(result)
     {
-        if (result.map_size != undefined && result.map_size != _map_size) {
-            throw new Error('Server map size ' + result.map_size + ' does not match client map size ' + _map_size);
-        }
+        if (result.map_size != undefined) _world_map_size = Math.max(_map_size, Number(result.map_size) || _map_size);
+        if (result.map_origin) this.setMapWindowOrigin(result.map_origin.i, result.map_origin.j, true);
         if (result.turn != undefined) this.serverTurn = result.turn;
         if (result.revision != undefined) this.serverRevision = Math.max(this.serverRevision, result.revision);
-        if (result.deadline_at) {
-            var parsedDeadline = new Date(result.deadline_at).getTime() - _server_turn_grace_ms;
-            var deadlineMs = isFinite(parsedDeadline)
-                ? parsedDeadline - Date.now() - 750
-                : _client_turn_timeout_ms;
-            this.deadlineAt = Date.now() + Math.max(0, Math.min(_client_turn_timeout_ms, deadlineMs));
-        }
-        else if (result.turn_seconds_remaining != undefined && isFinite(Number(result.turn_seconds_remaining))) {
+        if (result.turn_seconds_remaining != undefined && isFinite(Number(result.turn_seconds_remaining))) {
             var remainingMs = Math.max(0, Math.min(
                 _client_turn_timeout_ms,
                 Number(result.turn_seconds_remaining) * 1000 - 750
             ));
             this.deadlineAt = Date.now() + remainingMs;
+            this.deadlineFromServer = true;
         }
+        else if (result.deadline_at) {
+            var parsedDeadline = new Date(result.deadline_at).getTime() - _server_turn_grace_ms;
+            var deadlineMs = isFinite(parsedDeadline)
+                ? parsedDeadline - Date.now() - 750
+                : _client_turn_timeout_ms;
+            this.deadlineAt = Date.now() + Math.max(0, Math.min(_client_turn_timeout_ms, deadlineMs));
+            this.deadlineFromServer = true;
+        }
+    }
+
+    worldToLocal(coord)
+    {
+        return new Coord(Number(coord.i) - _map_origin_i, Number(coord.j) - _map_origin_j);
+    }
+
+    localToWorld(coord)
+    {
+        return new Coord(Number(coord.i) + _map_origin_i, Number(coord.j) + _map_origin_j);
+    }
+
+    shiftMapMatrix(matrix, di, dj, makeDefault)
+    {
+        if (!matrix) return;
+        var old = new Array(_map_size);
+        for (var i=0; i<_map_size; i++) old[i] = matrix[i] ? matrix[i].slice() : [];
+        for (var newI=0; newI<_map_size; newI++) {
+            matrix[newI] = new Array(_map_size);
+            var oldI = newI-di;
+            for (var newJ=0; newJ<_map_size; newJ++) {
+                var oldJ = newJ-dj;
+                matrix[newI][newJ] = oldI >= 0 && oldI < _map_size && oldJ >= 0 && oldJ < _map_size
+                    && old[oldI][oldJ] !== undefined ? old[oldI][oldJ] : makeDefault();
+            }
+        }
+    }
+
+    shiftLoadedMapWindow(di, dj)
+    {
+        var shifted = [];
+        var shiftOnce = function(matrix, makeDefault) {
+            if (!matrix || shifted.indexOf(matrix) != -1) return;
+            shifted.push(matrix);
+            this.shiftMapMatrix(matrix, di, dj, makeDefault);
+        }.bind(this);
+        shiftOnce(_map_terrain_tex, function() { return 0; });
+        shiftOnce(_map_terrain_bit, function() { return 0xFF; });
+        shiftOnce(_map_resource, function() { return {type: 0, hidden: true}; });
+        shiftOnce(_map_terrain_mod, function() { return {}; });
+        for (var playerId in _map_terrain_bit_by_user) {
+            shiftOnce(_map_terrain_bit_by_user[playerId], function() { return 0xFF; });
+        }
+        for (var resourcePlayerId in _map_resource_visibility_by_user) {
+            shiftOnce(_map_resource_visibility_by_user[resourcePlayerId], function() { return false; });
+        }
+    }
+
+    setMapWindowOrigin(i, j, clearTerrain)
+    {
+        i = Math.max(0, Math.min(Math.max(0, _world_map_size-_map_size), Math.floor(Number(i || 0)/10)*10));
+        j = Math.max(0, Math.min(Math.max(0, _world_map_size-_map_size), Math.floor(Number(j || 0)/10)*10));
+        if (i == _map_origin_i && j == _map_origin_j) return false;
+        var di = _map_origin_i-i;
+        var dj = _map_origin_j-j;
+        _map_origin_i = i;
+        _map_origin_j = j;
+        if (clearTerrain !== false) this.shiftLoadedMapWindow(di, dj);
+        for (var ownerId in _units_by_user) {
+            var list = _units_by_user[ownerId] || [];
+            for (var n=0; n<list.length; n++) {
+                var unit = list[n];
+                if (unit.coord) unit.coord = new Coord(unit.coord.i+di, unit.coord.j+dj);
+                ['gotoCoord', 'automateTarget', 'guardResource', 'patrolOrigin', 'exploreTarget'].forEach(function(key) {
+                    if (unit[key] && unit[key].i != undefined && unit[key].j != undefined) {
+                        unit[key] = Object.assign({}, unit[key], {i: unit[key].i+di, j: unit[key].j+dj});
+                    }
+                });
+                if (unit.roadToFollowupTarget) {
+                    unit.roadToFollowupTarget = new Coord(
+                        unit.roadToFollowupTarget.i+di, unit.roadToFollowupTarget.j+dj
+                    );
+                }
+                if (unit.gotoPath) unit.gotoPath = unit.gotoPath.map(function(point) {
+                    return new Coord(point.i+di, point.j+dj);
+                });
+                if (unit.economy && unit.economy.citizens) {
+                    for (var c=0; c<unit.economy.citizens.length; c++) {
+                        var citizen = unit.economy.citizens[c];
+                        if (citizen && citizen.coord) {
+                            citizen.coord = new Coord(citizen.coord.i+di, citizen.coord.j+dj);
+                        }
+                    }
+                }
+                if (unit.arrivalEffect && unit.arrivalEffect.from) {
+                    unit.arrivalEffect.from = new Coord(
+                        unit.arrivalEffect.from.i+di, unit.arrivalEffect.from.j+dj
+                    );
+                }
+            }
+        }
+        return true;
+    }
+
+    mapWindowParameters()
+    {
+        return { map_origin_i: _map_origin_i, map_origin_j: _map_origin_j, map_window_size: _map_size };
     }
 
     ensureClientKey(unit, ownerId)
@@ -364,15 +478,24 @@ const _server_game = new class
             routes.push({
                 server_id: unit.serverId || null,
                 client_key: unit.serverClientKey || null,
-                origin: unit.coord ? { i: unit.coord.i, j: unit.coord.j } : null,
-                path: hasPath ? unit.gotoPath.map(function(point) { return { i: point.i, j: point.j }; }) : [],
+                world_coordinates: true,
+                origin: unit.coord ? { i: unit.coord.i + _map_origin_i, j: unit.coord.j + _map_origin_j } : null,
+                path: hasPath ? unit.gotoPath.map(function(point) {
+                    return { i: point.i + _map_origin_i, j: point.j + _map_origin_j };
+                }) : [],
                 destination: hasPath && unit.gotoCoord
-                    ? { i: unit.gotoCoord.i, j: unit.gotoCoord.j }
+                    ? { i: unit.gotoCoord.i + _map_origin_i, j: unit.gotoCoord.j + _map_origin_j }
                     : hasPath
-                        ? { i: unit.gotoPath[unit.gotoPath.length - 1].i, j: unit.gotoPath[unit.gotoPath.length - 1].j }
+                        ? { i: unit.gotoPath[unit.gotoPath.length - 1].i + _map_origin_i,
+                            j: unit.gotoPath[unit.gotoPath.length - 1].j + _map_origin_j }
                         : null,
                 automation_mode: unit.automationMode || null,
                 road_to_building: !!unit.roadToBuilding,
+                resume_automation_after_road_to: !!unit.resumeAutomationAfterRoadTo,
+                road_to_followup_action: unit.roadToFollowupAction || null,
+                road_to_followup_target: unit.roadToFollowupTarget
+                    ? {i: unit.roadToFollowupTarget.i + _map_origin_i,
+                        j: unit.roadToFollowupTarget.j + _map_origin_j} : null,
                 improvement_turns_left: hasImprovementCountdown
                     ? Math.max(0, Number(unit.clientImprovementTurnsLeft)) : null,
                 improvement_state: hasImprovementCountdown ? this.activeWorkerModifier(unit) : null,
@@ -398,6 +521,8 @@ const _server_game = new class
             gotoPath: true, gotoCoord: true, pendingServerPath: true, pendingImmediateBuild: true,
             clientImprovementTurnsLeft: true, pendingDisband: true,
             interactionIntent: true, interactionTargetOwnerId: true, attackTargetOwnerId: true,
+            resumeAutomationAfterRoadTo: true, worldCoord: true, arrivalEffect: true,
+            roadToFollowupAction: true, roadToFollowupTarget: true,
         };
         var result = {};
         for (var key in unit) {
@@ -437,9 +562,16 @@ const _server_game = new class
         };
     }
 
-    captureTurn(playerId)
+    captureTurn(playerId, selectedUnitIds)
     {
         var list = _units_by_user[playerId] || [];
+        var selected = null;
+        if (Array.isArray(selectedUnitIds)) {
+            selected = {};
+            for (var selectedIndex=0; selectedIndex < selectedUnitIds.length; selectedIndex++) {
+                selected[Number(selectedUnitIds[selectedIndex])] = true;
+            }
+        }
         if (_units === list && typeof _city_economy != 'undefined'
             && _city_economy.queueServerGrowthRequests) {
             _city_economy.queueServerGrowthRequests(this.serverTurn);
@@ -452,6 +584,7 @@ const _server_game = new class
         var commands = [];
         for (var k=0; k < list.length; k++) {
             var unit = list[k];
+            if (selected && !selected[Number(unit.serverId)]) continue;
             if (unit.pendingDisband) continue;
             var command = {
                 unit_id: unit.serverId || undefined,
@@ -466,7 +599,7 @@ const _server_game = new class
             if (unit.can_move && movementPath.length && !activeModifier) {
                 command.command = 'move';
                 command.path = movementPath.map(function(point) {
-                    return { i: point.i, j: point.j };
+                    return { i: point.i + _map_origin_i, j: point.j + _map_origin_j };
                 });
                 command.payload.client_path_source = 'client_goto_path';
                 if (unit.interactionIntent == 'attack' || unit.interactionIntent == 'coexist') {
@@ -498,7 +631,10 @@ const _server_game = new class
                     }
                     else {
                         command.command = 'set_state';
-                        command.payload = { state: unit.state };
+                        command.payload = {
+                            state: unit.state,
+                            client_improvement_turns_left: unit.clientImprovementTurnsLeft,
+                        };
                     }
                 }
                 else {
@@ -518,7 +654,7 @@ const _server_game = new class
             }
             commands.push(command);
         }
-        this.queueCityHealing(playerId);
+        if (!selected) this.queueCityHealing(playerId);
         this.saveClientRoutes(playerId);
         return {
             playerId: playerId,
@@ -531,6 +667,27 @@ const _server_game = new class
             // Production clients never bootstrap terrain or units. PHP owns both.
             bootstrap: null,
         };
+    }
+
+    async claimAiBatch(includeSnapshot)
+    {
+        return await this.request('claim_ai_batch', {
+            player_id: _authenticated_player_id,
+            client_key: this.aiContributorKey,
+            include_snapshot: !!includeSnapshot,
+        });
+    }
+
+    async submitAiBatch(batch, submission)
+    {
+        return await this.request('submit_ai_batch', {
+            player_id: _authenticated_player_id,
+            client_key: this.aiContributorKey,
+            lease_token: batch.lease_token,
+            turn: batch.turn,
+            commands: submission.commands || [],
+            actions: submission.actions || [],
+        });
     }
 
     roadMovementStepCost(from, to)
@@ -634,10 +791,19 @@ const _server_game = new class
         return null;
     }
 
+    improvementBuildTurns(modifier)
+    {
+        if (modifier == 'chop_forest') return 4;
+        if (modifier == 'farm' || modifier == 'cottage') return 5;
+        return 6;
+    }
+
     advanceImprovementCountdown(unit, modifier)
     {
         var turns = Number(unit.clientImprovementTurnsLeft);
-        if (!Number.isFinite(turns) || turns <= 0) turns = modifier == 'chop_forest' ? 4 : 2;
+        if (!Number.isFinite(turns) || turns <= 0) {
+            turns = this.improvementBuildTurns(modifier);
+        }
         unit.clientImprovementTurnsLeft = Math.max(0, turns - 1);
         return unit.clientImprovementTurnsLeft == 0;
     }
@@ -798,10 +964,27 @@ const _server_game = new class
             var actionPayload = result.result || {};
             var unitId = action.worker_unit_id || action.settler_unit_id || action.city_unit_id;
             var found = unitId ? this.findUnit(playerId, Number(unitId), null) : null;
+            var completedAutomatedWorker = found && found.unit && found.unit.unitTypeId == 'worker'
+                && (found.unit.automationMode == 'automate' || found.unit.automationMode == 'road_to');
+            var impossibleBuild = action.type == 'build'
+                && ((result.ok && actionPayload.status == 'IMPOSSIBLE') || !result.ok);
+            if (impossibleBuild && found && found.unit.automationMode == 'automate' && found.unit.coord) {
+                if (!found.unit.automationBlockedActions) found.unit.automationBlockedActions = {};
+                var blockedKey = found.unit.coord.i + ':' + found.unit.coord.j + ':' + action.building_type;
+                found.unit.automationBlockedActions[blockedKey] = (Number(this.serverTurn) || 0) + 10;
+            }
             if (action.type == 'build' && found) {
                 found.unit.pendingImmediateBuild = false;
                 if (result.ok) {
-                    if (actionPayload.tile) this.applyAuthoritativeBuildTile(actionPayload.tile);
+                    var changedTile = actionPayload.tile
+                        ? this.applyAuthoritativeBuildTile(actionPayload.tile) : null;
+                    if (changedTile && actionPayload.status != 'IMPOSSIBLE'
+                        && typeof _city_economy != 'undefined'
+                        && _city_economy.reoptimizeCitiesForTile) {
+                        _city_economy.reoptimizeCitiesForTile(
+                            changedTile.i, changedTile.j, found.unit.team
+                        );
+                    }
                     var handledRoadTo = action.building_type == 'road'
                         && typeof _current_game != 'undefined'
                         && _current_game.completeRoadToBuild
@@ -809,6 +992,12 @@ const _server_game = new class
                     if (!handledRoadTo) {
                         found.unit.state = 'ready';
                         delete found.unit.clientImprovementTurnsLeft;
+                    }
+                    if (completedAutomatedWorker) {
+                        found.unit.suppressAutomationMenu = true;
+                        var actionMenu = typeof document != 'undefined'
+                            ? document.getElementById('foreground') : null;
+                        if (actionMenu) actionMenu.style.display = 'none';
                     }
                 }
             }
@@ -860,15 +1049,20 @@ const _server_game = new class
     {
         if (!tile || tile.i == undefined || tile.j == undefined
             || typeof _map_terrain_tex == 'undefined' || typeof _map_terrain_mod == 'undefined') return false;
-        var i = Number(tile.i);
-        var j = Number(tile.j);
+        // Immediate-build payloads use world coordinates, unlike landscape
+        // update payloads whose i/j fields are already relative to the window.
+        var worldI = Number(tile.world_i == undefined ? tile.i : tile.world_i);
+        var worldJ = Number(tile.world_j == undefined ? tile.j : tile.world_j);
+        var local = this.worldToLocal({i: worldI, j: worldJ});
+        var i = local.i;
+        var j = local.j;
         if (i < 0 || i >= _map_size || j < 0 || j >= _map_size) return false;
         _map_terrain_tex[i][j] = Number(tile.terrain_tex);
         _map_terrain_mod[i][j] = Object.assign({}, tile.modifiers || {});
         if (typeof _map != 'undefined' && _map.prepareTerrainModifierSprites) {
             _map.prepareTerrainModifierSprites();
         }
-        return true;
+        return local;
     }
 
     buildImprovement(worker, modifier)
@@ -940,7 +1134,7 @@ const _server_game = new class
     optimizeCity(city, optimization)
     {
         if (!city || !city.serverId) return Promise.reject(new Error('City has no authoritative server id'));
-        if (['food', 'production', 'gold'].indexOf(optimization) == -1) {
+        if (['food', 'production', 'gold', 'balanced'].indexOf(optimization) == -1) {
             return Promise.reject(new Error('Unsupported City optimization'));
         }
         this.queueTurnAction(city.team, 'optimize_city', {
@@ -996,6 +1190,7 @@ const _server_game = new class
         this.finishAwaitingTurn(playerId, result.turn);
         this.applyLandscapeUpdates(playerId, result.tiles || []);
         this.landscapeRevisionByPlayer[playerId] = result.revision;
+        this.applyRespawnStatus(playerId, result, options.hidden);
         if (!options.hidden) {
             if (typeof _game != 'undefined' && _game.redrawControlZones) {
                 _game.redrawControlZones();
@@ -1018,7 +1213,7 @@ const _server_game = new class
         // The waiting countdown and playable-turn countdown share timerId. Stop
         // the old owner before exposing the resolved turn, otherwise it can render
         // the deleted pending turn as NaN and expire without starting a new turn.
-        this.stopAwaitingCountdown(true);
+        this.stopAwaitingCountdown(this.deadlineFromServer);
         if (this.pollIds[playerId]) {
             clearTimeout(this.pollIds[playerId]);
             delete this.pollIds[playerId];
@@ -1043,7 +1238,10 @@ const _server_game = new class
         if (this.timerId) clearInterval(this.timerId);
         this.timerId = null;
         this.timerMode = null;
-        if (!preserveDeadline) this.deadlineAt = null;
+        if (!preserveDeadline) {
+            this.deadlineAt = null;
+            this.deadlineFromServer = false;
+        }
     }
 
     updateWaitingUi(playerId)
@@ -1061,6 +1259,7 @@ const _server_game = new class
     {
         this.stopTurnTimer(false);
         this.deadlineAt = Date.now() + _client_turn_timeout_ms;
+        this.deadlineFromServer = false;
         this.timerMode = 'waiting';
         var self = this;
         var update = function() {
@@ -1106,6 +1305,61 @@ const _server_game = new class
         return result;
     }
 
+    mapWindowTargetForWorld(world)
+    {
+        var localI = Number(world.i)-_map_origin_i;
+        var localJ = Number(world.j)-_map_origin_j;
+        var outside = localI < 0 || localI >= _map_size || localJ < 0 || localJ >= _map_size;
+        var nearIMin = localI < 10 && _map_origin_i > 0;
+        var nearIMax = localI >= _map_size-10 && _map_origin_i+_map_size < _world_map_size;
+        var nearJMin = localJ < 10 && _map_origin_j > 0;
+        var nearJMax = localJ >= _map_size-10 && _map_origin_j+_map_size < _world_map_size;
+        if (!outside && !nearIMin && !nearIMax && !nearJMin && !nearJMax) return null;
+        var targetI = _map_origin_i;
+        var targetJ = _map_origin_j;
+        if (nearIMin) targetI -= 10;
+        else if (nearIMax) targetI += 10;
+        if (nearJMin) targetJ -= 10;
+        else if (nearJMax) targetJ += 10;
+        if (localI < 0 || localI >= _map_size) targetI = Number(world.i)-50;
+        if (localJ < 0 || localJ >= _map_size) targetJ = Number(world.j)-50;
+        targetI = Math.max(0, Math.min(_world_map_size-_map_size, Math.floor(targetI/10)*10));
+        targetJ = Math.max(0, Math.min(_world_map_size-_map_size, Math.floor(targetJ/10)*10));
+        return targetI == _map_origin_i && targetJ == _map_origin_j ? null : {i: targetI, j: targetJ};
+    }
+
+    ensureMapWindowForSelectedUnit()
+    {
+        if (this.hiddenActions || typeof _selection == 'undefined' || _selection < 0
+            || !_units[_selection] || !_units[_selection].worldCoord || this.mapWindowLoad) return this.mapWindowLoad;
+        var world = _units[_selection].worldCoord;
+        var bucket = Math.floor(world.i/10) + ':' + Math.floor(world.j/10);
+        if (bucket == this.selectedWorldBucket
+            && world.i >= _map_origin_i && world.i < _map_origin_i+_map_size
+            && world.j >= _map_origin_j && world.j < _map_origin_j+_map_size) return null;
+        var target = this.mapWindowTargetForWorld(world);
+        this.selectedWorldBucket = bucket;
+        if (!target) return null;
+        var self = this;
+        var playerId = _current_user;
+        this.mapWindowLoad = this.request('load_full', {
+            player_id: playerId, include_map: true,
+            map_origin_i: target.i, map_origin_j: target.j,
+        }).then(function(result) {
+            self.applyFullSnapshot(playerId, result);
+            var selected = _selection >= 0 ? _units[_selection] : null;
+            if (selected && selected.coord && typeof _current_game != 'undefined'
+                && _current_game.centerViewOnUnit) _current_game.centerViewOnUnit(_selection);
+            if (typeof _birdsview != 'undefined' && _birdsview.build) _birdsview.build();
+            _fulldraw = 1;
+            return result;
+        }).catch(function(error) {
+            self.log('Map window load failed: ' + error.message);
+            return null;
+        }).finally(function() { self.mapWindowLoad = null; });
+        return this.mapWindowLoad;
+    }
+
     async fetchFullPlayer(playerId, includeMap)
     {
         return await this.request('load_full', {
@@ -1120,6 +1374,7 @@ const _server_game = new class
             pruneForeignUnits: true,
             preserveExistingForeignUnits: false,
         }, options || {});
+        if (result.map_origin) this.setMapWindowOrigin(result.map_origin.i, result.map_origin.j, true);
         // Reconcile into the live collections. Replacing the whole object makes
         // render callbacks briefly observe an empty world during full/AI sync.
         if (_units_by_user[playerId] == undefined) _units_by_user[playerId] = [];
@@ -1134,6 +1389,154 @@ const _server_game = new class
         this.landscapeRevisionByPlayer[playerId] = result.revision || 0;
         this.eventIdByPlayer[playerId] = result.last_event_id || 0;
         if (!this.hiddenActions) this.updateCivilizations(playerId, result.civilizations || []);
+        this.applyRespawnStatus(playerId, result, !!this.hiddenActions);
+    }
+
+    applyRespawnStatus(playerId, result, hidden)
+    {
+        if (!result || !result.respawn_required) {
+            if (this.respawnByPlayer[playerId] && !this.respawnByPlayer[playerId].force) {
+                delete this.respawnByPlayer[playerId];
+                this.updateRespawnTimer();
+            }
+            return;
+        }
+        this.beginRespawnSelection(playerId, false, !!hidden);
+    }
+
+    beginRespawnSelection(playerId, force, hidden)
+    {
+        var existing = this.respawnByPlayer[playerId];
+        if (!existing || force) {
+            this.respawnByPlayer[playerId] = {
+                availableAt: Date.now() + 5000,
+                selection: null,
+                submitting: false,
+                hidden: !!hidden,
+                force: !!force,
+            };
+        }
+        if (!hidden && playerId == _current_user) {
+            this.stopTurnTimer(false);
+            this.pendingTurnActionsByPlayer[playerId] = [];
+            var button = document.getElementById('endTurnButton');
+            if (button) button.disabled = true;
+        }
+        this.updateRespawnTimer();
+        return true;
+    }
+
+    isRespawnSelecting(playerId)
+    {
+        return !!this.respawnByPlayer[playerId];
+    }
+
+    respawnSelectionForPlayer(playerId)
+    {
+        var state = this.respawnByPlayer[playerId];
+        return state ? state.selection : null;
+    }
+
+    selectRespawnPoint(playerId, coord)
+    {
+        var state = this.respawnByPlayer[playerId];
+        if (!state || state.submitting || !coord) return false;
+        var i = Math.max(0, Math.min(_map_size - 1, Math.round(coord.i)));
+        var j = Math.max(0, Math.min(_map_size - 1, Math.round(coord.j)));
+        state.selection = {i: i, j: j};
+        state.submitting = true;
+        this.updateRespawnMessage(playerId);
+        this.submitRespawn(playerId);
+        return true;
+    }
+
+    showRespawnPrompt(visible, text)
+    {
+        if (typeof document == 'undefined') return;
+        var prompt = document.getElementById('respawnPrompt');
+        if (!prompt) return;
+        prompt.textContent = text || 'Click on minimap to select respawn point';
+        prompt.style.display = visible ? 'block' : 'none';
+    }
+
+    updateRespawnMessage(playerId)
+    {
+        var state = this.respawnByPlayer[playerId];
+        if (!state || state.hidden || playerId != _current_user) return;
+        this.showRespawnPrompt(true, state.submitting
+            ? 'Respawning civilization...'
+            : 'Click on minimap to select respawn point');
+        if (typeof _fulldraw != 'undefined') _fulldraw = 1;
+        if (typeof drawScene == 'function' && (typeof _in_drawing == 'undefined' || !_in_drawing)) drawScene(0);
+    }
+
+    updateRespawnTimer()
+    {
+        if (this.respawnTimer) clearInterval(this.respawnTimer);
+        this.respawnTimer = null;
+        var self = this;
+        var tick = function() {
+            var active = false;
+            for (var playerId in self.respawnByPlayer) {
+                var state = self.respawnByPlayer[playerId];
+                if (!state) continue;
+                self.updateRespawnMessage(Number(playerId));
+                if (state.hidden) active = true;
+                if (state.hidden && !state.submitting && Date.now() >= state.availableAt) {
+                    state.submitting = true;
+                    self.submitRespawn(Number(playerId));
+                }
+            }
+            if (!active && self.respawnTimer) {
+                clearInterval(self.respawnTimer);
+                self.respawnTimer = null;
+            }
+        };
+        tick();
+        var hasHidden = Object.keys(this.respawnByPlayer).some(function(playerId) {
+            return self.respawnByPlayer[playerId] && self.respawnByPlayer[playerId].hidden;
+        });
+        if (hasHidden) this.respawnTimer = setInterval(tick, 250);
+        if (!this.respawnByPlayer[_current_user]) this.showRespawnPrompt(false);
+    }
+
+    async submitRespawn(playerId)
+    {
+        var state = this.respawnByPlayer[playerId];
+        if (!state) return;
+        if (!state.hidden && !state.selection) {
+            state.submitting = false;
+            this.updateRespawnMessage(playerId);
+            return;
+        }
+        try {
+            var result = await this.request('respawn_player', {
+                player_id: playerId,
+                preferred_i: state.selection ? state.selection.i + _map_origin_i : null,
+                preferred_j: state.selection ? state.selection.j + _map_origin_j : null,
+                force_respawn: !!state.force,
+            });
+            this.applyFullSnapshot(playerId, result.snapshot || result);
+            delete this.respawnByPlayer[playerId];
+            this.updateRespawnTimer();
+            if (playerId == _current_user && result.spawn) {
+                this.showRespawnPrompt(false);
+                _one_turn_message = 'Civilization respawned at (' + result.spawn.i + ',' + result.spawn.j + ').';
+                var button = document.getElementById('endTurnButton');
+                if (button) button.disabled = false;
+                this.startTurnTimer(playerId, false);
+                if (typeof _birdsview != 'undefined' && _birdsview.centerViewAt) {
+                    _birdsview.centerViewAt(this.worldToLocal(result.spawn));
+                }
+            }
+        }
+        catch (error) {
+            state.submitting = false;
+            state.selection = null;
+            state.availableAt = Date.now() + 5000;
+            this.updateRespawnMessage(playerId);
+            this.log('Respawn failed: ' + error.message);
+        }
     }
 
     async applyEventUpdates(playerId, result, options)
@@ -1183,7 +1586,9 @@ const _server_game = new class
             if (snapshot.max_health != undefined) unit.maxHealth = Number(snapshot.max_health);
             if (snapshot.experience != undefined) unit.experience = Number(snapshot.experience);
             if (snapshot.i != undefined && snapshot.j != undefined) {
+                var previousCoord = unit.coord ? new Coord(unit.coord.i, unit.coord.j) : null;
                 unit.coord = new Coord(Number(snapshot.i), Number(snapshot.j));
+                this.startUnitArrivalEffect(unit, previousCoord, unit.coord);
             }
             changed = true;
             if (removeDestroyed && (snapshot.deleted || Number(snapshot.health) <= 0)) {
@@ -1195,6 +1600,24 @@ const _server_game = new class
         }
         if (changed && typeof _fulldraw != 'undefined') _fulldraw = 1;
         return changed;
+    }
+
+    startUnitArrivalEffect(unit, previousCoord, currentCoord)
+    {
+        if (!unit || !previousCoord || !currentCoord
+            || (previousCoord.i == currentCoord.i && previousCoord.j == currentCoord.j)) return false;
+        var di = currentCoord.i-previousCoord.i;
+        var dj = currentCoord.j-previousCoord.j;
+        var scale = Math.max(1, Math.abs(di), Math.abs(dj));
+        unit.arrivalEffect = {
+            // Only animate the final approach, even when one server update
+            // contains several atomic movement steps.
+            from: new Coord(currentCoord.i-di/scale, currentCoord.j-dj/scale),
+            startedAt: typeof performance != 'undefined' ? performance.now() : Date.now(),
+            duration: 900,
+        };
+        if (typeof _fulldraw != 'undefined') _fulldraw = 1;
+        return true;
     }
 
     cancelClientRouteForCombat(playerId, serverId)
@@ -1386,34 +1809,54 @@ const _server_game = new class
             var ownUnit = update.owner_id == viewerId;
             var storedRoute = ownUnit
                 ? this.storedClientRoute(viewerId, unit, update.id, update.client_key) : null;
+            var storedPoint = function(point) {
+                if (!point) return null;
+                return storedRoute && storedRoute.world_coordinates
+                    ? new Coord(point.i-_map_origin_i, point.j-_map_origin_j)
+                    : new Coord(point.i, point.j);
+            };
             var localGotoPath = ownUnit && unit.gotoPath && unit.gotoPath.length
                 ? unit.gotoPath.map(function(point) { return new Coord(point.i, point.j); })
                 : storedRoute && storedRoute.path
-                    ? storedRoute.path.map(function(point) { return new Coord(point.i, point.j); }) : [];
+                    ? storedRoute.path.map(storedPoint) : [];
             var localGotoCoord = ownUnit && unit.gotoCoord
                 ? new Coord(unit.gotoCoord.i, unit.gotoCoord.j)
                 : storedRoute && storedRoute.destination
-                    ? new Coord(storedRoute.destination.i, storedRoute.destination.j) : null;
+                    ? storedPoint(storedRoute.destination) : null;
             var localRouteOrigin = ownUnit && found && unit.coord
                 ? new Coord(unit.coord.i, unit.coord.j)
                 : storedRoute && storedRoute.origin
-                    ? new Coord(storedRoute.origin.i, storedRoute.origin.j) : null;
+                    ? storedPoint(storedRoute.origin) : null;
             var localInteractionIntent = ownUnit && unit.interactionIntent
                 ? unit.interactionIntent : storedRoute ? storedRoute.interaction_intent : null;
             var localInteractionTarget = ownUnit && unit.interactionTargetOwnerId != undefined
                 ? unit.interactionTargetOwnerId : storedRoute ? storedRoute.target_owner_id : null;
             var localAutomationMode = ownUnit && unit.automationMode
-                ? unit.automationMode : storedRoute ? storedRoute.automation_mode : null;
+                ? unit.automationMode : storedRoute ? storedRoute.automation_mode
+                    : ownUnit && update.properties ? update.properties.automationMode : null;
             var localRoadToBuilding = ownUnit && unit.roadToBuilding != undefined
                 ? !!unit.roadToBuilding : !!(storedRoute && storedRoute.road_to_building);
+            var localResumeAutomation = ownUnit && unit.resumeAutomationAfterRoadTo != undefined
+                ? !!unit.resumeAutomationAfterRoadTo
+                : !!(storedRoute && storedRoute.resume_automation_after_road_to);
+            var localRoadToFollowupAction = ownUnit && unit.roadToFollowupAction
+                ? unit.roadToFollowupAction : storedRoute ? storedRoute.road_to_followup_action : null;
+            var localRoadToFollowupTarget = ownUnit && unit.roadToFollowupTarget
+                ? new Coord(unit.roadToFollowupTarget.i, unit.roadToFollowupTarget.j)
+                : storedRoute && storedRoute.road_to_followup_target
+                    ? storedPoint(storedRoute.road_to_followup_target) : null;
             var localImprovementTurns = ownUnit && Number.isFinite(Number(unit.clientImprovementTurnsLeft))
                 ? Number(unit.clientImprovementTurnsLeft)
                 : storedRoute && Number.isFinite(Number(storedRoute.improvement_turns_left))
-                    ? Number(storedRoute.improvement_turns_left) : null;
+                    ? Number(storedRoute.improvement_turns_left)
+                    : ownUnit && update.properties
+                        && Number.isFinite(Number(update.properties.clientImprovementTurnsLeft))
+                        ? Number(update.properties.clientImprovementTurnsLeft) : null;
             var localImprovementState = ownUnit ? this.activeWorkerModifier(unit) : null;
             if (!localImprovementState && storedRoute && storedRoute.improvement_state) {
                 localImprovementState = storedRoute.improvement_state;
             }
+            var previousCoord = found && unit.coord ? new Coord(unit.coord.i, unit.coord.j) : null;
             unit.serverId = update.id;
             unit.serverClientKey = update.client_key || unit.serverClientKey;
             unit.team = update.owner_id;
@@ -1423,7 +1866,12 @@ const _server_game = new class
             unit.texture = update.texture;
             unit.can_move = update.can_move;
             unit.nature = update.nature;
-            unit.coord = new Coord(update.i, update.j);
+            unit.worldCoord = new Coord(
+                update.world_i == undefined ? update.i : update.world_i,
+                update.world_j == undefined ? update.j : update.world_j
+            );
+            unit.coord = this.worldToLocal(unit.worldCoord);
+            this.startUnitArrivalEffect(unit, previousCoord, unit.coord);
             unit.attack = update.attack;
             unit.defense = update.defense;
             unit.speed = update.speed;
@@ -1438,14 +1886,21 @@ const _server_game = new class
             for (var key in properties) {
                 if (key == 'gotoPath' || key == 'gotoCoord' || key == 'pendingServerPath'
                     || key == 'automationMode' || key == 'roadToBuilding'
+                    || key == 'resumeAutomationAfterRoadTo'
                     || key == 'automateTarget' || key == 'automateBuild'
                     || key == 'clientImprovementTurnsLeft' || key == 'pendingImmediateBuild') continue;
                 unit[key] = properties[key];
             }
             if (ownUnit && localAutomationMode == 'road_to') {
                 unit.roadToBuilding = localRoadToBuilding;
+                unit.resumeAutomationAfterRoadTo = localResumeAutomation;
+                unit.roadToFollowupAction = localRoadToFollowupAction;
+                unit.roadToFollowupTarget = localRoadToFollowupTarget;
             }
-            if (ownUnit && localImprovementState && localImprovementTurns != null) {
+            // A zero countdown means the command was submitted. Do not restore
+            // that stale client state over PHP's authoritative ready state.
+            if (ownUnit && localImprovementState && localImprovementTurns != null
+                && localImprovementTurns > 0) {
                 unit.state = localImprovementState == 'irrigation' ? 'irrigate' : localImprovementState;
                 unit.clientImprovementTurnsLeft = Math.max(0, localImprovementTurns);
             }
@@ -1574,6 +2029,7 @@ const _server_game = new class
             var update = updates[n];
             var i = parseInt(update.i, 10);
             var j = parseInt(update.j, 10);
+            if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) continue;
             bits[i][j] &= 0xF0FF;
             bits[i][j] |= 0x4000;
             if (parseInt(update.visibility_level, 10) >= 2) bits[i][j] |= 0x0500;
@@ -1587,6 +2043,7 @@ const _server_game = new class
     {
         for (var n=0; n < tiles.length; n++) {
             var tile = tiles[n];
+            if (tile.i < 0 || tile.j < 0 || tile.i >= _map_size || tile.j >= _map_size) continue;
             _map_terrain_tex[tile.i][tile.j] = tile.terrain_tex;
             var visibilityBits = _map_terrain_bit_by_user[playerId]
                 ? (_map_terrain_bit_by_user[playerId][tile.i][tile.j] & 0x7F00) : 0;
@@ -1617,6 +2074,7 @@ const _server_game = new class
         var now = Date.now();
         if (forceRestart || !this.deadlineAt || this.deadlineAt <= now) {
             this.deadlineAt = now + _client_turn_timeout_ms;
+            this.deadlineFromServer = false;
         }
         var self = this;
         var expired = false;

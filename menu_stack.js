@@ -82,7 +82,8 @@ const _unit_stack_menu = new class
     isVisibleUnit(unit)
     {
         return !!(unit && unit.coord && !unit.hiddenOnMap
-            && (unit.health == undefined || Number(unit.health) > 0));
+            && (unit.health == undefined || Number(unit.health) > 0)
+            && (unit.can_move || unit.type == 3));
     }
 
     liveIndicesAt(coord)

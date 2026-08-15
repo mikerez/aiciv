@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows, value} = require('./test_client');
+const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows, value, sql, gameDatabaseId} = require('./test_client');
 
 (async () => {
     resetDatabase();
@@ -20,8 +20,19 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
         specs.push(unit({client_key: `chop-${terrain}`, i: terrain, j: 9}));
         specs.push(city({client_key: `produce-${terrain}`, i: terrain, j: 11}));
     }
+    specs.push(unit({client_key: 'stack-filler', unit_type_id: 'warrior', unit_class: 2,
+        name: 'Warrior', i: 9, j: 3, speed: 1}));
+    specs.push(unit({client_key: 'stack-mover', unit_type_id: 'elephant', unit_class: 2,
+        name: 'Elephant', i: 10, j: 1, speed: 2, attack: 5, defense: 4}));
+    for (let index = 0; index < 4; index++) {
+        specs.push(unit({client_key: `stack-target-${index}`, unit_type_id: 'warrior',
+            unit_class: 2, name: 'Warrior', i: 10, j: 3}));
+    }
     specs.push(city({client_key: 'capital', i: 14, j: 14}));
     const fixture = await bootstrap({size, tiles, units: specs});
+    const gameDbId = gameDatabaseId(fixture.gameId);
+    sql(`UPDATE server_game_players SET state_json=JSON_SET(state_json,'$.food',100000,'$.money',100000)
+         WHERE game_id=${gameDbId} AND player_id=${fixture.playerId}`);
     const commands = [];
     for (let terrain = 0; terrain < 8; terrain++) {
         commands.push({unit_id: fixture.unitIds[`land-${terrain}`], command: 'move', path: [{i: terrain, j: 2}], payload: {}});
@@ -33,11 +44,20 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
         commands.push({unit_id: fixture.unitIds[`chop-${terrain}`], command: 'build', path: [], payload: {modifier: 'chop_forest'}});
         commands.push({unit_id: fixture.unitIds[`produce-${terrain}`], command: 'produce', path: [], payload: {unit_type_id: 'warrior'}});
     }
+    commands.push({unit_id: fixture.unitIds['stack-filler'], command: 'move',
+        path: [{i: 10, j: 3}], payload: {}});
+    commands.push({
+        unit_id: fixture.unitIds['stack-mover'], command: 'move',
+        path: [{i: 10, j: 2}, {i: 10, j: 3}], payload: {},
+    });
     const response = await serverGame.request('make_turn', {
         player_id: fixture.playerId, turn: fixture.result.turn, commands,
         actions: [{
             client_action_id: 'optimize-capital', type: 'optimize_city',
             city_unit_id: fixture.unitIds.capital, optimization: 'production',
+        }, {
+            client_action_id: 'balance-capital', type: 'optimize_city',
+            city_unit_id: fixture.unitIds.capital, optimization: 'balanced',
         }],
         player_state: {}, relations: {}, include_updates: true,
     });
@@ -58,8 +78,15 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
     for (const terrain of [0, 1, 2, 3, 4, 5, 7]) {
         assert.equal(Number(value(`SELECT (terrain_tex & 15) FROM server_game_map WHERE i=${terrain} AND j=9`)), terrain);
     }
+    assert.deepEqual(
+        positions.get('stack-mover').slice(1, 3).map(Number),
+        [10, 2],
+        'a multi-step move stops at the last available Tile before a full destination stack'
+    );
     assert.equal(response.action_results[0].ok, true);
     assert.equal(response.action_results[0].result.optimization, 'production');
-    assert.equal(JSON.parse(value(`SELECT properties_json FROM server_game_units WHERE id=${fixture.unitIds.capital}`)).cityOptimization, 'production');
+    assert.equal(response.action_results[1].ok, true);
+    assert.equal(response.action_results[1].result.optimization, 'balanced');
+    assert.equal(JSON.parse(value(`SELECT properties_json FROM server_game_units WHERE id=${fixture.unitIds.capital}`)).cityOptimization, 'balanced');
     console.log('PASS make_turn executes all unit commands across 8 terrain types and persists batched city actions');
 })().catch(error => { console.error(error); process.exitCode = 1; });

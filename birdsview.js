@@ -8,6 +8,7 @@ const _birdsview = new class
         this.strategyValues = new Float32Array(this.size * this.size);
         this.dirty = true;
         this.lastBuiltTurn = -1;
+        this.lastLayout = null;
     }
 
     index(x, y)
@@ -255,20 +256,12 @@ const _birdsview = new class
             return;
         }
         this.ensureBuilt();
-        var cell = (typeof document != 'undefined' && document.body && document.body.classList.contains('mobile-ui')) ? 4 : 3;
-        var sourceWidth = this.size * cell;
-        var rotatedSize = Math.ceil(sourceWidth * Math.SQRT2);
+        var layout = this.layoutForCanvas(ctx.canvas);
+        this.lastLayout = layout;
+        var cell = layout.cell;
+        var sourceWidth = layout.sourceWidth;
+        var rotatedSize = layout.rotatedSize;
         var halfCell = cell / 2;
-        var visible = this.visibleCanvasRect(ctx.canvas);
-        var x0 = visible.left + 12 - 50;
-        var y0 = Math.max(visible.top + 12, visible.bottom - rotatedSize - 12) + 50;
-        var centerX = x0 + rotatedSize / 2;
-        var centerY = y0 + rotatedSize / 2;
-        var sourceCenter = sourceWidth / 2;
-        var clipLeft = x0 + rotatedSize * 0.25;
-        var clipRight = x0 + rotatedSize * 0.75;
-        var clipTop = y0 + rotatedSize * 0.25;
-        var clipBottom = y0 + rotatedSize * 0.75;
         ctx.save();
         ctx.globalAlpha = 0.80;
         for (var y = 0; y < this.size; y++) {
@@ -285,15 +278,16 @@ const _birdsview = new class
                     ];
                 }
                 ctx.fillStyle = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
-                var sourceX = x * cell + halfCell - sourceCenter;
-                var sourceY = y * cell + halfCell - sourceCenter;
+                var sourceX = x * cell + halfCell - layout.sourceCenter;
+                var sourceY = y * cell + halfCell - layout.sourceCenter;
                 var screenPoint = this.sourceToScreenPoint(sourceX, sourceY, {
-                    centerX: centerX,
-                    centerY: centerY,
+                    centerX: layout.centerX,
+                    centerY: layout.centerY,
                 });
                 var cx = screenPoint.x;
                 var cy = screenPoint.y;
-                if (cx < clipLeft || cx > clipRight || cy < clipTop || cy > clipBottom) {
+                if (cx < layout.clipLeft || cx > layout.clipRight
+                    || cy < layout.clipTop || cy > layout.clipBottom) {
                     continue;
                 }
                 var radius = cell / Math.SQRT2 + 0.35;
@@ -308,19 +302,82 @@ const _birdsview = new class
         }
         ctx.strokeStyle = 'rgba(255,255,255,0.65)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(clipLeft - 0.5, clipTop - 0.5, clipRight - clipLeft + 1, clipBottom - clipTop + 1);
-        this.drawCurrentViewStroke(ctx, {
+        ctx.strokeRect(layout.clipLeft - 0.5, layout.clipTop - 0.5,
+            layout.clipRight - layout.clipLeft + 1, layout.clipBottom - layout.clipTop + 1);
+        this.drawCurrentViewStroke(ctx, layout);
+        this.drawRespawnSelection(ctx, layout);
+        ctx.restore();
+    }
+
+    layoutForCanvas(canvas)
+    {
+        var cell = (typeof document != 'undefined' && document.body
+            && document.body.classList.contains('mobile-ui')) ? 4 : 3;
+        var sourceWidth = this.size * cell;
+        var rotatedSize = Math.ceil(sourceWidth * Math.SQRT2);
+        var visible = this.visibleCanvasRect(canvas);
+        var x0 = visible.left + 12 - 50;
+        var y0 = Math.max(visible.top + 12, visible.bottom - rotatedSize - 12) + 50;
+        return {
+            cell: cell,
+            sourceWidth: sourceWidth,
+            sourceCenter: sourceWidth / 2,
+            rotatedSize: rotatedSize,
             x0: x0,
             y0: y0,
-            centerX: centerX,
-            centerY: centerY,
-            sourceWidth: sourceWidth,
-            sourceCenter: sourceCenter,
-            clipLeft: clipLeft,
-            clipRight: clipRight,
-            clipTop: clipTop,
-            clipBottom: clipBottom,
-        });
+            centerX: x0 + rotatedSize / 2,
+            centerY: y0 + rotatedSize / 2,
+            clipLeft: x0 + rotatedSize * 0.25,
+            clipRight: x0 + rotatedSize * 0.75,
+            clipTop: y0 + rotatedSize * 0.25,
+            clipBottom: y0 + rotatedSize * 0.75,
+        };
+    }
+
+    screenPointToMapCoord(x, y, canvas)
+    {
+        var layout = this.lastLayout || this.layoutForCanvas(canvas);
+        if (x < layout.clipLeft || x > layout.clipRight
+            || y < layout.clipTop || y > layout.clipBottom) return null;
+        var rotatedX = x - layout.centerX;
+        var rotatedY = layout.centerY - y;
+        var sourceX = (rotatedX - rotatedY) / Math.SQRT2;
+        var sourceY = (rotatedX + rotatedY) / Math.SQRT2;
+        var i = Math.floor((sourceX + layout.sourceCenter) * _map_size / layout.sourceWidth);
+        var j = Math.floor((sourceY + layout.sourceCenter) * _map_size / layout.sourceWidth);
+        if (i < 0 || j < 0 || i >= _map_size || j >= _map_size) return null;
+        return new Coord(i, j);
+    }
+
+    centerViewAt(coord)
+    {
+        if (!coord || typeof _screenOffsetX == 'undefined') return false;
+        _screenOffsetX = ijtox(coord.i, coord.j) / 2 / _ratio;
+        _screenOffsetY = ijtoy(coord.i, coord.j) / 2 / _ratio;
+        if (typeof _draw != 'undefined' && _draw.clear) _draw.clear();
+        if (typeof _fulldraw != 'undefined') _fulldraw = 1;
+        if (typeof drawScene == 'function') drawScene(0);
+        return true;
+    }
+
+    drawRespawnSelection(ctx, layout)
+    {
+        if (typeof _server_game == 'undefined' || !_server_game.respawnSelectionForPlayer) return;
+        var coord = _server_game.respawnSelectionForPlayer(
+            typeof _current_user == 'undefined' ? 0 : _current_user
+        );
+        if (!coord) return;
+        var point = this.mapCoordToRotatedPoint(coord.i + 0.5, coord.j + 0.5, layout);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(layout.clipLeft, layout.clipTop,
+            layout.clipRight - layout.clipLeft, layout.clipBottom - layout.clipTop);
+        ctx.clip();
+        ctx.strokeStyle = 'rgba(255,255,255,1)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
     }
 

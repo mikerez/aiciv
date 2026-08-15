@@ -4,13 +4,13 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value,
 
 const definitions = {
     road: {valid: [1,2,3,4,5,6,7]},
-    irrigation: {valid: [2]},
+    irrigation: {valid: [2,7]},
     pasture: {valid: [1,2,3,4,5,6,7], resource: 2},
     fortification: {valid: [1,2,3,4,5,6,7]},
-    cottage: {valid: [1,2,3,4,5,6,7]},
+    cottage: {valid: [1,2,3,4,5,6,7], irrigation: true},
     workshop: {valid: [1,2,3,4,5,6,7]},
-    mine: {valid: [4,5], resource: 34},
-    farm: {valid: [1,2,3,4,5,6,7], resource: 7},
+    mine: {valid: [1,4,5], resource: 34},
+    farm: {valid: [2,7], irrigation: true},
     plantation: {valid: [1,2,3,4,5,6,7], resource: 1},
     camp: {valid: [1,2,3,4,5,6,7], resource: 5},
     fishing_boats: {valid: [0], resource: 6},
@@ -36,7 +36,7 @@ const definitions = {
             const nature = definition.workboat ? 'water' : 'land';
             const resource = definition.resource || 0;
             sql(`DELETE FROM server_game_units WHERE game_id=${gameDbId} AND unit_class=4;
-                 UPDATE server_game_map SET terrain_tex=${terrain}, resource_type=${resource}, modifiers_json='{}' WHERE game_id=${gameDbId} AND i=3 AND j=3;
+                 UPDATE server_game_map SET terrain_tex=${terrain}, resource_type=${resource}, modifiers_json='${definition.irrigation ? '{"irrigation":true}' : '{}'}' WHERE game_id=${gameDbId} AND i=3 AND j=3;
                  UPDATE server_game_map SET terrain_tex=0, resource_type=0, modifiers_json='{}' WHERE game_id=${gameDbId} AND i=3 AND j=4;
                  INSERT INTO server_game_visibility
                     (game_id,player_id,i,j,visibility_level,resource_visible,revision)

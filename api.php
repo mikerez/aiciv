@@ -373,43 +373,11 @@ function markTimedOutUsersOffline(PDO $db): void
 
 function claimAiUser(PDO $db, int $humanUserId): array
 {
-    $statement = $db->prepare(
-        "SELECT * FROM game_users
-         WHERE user_type = 'ai' AND parent_id = ? ORDER BY id LIMIT 1 FOR UPDATE"
-    );
-    $statement->execute([$humanUserId]);
+    $aiId = ensureGlobalAiUser($db);
+    $statement = $db->prepare('SELECT * FROM game_users WHERE id = ?');
+    $statement->execute([$aiId]);
     $aiUser = $statement->fetch();
-    if (!$aiUser) {
-        $statement = $db->query(
-            "SELECT ai.* FROM game_users ai
-             LEFT JOIN game_users parent ON parent.id = ai.parent_id
-             WHERE ai.user_type = 'ai' AND (ai.parent_id IS NULL OR parent.online = 0)
-             ORDER BY ai.id LIMIT 1 FOR UPDATE"
-        );
-        $aiUser = $statement->fetch();
-    }
-    if (!$aiUser) {
-        $login = 'ai_' . bin2hex(random_bytes(12));
-        $passwordHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
-        if ($passwordHash === false) throw new RuntimeException('AI account initialization failed.');
-        $statement = $db->prepare(
-            "INSERT INTO game_users
-             (login, email, password_hash, status, user_type, online, last_online_at, parent_id)
-             VALUES (?, NULL, ?, 'active', 'ai', 1, UTC_TIMESTAMP(), ?)"
-        );
-        $statement->execute([$login, $passwordHash, $humanUserId]);
-        $statement = $db->prepare('SELECT * FROM game_users WHERE id = ?');
-        $statement->execute([(int) $db->lastInsertId()]);
-        $aiUser = $statement->fetch();
-    } else {
-        $statement = $db->prepare(
-            "UPDATE game_users SET parent_id = ?, online = 1, last_online_at = UTC_TIMESTAMP()
-             WHERE id = ? AND user_type = 'ai'"
-        );
-        $statement->execute([$humanUserId, $aiUser['id']]);
-        $aiUser['parent_id'] = $humanUserId;
-        $aiUser['online'] = 1;
-    }
+    if (!$aiUser) throw new RuntimeException('Global AI account initialization failed.');
     return $aiUser;
 }
 
@@ -568,7 +536,7 @@ function loginUser(PDO $db, array $data, string $requestId): void
         'player' => $player,
         'ai_player' => array_merge($aiPlayer, [
             'user_type' => 'ai',
-            'parent_id' => (int) $user['id'],
+            'parent_id' => null,
         ]),
         'request_id' => $requestId,
     ]);

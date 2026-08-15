@@ -45,7 +45,7 @@ const _economics = new class
             road: { money: 1.25 },
             irrigation: { food: 1.50 },
             pasture: { food: 1.50, production: 1.25 },
-            farm: { food: 1.75 },
+            farm: {},
             plantation: { food: 1.25 },
             camp: { food: 1.25, production: 1.50 },
             fishing_boats: { food: 1.50, money: 1.50 },
@@ -101,6 +101,10 @@ const _economics = new class
             }
             for (var field in multipliers) {
                 income[field] = Math.ceil((income[field] || 0) * multipliers[field]);
+            }
+            if (improvement == 'farm') {
+                income.food = 5;
+                income.money = 0;
             }
             if (improvement == 'workshop') income.production = 4;
         }
@@ -474,7 +478,18 @@ const _economics = new class
             if (typeof console != 'undefined' && console.debug) console.debug('[economy HUD]', next);
             this.lastHudState = next;
         }
-        if (food) food.textContent = next.food;
-        if (gold) gold.textContent = next.gold;
+        this.updateCounterValue(food, next.food);
+        this.updateCounterValue(gold, next.gold);
+    }
+
+    updateCounterValue(element, value)
+    {
+        if (!element) return;
+        var text = Math.trunc(Number(value) || 0).toLocaleString('en-US');
+        element.textContent = text;
+        var counter = element.parentElement;
+        if (!counter) return;
+        counter.classList.toggle('counter-wide', text.length >= 7 && text.length < 10);
+        counter.classList.toggle('counter-very-wide', text.length >= 10);
     }
 };

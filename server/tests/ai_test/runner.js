@@ -16,11 +16,31 @@ function databaseMetrics(gameId, scenario) {
     for (const [i, j, encoded] of rows(`SELECT i,j,modifiers_json FROM server_game_map WHERE game_id=${gameDbId}`)) {
         modifiers[`${i}:${j}`] = JSON.parse(encoded || '{}');
     }
+    const cityRows = own.filter(row => Number(row[2]) === 3);
+    const citySites = cityRows.map(row => {
+        const tileRow = rows(`SELECT terrain_tex FROM server_game_map WHERE game_id=${gameDbId}
+            AND i=${Number(row[3])} AND j=${Number(row[4])} LIMIT 1`);
+        return {i: Number(row[3]), j: Number(row[4]), terrain: tileRow.length ? Number(tileRow[0][0]) & 15 : -1};
+    });
+    let improvementCount = 0;
+    for (const modifier of Object.values(modifiers)) {
+        for (const [name, enabled] of Object.entries(modifier)) {
+            if (enabled && name !== 'road') improvementCount++;
+        }
+    }
+    const explored = Number(rows(`SELECT COUNT(*) FROM server_game_visibility
+        WHERE game_id=${gameDbId} AND player_id=${scenario.playerId} AND visibility_level>0`)[0]?.[0] || 0);
     return {
         own,
         enemy,
-        cities: own.filter(row => Number(row[2]) === 3).length,
+        cities: cityRows.length,
+        citySites,
         military: own.filter(row => Number(row[2]) === 2).length,
+        workers: own.filter(row => String(row[1]) === 'worker').length,
+        settlers: own.filter(row => String(row[1]) === 'settlers').length,
+        explorers: own.filter(row => String(row[1]) === 'explorer').length,
+        improvements: improvementCount,
+        explored,
         enemyHealth: enemy.reduce((sum, row) => sum + Number(row[5] || 0), 0),
         modifiers,
     };
@@ -76,6 +96,12 @@ async function setupScenario(scenario, modelDirectory) {
         lastScienceIncome: 2,
         openTechnologies: context._game_state.openTechnologies,
     });
+    for (const point of scenario.revealedResources || []) {
+        sql(`INSERT INTO server_game_visibility
+            (game_id,player_id,i,j,visibility_level,resource_visible,revision)
+            VALUES (${gameDatabaseId(gameId)},${scenario.playerId},${Number(point.i)},${Number(point.j)},1,1,1)
+            ON DUPLICATE KEY UPDATE visibility_level=GREATEST(visibility_level,1),resource_visible=1,revision=revision+1`);
+    }
     configureRelations(gameDatabaseId(gameId), scenario, context);
     loadAiModels(context, modelDirectory);
     context.aiPlayer.log = function() {};
@@ -97,6 +123,31 @@ function conditionFailures(scenario, history) {
     }
     if (expected.militaryMin && !byTurn(item => item.metrics.military >= expected.militaryMin, expected.militaryBy || scenario.turns)) {
         failures.push(`military count did not reach ${expected.militaryMin} by turn ${expected.militaryBy || scenario.turns}`);
+    }
+    if (expected.workersMin && !byTurn(item => item.metrics.workers >= expected.workersMin, expected.workersBy || scenario.turns)) {
+        failures.push(`Worker count did not reach ${expected.workersMin} by turn ${expected.workersBy || scenario.turns}`);
+    }
+    if (expected.improvementsMin && final.metrics.improvements < expected.improvementsMin) {
+        failures.push(`only ${final.metrics.improvements} improvement types were completed; expected ${expected.improvementsMin}`);
+    }
+    if (expected.exploredMin && final.metrics.explored < expected.exploredMin) {
+        failures.push(`only ${final.metrics.explored} Tiles were explored; expected ${expected.exploredMin}`);
+    }
+    if (expected.goodCitySites) {
+        const bad = final.metrics.citySites.filter(site => ![2, 7].includes(site.terrain));
+        if (bad.length) failures.push(`Cities were founded on poor terrain: ${bad.map(site => `${site.i}:${site.j}/T${site.terrain}`).join(', ')}`);
+    }
+    if (expected.minimumCitySpacing && final.metrics.citySites.length > 1) {
+        for (let left = 0; left < final.metrics.citySites.length; left++) {
+            for (let right = left + 1; right < final.metrics.citySites.length; right++) {
+                const a = final.metrics.citySites[left];
+                const b = final.metrics.citySites[right];
+                const distance = Math.max(Math.abs(a.i - b.i), Math.abs(a.j - b.j));
+                if (distance < expected.minimumCitySpacing) {
+                    failures.push(`Cities at ${a.i}:${a.j} and ${b.i}:${b.j} are only ${distance} Tiles apart`);
+                }
+            }
+        }
     }
     if (expected.modifier) {
         const key = `${expected.modifier.i}:${expected.modifier.j}`;
@@ -179,6 +230,7 @@ async function runScenario(scenario, options = {}) {
             resolvedTurn,
             action: actionDescription,
             economics: result.economics.decisions.map(decision => decision.unitTypeId || 'none').join(','),
+            policies: result.policies || {},
         });
     }
     return {
@@ -187,7 +239,12 @@ async function runScenario(scenario, options = {}) {
         failures: conditionFailures(scenario, history),
         feedbackAdded,
         final: history[history.length - 1],
-        trace: history.slice(1).map(item => ({turn: item.turn, action: item.action, economics: item.economics})),
+        trace: history.slice(1).map(item => ({turn: item.turn, action: item.action,
+            economics: item.economics, policies: item.policies, metrics: {
+                cities: item.metrics.cities, military: item.metrics.military,
+                workers: item.metrics.workers, improvements: item.metrics.improvements,
+                explored: item.metrics.explored,
+            }})),
     };
 }
 

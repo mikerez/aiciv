@@ -7,7 +7,7 @@ const {assert, serverGame, resetDatabase, bootstrap, city, unit, sql, value, exp
     const fixture = await bootstrap({units: [city({client_key: 'capital'}), unit({client_key: 'guard', i: 4, j: 4})]});
     const cityId = fixture.unitIds.capital;
     const properties = {
-        cityPopulation: 1, cityFoodStored: 35,
+        cityPopulation: 1, cityFoodStored: 125,
         cityProperties: {productionPerTurn: 5, productionStored: 0},
         production: null, productionDisabled: false,
     };
@@ -15,7 +15,7 @@ const {assert, serverGame, resetDatabase, bootstrap, city, unit, sql, value, exp
     const response = await serverGame.request('grow_city', {
         player_id: fixture.playerId, city_unit_id: cityId, food_stored: 999,
     });
-    assert.equal(response.growth_cost, 30);
+    assert.equal(response.growth_cost, 120);
     const stored = JSON.parse(value(`SELECT properties_json FROM server_game_units WHERE id=${cityId}`));
     assert.equal(stored.cityPopulation, 2);
     assert.equal(stored.cityFoodStored, 5, 'server uses authoritative stored food, not the client claim');

@@ -8,8 +8,8 @@ const sandbox = {
     _selection: 0,
     _screenZoom: 2,
     _units: [
-        {coord: {i: 2, j: 2}, type: 1, gotoPath: [{i: 3, j: 2}]},
-        {coord: {i: 5, j: 5}, type: 1, gotoPath: []},
+        {coord: {i: 2, j: 2}, type: 1, can_move:true, gotoPath: [{i: 3, j: 2}]},
+        {coord: {i: 5, j: 5}, type: 1, can_move:true, gotoPath: []},
     ],
     ijtox1: (i, j) => i*100 + j,
     ijtoy1: (i, j) => i*100 - j,

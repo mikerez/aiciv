@@ -53,17 +53,8 @@ const _city_economy = new class
             city.economy.foodStored = Math.max(0, Number(city.cityFoodStored) || 0);
             city.economy.foodLoadedFromServer = true;
         }
+        this.reoptimizeCitizenPlots(city);
         var targetPopulation = Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
-        city.economy.citizens = [];
-        while (city.economy.citizens.length < targetPopulation) {
-            var coord = this.findBestFreeTile(city);
-            if (coord == null) break;
-            city.economy.citizens.push({ coord: coord, income: this.tileIncomeAt(coord.i, coord.j) });
-        }
-        // The server population can exceed the number of locally assignable
-        // worked tiles. Never reduce authoritative population to fit this view.
-        city.cityPopulation = targetPopulation;
-        this.updateIncome(city);
         if (city.serverId && city.lastCityIncome) {
             var authoritative = city.lastCityIncome;
             city.economy.lastGrossIncome = {
@@ -82,9 +73,45 @@ const _city_economy = new class
         }
     }
 
+    reoptimizeCitizenPlots(city)
+    {
+        if (!city || city.type != 3) return false;
+        if (city.economy == undefined || city.economy == null) {
+            city.economy = new CityEconomyState();
+        }
+        var targetPopulation = Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
+        city.economy.citizens = [];
+        while (city.economy.citizens.length < targetPopulation) {
+            var coord = this.findBestFreeTile(city);
+            if (coord == null) break;
+            city.economy.citizens.push({ coord: coord, income: this.tileIncomeAt(coord.i, coord.j, city.team) });
+        }
+        // The server population can exceed the number of locally assignable
+        // worked tiles. Never reduce authoritative population to fit this view.
+        city.cityPopulation = targetPopulation;
+        this.updateIncome(city);
+        return true;
+    }
+
+    reoptimizeCitiesForTile(i, j, ownerId)
+    {
+        var units = typeof _units_by_user != 'undefined' && _units_by_user[ownerId]
+            ? _units_by_user[ownerId] : _units;
+        var changed = 0;
+        for (var k=0; k < units.length; k++) {
+            var city = units[k];
+            if (!city || city.type != 3 || !city.coord || Number(city.team) != Number(ownerId)) continue;
+            if (Math.abs(city.coord.i-i) > 4 || Math.abs(city.coord.j-j) > 4) continue;
+            if (city.coord.i < 0 || city.coord.i >= _map_size || city.coord.j < 0 || city.coord.j >= _map_size) continue;
+            if (this.reoptimizeCitizenPlots(city)) changed++;
+        }
+        if (changed && typeof _fulldraw != 'undefined') _fulldraw = 1;
+        return changed;
+    }
+
     citizenGrowthCost(city)
     {
-        return 20 + Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1)*10;
+        return 80 + Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1)*40;
     }
 
     foodConsumption(city)
@@ -98,7 +125,7 @@ const _city_economy = new class
         if (coord == null) {
             return false;
         }
-        city.economy.citizens.push({ coord: coord, income: this.tileIncomeAt(coord.i, coord.j) });
+        city.economy.citizens.push({ coord: coord, income: this.tileIncomeAt(coord.i, coord.j, city.team) });
         city.cityPopulation = Math.max(Number(city.cityPopulation) || 1, city.economy.citizens.length);
         this.updateIncome(city);
         return true;
@@ -121,7 +148,7 @@ const _city_economy = new class
 
     optimizationMode(city)
     {
-        return ['food', 'production', 'gold'].indexOf(city && city.cityOptimization) != -1
+        return ['food', 'production', 'gold', 'balanced'].indexOf(city && city.cityOptimization) != -1
             ? city.cityOptimization : 'balanced';
     }
 
@@ -135,9 +162,9 @@ const _city_economy = new class
 
     optimizeCity(city, mode)
     {
-        if (!city || city.type != 3 || ['food', 'production', 'gold'].indexOf(mode) == -1) return false;
+        if (!city || city.type != 3 || ['food', 'production', 'gold', 'balanced'].indexOf(mode) == -1) return false;
         city.cityOptimization = mode;
-        this.ensureCity(city);
+        this.reoptimizeCitizenPlots(city);
         _fulldraw = 1;
         return true;
     }
@@ -153,7 +180,8 @@ const _city_economy = new class
             if (this.isWorked(city, coord)) {
                 continue;
             }
-            var income = this.tileIncomeAt(coord.i, coord.j);
+            if (this.enemyOccupiesTile(coord.i, coord.j, city.team)) continue;
+            var income = this.tileIncomeAt(coord.i, coord.j, city.team);
             var score = this.tileOptimizationScore(income, this.optimizationMode(city));
             var key = coord.i + ':' + coord.j;
             if (score > bestScore || (score == bestScore && (best == null || key < bestKey))) {
@@ -168,6 +196,17 @@ const _city_economy = new class
     hexDistance(di, dj)
     {
         return di*dj >= 0 ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
+    }
+
+    hasRoadRequiredImprovement(modifiers)
+    {
+        modifiers = modifiers || {};
+        var improvements = ['irrigation', 'pasture', 'farm', 'plantation', 'camp',
+            'fishing_boats', 'quarry', 'winery', 'fortification', 'cottage', 'workshop', 'mine'];
+        for (var n=0; n < improvements.length; n++) {
+            if (modifiers[improvements[n]]) return true;
+        }
+        return false;
     }
 
     economicTileCandidates(city)
@@ -188,6 +227,7 @@ const _city_economy = new class
         for (var cursor=0; cursor < queue.length; cursor++) {
             var point = queue[cursor];
             if (point.i < 0 || point.i >= _map_size || point.j < 0 || point.j >= _map_size) continue;
+            if (Math.abs(point.i-city.coord.i) > 4 || Math.abs(point.j-city.coord.j) > 4) continue;
             var pointKey = point.i + ':' + point.j;
             if (visited[pointKey]) continue;
             visited[pointKey] = true;
@@ -198,12 +238,18 @@ const _city_economy = new class
                 queue.push(new Coord(point.i + directions[n][0], point.j + directions[n][1]));
             }
         }
-        // CITY-INCOME-011: the City Tile and all adjacent Tiles can be worked
-        // without a road; farther land requires a continuous road connection.
+        // Nearby bare Tiles can be worked directly. A Tile with a completed
+        // land improvement must carry a road and be reached by the road BFS.
         for (var closeDi=-1; closeDi <= 1; closeDi++) {
             for (var closeDj=-1; closeDj <= 1; closeDj++) {
                 if (this.hexDistance(closeDi, closeDj) <= 1) {
-                    add(city.coord.i + closeDi, city.coord.j + closeDj);
+                    var closeI = city.coord.i + closeDi;
+                    var closeJ = city.coord.j + closeDj;
+                    if (closeI < 0 || closeI >= _map_size || closeJ < 0 || closeJ >= _map_size) continue;
+                    var closeModifiers = _map_terrain_mod[closeI][closeJ] || {};
+                    if ((closeDi != 0 || closeDj != 0)
+                        && this.hasRoadRequiredImprovement(closeModifiers) && !closeModifiers.road) continue;
+                    add(closeI, closeJ);
                 }
             }
         }
@@ -266,11 +312,32 @@ const _city_economy = new class
             income.food = 5;
             income.money = 2;
         }
+        if (this.isCityTile(i, j)) {
+            income.production = Math.max(1, income.production || 0);
+            income.money = terrainType == 7 ? 0 : Math.max(1, income.money || 0);
+        }
         return income;
     }
 
-    tileIncomeAt(i, j)
+    enemyOccupiesTile(i, j, ownerId)
     {
+        if (ownerId == undefined || typeof _units_by_user == 'undefined') return false;
+        for (var userId in _units_by_user) {
+            if (Number(userId) == Number(ownerId)
+                || (typeof _military != 'undefined' && !_military.isAtWar(ownerId, userId))) continue;
+            var list = _units_by_user[userId] || [];
+            for (var k=0; k < list.length; k++) {
+                var unit = list[k];
+                if (unit && unit.can_move && unit.coord && Number(unit.health) > 0
+                    && unit.coord.i == i && unit.coord.j == j) return true;
+            }
+        }
+        return false;
+    }
+
+    tileIncomeAt(i, j, ownerId)
+    {
+        if (this.enemyOccupiesTile(i, j, ownerId)) return { food: 0, production: 0, money: 0 };
         return this.tileIncomeForModifiers(i, j, _map_terrain_mod[i][j]);
     }
 
@@ -307,17 +374,24 @@ const _city_economy = new class
 
     infrastructureCosts(city)
     {
-        var costs = { roads: 0, workshops: 0 };
+        var costs = { roads: 0, workshops: 0, networks: 0, fortifications: 0 };
         for (var k=0; k < _units.length; k++) {
             var improvement = _units[k];
             if (!improvement || improvement.type != 4 || !improvement.coord
                 || (improvement.health != undefined && improvement.health <= 0)) continue;
             var type = improvement.improvementType
                 || String(improvement.unitTypeId || '').replace(/^building_/, '');
-            if (type != 'road' && type != 'workshop') continue;
+            if (type != 'road' && type != 'workshop' && type != 'network'
+                && type != 'fortification') continue;
             if (this.parentCityForImprovement(improvement) !== city) continue;
-            if (type == 'road') costs.roads++;
-            else costs.workshops++;
+            var isCityCenterRoad = type == 'road'
+                && improvement.coord.i == city.coord.i && improvement.coord.j == city.coord.j;
+            if (type == 'road') {
+                if (!isCityCenterRoad) costs.roads++;
+            }
+            else if (type == 'workshop') costs.workshops++;
+            else if (type == 'network') costs.networks++;
+            else costs.fortifications++;
         }
         return costs;
     }
@@ -327,16 +401,20 @@ const _city_economy = new class
         var total = { food: 0, production: 0, money: 0 };
         for (var c=0; c < city.economy.citizens.length; c++) {
             var citizen = city.economy.citizens[c];
-            citizen.income = this.tileIncomeAt(citizen.coord.i, citizen.coord.j);
+            citizen.income = this.tileIncomeAt(citizen.coord.i, citizen.coord.j, city.team);
             this.addIncome(total, citizen.income);
         }
         var infrastructure = this.infrastructureCosts(city);
         city.economy.lastGrossIncome = total;
-        city.economy.foodConsumption = this.foodConsumption(city) + infrastructure.workshops;
+        city.economy.foodConsumption = this.foodConsumption(city) + infrastructure.workshops*2;
+        var population = Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
+        var grossFoodExcess = total.food - city.economy.foodConsumption;
+        var largeCityLossRate = population <= 10 ? 0 : Math.min(0.5, (population-10)*0.05);
         city.economy.lastIncome = {
-            food: total.food - city.economy.foodConsumption,
-            production: Math.max(0, total.production - infrastructure.roads),
-            money: total.money - infrastructure.workshops
+            food: grossFoodExcess > 0 ? Math.floor(grossFoodExcess*(1-largeCityLossRate)) : grossFoodExcess,
+            production: Math.max(0, total.production - infrastructure.roads
+                - infrastructure.networks - infrastructure.fortifications*2),
+            money: total.money
         };
         city.economy.turnsToNewCitizen = city.economy.lastIncome.food > 0 ? Math.ceil((this.citizenGrowthCost(city) - city.economy.foodStored)/city.economy.lastIncome.food) : 0;
         if (city.cityProperties == null) {
@@ -408,7 +486,7 @@ const _city_economy = new class
         city.type = 4;
         city.unitTypeId = 'destroyed_city';
         city.name = 'Destroyed City';
-        city.texture = 869;
+        city.texture = 871;
         city.can_move = false;
         city.attack = 0;
         city.defense = 0;

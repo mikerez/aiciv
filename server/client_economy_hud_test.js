@@ -11,8 +11,8 @@ const context = {
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('economics.js', 'utf8') + ';globalThis.economics=_economics;', context);
 context.economics.updateCounters({ food: 44, money: 900 }, 7, 'human');
-assert.equal(nodes.foodCounterValue.textContent, 44);
-assert.equal(nodes.goldCounterValue.textContent, 900);
+assert.equal(nodes.foodCounterValue.textContent, '44');
+assert.equal(nodes.goldCounterValue.textContent, '900');
 assert.equal(context.economics.hudHistory[0].playerId, 7);
 assert.equal(context.economics.hudHistory[0].source, 'human');
 
@@ -24,11 +24,11 @@ const authoritativeState = {
     lastAvailableMoney: 3, lastScienceIncome: 0, lastAccountIncome: 3,
 };
 context.economics.updateCounters(authoritativeState, 7, 'before-server');
-assert.equal(nodes.foodCounterValue.textContent, 44, 'HUD must wait for an authoritative server economy state');
+assert.equal(nodes.foodCounterValue.textContent, '44', 'HUD must wait for an authoritative server economy state');
 authoritativeState.serverEconomyLoaded = true;
 context.economics.updateCounters(authoritativeState, 7, 'server');
-assert.equal(nodes.foodCounterValue.textContent, 18);
-assert.equal(nodes.goldCounterValue.textContent, 27);
+assert.equal(nodes.foodCounterValue.textContent, '18');
+assert.equal(nodes.goldCounterValue.textContent, '27');
 const balanceBefore = authoritativeState.money;
 context.economics.processTurnIncome(authoritativeState, 99, 0);
 assert.equal(authoritativeState.money, balanceBefore, 'authenticated JS must not calculate treasury changes');

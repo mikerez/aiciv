@@ -80,8 +80,9 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-GEN-004`: Generated resources are prepared into a full-map sprite list for faster drawing.
 - `RESOURCE-GEN-005`: Resource generation uses sparse probabilities so resources remain rare on the map.
 - `RESOURCE-GEN-006`: Duplicate resource names in design input are represented once in `_resource_types`.
+- `RESOURCE-GEN-007`: New generated worlds contain at least four playable Gold deposits on a 100x100 map; this guarantee runs only during map generation and never inserts resources during turns.
 - `RESOURCE-GEN-007`: Server migration 8 seeds Gems once on eligible empty hill and rock tiles in existing worlds without replacing terrain or existing resources.
-- `RESOURCE-GEN-008`: JS and PHP use matching elevated generation chances for Stone (`0.024`), Marble (`0.014`), Copper (`0.020`), and Iron (`0.040`).
+- `RESOURCE-GEN-008`: JS and PHP use matching generation chances for Stone (`0.024`), Marble (`0.014`), Copper (`0.020`), Iron (`0.020`), and Ivory (`0.003`).
 
 ## Visibility
 
@@ -95,7 +96,7 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-IMPROVEMENT-001`: A resource tile is enhanced by the terrain modifier listed for that resource after the resource has been opened.
 - `RESOURCE-IMPROVEMENT-002`: Farm requires `Irrigation`; Pasture and Camp require `Animal Husbandry`; Fishing Boats requires `Sailing`; Plantation and Winery require `Pottery`; Quarry requires `Masonry`; Mine requires `Mining`.
 - `RESOURCE-IMPROVEMENT-003`: JS and PHP use matching resource-to-improvement tables and reject an economic improvement that does not match the Tile resource.
-- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles. Knight requires connected Horses and Iron; Spearman, Fencer, and Catapult require connected Copper/Bronze or Iron.
+- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles. Copper/Bronze and Iron must also have a Mine. Knight requires connected Horses and mined Iron; Spearman, Fencer, Catapult, and Longbow require connected mined Copper/Bronze or Iron.
 
 | Resource | Improvement |
 | --- | --- |

@@ -94,7 +94,7 @@ function roadPoints(gameDbId) {
         client._game_state.money = 5000;
         let turns = 0;
 
-        while (turns < 80) {
+        while (turns < 180) {
             turns++;
             const before = roadPoints(gameDbId);
             const {submission} = await runClientTurn(client);
@@ -107,8 +107,8 @@ function roadPoints(gameDbId) {
             for (const action of submission.actions.filter(item => item.type === 'build')) {
                 assert.equal(action.building_type, 'road');
                 const point = `${worker.coord.i}:${worker.coord.j}`;
-                assert.equal(turns - startedAt.get(point), 1,
-                    `scenario ${scenario}: road at ${point} must consume exactly two client turns`);
+                assert.equal(turns - startedAt.get(point), 5,
+                    `scenario ${scenario}: road at ${point} must consume exactly six client turns`);
                 assert.ok(!before.has(point), `scenario ${scenario}: road must not exist before completion`);
             }
             const built = roadPoints(gameDbId);
@@ -121,8 +121,8 @@ function roadPoints(gameDbId) {
             `scenario ${scenario}: Road-to must build only its selected route`);
         assert.equal(worker.coord.i, destination.i);
         assert.equal(worker.coord.j, destination.j);
-        assert.equal(turns, route.length * 3 + 2,
-            `scenario ${scenario}: every route step needs one move plus a two-turn road build`);
+        assert.equal(turns, route.length * 7 + 6,
+            `scenario ${scenario}: every route step needs one move plus a six-turn road build`);
     }
     console.log('PASS 10 randomized multi-turn Road-to scenarios use real JS, PHP, and MySQL');
 })().catch(error => { console.error(error); process.exitCode = 1; });
