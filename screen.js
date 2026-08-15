@@ -597,7 +597,7 @@ function drawSceneFrame(loop)
                             var supertileX = (ijtox1(supertileAnchor.i, supertileAnchor.j)
                                 + ijtox1(oppositeI, oppositeJ)) / 2;
                             var supertileY = (ijtoy1(supertileAnchor.i, supertileAnchor.j)
-                                + ijtoy1(oppositeI, oppositeJ)) / 2 + 10*_ratio;
+                                + ijtoy1(oppositeI, oppositeJ)) / 2 - 10*_ratio;
                             var supertileBrightness = Math.min(
                                 _screen.tileBrightness(supertileAnchor.i, supertileAnchor.j),
                                 _screen.tileBrightness(supertileAnchor.i, oppositeJ),
