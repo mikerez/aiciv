@@ -21,6 +21,13 @@ const context = {
     _map_terrain_tex: terrain,
     _map_terrain_mod: modifiers,
     _map: {prepareTerrainModifierSprites() {}},
+    _server_game: {
+        growthRequests: [],
+        growCity(city, foodStored) {
+            this.growthRequests.push({city, foodStored});
+            return Promise.resolve({queued: true});
+        },
+    },
 };
 vm.createContext(context);
 vm.runInContext(
@@ -63,6 +70,20 @@ assert(!candidateKeys.has("10:10"), "remote disconnected Tile must not contribut
 modifiers[2][2].network = true;
 const networkKeys = new Set(economy.economicTileCandidates(candidateCity).map((coord) => `${coord.i}:${coord.j}`));
 assert(networkKeys.has("2:2"), "a nearby Tile with Nets must contribute without a road");
+
+const growthCapacity = economy.economicTileCandidates(candidateCity).length;
+const growthCity = {
+    type: 3, serverId: 10, team: 1, coord: new Coord(1, 1), cityPopulation: growthCapacity,
+    cityFoodStored: 10000, economy: new context.CityEconomyStateForTest(),
+};
+context._units.push(growthCity);
+economy.queueServerGrowthRequests(7);
+assert.equal(context._server_game.growthRequests.length, 0,
+    "a City at its worked-Tile capacity must not request impossible growth");
+growthCity.cityPopulation = growthCapacity-1;
+economy.queueServerGrowthRequests(8);
+assert.equal(context._server_game.growthRequests.length, 1,
+    "a City with food and a free eligible Tile must request growth");
 
 const ruinedCity = {
     type: 3, unitTypeId: "city", name: "City", texture: 602, can_move: false,

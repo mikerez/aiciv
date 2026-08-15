@@ -68,43 +68,37 @@ const _draw = new class
         ctx.restore();
     }
 
+    unitArrivalVisualCoord(unit, now)
+    {
+        if (!unit || !unit.coord || !unit.arrivalEffect || !unit.arrivalEffect.from) {
+            return unit ? unit.coord : null;
+        }
+        if (now == undefined) now = typeof performance != 'undefined' ? performance.now() : Date.now();
+        var effect = unit.arrivalEffect;
+        var duration = Math.max(1, Number(effect.duration) || 1);
+        var progress = Math.max(0, Math.min(1, (now-effect.startedAt)/duration));
+        if (progress >= 1) {
+            delete unit.arrivalEffect;
+            return unit.coord;
+        }
+        return {
+            i: effect.from.i + (unit.coord.i-effect.from.i)*progress,
+            j: effect.from.j + (unit.coord.j-effect.from.j)*progress,
+        };
+    }
+
     drawUnitArrivalEffects(ctx)
     {
         if (!ctx || typeof visibleUnitsForCurrentUser !== 'function') return;
         var now = typeof performance != 'undefined' ? performance.now() : Date.now();
         var units = visibleUnitsForCurrentUser();
         var active = false;
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
         for (var k=0; k<units.length; k++) {
             var effect = units[k] && units[k].arrivalEffect;
             if (!effect || !units[k].coord) continue;
-            var age = now - effect.startedAt;
-            if (age >= effect.duration) {
-                delete units[k].arrivalEffect;
-                continue;
-            }
-            active = true;
-            var progress = Math.max(0, Math.min(1, age/effect.duration));
-            var fromX = x1toX(ijtox1(effect.from.i, effect.from.j));
-            var fromY = y1toY(ijtoy1(effect.from.i, effect.from.j));
-            var toX = x1toX(ijtox1(units[k].coord.i, units[k].coord.j));
-            var toY = y1toY(ijtoy1(units[k].coord.i, units[k].coord.j));
-            var tail = 0.12 + progress*0.88;
-            var x = fromX + (toX-fromX)*tail;
-            var y = fromY + (toY-fromY)*tail;
-            ctx.strokeStyle = 'rgba(255,255,220,' + (0.55*(1-progress)) + ')';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(toX, toY);
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(255,255,255,' + (0.35*(1-progress)) + ')';
-            ctx.beginPath();
-            ctx.arc(x, y, 5 + progress*5, 0, Math.PI*2);
-            ctx.fill();
+            this.unitArrivalVisualCoord(units[k], now);
+            if (units[k].arrivalEffect) active = true;
         }
-        ctx.restore();
         if (active && !this.arrivalFramePending && typeof requestAnimationFrame == 'function') {
             this.arrivalFramePending = true;
             var self = this;
@@ -156,8 +150,9 @@ const _draw = new class
             var tileKey = unit.coord.i + ':' + unit.coord.j;
             var line = labelsPerTile[tileKey] || 0;
             labelsPerTile[tileKey] = line + 1;
-            var x = x1toX(ijtox1(unit.coord.i, unit.coord.j));
-            var y = y1toY(ijtoy1(unit.coord.i, unit.coord.j))
+            var visualCoord = this.unitArrivalVisualCoord(unit);
+            var x = x1toX(ijtox1(visualCoord.i, visualCoord.j));
+            var y = y1toY(ijtoy1(visualCoord.i, visualCoord.j))
                 - Math.max(42, 92/_screenZoom) - line*(fontSize + 3);
             var maxWidth = Math.max(88, 190/_screenZoom);
             ctx.fillStyle = 'rgba(0,0,0,0.82)';
@@ -227,9 +222,10 @@ const _draw = new class
             var ownerLine = ownerLineByKey[unitOwnerKey] || 0;
             var unitLine = unitLinesPerOwner[unitOwnerKey] || 0;
             unitLinesPerOwner[unitOwnerKey] = unitLine + 1;
-            var centerX = x1toX(ijtox1(unit.coord.i, unit.coord.j));
+            var visualCoord = this.unitArrivalVisualCoord(unit);
+            var centerX = x1toX(ijtox1(visualCoord.i, visualCoord.j));
             var x = Math.round(centerX - fullWidth/2);
-            var labelY = y1toY(ijtoy1(unit.coord.i, unit.coord.j))
+            var labelY = y1toY(ijtoy1(visualCoord.i, visualCoord.j))
                 - Math.max(42, 92/zoom) - ownerLine*(fontSize + 3);
             var y = Math.round(labelY + 2 + unitLine*5);
             var healthWidth = healthRatio > 0 ? Math.max(1, Math.round(fullWidth*healthRatio)) : 0;

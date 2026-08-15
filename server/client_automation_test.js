@@ -49,6 +49,26 @@ assert.equal(fifthSubmission.commands[1].command, 'hold', 'completed client coun
 assert.equal(fifthSubmission.actions.length, 1, 'fifth Cottage turn submits one build request');
 assert.equal(fifthSubmission.actions[0].type, 'build');
 assert.equal(fifthSubmission.actions[0].building_type, 'cottage');
+const retrySubmission = sandbox.serverGame.captureTurn(7);
+assert.equal(retrySubmission.actions.length, 1,
+    'a pending improvement must be retried until PHP confirms it');
+assert.equal(retrySubmission.actions[0].building_type, 'cottage');
+sandbox.serverGame.applyTurnActionResults(7, retrySubmission.actions, [{
+    client_action_id: retrySubmission.actions[0].client_action_id,
+    type: 'build', ok: true, duplicate_skipped: true,
+}], false);
+assert.equal(worker.pendingImmediateBuild, true,
+    'a duplicate/skipped turn must not falsely complete the improvement');
+const confirmedSubmission = sandbox.serverGame.captureTurn(7);
+assert.equal(confirmedSubmission.actions.length, 1,
+    'a duplicate/skipped improvement must be submitted on the following turn');
+sandbox.serverGame.applyTurnActionResults(7, confirmedSubmission.actions, [{
+    client_action_id: confirmedSubmission.actions[0].client_action_id,
+    type: 'build', ok: true, result: {status: 'BUILT'},
+}], false);
+assert.equal(worker.state, 'ready', 'only an authoritative build result clears the Worker state');
+assert.equal(worker.pendingImmediateBuild, false, 'confirmed build clears the pending retry marker');
+assert.equal(worker.clientImprovementTurnsLeft, undefined, 'confirmed build clears the countdown');
 const chopper = {unitTypeId: 'worker', state: 'chop_forest'};
 assert.equal(sandbox.serverGame.advanceImprovementCountdown(chopper, 'chop_forest'), false);
 assert.equal(chopper.clientImprovementTurnsLeft, 3);
@@ -75,4 +95,40 @@ assert.match(php, /\$modifier === 'road' \? ':road' : ':improvement'/,
     'road and primary improvements must use separate occupancy keys');
 assert.match(php, /function resetRejectedImprovementUnit[\s\S]*?SET state = 'ready'/,
     'the server must persist ready state after a rejected improvement');
+assert.match(layer, /\(!hasPrimary \|\| replaceWorkshopForFood\)[\s\S]*?!modifiers\.irrigation[\s\S]*?this\.canBuildIrrigation/,
+    'automation must preserve primary improvements except a Workshop replaced for food recovery');
+assert.match(layer, /replaceWorkshopForFood = preferred == 'farm' && modifiers\.workshop[\s\S]*?!this\.workerCityAllowsWorkshop/,
+    'only a food-deficit City may replace its Workshop with Irrigation');
+assert.match(layer, /Finish prepared Irrigation before preparing another Tile/,
+    'automation must finish prepared Farm or Cottage Tiles even before citizen assignment');
+assert.match(layer, /_prehistory_unit_sprites[\s\S]*?vocabularyText\('production\.option',[\s\S]*?attack: unitType\.attack[\s\S]*?defense: unitType\.defense[\s\S]*?speed: unitType\.speed/,
+    'city production rows must include the actual unit sprite and A/D/S characteristics');
+assert.match(layer, /vocabularyText\('production\.option',[\s\S]*?food: this\.unitFoodUpkeep\(unitType\.id\)[\s\S]*?gold: this\.unitGoldUpkeep\(unitType\.id\)/,
+    'city production rows must show authoritative per-turn food and gold upkeep');
+assert.match(layer, /irrigationConnectedToWater\(originI, originJ\)[\s\S]*?return this\.irrigationConnectedToWater\(i, j\)/,
+    'JS must reject disconnected Irrigation before starting a Worker countdown');
+const costs = fs.readFileSync('menu_costs.js', 'utf8');
+const vocabulary = fs.readFileSync('vocabulary_EN.js', 'utf8');
+assert.match(costs, /cost\.unit_upkeep[\s\S]*?cost\.improvement_upkeep[\s\S]*?common\.overall/,
+    'the Costs window must group unit and improvement upkeep with totals');
+assert.match(costs, /lastCityIncome[\s\S]*?workshopFoodCost/,
+    'the Costs window must adjust current City food from the authoritative Workshop charge');
+assert.match(costs, /cost\.city_balances[\s\S]*?cost\.balance_food_production_gold/,
+    'the Costs window must show per-City food, production, and gold balances');
+assert.match(costs, /name == 'workshop'[\s\S]*?cityIsProducing\(workshopCity\)/,
+    'the Costs window must charge Workshop food only for actively producing parent Cities');
+assert.match(vocabulary, /'cost\.unit_upkeep': 'Unit upkeep'[\s\S]*?'cost\.improvement_upkeep': 'Improvement upkeep'/,
+    'Costs window labels must be defined in the vocabulary');
+assert.match(vocabulary, /'production\.option': '\{name\} \(\{cost\}\) A:\{attack\} D:\{defense\} S:\{speed\} \| Costs F:\{food\} G:\{gold\}'/,
+    'City production rows must show A/D/S and food/gold upkeep costs');
+assert.match(layer, /remaining > 0[\s\S]*?perTurn <= 0[\s\S]*?return null/,
+    'zero-production Cities must report a paused queue instead of fake remaining turns');
+assert.match(layer, /production\.paused_status/,
+    'the City production status must visibly identify a paused queue');
+assert.match(layer, /road: \{food:0, production:1, gold:0\}[\s\S]*?fortification: \{food:0, production:2, gold:0\}[\s\S]*?workshop: \{food:2, production:0, gold:0\}/,
+    'client improvement costs must match server economy costs');
+assert.doesNotMatch(layer, /Producing:/,
+    'city production status must not include the redundant Production label');
+assert.match(fs.readFileSync('index.html', 'utf8'), /loadTexture\('nets\.png[^']*', 872\)/,
+    'Nets must use a texture slot that is not overwritten by Village');
 console.log('PASS Patrol/Automate renewal and delayed transactional Worker builds');

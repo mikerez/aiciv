@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Civilization</title>
+    <title data-vocabulary="app.name">AI Civilization</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script>
@@ -9,9 +9,6 @@
             window.location.replace('login.html');
         }
     </script>
-    <link rel="preload" href="ai_player/strategy.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/action.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
-    <link rel="preload" href="ai_player/economics.db.gz?v=20260808b" as="fetch" crossorigin="anonymous">
     <style>
         body {
             margin: 0;
@@ -32,15 +29,14 @@
         }
         .economy-counter {
             width: 154px;
-            min-height: 46px;
+            height: 51px;
+            min-height: 0;
             box-sizing: border-box;
             display: flex;
             align-items: center;
-            padding: 6px 10px 6px 46px;
-            border: 1px solid rgba(0,0,0,0.35);
-            border-radius: 8px;
-            background-color: rgba(255,255,255,0.58);
-            background-image: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(208,218,221,0.72));
+            padding: 6px 10px 6px 31px;
+            border: 0;
+            background-color: transparent;
             background-position: center;
             background-repeat: no-repeat;
             background-size: 100% 100%;
@@ -52,21 +48,78 @@
         .economy-counter.counter-wide { font-size: 20px; }
         .economy-counter.counter-very-wide { font-size: 16px; }
         #foodCounter {
-            background-image: url('images/food.png'), linear-gradient(180deg, rgba(255,255,255,0.86), rgba(197,225,185,0.76));
-            background-position: 9px center, center;
-            background-size: 30px 30px, 100% 100%;
+            background-image: url('images/food_frame.png?v=20260811c');
         }
         #goldCounter {
-            background-image: url('images/money.png'), linear-gradient(180deg, rgba(255,255,255,0.86), rgba(239,221,151,0.78));
-            background-position: 9px center, center;
-            background-size: 30px 30px, 100% 100%;
+            background-image: url('images/gold_frame.png?v=20260811c');
+        }
+        #endTurnButton,
+        #optionsButton,
+        #civilizationsButton,
+        #costsButton {
+            box-sizing: border-box;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background-color: transparent !important;
+            background-image: url('images/button.png?v=20260815a') !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 100% 100% !important;
+            color: #f4edc5;
+            text-shadow: 0 1px 2px #000;
+            font: bold 14px Arial;
+        }
+        #endTurnButton {
+            width: 140px;
+            height: 56px;
+            padding: 8px 12px;
+        }
+        #optionsButton,
+        #civilizationsButton,
+        #costsButton {
+            width: 98px;
+            height: 39px;
+            padding: 6px 10px !important;
         }
         #optionsButton {
             position: fixed;
-            right: 76px;
+            right: 118px;
             bottom: 12px;
             z-index: 9;
         }
+        #costsButton {
+            position: fixed;
+            right: 224px;
+            bottom: 12px;
+            z-index: 9;
+        }
+        #costsMenu {
+            position: fixed;
+            right: 12px;
+            bottom: 60px;
+            z-index: 11;
+            display: none;
+            width: min(460px, calc(100vw - 24px));
+            max-height: min(72vh, 650px);
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid rgba(0,0,0,0.45);
+            border-radius: 7px;
+            background: rgba(255,255,255,0.78);
+            color: #111;
+            font: 12px Arial;
+        }
+        .costs-title { margin: 4px 0 6px; font-weight: bold; font-size: 15px; }
+        .costs-row {
+            display: grid;
+            grid-template-columns: minmax(100px,1.4fr) 44px minmax(76px,1fr) minmax(82px,1fr);
+            gap: 6px;
+            padding: 3px 2px;
+            border-top: 1px solid rgba(0,0,0,0.10);
+            font-variant-numeric: tabular-nums;
+        }
+        .costs-header { font-weight: bold; border-top-color: rgba(0,0,0,0.3); }
         #optionsMenu {
             position: fixed;
             left: 50%;
@@ -229,27 +282,42 @@
         }
         body.phone-ui .economy-counter {
             width: 104px;
-            min-height: 34px;
-            padding: 4px 5px 4px 30px;
-            background-size: 100% 100%, 22px 22px;
-            background-position: center, 5px center;
+            height: 35px;
+            min-height: 0;
+            justify-content: flex-start;
+            padding: 4px 5px 4px 25px;
+            background-size: 100% 100%;
+            background-position: center;
             font-size: 18px;
         }
         body.phone-ui .economy-counter.counter-wide { font-size: 15px; }
         body.phone-ui .economy-counter.counter-very-wide { font-size: 12px; }
         body.phone-ui #optionsButton {
-            right: calc(env(safe-area-inset-right, 0px) + 72px) !important;
-            bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+            right: calc(env(safe-area-inset-right, 0px) + 106px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+        }
+        body.phone-ui #endTurnButton {
+            width: 110px;
+            height: 44px;
+            min-height: 44px !important;
+        }
+        body.phone-ui #optionsButton,
+        body.phone-ui #civilizationsButton,
+        body.phone-ui #costsButton {
+            width: 90px;
+            height: 36px;
+            min-height: 36px !important;
         }
         body.phone-ui #optionsMenu { padding: 14px; }
         body.phone-ui #optionsMenu h2 { font-size: 24px; }
         body.phone-ui #optionsMenu button { min-height: 48px; }
         body.phone-ui #respawnPrompt { top: 38%; font-size: 28px; }
         body.phone-ui #foreground {
-            top: calc(env(safe-area-inset-top, 0px) + var(--phone-button-size) + 50px) !important;
+            top: calc(env(safe-area-inset-top, 0px) + var(--phone-unit-stack-y) + 40px) !important;
             right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
             bottom: auto !important;
-            width: min(220px, calc(var(--phone-vw) * 0.58)) !important;
+            width: min(200px, calc((var(--phone-vw) - 36px) / 2)) !important;
+            box-sizing: border-box;
             height: var(--phone-action-menu-height) !important;
             max-height: var(--phone-action-menu-height) !important;
             padding-right: 2px;
@@ -292,7 +360,7 @@
             left: calc(env(safe-area-inset-left, 0px) + 8px) !important;
             right: auto !important;
             bottom: auto !important;
-            width: min(240px, calc(var(--phone-vw) * 0.5)) !important;
+            width: min(200px, calc((var(--phone-vw) - 36px) / 2)) !important;
             height: var(--phone-unit-stack-height) !important;
             min-height: 120px !important;
             max-height: var(--phone-unit-stack-height) !important;
@@ -314,6 +382,17 @@
         body.phone-ui #civilizationsButton {
             right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
             bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+        }
+        body.phone-ui #costsButton {
+            right: calc(env(safe-area-inset-right, 0px) + 204px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+        }
+        body.phone-ui #costsMenu {
+            right: calc(env(safe-area-inset-right, 0px) + 8px) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 52px) !important;
+            width: calc(var(--phone-vw) - 16px) !important;
+            max-height: calc(var(--phone-vh) - 80px) !important;
+            font-size: 12px !important;
         }
         body.phone-ui #civilizations_menu {
             top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
@@ -349,22 +428,31 @@
     <canvas id="canvasSelection" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 3;pointer-events: none;mix-blend-mode: difference;"></canvas>
     <canvas id="canvasEvents" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 4;pointer-events: none;"></canvas>
     <div class="container">
-        <div id="foreground" style="position: fixed;top: 50px;right: 50px;width: 300px;height: 400px;z-index: 5;overflow-y: scroll; height:400px;">
+        <div id="foreground" style="position: fixed;top: calc(50% - 255px);right: 0;width: 300px;height: 480px;z-index: 5;overflow: hidden;">
         </div>
     </div>
     <div id="turnControls">
-        <div id="foodCounter" class="economy-counter" title="Food storage"><span id="foodCounterValue">-</span></div>
-        <button id="endTurnButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">End Turn (6s)</button>
-        <div id="goldCounter" class="economy-counter" title="Gold storage"><span id="goldCounterValue">-</span></div>
+        <div id="foodCounter" class="economy-counter" data-vocabulary-title="hud.food_storage"><span id="foodCounterValue">-</span></div>
+        <button id="endTurnButton">End Turn (6s)</button>
+        <div id="goldCounter" class="economy-counter" data-vocabulary-title="hud.gold_storage"><span id="goldCounterValue">-</span></div>
     </div>
-    <button id="optionsButton" style="background:rgba(255,255,255,0.75);border:1px solid rgba(0,0,0,0.35);border-radius:8px;padding:8px 12px;font:bold 14px Arial;">Options</button>
+    <button id="optionsButton" data-vocabulary="hud.options">Options</button>
     <div id="optionsMenu" role="dialog" aria-modal="true" aria-labelledby="optionsMenuTitle">
-        <h2 id="optionsMenuTitle">Options</h2>
-        <button id="optionsLogoutButton" type="button">Log out</button>
-        <button id="optionsRespawnButton" type="button">Respawn</button>
-        <button id="optionsBackButton" type="button">Back to game</button>
+        <h2 id="optionsMenuTitle" data-vocabulary="hud.options">Options</h2>
+        <button id="optionsLogoutButton" type="button" data-vocabulary="hud.log_out">Log out</button>
+        <button id="optionsRespawnButton" type="button" data-vocabulary="hud.respawn">Respawn</button>
+        <button id="optionsBackButton" type="button" data-vocabulary="hud.back_to_game">Back to game</button>
     </div>
-    <div id="respawnPrompt">Click on minimap to select respawn point</div>
+    <div id="respawnPrompt" data-vocabulary="hud.respawn_prompt">Click on minimap to select respawn point</div>
+    <script src="vocabulary_EN.js?v=20260815b"></script>
+    <script src="vocabulary_FR.js?v=20260815a"></script>
+    <script src="vocabulary_DE.js?v=20260815a"></script>
+    <script src="vocabulary_SP.js?v=20260815a"></script>
+    <script src="vocabulary_RU.js?v=20260815a"></script>
+    <script src="vocabulary_IT.js?v=20260815a"></script>
+    <script src="vocabulary_CH.js?v=20260815a"></script>
+    <script src="vocabulary_JP.js?v=20260815a"></script>
+    <script src="vocabulary.js?v=20260812c"></script>
     <script>
         // very global vars
 //        var _redraw = 1;
@@ -380,10 +468,10 @@
         const _cell_height = 200;  // by Y, already multiplied by sqrt2/2
         const _map_view = [_map_size/2*_cell_width,-_map_size/2*_cell_height,
                            _map_size/2*3*_cell_width,_map_size/2*_cell_height];
-        const _map_terrain_tex = new Array(_map_size);
+        let _map_terrain_tex = new Array(_map_size);
         var _map_terrain_bit = new Array(_map_size);
-        const _map_resource = new Array(_map_size);
-        const _map_terrain_mod = new Array(_map_size);
+        let _map_resource = new Array(_map_size);
+        let _map_terrain_mod = new Array(_map_size);
         // not zoomed coordinates from start of the map
         function xytoi(x,y) { return (x+y)/2/*sqrt2^2*//_cell_height; }
         function xytoj(x,y) { return (x-y)/2/*sqrt2^2*//_cell_width; }  //_map_size*sqrt2/2-
@@ -391,11 +479,11 @@
         function ijtoy(i,j) { return i*_cell_height-j*_cell_width; }
     </script>
     <script src="mobile_ui.js?v=20260805i"></script>
-    <script src="menu_unit.js?v=20260809d"></script>
-    <script src="draw.js?v=20260811a"></script>
-    <script src="control.js?v=20260811a"></script>
-    <script src="birdsview.js?v=20260809b"></script>
-    <script src="ai.js?v=20260810a"></script>
+    <script src="menu_unit.js?v=20260815e"></script>
+    <script src="draw.js?v=20260811d"></script>
+    <script src="control.js?v=20260814b"></script>
+    <script src="birdsview.js?v=20260811e"></script>
+    <script src="ai.js?v=20260814i"></script>
     <script>
         if (typeof _ai_player !== 'undefined') {
             _ai_player.ensureBackgroundModelsLoaded().catch(function(error) {
@@ -405,13 +493,13 @@
             });
         }
     </script>
-    <script src="game.js?v=20260810c"></script>
+    <script src="game.js?v=20260815a"></script>
     <script src="military.js?v=20260809b"></script>
-    <script src="economics.js?v=20260809b"></script>
-    <script src="multiplayer.js?v=20260810c"></script>
-    <script src="server_game.js?v=20260811b"></script>
-    <script src="city.js?v=20260811c"></script>
-    <script src="menu_tile.js?v=20260808b"></script>
+    <script src="economics.js?v=20260812a"></script>
+    <script src="multiplayer.js?v=20260814i"></script>
+    <script src="server_game.js?v=20260814k"></script>
+    <script src="city.js?v=20260815a"></script>
+    <script src="menu_tile.js?v=20260812d"></script>
     <!-- Top-level technology, politics, finance, trade, and console menus are disabled in this version. -->
     <!--
     <script src="menu_technology.js"></script>
@@ -422,10 +510,11 @@
     <script src="menu_main.js"></script>
     -->
     <script src="game_events.js?v=20260805b"></script>
-    <script src="menu_stack.js?v=20260809g"></script>
-    <script src="menu_civilizations.js?v=20260807e"></script>
-    <script src="map.js?v=20260810c"></script>
-    <script src="screen.js?v=20260810c"></script>
+    <script src="menu_stack.js?v=20260813a"></script>
+    <script src="menu_civilizations.js?v=20260812a"></script>
+    <script src="menu_costs.js?v=20260815a"></script>
+    <script src="map.js?v=20260815a"></script>
+    <script src="screen.js?v=20260815b"></script>
     <script>
         // X,Y - canvas backing-buffer coordinates.
         function Xtox1(X) { return X*2-_canvas.width/*/2*2*/; }
@@ -458,50 +547,62 @@
 
         const _textures = new Array(1024);  // first 256 are map tiles
         _screen.init();
+        _canvas.addEventListener('webglcontextlost', function(event) {
+            event.preventDefault();
+            _screen.contextLost = true;
+        }, false);
+        _canvas.addEventListener('webglcontextrestored', function() {
+            _screen.restoreContext();
+        }, false);
         // [A S D1 D0 T3 T2 T1 T0], T - type 4 bit, D - depth/height/wildity, S - 4 blocks supertile of similar type, A - alternative view (+means water source exists)
         // D0 for hills means forest exists, can be removed when forest is chopped, not touching other bits
-        _screen.loadTexture('waterdeep1.png', 0);
-         _screen.loadTexture('water.png', 0+(1<<4));  // deep
-         _screen.loadTexture('waterdeep.png', 0+(2<<4));  // deep
-         _screen.loadTexture('waterdeep.png', 0+(3<<4));  // deep
-//         _screen.loadTexture('water-1.png', 0+(8<<4));  // deep
-//         _screen.loadTexture('water4.png', 0+(4<<4));  // deep
-        _screen.loadTexture('sand.png', 1);
-         _screen.loadTexture('sanddune3.png', 1+(1<<4));
-         _screen.loadTexture('sand2.png', 1+(2<<4));
-         _screen.loadTexture('sanddune1.png', 1+(3<<4));
-         _screen.loadTexture('sandbig.png', 1+(4<<4));
-         _screen.loadTexture('sanddune3.png', 1+(5<<4));
-         _screen.loadTexture('sand6.png', 1+((2+4)<<4));
-         _screen.loadTexture('sand10.png', 1+((2+8)<<4));
-         _screen.loadTexture('sand14.png', 1+((8+2+4)<<4));
-        _screen.loadTexture('grass.png', 2);
-         _screen.loadTexture('grass_wet.png', 2+(1<<4));
-         _screen.loadTexture('grass_offroad.png', 2+(2<<4));
-         _screen.loadTexture('grass_swamps.png', 2+(3<<4));  //swamps
-        _screen.loadTexture('snow.png', 3);
-          _screen.loadTexture('snowhill.png', 3+(1<<4));
-          _screen.loadTexture('snowhill1.png', 3+(2<<4));
-          _screen.loadTexture('snowhill2.png', 3+(3<<4));
-        _screen.loadTexture('hills.png', 4);
-          _screen.loadTexture('hills1.png', 4+(1<<4));
-          _screen.loadTexture('hills2.png', 4+(2<<4));
-          _screen.loadTexture('hills3.png', 4+(3<<4));
-          _screen.loadTexture('hills4.png', 4+(4<<4));
-          _screen.loadTexture('hills5.png', 4+((1+4)<<4));
-          _screen.loadTexture('hills6.png', 4+((2+4)<<4));
-          _screen.loadTexture('hills12.png', 4+((8+4)<<4));
-          _screen.loadTexture('hills13.png', 4+((8+1+4)<<4));
-        _screen.loadTexture('rocks.png', 5);
-          _screen.loadTexture('rocks.png', 5+(1<<4));
-          _screen.loadTexture('rocks2.png', 5+(2<<4));
-          _screen.loadTexture('rocks1.png', 5+(3<<4));
-        _screen.loadTexture('forest.png', 6);
-         _screen.loadTexture('forest1.png', 6+(1<<4));
-         _screen.loadTexture('forest2.png', 6+(2<<4));
-         _screen.loadTexture('forest3.png', 6+(3<<4));
-         _screen.loadTexture('forest7.png', 6+(7<<4));
-        _screen.loadTexture('grasswater.png', 7+(3<<4));
+        _screen.loadTexture('water_depth0-00000000.png', 0b00000000);
+        _screen.loadTexture('water_depth1-00010000.png', 0b00010000);
+        _screen.loadTexture('water_depth2-00100000.png', 0b00100000);
+        _screen.loadTexture('water_depth3-00110000.png', 0b00110000);
+        _screen.loadTexture('water_depth0_supertile-01000000.png', 0b01000000);
+        _screen.loadTexture('water_depth1_supertile-01010000.png', 0b01010000);
+        _screen.loadTexture('water_depth2_supertile-01100000.png', 0b01100000);
+        _screen.loadTexture('water_depth3_supertile-01110000.png', 0b01110000);
+        _screen.loadTexture('sand_depth0-00000001.png', 0b00000001);
+        _screen.loadTexture('sand_dune_depth1-00010001.png', 0b00010001);
+        _screen.loadTexture('sand_depth2-00100001.png', 0b00100001);
+        _screen.loadTexture('sand_dune_depth3-00110001.png', 0b00110001);
+        _screen.loadTexture('sand_depth0_supertile-01000001.png', 0b01000001);
+        _screen.loadTexture('sand_dune_depth1_supertile-01010001.png', 0b01010001);
+        _screen.loadTexture('sand_depth2_supertile-01100001.png', 0b01100001);
+        _screen.loadTexture('sand_depth2_water_source-10100001.png', 0b10100001);
+        _screen.loadTexture('sand_depth2_supertile_water_source-11100001.png', 0b11100001);
+        _screen.loadTexture('grass_depth0-00000010.png', 0b00000010);
+        _screen.loadTexture('grass_wet_depth1-00010010.png', 0b00010010);
+        _screen.loadTexture('grass_offroad_depth2-00100010.png', 0b00100010);
+        _screen.loadTexture('grass_swamp_depth3-00110010.png', 0b00110010);
+        _screen.loadTexture('snow_height0-00000011.png', 0b00000011);
+        _screen.loadTexture('snow_hills_height1-00010011.png', 0b00010011);
+        _screen.loadTexture('snow_hills_height2-00100011.png', 0b00100011);
+        _screen.loadTexture('snow_hills_height3-00110011.png', 0b00110011);
+        _screen.loadTexture('hills_clear_height0-00000100.png', 0b00000100);
+        _screen.loadTexture('hills_forest_height1-00010100.png', 0b00010100);
+        _screen.loadTexture('hills_clear_height2-00100100.png', 0b00100100);
+        _screen.loadTexture('hills_forest_height3-00110100.png', 0b00110100);
+        _screen.loadTexture('hills_clear_height0_supertile-01000100.png', 0b01000100);
+        _screen.loadTexture('hills_forest_height1_supertile-01010100.png', 0b01010100);
+        _screen.loadTexture('hills_clear_height2_supertile-01100100.png', 0b01100100);
+        _screen.loadTexture('hills_clear_height0_supertile_water_source-11000100.png', 0b11000100);
+        _screen.loadTexture('hills_forest_height1_supertile_water_source-11010100.png', 0b11010100);
+        _screen.loadTexture('mountains_height0-00000101.png', 0b00000101);
+        _screen.loadTexture('mountains_height1-00010101.png', 0b00010101);
+        _screen.loadTexture('mountains_height2-00100101.png', 0b00100101);
+        _screen.loadTexture('mountains_height3-00110101.png', 0b00110101);
+        _screen.loadTexture('forest_wildity0-00000110.png', 0b00000110);
+        _screen.loadTexture('forest_wildity1-00010110.png', 0b00010110);
+        _screen.loadTexture('forest_wildity2-00100110.png', 0b00100110);
+        _screen.loadTexture('forest_wildity3-00110110.png', 0b00110110);
+        _screen.loadTexture('forest_wildity0_supertile-01000110.png', 0b01000110);
+        _screen.loadTexture('forest_wildity1_supertile-01010110.png', 0b01010110);
+        _screen.loadTexture('forest_wildity2_supertile-01100110.png', 0b01100110);
+        _screen.loadTexture('forest_wildity3_supertile-01110110.png', 0b01110110);
+        _screen.loadTexture('grass_water_wildity3-00110111.png', 0b00110111);
         _screen.loadTexture('road.png', 850);
         _screen.loadTexture('irrigation.png', 851);
         _screen.loadTexture('pasture.png', 852);
@@ -513,14 +614,14 @@
         _screen.loadTexture('plantation.png', 858);
         _screen.loadTexture('camp.png', 859);
         _screen.loadTexture('food.png', 860);
-        _screen.loadTexture('food5.png', 861);
+        _screen.loadTexture('food5.png?v=20260815b', 861);
         _screen.loadTexture('production.png', 862);
         _screen.loadTexture('production5.png', 863);
         _screen.loadTexture('money.png', 864);
         _screen.loadTexture('money5.png', 865);
         _screen.loadTexture('fishing_boats.png', 866);
         _screen.loadTexture('destroyed_city.png', 871);
-        _screen.loadTexture('nets.png', 870);
+        _screen.loadTexture('nets.png?v=20260811b', 872);
         _screen.loadTexture('quarry.png', 867);
         _screen.loadTexture('winery.png', 868);
         _screen.loadTexture('hamlet.png', 869);
@@ -530,7 +631,7 @@
         }
 
     </script>
-    <script src="game_prehistory.js?v=20260811c"></script>
+    <script src="game_prehistory.js?v=20260815f"></script>
     <script>
         for (var resourceId=1; resourceId < _resource_types.length; resourceId++) {
             _screen.loadTexture(_resource_types[resourceId].sprite + '?v=20260805a', _resource_types[resourceId].texture);
@@ -578,6 +679,9 @@
         if (typeof _server_game !== 'undefined') {
             _server_game.initializePlayer(_current_user).then(function() {
                 _server_game.startTurnTimer(_current_user, false);
+                if (typeof _multiplayer !== 'undefined' && _multiplayer.startBackgroundAiTurn) {
+                    _multiplayer.startBackgroundAiTurn(_server_game.serverTurn);
+                }
             }).catch(function(error) {
                 _server_game.log('Initial server load failed: ' + error.message);
             });
@@ -626,15 +730,16 @@
             if (endTurnButton) {
                 endTurnButton.disabled = true;
             }
-            var serverSubmission = typeof _server_game !== 'undefined'
-                ? _server_game.captureTurn(_current_user) : null;
-            if (typeof _server_game !== 'undefined') {
-                _server_game.stopTurnTimer(true);
-            }
-            if (typeof _game !== 'undefined' && _game.redrawControlZones) {
-                _game.redrawControlZones();
-            }
+            var serverSubmission = null;
             try {
+                serverSubmission = typeof _server_game !== 'undefined'
+                    ? _server_game.captureTurn(_current_user) : null;
+                if (typeof _server_game !== 'undefined') {
+                    _server_game.stopTurnTimer(true);
+                }
+                if (typeof _game !== 'undefined' && _game.redrawControlZones) {
+                    _game.redrawControlZones();
+                }
                 // Registered multiplayer is server-authoritative. Moving locally before
                 // make_turn is accepted causes visible rollback when this client is stale.
                 var processed = true;
@@ -669,6 +774,20 @@
                 _fulldraw = 1;
                 drawScene(0);
             }
+            catch (turnError) {
+                if (typeof console !== 'undefined' && console.error) console.error(turnError);
+                if (typeof _server_game !== 'undefined') {
+                    _server_game.log('End Turn failed: ' + turnError.message);
+                    if (_server_game.reportHandledClientError) {
+                        _server_game.reportHandledClientError('end_turn', {
+                            player_id: _current_user,
+                            forced_by_timeout: !!forcedByTimeout,
+                        }, turnError.message, 'client_end_turn_failed');
+                    }
+                }
+                _fulldraw = 1;
+                if (!_in_drawing) drawScene(0);
+            }
             finally {
                 if (!selectedCityMenuRestored && _current_game.restoreSelectedCityMenu) {
                     _current_game.restoreSelectedCityMenu(selectedCityMenu);
@@ -682,6 +801,10 @@
                 }
                 else if (awaitingServer) {
                     _server_game.updateWaitingUi(_current_user);
+                }
+                if (!awaitingServer && typeof _multiplayer !== 'undefined'
+                    && _multiplayer.startBackgroundAiTurn) {
+                    _multiplayer.startBackgroundAiTurn(_server_game.serverTurn);
                 }
             }
         }
@@ -746,6 +869,23 @@
             _pending_phone_map_command_tap = null;
             _phone_touch_context = null;
         }
+
+        function resumeGameInputAndDrawing()
+        {
+            cancelGamePointerForPinch();
+            _map_pinch = null;
+            _fulldraw = 1;
+            requestAnimationFrame(function() {
+                if (!_in_drawing) drawScene(0);
+            });
+        }
+
+        window.addEventListener('blur', cancelGamePointerForPinch);
+        window.addEventListener('focus', resumeGameInputAndDrawing);
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) cancelGamePointerForPinch();
+            else resumeGameInputAndDrawing();
+        });
 
         function touchCenterAndDistance(touches)
         {
@@ -823,6 +963,9 @@
                 }
                 return;
             }
+            if (_current_game.dismissActionMenu) {
+                _current_game.dismissActionMenu();
+            }
             _menu_tile.show(coord.i, coord.j);
         }
 
@@ -846,6 +989,9 @@
                 }
                 else {
                     _birdsview.centerViewAt(minimapCoord);
+                }
+                if (_current_game.dismissActionMenu) {
+                    _current_game.dismissActionMenu();
                 }
                 _mousedown = 0;
                 return;
@@ -931,9 +1077,6 @@
             } : null;
             if (_phone_touch_context) _phone_touch_context.unitSelected = unitSelected;
             if (deferPhoneStack) {
-                if (_current_game.dismissActionMenu) {
-                    _current_game.dismissActionMenu();
-                }
                 _pending_phone_action_tap = unitSelected ? {
                     x: point.x,
                     y: point.y,
@@ -975,6 +1118,12 @@
 
         function handlePointerMove(event) {
             if (useMapPinch(event)) return;
+            // A suspended/background tab can miss mouseup. Do not interpret
+            // its first resumed hover as a large map-pan delta.
+            if (event.type === 'mousemove' && _mousedown && event.buttons === 0) {
+                cancelGamePointerForPinch();
+                return;
+            }
             if (!_mousedown && !isGameInputTarget(event.target)) {
                 return;
             }

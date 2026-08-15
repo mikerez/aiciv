@@ -14,9 +14,9 @@ const _civilizations_menu = new class
         var button = document.createElement('button');
         button.id = 'civilizationsButton';
         button.type = 'button';
-        button.title = 'Civilizations';
-        button.setAttribute('aria-label', 'Civilizations');
-        button.textContent = 'Civs';
+        button.title = vocabularyText('menu.civilizations');
+        button.setAttribute('aria-label', vocabularyText('menu.civilizations'));
+        button.textContent = vocabularyText('menu.civs');
         button.style.position = 'fixed';
         button.style.right = '12px';
         button.style.bottom = '12px';
@@ -61,7 +61,8 @@ const _civilizations_menu = new class
         this.players = players || [];
         this.viewerId = viewerId;
         if (!this.panel) return;
-        this.panel.innerHTML = '<div style="font:bold 16px Arial;margin:1px 2px 8px">Civilizations</div>';
+        this.panel.innerHTML = '<div style="font:bold 16px Arial;margin:1px 2px 8px">'
+            + vocabularyText('menu.civilizations') + '</div>';
         for (var index=0; index < this.players.length; index++) {
             var player = this.players[index];
             var row = document.createElement('div');
@@ -72,7 +73,7 @@ const _civilizations_menu = new class
             row.style.borderTop = index ? '1px solid rgba(0,0,0,0.16)' : '0';
             var coat = document.createElement('div');
             coat.textContent = player.coat && player.coat.mark ? player.coat.mark : 'C';
-            coat.title = player.civilization_name + ' coat of arms';
+            coat.title = vocabularyText('civilization.coat_title', {name: player.civilization_name});
             coat.style.width = '36px';
             coat.style.height = '42px';
             coat.style.display = 'flex';
@@ -84,29 +85,34 @@ const _civilizations_menu = new class
             coat.style.font = 'bold 17px Georgia';
             coat.style.textShadow = '1px 1px 2px #000';
             var details = document.createElement('div');
-            var own = player.player_id == viewerId ? ' (you)' : '';
+            var own = player.player_id == viewerId
+                ? vocabularyText('civilization.own_suffix', {you: vocabularyText('common.you')}) : '';
             var relation = player.player_id == viewerId ? 'self'
                 : typeof _server_game != 'undefined' && _server_game.directionalRelation
                     ? _server_game.directionalRelation(viewerId, player.player_id) : player.relation;
             details.innerHTML = '<div style="font-weight:bold">' + this.escape(player.civilization_name) + own + '</div>'
                 + '<div>' + this.escape(player.player_name) + '</div>'
-                + '<div>Units: ' + player.current_units + ' | Cities: ' + player.current_cities + '</div>'
-                + '<div>Food: ' + (Number(player.food) || 0) + ' | Gold: ' + (Number(player.gold) || 0) + '</div>'
-                + '<div>Killed: ' + player.units_killed + ' | Occupied: ' + player.cities_occupied
-                + ' | Destroyed: ' + player.cities_destroyed + '</div>';
+                + '<div>' + vocabularyText('civilization.units_cities', {units: player.current_units, cities: player.current_cities}) + '</div>'
+                + '<div>' + vocabularyText('civilization.food_gold', {food: Number(player.food) || 0, gold: Number(player.gold) || 0}) + '</div>'
+                + '<div>' + vocabularyText('civilization.results', {killed: player.units_killed,
+                    occupied: player.cities_occupied, destroyed: player.cities_destroyed}) + '</div>';
             if (player.player_id != viewerId) {
                 let targetPlayerId = Number(player.player_id);
                 var relationControls = document.createElement('div');
                 relationControls.style.marginTop = '5px';
-                let friend = this.relationCheckbox('Friend', relation == 'friend');
-                let enemy = this.relationCheckbox('Enemy', relation == 'enemy');
+                let friend = this.relationCheckbox(vocabularyText('relation.friend'), relation == 'friend');
+                let enemy = this.relationCheckbox(vocabularyText('relation.enemy'), relation == 'enemy');
                 let relationText = document.createElement('span');
                 relationText.style.marginLeft = '7px';
-                relationText.textContent = 'Relation to you: ' + relation;
+                relationText.textContent = vocabularyText('civilization.relation_to_you', {
+                    relation: vocabularyText('relation.' + relation, null, relation)
+                });
                 let applyRelation = function(status) {
                     friend.input.checked = status == 'friend';
                     enemy.input.checked = status == 'enemy';
-                    relationText.textContent = 'Relation to you: ' + status;
+                    relationText.textContent = vocabularyText('civilization.relation_to_you', {
+                        relation: vocabularyText('relation.' + status, null, status)
+                    });
                     if (typeof _server_game != 'undefined' && _server_game.setRelationPreference) {
                         _server_game.setRelationPreference(viewerId, targetPlayerId, status);
                     }

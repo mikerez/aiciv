@@ -19,6 +19,13 @@ Terrain is stored as one byte per map cell:
 - Current examples include water, sand, grass, snow, hills, rocks, forest, and river/grass-water terrain.
 - The terrain type chooses the base texture family and whether the cell can be entered.
 
+## Sprite Filenames
+
+- `TERRAIN-SPRITE-001`: Every byte-indexed terrain sprite uses `general_name-binarynum.png`.
+- `general_name` is a lowercase underscore-separated description of terrain type and active visual modifiers, such as `forest_wildity0_supertile`.
+- `binarynum` is exactly eight binary digits in `ASD1D0T3T2T1T0` order and must equal the texture ID used by `_screen.loadTexture`.
+- Each encoded texture ID has its own filename even when multiple IDs currently contain identical image data.
+
 ## Depth, Height, And Wildity
 
 - `D1 D0` stores a 2-bit level from `0` to `3`.
@@ -48,6 +55,7 @@ Terrain is stored as one byte per map cell:
 - Supertiles are used by map enhancement/rendering to select larger or combined terrain textures.
 - The supertile is formed from neighboring cells of compatible terrain type and compatible `D1 D0` level.
 - `TERRAIN-SUPER-001`: Before one member of a 4-cell supertile is modified, the full supertile is split back into four ordinary terrain cells; the requested change then applies only to its target cell.
+- `TERRAIN-SUPER-002`: Map enhancement replaces each non-overlapping 2x2 group of identical water or forest Tiles with one `420x310` supersprite. The sprites are named by their exact encoding, for example `images/water_depth0_supertile-01000000.png` and `images/forest_wildity0_supertile-01000110.png`.
 - `A` marks an alternative visual variant of the same terrain data. For water-related terrain, `A` also indicates that a water source exists.
 - `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
 - `TERRAIN-GEN-004`: Generation adds many radial mountain clusters. Each cluster has a guaranteed maximum-height center, falls toward lower surrounding heights, and may contain local mountain water sources through the `A` bit.

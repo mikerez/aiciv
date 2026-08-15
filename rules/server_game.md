@@ -116,9 +116,11 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ORDER-010`: `disband_unit` locks and validates an owned movable non-City unit, sets its health to zero, clears occupancy, and returns its authoritative deleted state. The browser normally includes this operation in the aggregated End Turn action list.
 
+`SERVER-ORDER-010A`: After transport movement and combat resolution, PHP disbands every living movable land unit standing on a water Tile without an alive same-owner Galley or Frigate on that Tile. The deletion is authoritative in the same resolved turn and emits `unit_disbanded_at_sea` to its owner.
+
 `SERVER-ORDER-009A`: If five movable units occupy the producing City's Tile, `complete_production` returns HTTP 200 with `status: "PAUSE"`, preserves all production points and backlog state, and provides a later retry turn. The JS client does not treat this as an error and retries after the indicated turn.
 
-`SERVER-ORDER-009B`: An irrigation build uses the same breadth-first connectivity shape as road-connected resource lookup. Existing irrigation is traversable from the unbuilt request origin and must reach a valid fresh-water source. A disconnected request returns HTTP 200 with `status: "IMPOSSIBLE"` and `reason: "water_not_connected"` without changing the map.
+`SERVER-ORDER-009B`: An irrigation build uses the same breadth-first connectivity shape as road-connected resource lookup. Existing Irrigation Tiles are traversable from the unbuilt request origin; the route must reach a completed Farm, mixed grass-water, an `A`-bit source, or valid shallow fresh water that is not connected to deep sea. A completed Farm is a source itself rather than only a conduit. Sand, grass, and mixed grass-water origins are supported. A disconnected request returns HTTP 200 with `status: "IMPOSSIBLE"` and `reason: "water_not_connected"` without changing the map.
 
 `SERVER-ORDER-009C`: A completed road or Workshop stores its nearest same-owner City as `parentCityId`. Legacy improvements are assigned during turn processing. A road with no possible parent City is deleted together with its Tile modifier and emits an owner-visible event.
 
@@ -170,6 +172,10 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-003`: End Turn sends one `make_turn` containing atomic unit orders and all queued turn actions. Its response includes the first combined update snapshot. If the turn is unresolved, each poll uses one `load_update`; events are animated before unit removals are applied.
 
+`SERVER-UPDATE-004`: Client snapshot revisions are monotonic. A response older than the last applied snapshot cannot move units backward, prune visible foreign Cities, replace player state, or lower a revision cursor. Per-unit revisions provide the same protection for direct unit updates.
+
+`SERVER-UPDATE-005`: Road-to remains a client-owned persistent order when an authoritative coordinate does not occur in its cached route. The client rebuilds a legal land route from that coordinate to the saved destination; if the destination is outside the loaded window, it preserves the destination until routing is possible instead of clearing the order.
+
 `SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for shared AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
 
 `SERVER-AI-001`: `claim_ai_batch` leases up to eight random, living, movable units of the one global AI for the current turn. Active leases and units that already have an order are excluded, so browsers normally work on different units.
@@ -184,19 +190,23 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-ECONOMY-003`: A population-one starving City becomes a replaceable `destroyed_city` unit. It has no movement, economy, fog, control-zone, production, or combat behavior.
 
-`SERVER-ECONOMY-004`: Military food upkeep is four times the base unit size tier, gold-consuming military types use the mirrored 6/12 gold tiers, each Workshop consumes two City food, and population growth costs `80 + population * 40`.
+`SERVER-ECONOMY-004`: Military food upkeep is four times the base unit size tier, gold-consuming military types use the mirrored 6/12 gold tiers, each Workshop consumes two City food only while its parent City has a queue and positive net production, and population growth costs `80 + population * 40`.
 
 `SERVER-ECONOMY-005`: Cities above population 10 lose 5% of positive food excess and stored gold per additional citizen, capped at 50% at population 20; this compounds with applicable distance loss.
 
 `SERVER-PRODUCTION-001`: Production points accrue by the exact authoritative city production yield. Unit creation occurs only for a City that submitted `produce`, after PHP validates cost, road-connected resources, nature/spawn location, and the five-unit stack limit.
 
-`SERVER-PRODUCTION-002`: Authoritative City yield uses only nearby or road-connected worked Tiles. Parent roads and Nets each subtract one production, while parent Workshops each subtract two food, consume no gold, and set their worked Tile to four production.
+`SERVER-PRODUCTION-002`: Authoritative City yield uses only nearby or road-connected worked Tiles. Parent roads and Nets each subtract one production, while parent Workshops each subtract two food only when queued production has positive net production per turn, consume no gold, and set their worked Tile to four production.
 
 `SERVER-MAP-004`: Resource ids are assigned only when an empty map is generated. Turn processing and schema upgrades never create, remove, or relocate resources in an existing map; resource visibility may still be discovered separately.
 
 `SERVER-PRODUCTION-003`: Production points belong only to the current backlog item. Selecting the first item starts at zero; cancelling, removing, or completing it discards its balance and the next item also starts at zero.
 
-`SERVER-EVENT-001`: The event part of `load_update` takes `since_event_id`, returns addressed events in id order plus the next cursor and current civilization statistics, then deletes those delivered event rows.
+`SERVER-PRODUCTION-004`: Lazaret, Stable, Shooting-range, Barracks, Port, and Market use the ordinary City backlog but complete as hidden, nonmovable City-building units with a parent City id. PHP rejects a duplicate completed or queued building and does not apply the five-movable-unit Tile limit to building completion.
+
+`SERVER-ECONOMY-006`: PHP applies City-building effects authoritatively. Lazaret raises City healing from 10% to 20%; matching training buildings set produced-unit experience to 1.1; each road-connected Market transfers one existing global food to its parent City per turn.
+
+`SERVER-EVENT-001`: The event part of `load_update` takes `since_event_id`, locks and returns addressed events in id order plus the next cursor and current civilization statistics, then deletes those delivered event rows in the same transaction. The browser also deduplicates event ids, so overlapping slow requests cannot print or animate one event twice.
 
 `SERVER-EVENT-002`: Combat is addressed to both participants and every player with full visibility of the combat tile. Its payload contains attacker and defender ids, before/after snapshots, damage, combat kind (`unit_attack`, `city_attack`, or `city_capture`), and destroyed unit ids.
 
@@ -266,3 +276,16 @@ City and production examples:
 ```
 
 Send `unit_type_id: null` to clear City production. Send `remove_production` with `city_unit_id` and zero-based `queue_index` to remove one backlog item; send `complete_production` with `city_unit_id` when the active item has enough points.
+# Map Supertile Debug Update
+
+The standalone CLI tool `server/update_map_supertiles.php` converts existing repeated 2x2 water and forest terrain into non-overlapping supertiles without regenerating the map.
+
+```bash
+# Analyze only; this is the default mode.
+php server/update_map_supertiles.php --game=aiciv-default --sample=20
+
+# Apply the exact analyzed conversion in one transaction.
+php server/update_map_supertiles.php --game=aiciv-default --apply --sample=20
+```
+
+The JSON result reports existing supertile cells, blocks grouped by terrain and depth, changed-cell count, sample anchors, and revisions before and after the update. Apply mode changes only the `S` bit of the two lower cells in each selected 2x2 block and publishes one new map revision.

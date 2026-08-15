@@ -96,7 +96,7 @@ Resources are base map properties stored separately from terrain.
 - `RESOURCE-IMPROVEMENT-001`: A resource tile is enhanced by the terrain modifier listed for that resource after the resource has been opened.
 - `RESOURCE-IMPROVEMENT-002`: Farm requires `Irrigation`; Pasture and Camp require `Animal Husbandry`; Fishing Boats requires `Sailing`; Plantation and Winery require `Pottery`; Quarry requires `Masonry`; Mine requires `Mining`.
 - `RESOURCE-IMPROVEMENT-003`: JS and PHP use matching resource-to-improvement tables and reject an economic improvement that does not match the Tile resource.
-- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles. Copper/Bronze and Iron must also have a Mine. Knight requires connected Horses and mined Iron; Spearman, Fencer, Catapult, and Longbow require connected mined Copper/Bronze or Iron.
+- `RESOURCE-IMPROVEMENT-004`: Production resources are available to a City only over contiguous road Tiles. Copper/Bronze and Iron must also have a Mine. Chariot requires Horses and mined Copper/Bronze; Elephant requires Ivory and mined Copper/Bronze; Galleon requires mined Copper/Bronze; Frigate requires mined Iron; Knight requires connected Horses and mined Iron; Spearman, Fencer, Catapult, and Longbow require connected mined Copper/Bronze or Iron.
 
 | Resource | Improvement |
 | --- | --- |

@@ -28,6 +28,9 @@ const context = {
             elements.endTurnButton.textContent = `End Turn (${remaining}s)`;
         },
     },
+    vocabularyText: (key, values) => key === "hud.turn_seconds"
+        ? `${values.action} (${values.seconds}s)`
+        : key === "common.waiting" ? "Waiting" : key,
 };
 vm.createContext(context);
 const source = fs.readFileSync("server_game.js", "utf8") + "\nglobalThis.serverGame = _server_game;";
@@ -80,4 +83,14 @@ game.startTurnTimer(7, false);
 assert.equal(game.timerMode, "turn");
 assert.notEqual(game.timerId, null);
 game.stopTurnTimer();
-console.log("PASS client End Turn recharges to 5s without duplicate submission");
+
+let timeoutCalls = 0;
+game.setEndTurnCallback(() => { timeoutCalls++; });
+game.startTurnTimer(7, false);
+game.deadlineAt = Date.now() - 1;
+setTimeout(() => {
+    assert.equal(timeoutCalls, 1, "expired turn invokes End Turn once");
+    assert.equal(game.timerId, null, "expired turn must not retain a stale interval handle");
+    assert.equal(game.timerMode, null, "expired turn must release timer mode");
+    console.log("PASS client End Turn recharges to 5s without duplicate submission");
+}, 350);

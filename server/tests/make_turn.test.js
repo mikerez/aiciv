@@ -24,6 +24,8 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
         name: 'Warrior', i: 9, j: 3, speed: 1}));
     specs.push(unit({client_key: 'stack-mover', unit_type_id: 'elephant', unit_class: 2,
         name: 'Elephant', i: 10, j: 1, speed: 2, attack: 5, defense: 4}));
+    specs.push(unit({client_key: 'automated-worker', i: 12, j: 1,
+        state: 'automate', properties: {automationMode: 'automate'}}));
     for (let index = 0; index < 4; index++) {
         specs.push(unit({client_key: `stack-target-${index}`, unit_type_id: 'warrior',
             unit_class: 2, name: 'Warrior', i: 10, j: 3}));
@@ -49,6 +51,10 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
     commands.push({
         unit_id: fixture.unitIds['stack-mover'], command: 'move',
         path: [{i: 10, j: 2}, {i: 10, j: 3}], payload: {},
+    });
+    commands.push({
+        unit_id: fixture.unitIds['automated-worker'], command: 'move',
+        path: [{i: 12, j: 2}], payload: {automation_mode: 'automate'},
     });
     const response = await serverGame.request('make_turn', {
         player_id: fixture.playerId, turn: fixture.result.turn, commands,
@@ -82,6 +88,14 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
         positions.get('stack-mover').slice(1, 3).map(Number),
         [10, 2],
         'a multi-step move stops at the last available Tile before a full destination stack'
+    );
+    assert.deepEqual(positions.get('automated-worker').slice(1, 3).map(Number), [12, 2]);
+    assert.equal(positions.get('automated-worker')[3], 'ready',
+        'movement completion leaves the visible Worker state ready');
+    assert.equal(
+        JSON.parse(value(`SELECT properties_json FROM server_game_units WHERE id=${fixture.unitIds['automated-worker']}`)).automationMode,
+        'automate',
+        'movement completion preserves the separate persistent Worker automation mode'
     );
     assert.equal(response.action_results[0].ok, true);
     assert.equal(response.action_results[0].result.optimization, 'production');

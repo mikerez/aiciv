@@ -21,6 +21,61 @@ function roadPoints(gameDbId) {
 }
 
 (async () => {
+    resetDatabase();
+    const waterShortcutTiles = mapTiles(8, 2);
+    waterShortcutTiles.find(mapTile => mapTile.i === 1 && mapTile.j === 1).modifiers = {road: true};
+    waterShortcutTiles.find(mapTile => mapTile.i === 2 && mapTile.j === 1).terrain_tex = 0;
+    const shortcutWorkerDefinition = unit({
+        client_key: 'roadto-water-worker', owner_id: 7199, i: 1, j: 1,
+        state: 'road_to', properties: {automationMode: 'road_to'},
+    });
+    const frigateDefinition = unit({
+        client_key: 'roadto-water-frigate', owner_id: 7199, unit_type_id: 'frigate',
+        unit_class: 2, name: 'Frigate', nature: 'water', i: 2, j: 1,
+        attack: 5, defense: 5, speed: 3,
+    });
+    const shortcutFixture = await bootstrap({
+        playerId: 7199, gameId: 'multi-roadto-water-shortcut', size: 8,
+        tiles: waterShortcutTiles, units: [shortcutWorkerDefinition, frigateDefinition],
+    });
+    const shortcutWorker = localUnit(
+        shortcutWorkerDefinition, shortcutFixture.unitIds[shortcutWorkerDefinition.client_key]
+    );
+    const frigate = localUnit(frigateDefinition, shortcutFixture.unitIds[frigateDefinition.client_key]);
+    shortcutWorker.state = 'road_to';
+    shortcutWorker.automationMode = 'road_to';
+    const shortcutClient = createBrowserClient({
+        size: 8, playerId: shortcutFixture.playerId, gameId: shortcutFixture.gameId,
+        tiles: waterShortcutTiles, units: [shortcutWorker, frigate], serverTurn: shortcutFixture.result.turn,
+    });
+    const ordinaryPath = shortcutClient.currentGame.buildPath(0, new Coord(4, 1));
+    assert.ok(ordinaryPath.some(point => point.i === 2 && point.j === 1),
+        'ordinary Goto may embark a Worker onto a friendly Frigate');
+    const roadPath = shortcutClient.currentGame.buildRoadPath(0, new Coord(4, 1));
+    assert.ok(roadPath.length > 0, 'Road-to must find the available land detour');
+    assert.ok(roadPath.every(point => (waterShortcutTiles.find(
+        mapTile => mapTile.i === point.i && mapTile.j === point.j
+    ).terrain_tex & 0x0f) !== 0), 'Road-to route must contain no water Tiles');
+    shortcutClient.currentGame.assignPath(0, roadPath);
+    const shortcutSubmission = shortcutClient.serverGame.captureTurn(shortcutFixture.playerId);
+    const workerMove = shortcutSubmission.commands.find(
+        command => command.unit_id === shortcutWorker.serverId && command.command === 'move'
+    );
+    assert.equal(workerMove.payload.road_to, true,
+        'Road-to atomic movement must be marked for authoritative PHP validation');
+    const rejectedWaterMove = await shortcutClient.serverGame.request('make_turn', {
+            player_id: shortcutFixture.playerId, turn: shortcutFixture.result.turn,
+            commands: [{
+                unit_id: shortcutWorker.serverId, command: 'move',
+                path: [{i: 2, j: 1}], payload: {road_to: true},
+            }], actions: [], player_state: {}, relations: {}, include_updates: true,
+        });
+    assert.equal(
+        rejectedWaterMove.rejected_movements[0].validation.stopped.reason,
+        'road_to_water_forbidden',
+        'PHP must reject a Road-to water step even when a friendly Frigate is present'
+    );
+
     for (let scenario = 0; scenario < 10; scenario++) {
         resetDatabase();
         const rng = random(0x70ad0000 + scenario);
@@ -73,7 +128,7 @@ function roadPoints(gameDbId) {
             units: [worker, localCity],
             serverTurn: fixture.result.turn,
         });
-        const route = client.currentGame.buildPath(0, new Coord(destination.i, destination.j));
+        const route = client.currentGame.buildRoadPath(0, new Coord(destination.i, destination.j));
         assert.ok(route.length >= 3, `scenario ${scenario}: randomized Road-to route must be non-trivial`);
         let previous = start;
         for (const point of route) {
@@ -84,6 +139,13 @@ function roadPoints(gameDbId) {
             previous = point;
         }
         assert.deepEqual([previous.i, previous.j], [destination.i, destination.j]);
+        worker.gotoPath = [];
+        worker.gotoCoord = new Coord(destination.i, destination.j);
+        worker.roadToBuilding = true;
+        client.currentGame.completeRoadToBuild(worker, true);
+        assert.equal(worker.state, 'road_to',
+            `scenario ${scenario}: a temporarily unroutable Road-to destination must survive a completed road`);
+        assert.equal(worker.automationMode, 'road_to');
         client.currentGame.assignPath(0, route);
         client.currentGame.prepareRoadToTurn(0);
         const expected = new Set([`${start.i}:${start.j}`, ...route.map(point => `${point.i}:${point.j}`)]);
@@ -124,5 +186,5 @@ function roadPoints(gameDbId) {
         assert.equal(turns, route.length * 7 + 6,
             `scenario ${scenario}: every route step needs one move plus a six-turn road build`);
     }
-    console.log('PASS 10 randomized multi-turn Road-to scenarios use real JS, PHP, and MySQL');
+    console.log('PASS water transport exclusion and 10 randomized multi-turn Road-to scenarios use real JS, PHP, and MySQL');
 })().catch(error => { console.error(error); process.exitCode = 1; });

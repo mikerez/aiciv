@@ -2,6 +2,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
 
 const prompt = {style: {display: 'none'}, textContent: ''};
 global.document = {getElementById(id) { return id === 'respawnPrompt' ? prompt : null; }};
@@ -11,6 +13,8 @@ global._map_origin_i = 20;
 global._map_origin_j = 30;
 global._fulldraw = 0;
 global.drawScene = function() {};
+vm.runInThisContext(fs.readFileSync('vocabulary_EN.js', 'utf8'), {filename: 'vocabulary_EN.js'});
+vm.runInThisContext(fs.readFileSync('vocabulary.js', 'utf8'), {filename: 'vocabulary.js'});
 
 const {serverGame} = require('../server_game.js');
 let submittedPlayer = null;

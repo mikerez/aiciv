@@ -52,6 +52,16 @@ context._map_terrain_mod[1][0].road = true;
 const connected = context.cityEconomy.economicTileCandidates({ coord: { i: 0, j: 0 } });
 assert.ok(connected.some(coord => coord.i == 1 && coord.j == 0),
     'an adjacent improved Tile contributes after its road connects to the City');
+context._map_size = 4;
+context._map_terrain_tex = Array.from({length: 4}, () => Array(4).fill(2));
+context._map_terrain_mod = Array.from({length: 4}, () => Array.from({length: 4}, () => ({})));
+context._map_resource = Array.from({length: 4}, () => Array.from({length: 4}, () => ({type: 0})));
+context._map_terrain_mod[1][1] = {road: true};
+context._map_terrain_mod[1][2] = {road: true};
+context._map_terrain_mod[1][3] = {pasture: true};
+const roadEndpoint = context.cityEconomy.economicTileCandidates({coord: {i: 1, j: 1}});
+assert.ok(roadEndpoint.some(coord => coord.i == 1 && coord.j == 3),
+    'a Pasture directly beside the connected road is a workable endpoint');
 const foodYield = {food: 5, production: 1, money: 0};
 const productionYield = {food: 1, production: 5, money: 0};
 const goldYield = {food: 1, production: 1, money: 4};

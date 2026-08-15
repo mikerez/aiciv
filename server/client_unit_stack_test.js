@@ -43,6 +43,8 @@ const sandbox = {
     drawScene() {},
 };
 vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync('vocabulary_EN.js', 'utf8'), sandbox, {filename: 'vocabulary_EN.js'});
+vm.runInContext(fs.readFileSync('vocabulary.js', 'utf8'), sandbox, {filename: 'vocabulary.js'});
 const source = fs.readFileSync('menu_stack.js', 'utf8') + '\nglobalThis.__unitStack = _unit_stack_menu;';
 vm.runInContext(source, sandbox, {filename: 'menu_stack.js'});
 

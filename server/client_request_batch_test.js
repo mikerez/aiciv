@@ -22,6 +22,7 @@ const warrior = {
 };
 const context = {
     console, Date, JSON, Math, Promise,
+    vocabularyText(key) { return key; },
     setTimeout, clearTimeout, setInterval, clearInterval,
     document: {getElementById() { return null; }},
     window: {location: {replace() {}}, alerts: [], alert(message) { this.alerts.push(message); }},
@@ -53,6 +54,10 @@ vm.runInContext(
 
 (async function() {
     const game = context.serverGame;
+    const handledReports = [];
+    game.reportHandledClientError = function(type, parameters, message, code) {
+        handledReports.push({type, parameters, message, code});
+    };
     game.setRelationPreference(7, 8, "friend");
     await game.buildImprovement(worker, "cottage");
     await game.selectProduction(city, "warrior");
@@ -77,6 +82,10 @@ vm.runInContext(
                 client_action_id: item.client_action_id,
                 type: item.type,
                 ok: item.type != "build",
+                result: item.type == "optimize_city" ? {
+                    revision: 21,
+                    city: {id: 12, properties: {cityOptimization: "gold"}},
+                } : undefined,
                 error: item.type == "build" ? {
                     code: "building_not_supported",
                     message: "irrigation cannot be built on this terrain.",
@@ -88,6 +97,10 @@ vm.runInContext(
     game.applyUnitIdMap = function() {};
     game.applyRejectedMovements = function() {};
     game.applyCombatUnitUpdates = function() {};
+    const optimizedSnapshots = [];
+    game.applyUnitUpdates = function(playerId, result, options) {
+        optimizedSnapshots.push({playerId, result, options});
+    };
     const responseOrder = [];
     game.applyCombinedUpdates = async function() {
         responseOrder.push("updates");
@@ -95,9 +108,9 @@ vm.runInContext(
         worker.clientImprovementTurnsLeft = 0;
     };
     const applyTurnActionResults = game.applyTurnActionResults.bind(game);
-    game.applyTurnActionResults = function(playerId, actions, results, hidden) {
+    game.applyTurnActionResults = function(playerId, actions, results, hidden, skipLandscape) {
         responseOrder.push("actions");
-        return applyTurnActionResults(playerId, actions, results, hidden);
+        return applyTurnActionResults(playerId, actions, results, hidden, skipLandscape);
     };
     await game.submitTurn(submission, {hidden: true, deferUpdates: true, deferPolling: true});
     assert.equal(requests.length, 1, "one logical turn must make one write request");
@@ -106,6 +119,9 @@ vm.runInContext(
     assert.equal(worker.pendingImmediateBuild, false);
     assert.equal(worker.state, "ready", "a rejected build must not restart from a stale unit snapshot");
     assert.equal(worker.clientImprovementTurnsLeft, undefined);
+    assert.equal(optimizedSnapshots.length, 1,
+        "an accepted optimization must immediately apply its authoritative City snapshot");
+    assert.equal(optimizedSnapshots[0].result.units[0].properties.cityOptimization, "gold");
     assert.deepEqual(responseOrder, ["updates", "actions"], "action outcomes must override the response snapshot");
     worker.state = "irrigate";
     worker.pendingImmediateBuild = true;
@@ -115,7 +131,8 @@ vm.runInContext(
     }]);
     assert.equal(worker.state, "ready");
     assert.equal(worker.pendingImmediateBuild, false);
-    assert.match(context.window.alerts[0], /IMPOSSIBLE: water not connected/);
+    assert.equal(context.window.alerts.length, 0);
+    assert.match(handledReports[0].message, /IMPOSSIBLE: water not connected/);
     worker.pendingImmediateBuild = true;
     game.applyTurnActionResults(7, [{
         client_action_id: 100, type: "build", worker_unit_id: 11, building_type: "farm",
@@ -129,6 +146,18 @@ vm.runInContext(
     assert.deepEqual(context._city_economy.reoptimized, [{i: 3, j: 3, ownerId: 7}],
         "a world-coordinate build response must re-optimize Cities at the changed local Tile");
     assert.equal(context._map_terrain_mod[3][3].farm, true);
+    context._map_terrain_mod[3][3] = {};
+    game.applyTurnActionResults(7, [{
+        client_action_id: 101, type: "build", worker_unit_id: 11, building_type: "farm",
+    }], [{
+        client_action_id: 101, type: "build", ok: true,
+        result: {
+            status: "BUILT",
+            tile: {i: 103, j: 203, terrain_tex: 2, modifiers: {farm: true}},
+        },
+    }], false, true);
+    assert.equal(context._map_terrain_mod[3][3].farm, undefined,
+        "a build result from an old map window must not paint its local Tile into the new window");
     await game.disbandUnit(warrior);
     const disbandSubmission = game.captureTurn(7);
     assert.ok(disbandSubmission.actions.some(action => action.type == 'disband_unit' && action.unit_id == 13));

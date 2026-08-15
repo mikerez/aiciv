@@ -134,9 +134,10 @@ async function advanceUntil(test, predicate, limit = 180) {
         scenario.units.push(cityDefinition(scenario.playerId, 'city-4a', 4, 4,
             [{i:4,j:4}, {i:5,j:4}]));
         scenario.units.push(cityDefinition(scenario.playerId, 'city-4b', 9, 9, [{i:9,j:9}]));
+        tileAt(scenario.tiles, 4, 4).terrain_tex = 7;
         tileAt(scenario.tiles, 5, 4).terrain_tex = 5;
     });
-    await advanceUntil(priority4, () => mapModifiers(priority4.gameDbId, 5, 4).workshop);
+    await advanceUntil(priority4, () => mapModifiers(priority4.gameDbId, 5, 4).mine);
 
     const priority5 = await setupScenario('5', scenario => {
         scenario.worker = {i: 3, j: 3};
@@ -159,7 +160,7 @@ async function advanceUntil(test, predicate, limit = 180) {
         }
         tileAt(scenario.tiles, 8, 7).terrain_tex = 5;
     });
-    await advanceUntil(priority6, () => mapModifiers(priority6.gameDbId, 8, 7).workshop);
+    await advanceUntil(priority6, () => mapModifiers(priority6.gameDbId, 8, 7).mine);
 
     console.log('PASS six multi-turn Worker priorities choose the correct task and complete it through real JS, PHP, and MySQL');
 })().catch(error => { console.error(error); process.exitCode = 1; });

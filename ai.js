@@ -57,6 +57,7 @@ const _ai_player = new class
         this.batchCursors = {};
         this.actionCandidateCursors = {};
         this.forcedActionUnitServerId = null;
+        this.forcedEconomicsCityServerId = null;
         this.economicsCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
         this.settlerBuildCityTurnLimit = 20;
@@ -1508,9 +1509,22 @@ const _ai_player = new class
 
     freeCityRecords(ownerTeam)
     {
+        var forcedId = this.forcedEconomicsCityServerId;
         return this.sortedUnits(function(unit) {
-            return (unit.team || 0) == ownerTeam && unit.type == 3 && unit.production == null;
+            return (unit.team || 0) == ownerTeam && unit.type == 3 && unit.production == null
+                && (forcedId == null || Number(unit.serverId) == forcedId);
         });
+    }
+
+    buildEconomicsInputForCity(ownerTeam, cityServerId, productionDemands = null)
+    {
+        this.forcedEconomicsCityServerId = Number(cityServerId);
+        try {
+            return this.buildEconomicsInput(ownerTeam, productionDemands);
+        }
+        finally {
+            this.forcedEconomicsCityServerId = null;
+        }
     }
 
     countUnitsByType(ownerTeam, unitTypeId)
@@ -1876,6 +1890,14 @@ const _ai_player = new class
         var slots = [];
         for (var n = 0; n < this.lastActionCandidates.length; n++) slots.push(n);
         var best = this.argmaxSlots(output, slots);
+        if (!(best.value > 0)) {
+            for (var waitSlot = 0; waitSlot < this.lastActionCandidates.length; waitSlot++) {
+                if (this.lastActionCandidates[waitSlot].command == 'wait') {
+                    best = {slot: waitSlot, value: best.value};
+                    break;
+                }
+            }
+        }
         var candidate = this.lastActionCandidates[best.slot];
         return [{
             record: best.slot,
@@ -2113,9 +2135,10 @@ const _ai_player = new class
     {
         if (!this.lastEconomicsCandidates.length || this.lastEconomicsCityIndices[0] == undefined) return [];
         var best = this.argmax(output, 0, this.lastEconomicsCandidates.length);
-        var candidate = this.lastEconomicsCandidates[best.index];
+        var candidate = best.value > 0
+            ? this.lastEconomicsCandidates[best.index] : this.lastEconomicsCandidates[0];
         return [{
-            record: best.index,
+            record: best.value > 0 ? best.index : 0,
             cityIndex: this.lastEconomicsCityIndices[0],
             unitTypeId: candidate.unitTypeId,
             slot: best.slot,
@@ -2235,6 +2258,7 @@ const _ai_player = new class
     {
         if (!unit) return false;
         if (unit.pendingImmediateBuild || unit.serverActionPending || unit.pendingDisband) return true;
+        if (unit.roadToBuilding || unit.roadToDestination) return true;
         if ((unit.gotoPath && unit.gotoPath.length) || unit.gotoCoord != undefined) return true;
         if (unit.chop_turns_left != undefined || unit.road_turns_left != undefined
             || unit.irrigation_turns_left != undefined || unit.building_turns_left != undefined
@@ -2318,30 +2342,60 @@ const _ai_player = new class
             var settler = _units[k];
             if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam
                 || this.civilianPolicyHasActiveTask(settler)) continue;
-            var minimumSpacing = cityCount + planned.length ? 5 : 0;
-            var currentScore = this.cityPlotScore(settler.coord.i, settler.coord.j, ownerTeam);
-            var spacing = this.settlementDistanceToOwnCity(settler.coord.i, settler.coord.j, ownerTeam);
-            var threshold = cityCount + planned.length ? 0.40 : 0.28;
-            var agedThreshold = (settler.aiSettlerTurns || 0) >= 10 ? threshold - 0.08 : threshold;
-            if (this.terrainTypeAt(settler.coord.i, settler.coord.j) != 0
-                && spacing >= minimumSpacing && currentScore >= agedThreshold) {
-                var build = {command: 'build_city'};
-                if (this.applyUnitCommand(k, build)) {
-                    planned.push(new Coord(settler.coord.i, settler.coord.j));
-                    applied.push('Settler #' + (settler.serverId || k) + ' -> Build City at '
-                        + this.coordText(settler.coord) + ' score=' + this.fmt(currentScore));
-                }
-                continue;
-            }
-            var target = this.bestSettlementRoute(k, ownerTeam, minimumSpacing);
-            if (target && target.path.length) {
-                settler.state = 'ready';
-                _current_game.assignPath(k, target.path);
-                applied.push('Settler #' + (settler.serverId || k) + ' -> '
-                    + this.coordText(target.coord) + ' score=' + this.fmt(target.plotScore));
-            }
+            var decision = this.applySettlerExpansionPolicy(k, ownerTeam, cityCount + planned.length);
+            if (!decision.applied) continue;
+            if (decision.command == 'build_city') planned.push(new Coord(settler.coord.i, settler.coord.j));
+            applied.push(decision.description);
         }
         return applied;
+    }
+
+    applySettlerExpansionPolicy(k, ownerTeam, plannedCityCount = null)
+    {
+        var settler = typeof _units != 'undefined' ? _units[k] : null;
+        if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam) {
+            return {applied: false, reason: 'not_an_owned_settler'};
+        }
+        if (this.civilianPolicyHasActiveTask(settler)) {
+            return {applied: false, reason: 'active_task'};
+        }
+        var cityCount = plannedCityCount;
+        if (cityCount == null) {
+            cityCount = this.sortedUnits(function(unit) {
+                return unit && unit.type == 3 && (unit.team || 0) == ownerTeam;
+            }).length;
+        }
+        var minimumSpacing = cityCount ? 5 : 0;
+        var currentScore = this.cityPlotScore(settler.coord.i, settler.coord.j, ownerTeam);
+        var spacing = this.settlementDistanceToOwnCity(settler.coord.i, settler.coord.j, ownerTeam);
+        var age = Math.max(0, Number(settler.aiSettlerTurns) || 0);
+        var threshold = cityCount ? 0.40 : 0.28;
+        var agedThreshold = age >= 10 ? threshold - 0.08 : threshold;
+        var mustSettle = age >= this.settlerBuildCityTurnLimit;
+        if (this.terrainTypeAt(settler.coord.i, settler.coord.j) != 0
+            && spacing >= minimumSpacing && (mustSettle || currentScore >= agedThreshold)) {
+            var build = {command: 'build_city'};
+            if (this.applyUnitCommand(k, build)) {
+                return {
+                    applied: true, command: 'build_city', score: currentScore, age: age,
+                    description: 'Settler #' + (settler.serverId || k) + ' -> Build City at '
+                        + this.coordText(settler.coord) + ' score=' + this.fmt(currentScore)
+                        + (mustSettle ? ' age-limit' : ''),
+                };
+            }
+        }
+        var target = this.bestSettlementRoute(k, ownerTeam, minimumSpacing);
+        if (target && target.path.length) {
+            settler.state = 'ready';
+            _current_game.assignPath(k, target.path);
+            return {
+                applied: true, command: 'goto', target: target.coord, score: target.plotScore,
+                pathLength: target.path.length, age: age,
+                description: 'Settler #' + (settler.serverId || k) + ' -> '
+                    + this.coordText(target.coord) + ' score=' + this.fmt(target.plotScore),
+            };
+        }
+        return {applied: false, reason: 'no_legal_settlement_route', score: currentScore, age: age};
     }
 
     firstAvailableProduction(city, ids)
@@ -2369,6 +2423,7 @@ const _ai_player = new class
         var workers = this.countUnitsByType(ownerTeam, 'worker');
         var settlers = this.countUnitsByType(ownerTeam, 'settlers');
         var targetCities = 3;
+        var militaryCap = Math.max(4, cities.length*2);
         for (var n = 0; n < cities.length; n++) {
             var record = cities[n];
             var city = record.unit;
@@ -2387,7 +2442,7 @@ const _ai_player = new class
                 choice = this.firstAvailableProduction(city, ['settlers']);
                 if (choice) settlers++;
             }
-            if (!choice && military < cities.length) {
+            if (!choice && military < Math.min(cities.length, militaryCap)) {
                 choice = this.firstAvailableProduction(city, ['warrior', 'slinger', 'archer']);
                 if (choice) military++;
             }
@@ -2395,7 +2450,7 @@ const _ai_player = new class
                 choice = this.firstAvailableProduction(city, ['worker']);
                 if (choice) workers++;
             }
-            if (!choice) {
+            if (!choice && military < militaryCap) {
                 choice = this.firstAvailableProduction(city, ['warrior', 'slinger', 'archer', 'fencer']);
                 if (choice) military++;
             }
@@ -2794,19 +2849,11 @@ const _ai_player = new class
         if (!resource) {
             return null;
         }
-        var text = (resource.id || '') + ' ' + (resource.name || '') + ' ' + (resource.gives || '');
-        if (/cattle|sheep|deer|horse|ivory|elephant|furs|herd|animal/i.test(text)) {
-            return 'animal';
-        }
-        if (/stone|marble|gypsum|quarry|masonry/i.test(text)) {
-            return 'stone';
-        }
-        if (/copper|iron|niter|coal|oil|aluminum|uranium|metal|mining|mine/i.test(text)) {
-            return 'mineral';
-        }
-        if (/wheat|rice|bananas|sugar|crop|farm|food/i.test(text)) {
-            return 'crop';
-        }
+        var categories = resource.categories || [];
+        if (categories.indexOf('animal') != -1) return 'animal';
+        if (categories.indexOf('stone') != -1) return 'stone';
+        if (categories.indexOf('mineral') != -1) return 'mineral';
+        if (categories.indexOf('crop') != -1) return 'crop';
         return null;
     }
 
@@ -2845,10 +2892,10 @@ const _ai_player = new class
                     continue;
                 }
                 var resource = _resource_types[state.type];
-                if (kind == 'food' && /food|herd|wheat|fish|rice|cattle|sheep/i.test(resource.gives)) {
+                if (kind == 'food' && (resource.categories || []).indexOf('food') != -1) {
                     total++;
                 }
-                if (kind == 'production' && /production|metal|stone|construction|weapons/i.test(resource.gives)) {
+                if (kind == 'production' && (resource.categories || []).indexOf('production') != -1) {
                     total++;
                 }
             }
@@ -3005,13 +3052,14 @@ const _ai_player = new class
         if (!resource) {
             return 0.25;
         }
-        if (/food|wheat|fish|rice|cattle|sheep|deer|bananas|sugar|honey/i.test(resource.gives || resource.id || '')) {
+        var categories = resource.categories || [];
+        if (categories.indexOf('food') != -1) {
             return 0.8;
         }
-        if (/production|metal|stone|construction|weapons|horses|iron|copper/i.test(resource.gives || resource.id || '')) {
+        if (categories.indexOf('production') != -1) {
             return 0.6;
         }
-        if (/commerce|trade|luxury|gold|silver|diamonds/i.test(resource.gives || resource.id || '')) {
+        if (categories.indexOf('money') != -1) {
             return 0.5;
         }
         return 0.35;

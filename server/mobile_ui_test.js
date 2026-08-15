@@ -167,10 +167,22 @@ check(/left:.*!important/.test(unitStackPhoneRule[1]) && /right:\s*auto\s*!impor
     'phone unit-stack panel should remain left anchored');
 check(/bottom:\s*auto\s*!important/.test(unitStackPhoneRule[1]),
     'phone unit-stack panel should expand downward instead of upward from the bottom');
-check(/width:\s*min\(240px,\s*calc\(var\(--phone-vw\) \* 0\.5\)\)\s*!important/.test(unitStackPhoneRule[1]),
-    'phone unit-stack panel should be half the viewport width');
+check(/width:\s*min\(200px,\s*calc\(\(var\(--phone-vw\) - 36px\) \/ 2\)\)\s*!important/.test(unitStackPhoneRule[1]),
+    'phone unit-stack panel should occupy one non-overlapping half-column');
 check(/height:\s*var\(--phone-unit-stack-height\)\s*!important/.test(unitStackPhoneRule[1]),
     'phone unit-stack panel should use its calculated pixel height');
+
+const actionMenuPhoneRule = indexSource.match(/body\.phone-ui #foreground \{([\s\S]*?)\n\s*\}/);
+check(actionMenuPhoneRule, 'phone Action Options rule should exist');
+check(/width:\s*min\(200px,\s*calc\(\(var\(--phone-vw\) - 36px\) \/ 2\)\)\s*!important/.test(actionMenuPhoneRule[1]),
+    'phone Action Options panel should occupy the other non-overlapping half-column');
+check(/background-image:\s*url\('images\/button\.png\?v=\d+[a-z]'\)\s*!important/.test(indexSource),
+    'End Turn, Options, and Civs should use the shared button frame');
+check(/#endTurnButton\s*\{[\s\S]*?width:\s*140px[\s\S]*?height:\s*56px/.test(indexSource),
+    'desktop End Turn button should match the wider 520x208 button frame');
+check(/id="costsButton"|menu_costs\.js/.test(indexSource)
+    && /#costsMenu\s*\{/.test(indexSource),
+    'Costs button and expense window should be loaded');
 check(/deferPhoneStack\s*=\s*event\.type\s*===\s*'touchstart'/.test(indexSource)
     && /updateDeferredPhoneTap/.test(indexSource)
     && /finishDeferredPhoneTap\(event\.type\s*===\s*'touchend'\)/.test(indexSource),
@@ -183,6 +195,14 @@ check(/_pending_phone_action_tap\s*=\s*unitSelected/.test(indexSource)
 const turnControlsRule = indexSource.match(/#turnControls \{([\s\S]*?)\n\s*\}/);
 check(turnControlsRule && /top:\s*0\s*;/.test(turnControlsRule[1]),
     'turn controls should touch the top screen edge');
+const phoneCounterRule = indexSource.match(/body\.phone-ui \.economy-counter \{([\s\S]*?)\n\s*\}/);
+check(phoneCounterRule && /justify-content:\s*flex-start\s*;/.test(phoneCounterRule[1])
+    && /padding:\s*4px\s+5px\s+4px\s+25px\s*;/.test(phoneCounterRule[1]),
+    'phone economy values should begin 25px from the frame left edge');
+const phoneOptionsBottom = /body\.phone-ui #optionsButton \{[^}]*bottom:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 8px\)\s*!important/.test(indexSource);
+const phoneCivsBottom = /body\.phone-ui #civilizationsButton \{[^}]*bottom:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 8px\)\s*!important/.test(indexSource);
+check(phoneOptionsBottom && phoneCivsBottom,
+    'phone Options and Civs buttons should share the same bottom baseline');
 check(/<div id="turnControls">[\s\S]*id="endTurnButton"/.test(indexSource)
     && !/id="turnTimer"/.test(indexSource),
     'End Turn should contain the counter without a separate counter control');

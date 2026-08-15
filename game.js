@@ -224,10 +224,13 @@ class GameState
     {
         if (this.currentResearch && _technology_table[this.currentResearch]) {
             var progress = Math.floor(this.technologyProgress[this.currentResearch] || 0);
-            return 'Technology: ' + this.currentResearch + ' ' + progress + '/'
-                + _technology_table[this.currentResearch].cost;
+            return vocabularyText('technology.status', {
+                name: vocabularyTechnologyName(this.currentResearch),
+                progress: progress,
+                cost: _technology_table[this.currentResearch].cost
+            });
         }
-        return 'Technology: all discovered';
+        return vocabularyText('technology.all_discovered');
     }
 
     hasAvailableResearch()
@@ -305,6 +308,7 @@ var _one_turn_message = '';
 
 const _team_colors = ['blue', 'green', 'yellow', 'magenta', 'orange'];
 const _team_color_textures = [900, 901, 902, 903, 904];
+/* Control-zone color stripes are temporarily disabled.
 const _team_color_strokes = [
     'rgba(50,120,255,0.35)',
     'rgba(30,190,80,0.35)',
@@ -312,6 +316,7 @@ const _team_color_strokes = [
     'rgba(220,55,220,0.35)',
     'rgba(245,135,35,0.35)'
 ];
+*/
 
 const _game = new class
 {
@@ -677,6 +682,7 @@ const _game = new class
     redrawControlZones()
     {
         var ctx = _draw.clear();
+        /* Control-zone color stripes are not currently needed.
         for (var k=0; k < _units.length; k++) {
             if (_units[k].noControlZone) {
                 continue;
@@ -691,6 +697,7 @@ const _game = new class
             _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
             _draw.drawStroke(ctx, _units[k].coord.i, _units[k].coord.j-1, _mark, strokeStyle);
         }
+        */
         if (typeof _control !== 'undefined' && _control.drawMovementOrders) {
             _control.drawMovementOrders(ctx);
         }
@@ -732,7 +739,19 @@ const _game = new class
             city.cityProperties.productionStored = 0;
             city.production.productionPoints += city.cityProperties.productionPerTurn;
             if (city.production.productionPoints >= unitType.productionCost) {
-                this.createUnit(unitType, city.coord, unitType.productionCost, city.team);
+                var producedUnit = this.createUnit(unitType, city.coord, unitType.productionCost, city.team);
+                if (unitType.cityBuilding) {
+                    producedUnit.cityBuilding = true;
+                    producedUnit.parentCityId = city.serverId || null;
+                    producedUnit.hiddenOnMap = true;
+                    producedUnit.noControlZone = true;
+                    producedUnit.noFogReveal = true;
+                    producedUnit.can_move = false;
+                    producedUnit.state = 'built';
+                }
+                else if (layer.producedUnitExperience) {
+                    producedUnit.experience = layer.producedUnitExperience(city, unitType);
+                }
                 city.productionDisabled = false;
                 if (Array.isArray(city.productionQueue) && city.productionQueue.length) {
                     city.productionQueue.shift();

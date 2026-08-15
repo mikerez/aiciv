@@ -106,24 +106,26 @@ const _map = new class
         }
     }
 
-    enhMap()  // make supertiles 4x4 where tiles are too repetitive or add some alternative looking tiles
+    enhMap()  // replace non-overlapping 2x2 repeated terrain with one supertile
     {
         for (var i=0; i < _map_size-1; i++) {
             for (var j=0; j < _map_size-1; j++) {
                 for (var k=0; k < 16; k++) {
                     for (var l=0; l < 4; l++) {
                         if (_textures[k+((l+4)<<4)] !== undefined
+                         && (_map_terrain_tex[i][j]&0x40) == 0 && (_map_terrain_tex[i+1][j]&0x40) == 0
+                         && (_map_terrain_tex[i][j+1]&0x40) == 0 && (_map_terrain_tex[i+1][j+1]&0x40) == 0
                          && (_map_terrain_tex[i][j]&0x3F) == k+(l<<4) && (_map_terrain_tex[i+1][j]&0x3F) == k+(l<<4)
                          && (_map_terrain_tex[i][j+1]&0x3F) == k+(l<<4) && (_map_terrain_tex[i+1][j+1]&0x3F) == k+(l<<4)
                          /*&& (_map_terrain_tex[i][j]&0x30)+(_map_terrain_tex[i+1][j]&0x30)+(_map_terrain_tex[i][j+1]&0x30)+(_map_terrain_tex[i+1][j+1]&0x30) < 0xC0*/) {
 //                                     _map_terrain_tex[i][j] = k+((l+4)<<4);
-                             _map_terrain_tex[i+1][j] = k+((l+4)<<4);
+                             _map_terrain_tex[i+1][j] |= 0x40;
 //                                     _map_terrain_tex[i][j+1] = k+((l+4)<<4);
-                             _map_terrain_tex[i+1][j+1] = k+((l+4)<<4);
+                             _map_terrain_tex[i+1][j+1] |= 0x40;
 if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
-    if ((_map_terrain_tex[i+2][j+1]&0xF)!=4) _map_terrain_bit[i+2][j+1] |= 1<<15;
-    if ((_map_terrain_tex[i+1][j+2]&0xF)!=4) _map_terrain_bit[i+1][j+2] |= 1<<15;
-    if ((_map_terrain_tex[i+2][j+2]&0xF)!=4) _map_terrain_bit[i+2][j+2] |= 1<<15;
+    if (i+2 < _map_size && j+1 < _map_size && (_map_terrain_tex[i+2][j+1]&0xF)!=4) _map_terrain_bit[i+2][j+1] |= 1<<15;
+    if (i+1 < _map_size && j+2 < _map_size && (_map_terrain_tex[i+1][j+2]&0xF)!=4) _map_terrain_bit[i+1][j+2] |= 1<<15;
+    if (i+2 < _map_size && j+2 < _map_size && (_map_terrain_tex[i+2][j+2]&0xF)!=4) _map_terrain_bit[i+2][j+2] |= 1<<15;
 }
                         }
                     }
@@ -195,7 +197,7 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         for (var i=0; i < _map_size; i++) {
             for (var j=0; j < _map_size; j++) {
                 if (_map_terrain_mod[i][j].road) {
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: 850 });
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 850, modifier: 'road' });
                 }
                 if (_map_terrain_mod[i][j].irrigation) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 851 });
@@ -235,7 +237,7 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 868 });
                 }
                 if (_map_terrain_mod[i][j].network) {
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: 870 });
+                    this.terrainModifierSprites.push({ i: i, j: j, texture: 872 });
                 }
             }
         }
@@ -268,6 +270,8 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         for (var n=0; n < primary.length; n++) {
             var modifier = primary[n];
             if (modifier == replacement || !modifiers[modifier]) continue;
+            // Fortification cannot be erased as a replacement side effect.
+            if (modifier == 'fortification') continue;
             modifiers[modifier] = false;
             if (typeof _economics !== 'undefined' && _economics.removeTerrainImprovementUnitsAt) {
                 _economics.removeTerrainImprovementUnitsAt(i, j, modifier);

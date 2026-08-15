@@ -12,7 +12,18 @@ const {assert, serverGame, resetDatabase, bootstrap, unit, value, gameDatabaseId
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId}`)), 400);
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND owner_id=${fixture.playerId} AND deleted_at IS NULL`)), 1);
     const globalAiId = Number(value("SELECT id FROM game_users WHERE login='aiciv_global_ai'"));
-    const guardedResources = Number(value(`SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId} AND resource_type IN (3,15,34,35,36)`));
+    const guardedResources = Number(value(
+        `SELECT COUNT(*) FROM server_game_map m JOIN server_games g ON g.id=m.game_id
+         WHERE m.game_id=${gameDbId} AND resource_type IN (3,15,34,35,36)
+           AND i+j >= g.map_size/2 AND i+j < g.map_size*1.5
+           AND CAST(i AS SIGNED)-CAST(j AS SIGNED) >= -CAST(g.map_size AS SIGNED)/2
+           AND CAST(i AS SIGNED)-CAST(j AS SIGNED) < CAST(g.map_size AS SIGNED)/2`
+    ));
+    for (const resourceType of [3, 15, 34, 35, 36]) {
+        assert.ok(Number(value(
+            `SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId} AND resource_type=${resourceType}`
+        )) >= 2, `fresh generation must include protected resource ${resourceType}`);
+    }
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND owner_id=${globalAiId} AND unit_type_id='settlers'`)), guardedResources * 5);
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND owner_id=${globalAiId} AND unit_type_id='explorer'`)), guardedResources * 5);
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND owner_id=${globalAiId} AND unit_type_id='archer'`)), guardedResources * 10);

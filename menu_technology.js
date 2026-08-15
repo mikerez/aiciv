@@ -40,7 +40,7 @@ function createTechnologyMenu()
   panel.style.fontFamily = 'Courier New, monospace';
 
   var title = document.createElement('div');
-  title.textContent = 'Technology';
+  title.textContent = vocabularyText('menu.technology');
   title.style.color = 'darkblue';
   title.style.fontSize = '22px';
   title.style.fontWeight = 'bold';
@@ -131,7 +131,7 @@ function createTechnologyMenu()
   _technology_tree.forEach(function(technology) {
     var position = positions[technology.id];
     var item = document.createElement('div');
-    item.title = technology.id;
+    item.title = vocabularyTechnologyName(technology.id);
     item.dataset.technologyId = technology.id;
     item.style.position = 'absolute';
     item.style.left = position.x + 'px';
@@ -197,12 +197,13 @@ function updateTechnologyMenu()
 
   var rateLabel = document.getElementById('technology_science_rate_label');
   if (rateLabel) {
-    rateLabel.textContent = 'Science: ' + _game_state.scienceRate + '%';
+    rateLabel.textContent = vocabularyText('technology.science_rate', {rate: _game_state.scienceRate});
   }
 
   var status = document.getElementById('technology_research_status');
   if (status) {
-    status.textContent = _game_state.researchStatusText ? _game_state.researchStatusText() : 'Research: unavailable';
+    status.textContent = _game_state.researchStatusText ? _game_state.researchStatusText()
+      : vocabularyText('technology.research_unavailable');
   }
 
   _technology_tree.forEach(function(technology) {
@@ -225,7 +226,7 @@ function updateTechnologyMenu()
     }
     if (progress) {
       if (isOpen) {
-        progress.textContent = 'Open';
+        progress.textContent = vocabularyText('common.open');
       }
       else {
         progress.textContent = done + '/' + cost;

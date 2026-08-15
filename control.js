@@ -1,5 +1,43 @@
 const _control = new class
 {
+    pathHeapPush(heap, node)
+    {
+        var index = heap.length;
+        heap.push(node);
+        while (index > 0) {
+            var parent = Math.floor((index - 1) / 2);
+            if (heap[parent].f < node.f
+                || (heap[parent].f == node.f && heap[parent].g <= node.g)) break;
+            heap[index] = heap[parent];
+            index = parent;
+        }
+        heap[index] = node;
+    }
+
+    pathHeapPop(heap)
+    {
+        if (!heap.length) return null;
+        var first = heap[0];
+        var last = heap.pop();
+        if (!heap.length) return first;
+        var index = 0;
+        while (true) {
+            var left = index * 2 + 1;
+            if (left >= heap.length) break;
+            var right = left + 1;
+            var child = right < heap.length
+                && (heap[right].f < heap[left].f
+                    || (heap[right].f == heap[left].f && heap[right].g < heap[left].g))
+                ? right : left;
+            if (heap[child].f > last.f
+                || (heap[child].f == last.f && heap[child].g >= last.g)) break;
+            heap[index] = heap[child];
+            index = child;
+        }
+        heap[index] = last;
+        return first;
+    }
+
     arrowNum(mi, mj)
     {
         return mi==1&&mj==1?0:mi==1&&mj==0?1:mi==1&&mj==-1?2:mi==0&&mj==-1?3:mi==-1&&mj==-1?4:mi==-1&&mj==0?5:mi==-1&&mj==1?6:7;
@@ -82,7 +120,7 @@ const _control = new class
         return 1;
     }
 
-    findPath(i1, j1, i2, j2, k, limit)
+    findPath(i1, j1, i2, j2, k, limit, traversalOptions)
     {
         i1 = Math.round(i1); j1 = Math.round(j1);
         i2 = Math.round(i2); j2 = Math.round(j2);
@@ -90,6 +128,7 @@ const _control = new class
         if (i1 < 0 || i1 >= _map_size || j1 < 0 || j1 >= _map_size
             || i2 < 0 || i2 >= _map_size || j2 < 0 || j2 >= _map_size || !limit) return [];
 
+        traversalOptions = traversalOptions || {};
         var directions = [[1,1],[1,0],[0,-1],[-1,-1],[-1,0],[0,1]];
         var startKey = i1 + ':' + j1;
         var targetKey = i2 + ':' + j2;
@@ -98,19 +137,21 @@ const _control = new class
         var start = {i:i1, j:j1, key:startKey, g:0, steps:0,
             f:this.pathDistance(i1,j1,i2,j2)*0.45, parent:null};
         records[startKey] = start;
-        open.push(start);
+        this.pathHeapPush(open, start);
         var best = start;
         var expanded = 0;
-        var maximumExpanded = Math.min(_map_size*_map_size, Math.max(256, limit*limit*8));
+        var requestedMaximum = Number(traversalOptions.pathMaximumExpanded);
+        var maximumExpanded = Number.isFinite(requestedMaximum)
+            ? Math.max(32, Math.min(1536, Math.floor(requestedMaximum)))
+            : Math.min(_map_size*_map_size, Math.max(128, Math.min(1024, limit*limit*2)));
+        var requestedMilliseconds = Number(traversalOptions.pathMaximumMilliseconds);
+        var maximumMilliseconds = Number.isFinite(requestedMilliseconds)
+            ? Math.max(1, Math.min(12, requestedMilliseconds)) : 6;
+        var startedAt = Date.now();
         while (open.length && expanded++ < maximumExpanded) {
-            var bestOpenIndex = 0;
-            for (var openIndex=1; openIndex < open.length; openIndex++) {
-                if (open[openIndex].f < open[bestOpenIndex].f
-                    || (open[openIndex].f == open[bestOpenIndex].f
-                        && open[openIndex].g < open[bestOpenIndex].g)) bestOpenIndex = openIndex;
-            }
-            var current = open.splice(bestOpenIndex, 1)[0];
-            if (current.closed) continue;
+            if ((expanded & 63) == 0 && Date.now()-startedAt >= maximumMilliseconds) break;
+            var current = this.pathHeapPop(open);
+            if (!current || current.closed || records[current.key] !== current) continue;
             current.closed = true;
             var currentDistance = this.pathDistance(current.i, current.j, i2, j2);
             var bestDistance = this.pathDistance(best.i, best.j, i2, j2);
@@ -125,7 +166,8 @@ const _control = new class
                 var ni = current.i + directions[directionIndex][0];
                 var nj = current.j + directions[directionIndex][1];
                 if (ni < 0 || ni >= _map_size || nj < 0 || nj >= _map_size) continue;
-                if (typeof _game != 'undefined' && !_game.canUnitEnterTile(k, ni, nj)) continue;
+                if (typeof _game != 'undefined'
+                    && !_game.canUnitEnterTile(k, ni, nj, traversalOptions)) continue;
                 var nextKey = ni + ':' + nj;
                 var nextG = current.g + this.pathStepCost(current.i, current.j, ni, nj);
                 var existing = records[nextKey];
@@ -133,7 +175,7 @@ const _control = new class
                 var next = {i:ni, j:nj, key:nextKey, g:nextG, steps:current.steps+1,
                     f:nextG + this.pathDistance(ni,nj,i2,j2)*0.45, parent:current};
                 records[nextKey] = next;
-                open.push(next);
+                this.pathHeapPush(open, next);
             }
         }
         var result = [];
@@ -145,7 +187,7 @@ const _control = new class
         return result;
     }
 
-    mapLine(i1, j1, i2, j2, func, k, limit)
+    mapLine(i1, j1, i2, j2, func, k, limit, traversalOptions)
     {
         if (Math.round(i1) < 0 || Math.round(i1) >= _map_size || Math.round(j1) < 0 || Math.round(j1) >= _map_size
          || Math.round(i2) < 0 || Math.round(i2) >= _map_size || Math.round(j2) < 0 || Math.round(j2) >= _map_size) {
@@ -153,7 +195,7 @@ const _control = new class
         }
 
         i1 = Math.round(i1); j1 = Math.round(j1);
-        var path = this.findPath(i1, j1, i2, j2, k, limit);
+        var path = this.findPath(i1, j1, i2, j2, k, limit, traversalOptions);
         var i = i1;
         var j = j1;
         for (var pathIndex=0; pathIndex < path.length; pathIndex++) {
@@ -174,21 +216,25 @@ const _control = new class
         if (typeof _server_game != 'undefined') _server_game.saveClientRoutes(_current_user);
     }
 
-    drawGotoPath(ctx, i1, j1, i2, j2, k)
+    drawGotoPath(ctx, i1, j1, i2, j2, k, traversalOptions)
     {
         var path = [];
         this.mapLine(i1, j1, i2, j2, function(i, j, ni, nj, arrow_num) {
             path.push(new Coord(ni, nj));
             _control.drawMovementArrow(ctx, i, j, arrow_num);
-        }, k, 30);
+        }, k, 30, traversalOptions);
         return path;
     }
 
-    drawGotoPreview(i1, j1, i2, j2, k, existingContext)
+    drawGotoPreview(i1, j1, i2, j2, k, existingContext, traversalOptions)
     {
         var ctx = existingContext || _draw.clear();
         if (!existingContext) this.drawMovementOrders(ctx);
-        return this.drawGotoPath(ctx, i1, j1, i2, j2, k);
+        var previewOptions = Object.assign({}, traversalOptions || {}, {
+            pathMaximumExpanded: 256,
+            pathMaximumMilliseconds: 2,
+        });
+        return this.drawGotoPath(ctx, i1, j1, i2, j2, k, previewOptions);
     }
 
     drawGotoGroup(indices, i2, j2)
@@ -240,23 +286,34 @@ const _control = new class
     drawMovementOrder(ctx, unit, k)
     {
         if (!ctx || !unit || !unit.coord) return false;
+        if (unit.coord.i < -30 || unit.coord.i >= _map_size + 30
+            || unit.coord.j < -30 || unit.coord.j >= _map_size + 30) return false;
         var path = unit.gotoPath && unit.gotoPath.length
             ? unit.gotoPath : unit.pendingServerPath;
         if (path && path.length) {
             var from = unit.coord;
-            for (var n=0; n < path.length; n++) {
+            var visited = {};
+            visited[Math.round(Number(from.i)) + ':' + Math.round(Number(from.j))] = true;
+            // Generated routes are at most 30 steps. Never let corrupted saved
+            // state turn one overlay redraw into thousands of canvas operations.
+            var maximum = Math.min(path.length, 30);
+            for (var n=0; n < maximum; n++) {
                 var to = path[n];
+                if (!to || !Number.isFinite(Number(to.i)) || !Number.isFinite(Number(to.j))) break;
+                var di = Math.round(Number(to.i)) - Math.round(Number(from.i));
+                var dj = Math.round(Number(to.j)) - Math.round(Number(from.j));
+                if ((di == 0 && dj == 0) || Math.abs(di) > 1 || Math.abs(dj) > 1 || di == -dj) break;
+                var key = Math.round(Number(to.i)) + ':' + Math.round(Number(to.j));
+                if (visited[key]) break;
                 this.drawMovementArrow(ctx, from.i, from.j, this.arrowNum(to.i - from.i, to.j - from.j));
+                visited[key] = true;
                 from = to;
             }
             return true;
         }
-        if (!unit.gotoCoord) return false;
-        this.mapLine(unit.coord.i, unit.coord.j, unit.gotoCoord.i, unit.gotoCoord.j,
-            function(i, j, ni, nj, arrowNum) {
-                _control.drawMovementArrow(ctx, i, j, arrowNum);
-            }, k, 30);
-        return true;
+        // Rendering must never invoke pathfinding. Destination-only state can be
+        // repaired by command processing without blocking a canvas redraw.
+        return false;
     }
 
     forceDrawSelectedMovementOrder()
@@ -285,7 +342,7 @@ const _control = new class
         var tileUnits = [];
         var spriteUnits = [];
         for (var k=_units.length - 1; k >= 0; k--) {
-            if (!_units[k] || !_units[k].coord || _units[k].hiddenOnMap
+            if (!_units[k] || !_units[k].coord || _units[k].hiddenOnMap || _units[k].outsideMapWindow
                 || (_units[k].health != undefined && Number(_units[k].health) <= 0)
                 || (!_units[k].can_move && _units[k].type != 3)) continue;
             var unitX = ijtox1(_units[k].coord.i, _units[k].coord.j);

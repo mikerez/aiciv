@@ -238,8 +238,31 @@ const _city_economy = new class
                 queue.push(new Coord(point.i + directions[n][0], point.j + directions[n][1]));
             }
         }
+        // CITY-INCOME-011A: an improved Tile may terminate a connected road
+        // without carrying a road itself. It is an endpoint only and cannot
+        // extend the road network to another Tile.
+        for (var endpointDi=-4; endpointDi <= 4; endpointDi++) {
+            for (var endpointDj=-4; endpointDj <= 4; endpointDj++) {
+                var endpointI = city.coord.i + endpointDi;
+                var endpointJ = city.coord.j + endpointDj;
+                if (endpointI < 0 || endpointI >= _map_size
+                    || endpointJ < 0 || endpointJ >= _map_size) continue;
+                var endpointModifiers = _map_terrain_mod[endpointI][endpointJ] || {};
+                if (!this.hasRoadRequiredImprovement(endpointModifiers) || endpointModifiers.road) continue;
+                for (var endpointDirection=0; endpointDirection < directions.length; endpointDirection++) {
+                    var roadI = endpointI + directions[endpointDirection][0];
+                    var roadJ = endpointJ + directions[endpointDirection][1];
+                    var roadKey = roadI + ':' + roadJ;
+                    if (found[roadKey] && _map_terrain_mod[roadI] && _map_terrain_mod[roadI][roadJ]
+                        && _map_terrain_mod[roadI][roadJ].road) {
+                        add(endpointI, endpointJ);
+                        break;
+                    }
+                }
+            }
+        }
         // Nearby bare Tiles can be worked directly. A Tile with a completed
-        // land improvement must carry a road and be reached by the road BFS.
+        // land improvement must connect through the road BFS or its endpoint rule.
         for (var closeDi=-1; closeDi <= 1; closeDi++) {
             for (var closeDj=-1; closeDj <= 1; closeDj++) {
                 if (this.hexDistance(closeDi, closeDj) <= 1) {
@@ -396,6 +419,19 @@ const _city_economy = new class
         return costs;
     }
 
+    cityIsProducing(city)
+    {
+        if (!city) return false;
+        var queued = (Array.isArray(city.productionQueue) && city.productionQueue.length > 0)
+            || !!(city.production && city.production.unitTypeId);
+        if (!queued) return false;
+        var perTurn = Number(city.cityProperties && city.cityProperties.productionPerTurn);
+        if (Number.isFinite(perTurn)) return perTurn > 0;
+        var income = city.lastCityIncome || (city.economy && city.economy.lastIncome) || {};
+        var production = Number(income.production);
+        return !Number.isFinite(production) || production > 0;
+    }
+
     updateIncome(city)
     {
         var total = { food: 0, production: 0, money: 0 };
@@ -406,14 +442,18 @@ const _city_economy = new class
         }
         var infrastructure = this.infrastructureCosts(city);
         city.economy.lastGrossIncome = total;
-        city.economy.foodConsumption = this.foodConsumption(city) + infrastructure.workshops*2;
         var population = Math.max(1, Number(city.cityPopulation) || city.economy.citizens.length || 1);
+        var netProduction = Math.max(0, total.production - infrastructure.roads
+            - infrastructure.networks - infrastructure.fortifications*2);
+        var hasQueue = (Array.isArray(city.productionQueue) && city.productionQueue.length > 0)
+            || !!(city.production && city.production.unitTypeId);
+        var workshopFoodCost = hasQueue && netProduction > 0 ? infrastructure.workshops*2 : 0;
+        city.economy.foodConsumption = this.foodConsumption(city) + workshopFoodCost;
         var grossFoodExcess = total.food - city.economy.foodConsumption;
         var largeCityLossRate = population <= 10 ? 0 : Math.min(0.5, (population-10)*0.05);
         city.economy.lastIncome = {
             food: grossFoodExcess > 0 ? Math.floor(grossFoodExcess*(1-largeCityLossRate)) : grossFoodExcess,
-            production: Math.max(0, total.production - infrastructure.roads
-                - infrastructure.networks - infrastructure.fortifications*2),
+            production: netProduction,
             money: total.money
         };
         city.economy.turnsToNewCitizen = city.economy.lastIncome.food > 0 ? Math.ceil((this.citizenGrowthCost(city) - city.economy.foodStored)/city.economy.lastIncome.food) : 0;
@@ -434,6 +474,14 @@ const _city_economy = new class
                 continue;
             }
             this.ensureCity(city);
+            var marketFood = 0;
+            if (typeof _current_game != 'undefined' && _current_game.cityHasBuilding(city, 'market')
+                && _current_game.cityRoadConnectedToAnotherCity(city)
+                && typeof _game_state != 'undefined' && Number(_game_state.food) > 0) {
+                marketFood = 1;
+                _game_state.food = Math.max(0, Number(_game_state.food) - marketFood);
+                city.economy.lastIncome.food += marketFood;
+            }
             city.economy.foodStored += city.economy.lastIncome.food;
             while (city.economy.foodStored < 0 && city.economy.citizens.length > 1) {
                 city.economy.citizens.pop();
@@ -471,6 +519,10 @@ const _city_economy = new class
             var storedFood = Math.max(0, Number(city.cityFoodStored != undefined
                 ? city.cityFoodStored : city.economy.foodStored) || 0);
             if (storedFood < this.citizenGrowthCost(city) || city.growthPending) continue;
+            var population = Math.max(1, Number(city.cityPopulation)
+                || city.economy.citizens.length || 1);
+            var tileCapacity = Math.max(1, this.economicTileCandidates(city).length);
+            if (population >= tileCapacity) continue;
             city.growthPending = true;
             let growingCity = city;
             _server_game.growCity(growingCity, storedFood).catch(function(error) {
@@ -540,11 +592,12 @@ const _city_economy = new class
         _screen.drawSpriteSized(x, y, texture, _screenZoom, 80, 80, 1.0);
     }
 
-    drawCitizenTilesMap(start_i, start_j, height_i, width_j)
+    citizenTilesMapData(start_i, start_j, height_i, width_j)
     {
+        var result = [];
         for (var k=0; k < _units.length; k++) {
             var city = _units[k];
-            if (city.type != 3 || !city.economy) {
+            if (city.type != 3 || city.outsideMapWindow || !city.economy) {
                 continue;
             }
             this.updateIncome(city);
@@ -553,10 +606,22 @@ const _city_economy = new class
                 if (citizen.coord.i < start_i || citizen.coord.i >= start_i + height_i || citizen.coord.j < start_j || citizen.coord.j > start_j + width_j) {
                     continue;
                 }
-                var x = ijtox1(citizen.coord.i, citizen.coord.j);
-                var y = ijtoy1(citizen.coord.i, citizen.coord.j);
-                this.drawYieldCompositionMap(x, y, citizen.income);
+                result.push({
+                    i: citizen.coord.i,
+                    j: citizen.coord.j,
+                    income: citizen.income,
+                });
             }
+        }
+        return result;
+    }
+
+    drawCitizenTilesMap(start_i, start_j, height_i, width_j)
+    {
+        var citizenTiles = this.citizenTilesMapData(start_i, start_j, height_i, width_j);
+        for (var n=0; n<citizenTiles.length; n++) {
+            var citizen = citizenTiles[n];
+            this.drawYieldCompositionMap(ijtox1(citizen.i, citizen.j), ijtoy1(citizen.i, citizen.j), citizen.income);
         }
     }
 }
