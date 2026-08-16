@@ -28,13 +28,16 @@ assert.equal(context.economics.resourceYield('bananas', { plantation: true }).mo
 assert.equal(context.economics.maintenanceCost({ economicClass: 'terrain_improvement', improvementType: 'workshop' }), 0);
 context._map_terrain_tex[0][0] = 2;
 context._map_resource[0][0] = { type: 0 };
-context._map_terrain_mod[0][0] = { cottage: true, cottageAge: 99 };
+context._map_terrain_mod[0][0] = { cottage: true, cottageAge: 999 };
 assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
     { food: 2, production: 0, money: 2 }, 'Cottage gives base food and at least two gold');
-context._map_terrain_mod[0][0].cottageAge = 100;
+context._map_terrain_mod[0][0].cottageAge = 1000;
 assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
     { food: 3, production: 0, money: 3 }, 'Hamlet gives more food and gold than Cottage');
-context._map_terrain_mod[0][0].cottageAge = 200;
+context._map_terrain_mod[0][0].cottageAge = 5999;
+assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
+    { food: 3, production: 0, money: 3 }, 'Hamlet remains a Hamlet for 5000 turns');
+context._map_terrain_mod[0][0].cottageAge = 6000;
 assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
     { food: 4, production: 0, money: 4 }, 'Village gives more food and gold than Hamlet');
 context._map_terrain_tex[0][0] = 2;
@@ -97,4 +100,9 @@ context._units.push(
 assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.infrastructureCosts(accountingCity))), {
     roads: 1, workshops: 0, networks: 0, fortifications: 1,
 }, 'client accounting assigns one Road and one Fortification to their parent City');
+vm.runInContext(fs.readFileSync('map.js', 'utf8') + ';globalThis.mapEngine=_map;', context);
+assert.equal(context.mapEngine.cottageStage(999), 'cottage');
+assert.equal(context.mapEngine.cottageStage(1000), 'hamlet');
+assert.equal(context.mapEngine.cottageStage(5999), 'hamlet');
+assert.equal(context.mapEngine.cottageStage(6000), 'village');
 console.log('PASS mirrored client tile economy rules');

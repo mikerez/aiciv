@@ -68,5 +68,5 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-MOD-003`: Roads are drawn as `images/road.png` overlays above terrain.
 - `TERRAIN-MOD-004`: Irrigation is drawn as `images/irrigation.png` overlays above terrain.
 - `TERRAIN-MOD-005`: Pasture, farm, plantation, camp, fishing boats, network, quarry, winery, fortification, cottage, hamlet, village, workshop, and mine are drawn as full `220x160` overlay sprites above terrain.
-- `TERRAIN-MOD-006`: Cottage uses `images/cottage.png` before 100 turns, `images/hamlet.png` from turn 100, and `images/village.png` from turn 200.
+- `TERRAIN-MOD-006`: Cottage uses `images/cottage.png` before age 1000, `images/hamlet.png` for the next 5000 turns, and `images/village.png` from total age 6000.
 - `TERRAIN-MOD-007`: A Tile can have one primary improvement. Building a different primary improvement removes the previous one; `road` is infrastructure and can coexist with any primary improvement.

@@ -5476,11 +5476,19 @@ function serverImprovementYieldMultipliers(): array
     ];
 }
 
+function serverCottageStage(int $age): string
+{
+    if ($age >= 6000) return 'village';
+    if ($age >= 1000) return 'hamlet';
+    return 'cottage';
+}
+
 function serverCottageStageYield(int $age): array
 {
     // Mirrored by cottageStageYields() in economics.js.
-    if ($age >= 200) return ['food_bonus' => 2, 'money_multiplier' => 4.0, 'minimum_money' => 4.0];
-    if ($age >= 100) return ['food_bonus' => 1, 'money_multiplier' => 3.0, 'minimum_money' => 3.0];
+    $stage = serverCottageStage($age);
+    if ($stage === 'village') return ['food_bonus' => 2, 'money_multiplier' => 4.0, 'minimum_money' => 4.0];
+    if ($stage === 'hamlet') return ['food_bonus' => 1, 'money_multiplier' => 3.0, 'minimum_money' => 3.0];
     return ['food_bonus' => 0, 'money_multiplier' => 2.0, 'minimum_money' => 2.0];
 }
 
@@ -7280,8 +7288,8 @@ function processTerrainImprovementAges(
         $before = max(0, (int) ($modifiers['cottageAge'] ?? 0));
         $after = $before + 1;
         $modifiers['cottageAge'] = $after;
-        $beforeStage = $before >= 200 ? 'village' : ($before >= 100 ? 'hamlet' : 'cottage');
-        $afterStage = $after >= 200 ? 'village' : ($after >= 100 ? 'hamlet' : 'cottage');
+        $beforeStage = serverCottageStage($before);
+        $afterStage = serverCottageStage($after);
         $modifiers['cottageStage'] = $afterStage;
         $tile['modifiers_json'] = jsonObject($modifiers);
         $tileRevision = $beforeStage !== $afterStage ? $revision : (int) ($tile['revision'] ?? 0);

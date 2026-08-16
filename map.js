@@ -210,7 +210,11 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 }
                 if (_map_terrain_mod[i][j].cottage) {
                     var cottageAge = _map_terrain_mod[i][j].cottageAge || 0;
-                    this.terrainModifierSprites.push({ i: i, j: j, texture: cottageAge >= 200 ? 870 : (cottageAge >= 100 ? 869 : 854) });
+                    var cottageStage = this.cottageStage(cottageAge);
+                    this.terrainModifierSprites.push({
+                        i: i, j: j,
+                        texture: cottageStage == 'village' ? 870 : (cottageStage == 'hamlet' ? 869 : 854)
+                    });
                 }
                 if (_map_terrain_mod[i][j].workshop) {
                     this.terrainModifierSprites.push({ i: i, j: j, texture: 855 });
@@ -410,6 +414,13 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         return this.addTerrainModifier(i, j, 'winery');
     }
 
+    cottageStage(age)
+    {
+        if (age >= 6000) return 'village';
+        if (age >= 1000) return 'hamlet';
+        return 'cottage';
+    }
+
     processTerrainModifierTurns()
     {
         var changed = false;
@@ -418,12 +429,8 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
                 if (_map_terrain_mod[i][j].cottage) {
                     var previousAge = _map_terrain_mod[i][j].cottageAge || 0;
                     _map_terrain_mod[i][j].cottageAge = previousAge + 1;
-                    if (previousAge < 100 && _map_terrain_mod[i][j].cottageAge >= 100) {
-                        changed = true;
-                    }
-                    if (previousAge < 200 && _map_terrain_mod[i][j].cottageAge >= 200) {
-                        changed = true;
-                    }
+                    if (this.cottageStage(previousAge)
+                        != this.cottageStage(_map_terrain_mod[i][j].cottageAge)) changed = true;
                 }
             }
         }

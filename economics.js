@@ -59,11 +59,19 @@ const _economics = new class
         };
     }
 
+    cottageStage(age)
+    {
+        if (age >= 6000) return 'village';
+        if (age >= 1000) return 'hamlet';
+        return 'cottage';
+    }
+
     cottageStageYields(age)
     {
         // Mirrored by serverCottageStageYield() in server_game.php.
-        if (age >= 200) return { foodBonus: 2, moneyMultiplier: 4, minimumMoney: 4 };
-        if (age >= 100) return { foodBonus: 1, moneyMultiplier: 3, minimumMoney: 3 };
+        var stage = this.cottageStage(age);
+        if (stage == 'village') return { foodBonus: 2, moneyMultiplier: 4, minimumMoney: 4 };
+        if (stage == 'hamlet') return { foodBonus: 1, moneyMultiplier: 3, minimumMoney: 3 };
         return { foodBonus: 0, moneyMultiplier: 2, minimumMoney: 2 };
     }
 

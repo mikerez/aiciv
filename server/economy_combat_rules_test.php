@@ -109,14 +109,17 @@ $economicTiles['3:2']['modifiers_json'] = '{"farm":true,"road":true}';
 $economicKeys = serverCityEconomicTileKeys($economicCity, $economicTiles);
 check(isset($economicKeys['3:2']), 'an improved Tile contributes after a continuous City road connection');
 $cottageBase = array_replace($plain, ['terrain_tex' => 2]);
-$cottage99 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":99}']));
-$cottage100 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":100}']));
-$cottage200 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":200}']));
-check($cottage99['food'] === 2 && $cottage99['money'] === 2.0,
+$cottage999 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":999}']));
+$cottage1000 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":1000}']));
+$cottage5999 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":5999}']));
+$cottage6000 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":6000}']));
+check($cottage999['food'] === 2 && $cottage999['money'] === 2.0,
     'Cottage provides its base food and at least 2 gold');
-check($cottage100['food'] === 3 && $cottage100['money'] === 3.0,
+check($cottage1000['food'] === 3 && $cottage1000['money'] === 3.0,
     'Hamlet provides more food and gold than Cottage');
-check($cottage200['food'] === 4 && $cottage200['money'] === 4.0,
+check($cottage5999['food'] === 3 && $cottage5999['money'] === 3.0,
+    'Hamlet remains active for 5000 turns');
+check($cottage6000['food'] === 4 && $cottage6000['money'] === 4.0,
     'Village provides more food and gold than Hamlet');
 check(serverResourceImprovementRequirements()['horses'] === 'pasture', 'Horses need Pasture');
 check(!serverImprovementMatchesTileResource($plain, 'pasture'), 'Pasture requires an animal resource');

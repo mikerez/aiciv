@@ -200,7 +200,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-WORKER-BUILDING-006`: Mine can be built on hills terrain type `4`, mountains/rocks terrain type `5`, or sand terrain type `1` when that sand Tile contains an opened resource whose required improvement is Mine.
 - `PREHISTORY-WORKER-BUILDING-007`: If the worker tile has an opened resource and its required improvement is currently buildable, the worker menu suggests only that resource improvement from the worker tile-building list.
 - `PREHISTORY-WORKER-BUILDING-008`: Land worker tile buildings are not supported on water tiles; Fishing Boats is supported only on water resource tiles.
-- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 100 turns and a Village after 200 total turns.
+- `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 1000 turns, then the Hamlet becomes a Village after 5000 more turns at total age 6000.
 - `PREHISTORY-WORKER-BUILDING-010`: Workers cannot start Pasture, Farm, Plantation, Camp, Fishing Boats, Quarry, Winery, Cottage, Workshop, Mine, or Fortification while standing on a city tile.
 - `PREHISTORY-WORKER-BUILDING-011`: Farm and Cottage each take five client turns and require an existing Irrigation modifier on their Tile. Completing either replaces that preparatory Irrigation as the Tile's primary improvement.
 
