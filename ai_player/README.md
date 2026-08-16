@@ -113,8 +113,9 @@ node ai_player/ai_player.js
 ```
 
 The process reads the application secret from `AICIV_SECRET`, from the file in
-`AICIV_SECRET_FILE`, or from `api_secret` in the repository root. It claims short
-server leases and can run continuously alongside browser contributors. The
+`AICIV_SECRET_FILE`, or from `api_secret` in the repository root. Run it directly
+in a dedicated console; it claims short server leases until interrupted with
+`Ctrl+C`. The
 server scheduler and browser-side rotating batches both start from randomized
 unit positions, so repeated inference is not pinned to the first eight units.
 
