@@ -3,16 +3,22 @@
 
 import http.cookiejar
 import json
+import os
 import pathlib
+import ssl
 import urllib.request
+import urllib.parse
 import uuid
 from datetime import datetime, timezone
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SECRET = (ROOT / "api_secret").read_text(encoding="utf-8").strip()
-API = "https://softmaximite.com/game/api.php"
-GAME = "https://softmaximite.com/game/"
+ORIGIN = os.environ.get("AICIV_TEST_ORIGIN", "https://13.60.223.71").rstrip("/")
+VIRTUAL_HOST = os.environ.get("AICIV_TEST_HOST", "softmaximite.com")
+API = ORIGIN + "/api.php"
+GAME = ORIGIN + "/"
+SSL_CONTEXT = ssl._create_unverified_context()
 
 
 def post(payload):
@@ -20,10 +26,10 @@ def post(payload):
     request = urllib.request.Request(
         API,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "Host": VIRTUAL_HOST},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
+    with urllib.request.urlopen(request, timeout=60, context=SSL_CONTEXT) as response:
         return response.status, json.load(response)
 
 
@@ -32,8 +38,12 @@ def cookies_by_name(jar):
 
 
 def open_with_jar(url, jar):
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
-    with opener.open(url, timeout=60) as response:
+    opener = urllib.request.build_opener(
+        urllib.request.HTTPSHandler(context=SSL_CONTEXT),
+        urllib.request.HTTPCookieProcessor(jar),
+    )
+    request = urllib.request.Request(url, headers={"Host": VIRTUAL_HOST})
+    with opener.open(request, timeout=60) as response:
         body = response.read().decode("utf-8")
         return response.status, response.geturl(), body
 
@@ -45,10 +55,10 @@ def token_cookie(token):
         value=token,
         port=None,
         port_specified=False,
-        domain="softmaximite.com",
+        domain=urllib.parse.urlparse(ORIGIN).hostname,
         domain_specified=True,
         domain_initial_dot=False,
-        path="/game/",
+        path="/",
         path_specified=True,
         secure=True,
         expires=None,
@@ -103,7 +113,8 @@ def main():
     assert entry["device_query_parameter"] == "device", entry
 
     url_jar = http.cookiejar.CookieJar()
-    status, final_url, body = open_with_jar(entry["game_entry_url"], url_jar)
+    entry_query = urllib.parse.urlparse(entry["game_entry_url"]).query
+    status, final_url, body = open_with_jar(GAME + "?" + entry_query, url_jar)
     url_cookies = cookies_by_name(url_jar)
     assert status == 200 and final_url == GAME, final_url
     assert "AI Civilization" in body, "game HTML was not returned"
