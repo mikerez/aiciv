@@ -41,7 +41,7 @@ registerVocabularyPack('CH', {
     'unit.features':'{attack}/{defense}/{speed}', 'unit.selected_military':'已选军事单位：{count}',
     'unit.id':'单位 ID：{id}', 'unit.pending':'等待中',
     'terrain.water':'水域', 'terrain.sand':'沙地', 'terrain.grass':'草原', 'terrain.snow':'雪地',
-    'terrain.hills':'丘陵', 'terrain.mountains':'山脉', 'terrain.forest':'森林',
+    'terrain.hills':'丘陵', 'terrain.rocks':'岩地', 'terrain.forest':'森林',
     'terrain.grasswater':'有水草原', 'terrain.unknown':'未知',
     'tile.defence':'防御', 'tile.base':'基础', 'tile.resource':'资源', 'tile.current':'当前',
     'tile.suggested':'建议', 'tile.after':'建成后', 'tile.income':'粮食 {food} / 生产 {production} / 金币 {gold}',

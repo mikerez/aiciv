@@ -26,7 +26,7 @@ City economy is implemented by `city.js`.
 - `CITY-INCOME-011A`: An improved land Tile may also be the final endpoint beside a continuously connected road Tile. This endpoint cannot extend the road network and does not count as an exactly road-connected strategic resource for unit production.
 - `CITY-INCOME-012`: The City menu labels `F` as gross food gathered from worked Tiles and shows citizen and Workshop consumption separately as `Eat`.
 - `CITY-INCOME-006`: City-tile irrigation gives food only after worker-built neighboring irrigation activates the city irrigation food flag.
-- `CITY-INCOME-007`: A land tile with the terrain `A` bit set contains a local water source. Sand with this bit is a lake and gives 2 food, or 4 with irrigation. Other land gains 1 food; hills or rocks/mountains also gain 1 production.
+- `CITY-INCOME-007`: A land tile with the terrain `A` bit set contains a local water source. Sand with this bit is a lake and gives 2 food, or 4 with irrigation. Other land gains 1 food; hills or rocks also gain 1 production.
 - `CITY-INCOME-008`: Sand gives no food or gold. Irrigated sand gives 1 food unless it is a lake.
 - `CITY-INCOME-009`: A Workshop sets its worked Tile output to exactly 4 production. Each Workshop consumes 2 food and no gold from its nearest same-owner parent City only while that City has a production queue and positive net production per turn. A stalled `P=0` queue consumes no Workshop food.
 - `CITY-INCOME-010`: A City works only Tiles whose coordinates are within `+/-4` of the City on both map axes, forming a maximum `9x9` working rectangle. Inside it, land Tiles connect by road and water Tiles within three hex steps remain eligible when they have Nets.

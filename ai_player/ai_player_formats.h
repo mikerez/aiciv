@@ -262,7 +262,7 @@ typedef struct AIPlayerStrategySituation {
     float military_count;
     float city_count;
     float city_context_hills;
-    float city_context_mountains;
+    float city_context_rocks;
     float city_context_grass;
     float city_context_water;
     float city_context_animal_resources;

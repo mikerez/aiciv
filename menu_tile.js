@@ -7,7 +7,7 @@ const _menu_tile = new class
 
     terrainName(type)
     {
-        var terrainIds = ['water', 'sand', 'grass', 'snow', 'hills', 'mountains', 'forest', 'grasswater'];
+        var terrainIds = ['water', 'sand', 'grass', 'snow', 'hills', 'rocks', 'forest', 'grasswater'];
         return vocabularyText('terrain.' + (terrainIds[type] || 'unknown'));
     }
 

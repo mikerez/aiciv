@@ -71,7 +71,7 @@ Input:
   counters as settlers, workers, military, cities.
 - `general_situation[24..40]`: statistics collected around owned city rings, or
   around owned settlers if no city exists yet. These slots are visible-map only:
-  `[24]` hills, `[25]` mountains/rocks, `[26]` grass-like terrain, `[27]`
+  `[24]` hills, `[25]` rocks, `[26]` grass-like terrain, `[27]`
   water/water-source tiles, `[28]` animal resources, `[29]` stone/masonry
   resources, `[30]` crop/farm resources, `[31]` already-opened technology
   ratio, `[32]` visible context coverage, `[33]` flat non-mining land, `[34]`

@@ -12,6 +12,15 @@ vm.createContext(sandbox);
 const source = fs.readFileSync('birdsview.js', 'utf8') + '\nglobalThis.__birdsview = _birdsview;';
 vm.runInContext(source, sandbox, {filename: 'birdsview.js'});
 
+sandbox._map_terrain_tex = [[5 | (2 << 4)]];
+const plainRockHeight = sandbox.__birdsview.terrainHeightSignal(0, 0);
+sandbox._map_terrain_tex[0][0] |= 0x80;
+assert(sandbox.__birdsview.terrainHeightSignal(0, 0) > plainRockHeight,
+    'the A bit must expose a rock water source to birdsview');
+sandbox._map_terrain_tex[0][0] = (5 | (2 << 4) | 0x40);
+assert.equal(sandbox.__birdsview.terrainHeightSignal(0, 0), plainRockHeight,
+    'the supertile S bit must not be decoded as a water source');
+
 const layout = {centerX: 100, centerY: 100, sourceWidth: 100, sourceCenter: 50};
 const positiveRotatedY = sandbox.__birdsview.sourceToScreenPoint(0, 20, layout);
 const negativeRotatedY = sandbox.__birdsview.sourceToScreenPoint(0, -20, layout);

@@ -44,7 +44,7 @@ registerVocabularyPack('FR', {
     'unit.features':'{attack}/{defense}/{speed}', 'unit.selected_military':'Unités militaires sélectionnées : {count}',
     'unit.id':'ID unité : {id}', 'unit.pending':'en attente',
     'terrain.water':'Eau', 'terrain.sand':'Sable', 'terrain.grass':'Prairie', 'terrain.snow':'Neige',
-    'terrain.hills':'Collines', 'terrain.mountains':'Montagnes', 'terrain.forest':'Forêt',
+    'terrain.hills':'Collines', 'terrain.rocks':'Rochers', 'terrain.forest':'Forêt',
     'terrain.grasswater':'Prairie humide', 'terrain.unknown':'Inconnu',
     'tile.defence':'Défense', 'tile.base':'Base', 'tile.resource':'Ressource', 'tile.current':'Actuel',
     'tile.suggested':'Conseillé', 'tile.after':'Après',

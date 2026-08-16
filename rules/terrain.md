@@ -11,12 +11,12 @@ Terrain is stored as one byte per map cell:
 - `T3 T2 T1 T0`: terrain type, 4 bits.
 - `D1 D0`: depth, height, or wildity level, 2 bits.
 - `S`: supertile flag for 4-block aggregation of similar terrain.
-- `A`: alternative view flag. A set `A` bit marks an alternate visual variant; for land terrain it also means a local water source exists in fields, hills, or mountains.
+- `A`: alternative view flag. A set `A` bit marks an alternate visual variant; for land terrain it also means a local water source exists in fields, hills, or rocks.
 
 ## Terrain Type
 
 - `T` identifies the base terrain family.
-- Current examples include water, sand, grass, snow, hills, rocks, forest, and river/grass-water terrain.
+- Current examples include water, sand, grass, snow, hills, rocks, forest, and river/grass-water terrain. Mountain artwork belongs to the `hills_*` family; terrain type `5` is rocks.
 - The terrain type chooses the base texture family and whether the cell can be entered.
 
 ## Sprite Filenames
@@ -24,7 +24,7 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-SPRITE-001`: Every byte-indexed terrain sprite uses `general_name-binarynum.png`.
 - `general_name` is a lowercase underscore-separated description of terrain type and active visual modifiers, such as `forest_wildity0_supertile`.
 - `binarynum` is exactly eight binary digits in `ASD1D0T3T2T1T0` order and must equal the texture ID used by `_screen.loadTexture`.
-- When `A=1`, ordinary visual variants include `_alt` in `general_name`. Hill and mountain/stone variants use `_has_water` because their `A` bit describes water on elevated or stone terrain.
+- When `A=1`, ordinary visual variants include `_alt` in `general_name`. Hill and rock variants use `_has_water` because their `A` bit describes water on elevated or stone terrain.
 - Each encoded texture ID has its own filename even when multiple IDs currently contain identical image data.
 
 ## Depth, Height, And Wildity
@@ -43,7 +43,7 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-TURN-003`: A penalty of `0` means the unit can continue moving on the next turn.
 - `TERRAIN-TURN-004`: A penalty greater than `0` delays future movement while the penalty is decremented by turn processing.
 - `TERRAIN-TURN-005`: Water terrain is currently blocked for normal land movement.
-- `TERRAIN-TURN-006`: Mounted and wheeled units (Horseman, Chariot, Knight, and Elephant) cannot enter a maximum-height mountain Tile (`T=5`, `D=3`). Other land units entering it receive a three-turn future movement delay.
+- `TERRAIN-TURN-006`: Mounted and wheeled units (Horseman, Chariot, Knight, and Elephant) cannot enter a maximum-height rock Tile (`T=5`, `D=3`). Other land units entering it receive a three-turn future movement delay.
 
 ## Generation
 
@@ -59,7 +59,7 @@ Terrain is stored as one byte per map cell:
 - `TERRAIN-SUPER-002`: Map enhancement replaces each non-overlapping 2x2 group of identical water or forest Tiles with one supersprite. Rendering uses the loaded image's natural dimensions with a minimum `420x310` footprint. The sprites are named by their exact encoding, for example `images/water_depth0_supertile-01000000.png` and `images/forest_wildity0_supertile-01000110.png`.
 - `A` marks an alternative visual variant of the same terrain data. For water-related terrain, `A` also indicates that a water source exists.
 - `TERRAIN-GEN-003`: Hills are generated as visible clustered terrain so maps contain frequent elevated regions.
-- `TERRAIN-GEN-004`: Generation adds many radial mountain clusters. Each cluster has a guaranteed maximum-height center, falls toward lower surrounding heights, and may contain local mountain water sources through the `A` bit.
+- `TERRAIN-GEN-004`: Generation adds many radial rock clusters. Each cluster has a guaranteed maximum-height center, falls toward lower surrounding heights, and may contain local rock water sources through the `A` bit.
 
 ## Terrain Modifiers
 

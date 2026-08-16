@@ -45,7 +45,7 @@ registerVocabularyPack('SP', {
     'unit.selected_military':'Unidades militares seleccionadas: {count}', 'unit.id':'ID de unidad: {id}',
     'unit.pending':'pendiente',
     'terrain.water':'Agua', 'terrain.sand':'Arena', 'terrain.grass':'Pradera', 'terrain.snow':'Nieve',
-    'terrain.hills':'Colinas', 'terrain.mountains':'Montañas', 'terrain.forest':'Bosque',
+    'terrain.hills':'Colinas', 'terrain.rocks':'Rocas', 'terrain.forest':'Bosque',
     'terrain.grasswater':'Pradera con agua', 'terrain.unknown':'Desconocido',
     'tile.defence':'Defensa', 'tile.base':'Base', 'tile.resource':'Recurso', 'tile.current':'Actual',
     'tile.suggested':'Sugerido', 'tile.after':'Después',

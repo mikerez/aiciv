@@ -45,7 +45,7 @@ registerVocabularyPack('RU', {
     'unit.features':'{attack}/{defense}/{speed}', 'unit.selected_military':'Выбрано военных отрядов: {count}',
     'unit.id':'ID отряда: {id}', 'unit.pending':'ожидается',
     'terrain.water':'Вода', 'terrain.sand':'Песок', 'terrain.grass':'Равнина', 'terrain.snow':'Снег',
-    'terrain.hills':'Холмы', 'terrain.mountains':'Горы', 'terrain.forest':'Лес',
+    'terrain.hills':'Холмы', 'terrain.rocks':'Скалы', 'terrain.forest':'Лес',
     'terrain.grasswater':'Равнина с водой', 'terrain.unknown':'Неизвестно',
     'tile.defence':'Защита', 'tile.base':'Базовый доход', 'tile.resource':'Ресурс', 'tile.current':'Сейчас',
     'tile.suggested':'Рекомендуется', 'tile.after':'После',

@@ -129,7 +129,7 @@ int terrainCode(const std::string& terrain)
     if (terrain == "grass") return 2;
     if (terrain == "snow") return 3;
     if (terrain == "hills") return 4;
-    if (terrain == "mountain" || terrain == "rocks") return 5;
+    if (terrain == "rock" || terrain == "rocks") return 5;
     if (terrain == "forest" || terrain == "jungle") return 6;
     if (terrain == "grasswater" || terrain == "river") return 7;
     throw std::runtime_error("unknown action test terrain: " + terrain);

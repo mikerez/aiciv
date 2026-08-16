@@ -1373,7 +1373,7 @@ function serverGenerateMapPaths(
     }
 }
 
-function serverAddMountainClusters(array &$terrain, int $mapSize, int &$randomState, int $count): void
+function serverAddRockClusters(array &$terrain, int $mapSize, int &$randomState, int $count): void
 {
     for ($cluster = 0; $cluster < $count; ++$cluster) {
         $centerI = 8 + (int) floor(serverMapRandom($randomState) * max(1, $mapSize - 16));
@@ -1664,8 +1664,8 @@ function generateServerMapTilesCandidate(int $mapSize, string $gameKey): array
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(10), 10, 4, 4, $minX, $minY + ($maxY - $minY) / 3, $maxX, $maxY - ($maxY - $minY) / 3, 1, 1);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(SERVER_MAP_HILL_SEEDS), 12, 6, 10, $minX, $minY, $maxX, $maxY, 4, 1);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(SERVER_MAP_FOREST_SEEDS), 12, 12, 6, $minX, $minY, $maxX, $maxY, 6, 1);
-    // Mountain paths are last among land biomes so later hill/forest paths do
-    // not erase the additional mountain seeds.
+    // Rock paths are last among land biomes so later hill/forest paths do not
+    // erase the additional rock seeds.
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(SERVER_MAP_ROCK_SEEDS), 2, 4, 2, $minX, $minY + ($maxY - $minY) / 3, $maxX, $maxY - ($maxY - $minY) / 3, 5, 1);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(10), 10, 10, 5, $minX, $minY, $maxX, $minY + ($maxY - $minY) / 10, 3, 1);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(10), 10, 10, 5, $minX, $maxY - ($maxY - $minY) / 10, $maxX, $maxY, 3, 1);
@@ -1673,7 +1673,7 @@ function generateServerMapTilesCandidate(int $mapSize, string $gameKey): array
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(16), 20, 4, 4, $minX, $minY, $maxX, $maxY, -1, 2);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(10), 20, 1, 1, $minX, $minY, $maxX, $maxY, 0x10, 0);
     serverGenerateMapPaths($terrain, $mapSize, $randomState, $scaled(6), 10, 1, 1, $minX, $minY + ($maxY - $minY) / 10, $maxX, $maxY - ($maxY - $minY) / 10, 0x37, 1);
-    serverAddMountainClusters($terrain, $mapSize, $randomState, $scaled(12));
+    serverAddRockClusters($terrain, $mapSize, $randomState, $scaled(12));
     serverEnsureHorseTerrainMinimum($terrain, $mapSize, $randomState, serverMinimumHorseCount($mapSize));
     serverEnhanceMap($terrain, $terrainBits, $mapSize, $randomState);
 
@@ -3592,7 +3592,7 @@ function serverMovementStepCost(?array $sourceTile, ?array $destinationTile): fl
     return serverTileHasRoad($sourceTile) && serverTileHasRoad($destinationTile) ? 0.5 : 1.0;
 }
 
-function serverIsMaximumMountain(?array $tile): bool
+function serverIsMaximumRock(?array $tile): bool
 {
     if (!$tile) return false;
     $terrain = (int) ($tile['terrain_tex'] ?? 0);
@@ -3608,7 +3608,7 @@ function serverIsMountedOrWheelUnit(array $unit): bool
 function serverTerrainMovePenalty(array $unit, ?array $tile): int
 {
     if (!$tile || serverTileHasRoad($tile) || ((int) $tile['terrain_tex'] & 0x0f) === 0) return 0;
-    if (serverIsMaximumMountain($tile)) return 3;
+    if (serverIsMaximumRock($tile)) return 3;
     return ((int) $tile['terrain_tex'] >> 4) & 0x03;
 }
 
@@ -3710,9 +3710,9 @@ function validatePath(
             ];
             break;
         }
-        if (serverIsMaximumMountain($tile) && serverIsMountedOrWheelUnit($unit)) {
+        if (serverIsMaximumRock($tile) && serverIsMountedOrWheelUnit($unit)) {
             $diagnostic['stopped'] = [
-                'step' => $n, 'reason' => 'maximum_mountain_forbidden',
+                'step' => $n, 'reason' => 'maximum_rock_forbidden',
                 'unit_type_id' => (string) $unit['unit_type_id'], 'to' => ['i' => $ni, 'j' => $nj],
             ];
             break;

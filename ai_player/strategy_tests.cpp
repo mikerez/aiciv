@@ -14,7 +14,7 @@ namespace {
 struct StrategyTechnologyScenario {
     std::string name;
     float hills = 0.0f;
-    float mountains = 0.0f;
+    float rocks = 0.0f;
     float grass = 0.0f;
     float water = 0.0f;
     float animalResources = 0.0f;
@@ -153,7 +153,7 @@ InputSignal buildStrategyTechnologyInput(const StrategyTechnologyScenario& scena
     InputSignal input{};
     input.fill(0.0f);
     input[AI_PLAYER_SITUATION_BASE + 24] = scenario.hills;
-    input[AI_PLAYER_SITUATION_BASE + 25] = scenario.mountains;
+    input[AI_PLAYER_SITUATION_BASE + 25] = scenario.rocks;
     input[AI_PLAYER_SITUATION_BASE + 26] = scenario.grass;
     input[AI_PLAYER_SITUATION_BASE + 27] = scenario.water;
     input[AI_PLAYER_SITUATION_BASE + 28] = scenario.animalResources;
@@ -162,7 +162,7 @@ InputSignal buildStrategyTechnologyInput(const StrategyTechnologyScenario& scena
     input[AI_PLAYER_SITUATION_BASE + 31] = scenario.openedTechRate;
     input[AI_PLAYER_SITUATION_BASE + 32] = scenario.contextTiles >= 0.0f ? scenario.contextTiles : 1.0f;
     input[AI_PLAYER_SITUATION_BASE + 33] = scenario.flatLand >= 0.0f ? scenario.flatLand
-        : std::max(0.0f, scenario.grass - scenario.hills - scenario.mountains);
+        : std::max(0.0f, scenario.grass - scenario.hills - scenario.rocks);
     input[AI_PLAYER_SITUATION_BASE + 34] = scenario.freshWater >= 0.0f ? scenario.freshWater : scenario.water;
     input[AI_PLAYER_SITUATION_BASE + 35] = scenario.forest;
     input[AI_PLAYER_SITUATION_BASE + 36] = scenario.desertSnow;
@@ -292,7 +292,7 @@ std::vector<StrategyTechnologyScenario> loadStrategyTechnologyTestFile(const std
         if (words[0] == "terrain") {
             const auto options = parseOptions(words, 1);
             current.hills = optionFloat(options, "hills", current.hills);
-            current.mountains = optionFloat(options, "mountains", current.mountains);
+            current.rocks = optionFloat(options, "rocks", current.rocks);
             current.grass = optionFloat(options, "grass", current.grass);
             current.water = optionFloat(options, "water", current.water);
         }

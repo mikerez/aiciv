@@ -157,7 +157,7 @@ _game_vocabulary_packs.EN = {
         'terrain.grass': 'Grass',
         'terrain.snow': 'Snow',
         'terrain.hills': 'Hills',
-        'terrain.mountains': 'Mountains',
+        'terrain.rocks': 'Rocks',
         'terrain.forest': 'Forest',
         'terrain.grasswater': 'Grass with water',
         'terrain.unknown': 'Unknown',

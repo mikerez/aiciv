@@ -37,7 +37,7 @@ const _birdsview = new class
         var tex = _map_terrain_tex[i][j];
         var type = tex & 0x0F;
         var depth = (tex >> 4) & 0x03;
-        var waterSource = (tex >> 6) & 0x01;
+        var waterSource = (tex >> 7) & 0x01;
         if (type == 0) {
             return -0.90 - depth * 0.08;
         }
@@ -54,7 +54,7 @@ const _birdsview = new class
             return 0.48 + depth * 0.08;
         }
         if (type == 5) {
-            return 0.78 + depth * 0.07;
+            return 0.78 + waterSource * 0.04 + depth * 0.07;
         }
         if (type == 6) {
             return 0.28 + depth * 0.03;

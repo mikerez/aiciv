@@ -120,7 +120,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-STATE-010`: Right mouse click assigns a Goto path for the selected movable unit.
 - `PREHISTORY-STATE-011`: Right mouse click draws the same Goto arrows as drag preview after assigning the path.
 - `PREHISTORY-STATE-012`: Goto preview follows normal mouse hover after the command is selected, even when the mouse button is not held.
-- `PREHISTORY-STATE-013`: Goto considers every legal advancing neighbor, prefers roads that continue toward the target, and penalizes hills and mountains when an easier advancing Tile is available.
+- `PREHISTORY-STATE-013`: Goto considers every legal advancing neighbor, prefers roads that continue toward the target, and penalizes hills and rocks when an easier advancing Tile is available.
 - `PREHISTORY-MENU-012`: Background server updates, Automate completion, and Road-to completion must not close the command panel of a selected unit or city. Only an explicit command dismissal or clearing the selection may hide it.
 - `PREHISTORY-MENU-013`: City production and backlog state never inserts a conditional blank line or reserves an empty second row in the Actions menu.
 - `PREHISTORY-MENU-014`: The desktop Actions window follows the `300x480` `menu.png` artwork and aligns its right border with the game viewport. Its scroll area is centered at `280x420`, with a 10px horizontal inset and 30px vertical inset, so the scrollbar stays inside the ornamental border.
@@ -197,7 +197,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-WORKER-BUILDING-003`: Worker tile-building commands are shown only when the building is supported on the worker tile and that tile does not already have the same building.
 - `PREHISTORY-WORKER-BUILDING-004`: Completed worker tile buildings set the corresponding terrain modifier on the worker tile.
 - `PREHISTORY-WORKER-BUILDING-005`: Resource improvements require the matching opened resource on the worker tile: Pasture for Cattle, Sheep, and Horses; Farm for Rice and Wheat; Plantation for Bananas, Citrus, Cotton, Dyes, Incense, Olives, Silk, Spices, Sugar, and Tea; Camp for Deer, Amber, Furs, Honey, and Ivory; Fishing Boats for Crabs, Fish, Pearls, Turtles, and Whales; Quarry for Stone, Gypsum, Marble, and Salt; Winery for Wine; Mine for Copper, Diamonds, Silver, Iron, Gold, and Gems.
-- `PREHISTORY-WORKER-BUILDING-006`: Mine can be built on hills terrain type `4`, mountains/rocks terrain type `5`, or sand terrain type `1` when that sand Tile contains an opened resource whose required improvement is Mine.
+- `PREHISTORY-WORKER-BUILDING-006`: Mine can be built on hills terrain type `4`, rocks terrain type `5`, or sand terrain type `1` when that sand Tile contains an opened resource whose required improvement is Mine.
 - `PREHISTORY-WORKER-BUILDING-007`: If the worker tile has an opened resource and its required improvement is currently buildable, the worker menu suggests only that resource improvement from the worker tile-building list.
 - `PREHISTORY-WORKER-BUILDING-008`: Land worker tile buildings are not supported on water tiles; Fishing Boats is supported only on water resource tiles.
 - `PREHISTORY-WORKER-BUILDING-009`: Cottage age increases each authoritative server turn; a Cottage becomes a Hamlet after 1000 turns, then the Hamlet becomes a Village after 5000 more turns at total age 6000.
@@ -214,7 +214,7 @@ Map generation, terrain data, fog/open map state, and terrain movement penalties
 - `PREHISTORY-IRRIGATION-006`: JS and PHP both validate irrigation with the same six-direction breadth-first search through existing Irrigation Tiles; a completed Farm terminates the search as a local water source. PHP remains authoritative and returns `status: IMPOSSIBLE` if its current map state disagrees.
 - `PREHISTORY-IRRIGATION-007`: A shallow water terrain type `0` source belongs to sea and cannot start irrigation if it has a cardinal neighboring water tile with depth greater than 1.
 - `PREHISTORY-IRRIGATION-008`: Irrigation can be built on sand terrain type `1`, grass terrain type `2`, and mixed grass-water/river terrain type `7`, provided its network reaches shallow fresh water that is not connected to deep sea.
-- `PREHISTORY-IRRIGATION-009`: The `A` terrain bit marks a local water source. On fields, hills, and mountains it represents land water; on water-related terrain it represents lake/source water and allows irrigation source detection.
+- `PREHISTORY-IRRIGATION-009`: The `A` terrain bit marks a local water source. On fields, hills, and rocks it represents land water; on water-related terrain it represents lake/source water and allows irrigation source detection.
 - `PREHISTORY-IRRIGATION-010`: Workers cannot build irrigation before `Irrigation` is discovered.
 - `PREHISTORY-IRRIGATION-011`: When a Worker completes irrigation next to a city, the city tile's existing irrigation starts giving its food bonus.
 - `PREHISTORY-IRRIGATION-012`: Fresh water means a neighboring water source tile that has no nearby cardinal deep-water tile.

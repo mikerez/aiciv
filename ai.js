@@ -943,7 +943,7 @@ const _ai_player = new class
         var cityContext = this.strategyCityContextStats(ownerTeam);
         this.lastStrategyContext = cityContext;
         input[960 + 24] = cityContext.hills;
-        input[960 + 25] = cityContext.mountains;
+        input[960 + 25] = cityContext.rocks;
         input[960 + 26] = cityContext.grass;
         input[960 + 27] = cityContext.water;
         input[960 + 28] = cityContext.animalResources;
@@ -1743,7 +1743,7 @@ const _ai_player = new class
             return 'strategy context none';
         }
         return 'strategy context hills=' + this.fmt(c.hills)
-            + ', mountains=' + this.fmt(c.mountains)
+            + ', rocks=' + this.fmt(c.rocks)
             + ', grass=' + this.fmt(c.grass)
             + ', water=' + this.fmt(c.water)
             + ', forest=' + this.fmt(c.forest)
@@ -2720,7 +2720,7 @@ const _ai_player = new class
     {
         var stats = {
             hills: 0,
-            mountains: 0,
+            rocks: 0,
             grass: 0,
             water: 0,
             flatLand: 0,
@@ -2764,7 +2764,7 @@ const _ai_player = new class
         if (counts.tiles > 0) {
             stats.contextTiles = this.normalizeCount(counts.tiles, 25);
             stats.hills = this.clamp(stats.hills / counts.tiles, 0, 1);
-            stats.mountains = this.clamp(stats.mountains / counts.tiles, 0, 1);
+            stats.rocks = this.clamp(stats.rocks / counts.tiles, 0, 1);
             stats.grass = this.clamp(stats.grass / counts.tiles, 0, 1);
             stats.water = this.clamp(stats.water / counts.tiles, 0, 1);
             stats.flatLand = this.clamp(stats.flatLand / counts.tiles, 0, 1);
@@ -2802,7 +2802,7 @@ const _ai_player = new class
                     stats.hills++;
                 }
                 else if (terrain == 5) {
-                    stats.mountains++;
+                    stats.rocks++;
                 }
                 else if (terrain == 2 || terrain == 6 || terrain == 7) {
                     stats.grass++;
@@ -3173,7 +3173,7 @@ const _ai_player = new class
         else if (terrain == 7) score += 3.5; // river/grasswater
         else if (terrain == 6) score += 1.4; // forest/jungle needs support
         else if (terrain == 4) score += 2.0; // hills
-        else if (terrain == 5) score += 1.5; // rocks/mountains
+        else if (terrain == 5) score += 1.5; // rocks
         else if (terrain == 1) score += 1.0; // desert
         else if (terrain == 3) score += 0.8; // snow
         else score += 1.2;

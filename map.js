@@ -533,20 +533,20 @@ if ((_map_terrain_tex[i+1][j]&0xF)==4) {  // make shadows of big mountains
         this.genMap(10, 10, 4, 4, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 1, 1);  // sand
         this.genMap(24, 12, 6, 10, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 4, 1);  // hills
         this.genMap(56, 12, 12, 6, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 6, 1);  // forest
-        this.genMap(20, 2, 4, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks/mountains
+        this.genMap(20, 2, 4, 2, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/3, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/3, 5, 1);  // rocks
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[1], _map_view[2], _map_view[1]+(_map_view[3]-_map_view[1])/10, 3, 1);  // snow
         this.genMap(10, 10, 10, 5, _map_view[0], _map_view[3]-(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3], 3, 1);  // snow
         this.fixMap();  // before mod tiles
         this.genMap(16, 20, 4, 4, _map_view[0], _map_view[1], _map_view[2], _map_view[3], -1, 2);  // mods
         this.genMap(10, 20, 1, 1, _map_view[0], _map_view[1], _map_view[2], _map_view[3], 0+(1<<4), 0);  // wide rivers
         this.genMap(6, 10, 1, 1, _map_view[0], _map_view[1]+(_map_view[3]-_map_view[1])/10, _map_view[2], _map_view[3]-(_map_view[3]-_map_view[1])/10, 7+(3<<4), 1);  // narrow rivers
-        this.addMountainClusters(Math.max(8, Math.round(_map_size/8)));
+        this.addRockClusters(Math.max(8, Math.round(_map_size/8)));
         this.enhMap();
         this.prepareTerrainModifierSprites();
         this.genResources();
     }
 
-    addMountainClusters(count)
+    addRockClusters(count)
     {
         for (var cluster=0; cluster<count; cluster++) {
             var centerI = 8 + Math.floor(Math.random()*Math.max(1, _map_size-16));

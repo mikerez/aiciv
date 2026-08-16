@@ -27,7 +27,7 @@ assert.deepEqual(points.slice(0, 3), [[2,2], [3,3], [4,4]], 'Goto sticks to a ro
 for (let i=0; i<_map_size; i++) for (let j=0; j<_map_size; j++) _map_terrain_mod[i][j] = {};
 _map_terrain_tex[2][2] = 5;
 points = route({i: 1, j: 1}, {i: 5, j: 5});
-assert.notDeepEqual(points[0], [2,2], 'Goto avoids a mountain when an advancing field step is available');
+assert.notDeepEqual(points[0], [2,2], 'Goto avoids rocks when an advancing field step is available');
 assert.deepEqual(points[points.length - 1], [5,5], 'terrain avoidance still reaches the requested destination');
 
-console.log('PASS client Goto favors advancing roads and avoids hills or mountains when a better advancing Tile exists');
+console.log('PASS client Goto favors advancing roads and avoids hills or rocks when a better advancing Tile exists');

@@ -41,7 +41,7 @@ registerVocabularyPack('JP', {
     'unit.features':'{attack}/{defense}/{speed}', 'unit.selected_military':'選択中の軍事ユニット：{count}',
     'unit.id':'ユニット ID：{id}', 'unit.pending':'保留中',
     'terrain.water':'水域', 'terrain.sand':'砂地', 'terrain.grass':'草原', 'terrain.snow':'雪原',
-    'terrain.hills':'丘陵', 'terrain.mountains':'山岳', 'terrain.forest':'森林',
+    'terrain.hills':'丘陵', 'terrain.rocks':'岩場', 'terrain.forest':'森林',
     'terrain.grasswater':'水のある草原', 'terrain.unknown':'不明',
     'tile.defence':'防御', 'tile.base':'基本', 'tile.resource':'資源', 'tile.current':'現在',
     'tile.suggested':'推奨', 'tile.after':'建設後', 'tile.income':'食料 {food} / 生産 {production} / ゴールド {gold}',

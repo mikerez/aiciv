@@ -822,8 +822,8 @@ const _game_prehistory = new class
         var unitType = this.unitTypesById[_units[k].unitTypeId];
         var movingUnit = _units[k];
         var terrain = _map_terrain_tex[i][j];
-        var maximumMountain = (terrain&0x0F) == 5 && ((terrain>>4)&0x03) == 3;
-        if (maximumMountain && ['horseman', 'chariot', 'knight', 'elephant'].indexOf(movingUnit.unitTypeId) != -1) {
+        var maximumRock = (terrain&0x0F) == 5 && ((terrain>>4)&0x03) == 3;
+        if (maximumRock && ['horseman', 'chariot', 'knight', 'elephant'].indexOf(movingUnit.unitTypeId) != -1) {
             return false;
         }
         var startsOnWater = this.isWaterTerrain(movingUnit.coord.i, movingUnit.coord.j);

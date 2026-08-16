@@ -1,34 +1,34 @@
 # Strategy technology tests.
 # Format:
 # scenario NAME
-# terrain hills=N mountains=N grass=N water=N
+# terrain hills=N rocks=N grass=N water=N
 # resources animals=N stone=N crops=N
 # context visible=N flat=N fresh=N forest=N desert_snow=N resources=N minerals=N city=N settler=N
 # birdsview x=N y=N civ=N military=N height=N resource=N
 #   x/y are cells in the 50x50 strategic map. height is the compact landscape signal:
-#   negative sea/water, near zero flat land, positive hills/mountains/forests.
+#   negative sea/water, near zero flat land, positive hills/rocks/forests.
 #   resource is the primary resource id in that birdsview cell, using the game_prehistory.js resource table.
 # tech opened=N
 # expect technology Mining|Animal_Husbandry|Masonry|Irrigation
 # end
 
 scenario hills_choose_mining
-terrain hills=0.70 mountains=0.10 grass=0.30 water=0.05
+terrain hills=0.70 rocks=0.10 grass=0.30 water=0.05
 resources animals=0.05 stone=0.05 crops=0.10
 birdsview x=20 y=20 civ=0 military=0 height=0.62 resource=0
 tech opened=0.00
 expect technology Mining
 end
 
-scenario mountains_choose_mining
-terrain hills=0.25 mountains=0.60 grass=0.25 water=0.05
+scenario rocks_choose_mining
+terrain hills=0.25 rocks=0.60 grass=0.25 water=0.05
 resources animals=0.00 stone=0.10 crops=0.05
 tech opened=0.00
 expect technology Mining
 end
 
 scenario animals_choose_animal_husbandry
-terrain hills=0.20 mountains=0.05 grass=0.60 water=0.05
+terrain hills=0.20 rocks=0.05 grass=0.60 water=0.05
 resources animals=0.75 stone=0.05 crops=0.05
 birdsview x=20 y=20 civ=0 military=0 height=0.14 resource=8
 tech opened=0.00
@@ -36,7 +36,7 @@ expect technology Animal_Husbandry
 end
 
 scenario stone_after_mining_choose_masonry
-terrain hills=0.35 mountains=0.15 grass=0.35 water=0.05
+terrain hills=0.35 rocks=0.15 grass=0.35 water=0.05
 resources animals=0.05 stone=0.80 crops=0.05
 birdsview x=21 y=20 civ=0 military=0 height=0.70 resource=9
 tech opened=0.08
@@ -44,14 +44,14 @@ expect technology Masonry
 end
 
 scenario wet_crop_land_choose_irrigation
-terrain hills=0.05 mountains=0.00 grass=0.75 water=0.35
+terrain hills=0.05 rocks=0.00 grass=0.75 water=0.35
 resources animals=0.05 stone=0.05 crops=0.75
 tech opened=0.08
 expect technology Irrigation
 end
 
 scenario wet_fields_choose_irrigation
-terrain hills=0.05 mountains=0.00 grass=0.82 water=0.32
+terrain hills=0.05 rocks=0.00 grass=0.82 water=0.32
 resources animals=0.05 stone=0.05 crops=0.25
 context visible=1.00 flat=0.77 fresh=0.32 forest=0.02 desert_snow=0.00 resources=0.25 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -59,7 +59,7 @@ expect technology Irrigation
 end
 
 scenario flat_dry_fields_without_hills_choose_irrigation_path
-terrain hills=0.00 mountains=0.00 grass=0.75 water=0.02
+terrain hills=0.00 rocks=0.00 grass=0.75 water=0.02
 resources animals=0.05 stone=0.05 crops=0.05
 context visible=1.00 flat=0.75 fresh=0.02 forest=0.10 desert_snow=0.00 resources=0.05 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -67,7 +67,7 @@ expect technology Irrigation
 end
 
 scenario flat_wet_settler_start_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.85 water=0.40
+terrain hills=0.00 rocks=0.00 grass=0.85 water=0.40
 resources animals=0.05 stone=0.05 crops=0.15
 context visible=1.00 flat=0.85 fresh=0.40 forest=0.02 desert_snow=0.00 resources=0.15 minerals=0.00 city=0.00 settler=1.00
 birdsview x=19 y=21 civ=0 military=0 height=-0.05 resource=10
@@ -76,7 +76,7 @@ expect technology Irrigation
 end
 
 scenario flat_crop_city_without_hills_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.78 water=0.10
+terrain hills=0.00 rocks=0.00 grass=0.78 water=0.10
 resources animals=0.05 stone=0.05 crops=0.65
 context visible=1.00 flat=0.78 fresh=0.10 forest=0.02 desert_snow=0.00 resources=0.65 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -84,7 +84,7 @@ expect technology Irrigation
 end
 
 scenario flat_animals_without_hills_choose_animal_husbandry
-terrain hills=0.00 mountains=0.00 grass=0.68 water=0.08
+terrain hills=0.00 rocks=0.00 grass=0.68 water=0.08
 resources animals=0.80 stone=0.05 crops=0.05
 context visible=1.00 flat=0.68 fresh=0.08 forest=0.04 desert_snow=0.00 resources=0.80 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -92,7 +92,7 @@ expect technology Animal_Husbandry
 end
 
 scenario tiny_hill_noise_wet_fields_choose_irrigation
-terrain hills=0.08 mountains=0.00 grass=0.80 water=0.28
+terrain hills=0.08 rocks=0.00 grass=0.80 water=0.28
 resources animals=0.05 stone=0.05 crops=0.30
 context visible=1.00 flat=0.72 fresh=0.28 forest=0.02 desert_snow=0.00 resources=0.30 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -100,7 +100,7 @@ expect technology Irrigation
 end
 
 scenario jungle_city_without_hills_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.78 water=0.04
+terrain hills=0.00 rocks=0.00 grass=0.78 water=0.04
 resources animals=0.05 stone=0.05 crops=0.10
 context visible=1.00 flat=0.78 fresh=0.04 forest=0.72 desert_snow=0.00 resources=0.10 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -108,7 +108,7 @@ expect technology Irrigation
 end
 
 scenario jungle_settler_without_hills_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.82 water=0.06
+terrain hills=0.00 rocks=0.00 grass=0.82 water=0.06
 resources animals=0.05 stone=0.05 crops=0.08
 context visible=1.00 flat=0.82 fresh=0.06 forest=0.78 desert_snow=0.00 resources=0.08 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -116,7 +116,7 @@ expect technology Irrigation
 end
 
 scenario jungle_with_animals_choose_animal_husbandry
-terrain hills=0.00 mountains=0.00 grass=0.72 water=0.05
+terrain hills=0.00 rocks=0.00 grass=0.72 water=0.05
 resources animals=0.70 stone=0.05 crops=0.05
 context visible=1.00 flat=0.72 fresh=0.05 forest=0.68 desert_snow=0.00 resources=0.70 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -124,7 +124,7 @@ expect technology Animal_Husbandry
 end
 
 scenario jungle_with_crop_river_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.76 water=0.22
+terrain hills=0.00 rocks=0.00 grass=0.76 water=0.22
 resources animals=0.05 stone=0.05 crops=0.45
 context visible=1.00 flat=0.76 fresh=0.22 forest=0.58 desert_snow=0.00 resources=0.45 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -132,7 +132,7 @@ expect technology Irrigation
 end
 
 scenario pure_jungle_city_no_resources_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=1.00 water=0.00
+terrain hills=0.00 rocks=0.00 grass=1.00 water=0.00
 resources animals=0.00 stone=0.00 crops=0.00
 context visible=1.00 flat=1.00 fresh=0.00 forest=1.00 desert_snow=0.00 resources=0.00 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -140,7 +140,7 @@ expect technology Irrigation
 end
 
 scenario pure_jungle_settler_no_resources_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=1.00 water=0.00
+terrain hills=0.00 rocks=0.00 grass=1.00 water=0.00
 resources animals=0.00 stone=0.00 crops=0.00
 context visible=1.00 flat=1.00 fresh=0.00 forest=1.00 desert_snow=0.00 resources=0.00 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -148,7 +148,7 @@ expect technology Irrigation
 end
 
 scenario mostly_forest_city_no_resources_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.88 water=0.02
+terrain hills=0.00 rocks=0.00 grass=0.88 water=0.02
 resources animals=0.00 stone=0.00 crops=0.00
 context visible=1.00 flat=0.88 fresh=0.02 forest=0.86 desert_snow=0.00 resources=0.00 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00
@@ -156,7 +156,7 @@ expect technology Irrigation
 end
 
 scenario mostly_forest_settler_no_resources_choose_irrigation
-terrain hills=0.00 mountains=0.00 grass=0.88 water=0.02
+terrain hills=0.00 rocks=0.00 grass=0.88 water=0.02
 resources animals=0.00 stone=0.00 crops=0.00
 context visible=1.00 flat=0.88 fresh=0.02 forest=0.86 desert_snow=0.00 resources=0.00 minerals=0.00 city=0.00 settler=1.00
 tech opened=0.00
@@ -164,7 +164,7 @@ expect technology Irrigation
 end
 
 scenario forest_tiny_hill_noise_no_resources_choose_irrigation
-terrain hills=0.03 mountains=0.00 grass=0.90 water=0.00
+terrain hills=0.03 rocks=0.00 grass=0.90 water=0.00
 resources animals=0.00 stone=0.00 crops=0.00
 context visible=1.00 flat=0.87 fresh=0.00 forest=0.88 desert_snow=0.00 resources=0.00 minerals=0.00 city=1.00 settler=0.00
 tech opened=0.00

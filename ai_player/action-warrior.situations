@@ -41,7 +41,7 @@
 # Purpose: teach Action to score eight complete legal action candidates for one unit.
 # Each input object is one candidate: unit facts, command code, exact target dx/dy, path distance, target terrain/resource/site score/relation, and exact state or improvement.
 # Action output[0..7] scores candidates in the same order. ai.js applies the selected candidate without choosing a target or improvement.
-# Cue meaning: center tile is rocks/mountains defensive terrain.
+# Cue meaning: center tile is rocks defensive terrain.
 # Decision meaning: wait as fortify/hold because current terrain is a strong defensive point.
 # Correct candidate is output[1] = wait; every other legal candidate target is -0.900000.
 # Machine row below repeats the same situation in parser format.

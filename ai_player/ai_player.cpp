@@ -1300,7 +1300,7 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
     struct Case {
         const char* title;
         float hills;
-        float mountains;
+        float rocks;
         float grass;
         float water;
         float animalResources;
@@ -1317,7 +1317,7 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
     };
     const std::vector<Case> cases = {
         { "cities near hills need mining", 0.70f, 0.10f, 0.35f, 0.05f, 0.05f, 0.05f, 0.10f, 0.00f, {0.85f, 0.10f, 0.10f, 0.15f}, 0, "open Mining because city rings contain many hills and mines unlock production" },
-        { "cities near mountains need mining", 0.25f, 0.60f, 0.25f, 0.05f, 0.00f, 0.10f, 0.05f, 0.00f, {0.80f, 0.10f, 0.15f, 0.10f}, 0, "open Mining because mountain and hill terrain indicates mineral production" },
+        { "cities near rocks need mining", 0.25f, 0.60f, 0.25f, 0.05f, 0.00f, 0.10f, 0.05f, 0.00f, {0.80f, 0.10f, 0.15f, 0.10f}, 0, "open Mining because rock and hill terrain indicates mineral production" },
         { "animal resources need animal husbandry", 0.20f, 0.05f, 0.60f, 0.05f, 0.75f, 0.05f, 0.05f, 0.00f, {0.10f, 0.90f, 0.05f, 0.10f}, 1, "open Animal Husbandry because pasture/camp resources are near cities" },
         { "stone resources after mining need masonry", 0.35f, 0.15f, 0.35f, 0.05f, 0.05f, 0.80f, 0.05f, 0.08f, {0.15f, 0.05f, 0.90f, 0.10f}, 2, "open Masonry because stone and marble resources need quarry access after Mining" },
         { "crop and river city needs irrigation", 0.05f, 0.00f, 0.75f, 0.30f, 0.05f, 0.05f, 0.75f, 0.08f, {0.10f, 0.10f, 0.05f, 0.90f}, 3, "open Irrigation because crop resources and water-heavy city rings need farms" },
@@ -1327,17 +1327,17 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         { "wet crop land chooses irrigation", 0.05f, 0.00f, 0.70f, 0.45f, 0.10f, 0.05f, 0.60f, 0.05f, {0.10f, 0.15f, 0.05f, 0.80f}, 3, "prefer Irrigation when city rings contain water and crop resources" },
         { "many grass fields with fresh water choose irrigation", 0.05f, 0.00f, 0.82f, 0.32f, 0.05f, 0.05f, 0.25f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "open Irrigation because city or settler rings are dominated by workable wet fields" },
         { "settler field start with crops chooses irrigation", 0.10f, 0.00f, 0.78f, 0.18f, 0.05f, 0.05f, 0.45f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "open Irrigation because early field starts with crop resources need farms before other worker jobs" },
-        { "flat grass without minerals chooses irrigation path", 0.00f, 0.00f, 0.75f, 0.02f, 0.05f, 0.05f, 0.05f, 0.00f, {0.05f, 0.15f, 0.10f, 0.75f}, 3, "prefer Irrigation as the non-mining growth path when no hills, mountains, or mineral terrain are visible" },
+        { "flat grass without minerals chooses irrigation path", 0.00f, 0.00f, 0.75f, 0.02f, 0.05f, 0.05f, 0.05f, 0.00f, {0.05f, 0.15f, 0.10f, 0.75f}, 3, "prefer Irrigation as the non-mining growth path when no hills, rocks, or mineral terrain are visible" },
         { "flat wet fields without hills choose irrigation", 0.00f, 0.00f, 0.82f, 0.40f, 0.05f, 0.05f, 0.10f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "open Irrigation because flat grass with visible water should lead to farms, not mines" },
         { "flat crop fields without hills choose irrigation", 0.00f, 0.00f, 0.76f, 0.08f, 0.05f, 0.05f, 0.65f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "open Irrigation because crop resources on flat land need farm technology" },
         { "flat animal resources without hills choose animal husbandry", 0.00f, 0.00f, 0.68f, 0.08f, 0.80f, 0.05f, 0.08f, 0.00f, {0.05f, 0.85f, 0.05f, 0.15f}, 1, "open Animal Husbandry because flat pasture resources should not be mistaken for Mining demand" },
         { "tiny accidental hill signal still chooses irrigation", 0.08f, 0.00f, 0.80f, 0.28f, 0.05f, 0.05f, 0.30f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "ignore small noisy hill statistics when wet field pressure dominates" },
-        { "tiny accidental mountain signal still chooses irrigation", 0.00f, 0.04f, 0.80f, 0.25f, 0.05f, 0.05f, 0.30f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "ignore small noisy mountain statistics when wet field pressure dominates" },
-        { "jungle city without hills chooses irrigation path", 0.00f, 0.00f, 0.78f, 0.04f, 0.05f, 0.05f, 0.10f, 0.00f, {0.05f, 0.15f, 0.05f, 0.75f}, 3, "avoid Mining when the visible city ring is jungle/forest with no hills, mountains, or mineral resources", 0.72f, 0.04f, 1.0f, 0.0f },
+        { "tiny accidental rock signal still chooses irrigation", 0.00f, 0.04f, 0.80f, 0.25f, 0.05f, 0.05f, 0.30f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "ignore small noisy rock statistics when wet field pressure dominates" },
+        { "jungle city without hills chooses irrigation path", 0.00f, 0.00f, 0.78f, 0.04f, 0.05f, 0.05f, 0.10f, 0.00f, {0.05f, 0.15f, 0.05f, 0.75f}, 3, "avoid Mining when the visible city ring is jungle/forest with no hills, rocks, or mineral resources", 0.72f, 0.04f, 1.0f, 0.0f },
         { "jungle settler without hills chooses irrigation path", 0.00f, 0.00f, 0.82f, 0.06f, 0.05f, 0.05f, 0.08f, 0.00f, {0.05f, 0.15f, 0.05f, 0.75f}, 3, "avoid Mining before the first city when the settler only sees jungle/forest and no mining terrain", 0.78f, 0.06f, 0.0f, 1.0f },
         { "jungle with animals chooses animal husbandry", 0.00f, 0.00f, 0.72f, 0.05f, 0.70f, 0.05f, 0.05f, 0.00f, {0.05f, 0.80f, 0.05f, 0.15f}, 1, "prefer Animal Husbandry when jungle/forest context has visible animal resources but no mining terrain", 0.68f, 0.05f, 1.0f, 0.0f },
         { "jungle with crop river chooses irrigation", 0.00f, 0.00f, 0.76f, 0.22f, 0.05f, 0.05f, 0.45f, 0.00f, {0.05f, 0.10f, 0.05f, 0.85f}, 3, "prefer Irrigation when jungle/forest context has crop and fresh-water pressure but no mining terrain", 0.58f, 0.22f, 1.0f, 0.0f },
-        { "pure jungle city no resources chooses irrigation path", 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, {-0.80f, -0.20f, -0.80f, 0.80f}, 3, "reject Mining when a city sees only jungle/forest, zero resources, zero hills, zero mountains, and zero minerals", 1.00f, 0.00f, 1.0f, 0.0f },
+        { "pure jungle city no resources chooses irrigation path", 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, {-0.80f, -0.20f, -0.80f, 0.80f}, 3, "reject Mining when a city sees only jungle/forest, zero resources, zero hills, zero rocks, and zero minerals", 1.00f, 0.00f, 1.0f, 0.0f },
         { "pure jungle settler no resources chooses irrigation path", 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, {-0.80f, -0.20f, -0.80f, 0.80f}, 3, "reject Mining before founding when a settler sees only jungle/forest and no mining or resource signal", 1.00f, 0.00f, 0.0f, 1.0f },
         { "mostly forest city no resources chooses irrigation path", 0.00f, 0.00f, 0.88f, 0.02f, 0.00f, 0.00f, 0.00f, 0.00f, {-0.75f, -0.15f, -0.75f, 0.75f}, 3, "avoid Mining for a mostly forest city ring when all resource and mineral inputs are zero", 0.86f, 0.02f, 1.0f, 0.0f },
         { "mostly forest settler no resources chooses irrigation path", 0.00f, 0.00f, 0.88f, 0.02f, 0.00f, 0.00f, 0.00f, 0.00f, {-0.75f, -0.15f, -0.75f, 0.75f}, 3, "avoid Mining for a mostly forest settler ring when all resource and mineral inputs are zero", 0.86f, 0.02f, 0.0f, 1.0f },
@@ -1353,7 +1353,7 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         ex.decisionSlots = slotRange(68, 4);
         ex.correctSlot = 68 + c.strongest;
         ex.input[AI_PLAYER_SITUATION_BASE + 24] = c.hills;
-        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.mountains;
+        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.rocks;
         ex.input[AI_PLAYER_SITUATION_BASE + 26] = c.grass;
         ex.input[AI_PLAYER_SITUATION_BASE + 27] = c.water;
         ex.input[AI_PLAYER_SITUATION_BASE + 28] = c.animalResources;
@@ -1361,7 +1361,7 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 30] = c.cropResources;
         ex.input[AI_PLAYER_SITUATION_BASE + 31] = c.openedTechRate;
         ex.input[AI_PLAYER_SITUATION_BASE + 32] = 1.0f;
-        ex.input[AI_PLAYER_SITUATION_BASE + 33] = std::max(0.0f, c.grass - c.hills - c.mountains);
+        ex.input[AI_PLAYER_SITUATION_BASE + 33] = std::max(0.0f, c.grass - c.hills - c.rocks);
         ex.input[AI_PLAYER_SITUATION_BASE + 34] = c.freshWater >= 0.0f ? c.freshWater : c.water;
         ex.input[AI_PLAYER_SITUATION_BASE + 35] = c.forest >= 0.0f ? c.forest : (c.grass > 0.60f && c.water < 0.10f ? 0.10f : 0.02f);
         ex.input[AI_PLAYER_SITUATION_BASE + 36] = 0.0f;
@@ -1370,11 +1370,11 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 39] = c.cityAnchor >= 0.0f ? c.cityAnchor : (repeat % 3 == 0 ? 1.0f : 0.0f);
         ex.input[AI_PLAYER_SITUATION_BASE + 40] = c.settlerAnchor >= 0.0f ? c.settlerAnchor : (repeat % 3 == 0 ? 0.0f : 1.0f);
         const float forestSignal = c.forest >= 0.0f ? c.forest : (c.grass > 0.60f && c.water < 0.10f ? 0.10f : 0.02f);
-        setBirdsviewCell(ex, 20, 20, 0.0f, 0.0f, c.hills * 0.50f + c.mountains * 0.80f
+        setBirdsviewCell(ex, 20, 20, 0.0f, 0.0f, c.hills * 0.50f + c.rocks * 0.80f
                          + c.grass * 0.12f + forestSignal * 0.28f - c.water * 0.75f,
                          c.stoneResources > 0.20f ? 9.0f : (c.animalResources > 0.20f ? 8.0f : (c.cropResources > 0.20f ? 10.0f : 0.0f)),
                          "main owned or settler-visible region summarized for technology choice");
-        if (c.hills > 0.20f || c.mountains > 0.20f) {
+        if (c.hills > 0.20f || c.rocks > 0.20f) {
             setBirdsviewCell(ex, 21, 20, 0.0f, 0.0f, 0.62f, c.stoneResources > 0.20f ? 9.0f : 0.0f,
                              "nearby high ground visible on birdsview map; supports Mining or Masonry decisions");
         }
@@ -1384,12 +1384,12 @@ std::vector<TrainingExample> makeStrategyTechnologyExamples()
         }
         setOneHot(ex.target, 68, 4, c.strongest);
         ex.comments.push_back("Purpose: teach Strategy general outputs 68..71 as specific technology priorities.");
-        ex.comments.push_back("General inputs: input[984]=hills, [985]=mountains, [986]=grass, [987]=water, [988]=animal resources, [989]=stone resources, [990]=crop resources, [991]=opened technology rate.");
+        ex.comments.push_back("General inputs: input[984]=hills, [985]=rocks, [986]=grass, [987]=water, [988]=animal resources, [989]=stone resources, [990]=crop resources, [991]=opened technology rate.");
         ex.comments.push_back("Additional context: input[992]=visible context coverage, [993]=flat land, [994]=fresh water, [995]=forest, [996]=desert/snow, [997]=visible resource coverage, [998]=metal/mineral resources, [999]=city anchor, [1000]=settler anchor.");
         ex.comments.push_back("General outputs: output[68]=Mining priority, output[69]=Animal Husbandry priority, output[70]=Masonry priority, output[71]=Irrigation priority.");
         ex.comments.push_back(std::string("Decision meaning: ") + c.decision + ".");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 24, c.hills, "share of visible city-ring tiles that are hills");
-        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.mountains, "share of visible city-ring tiles that are mountains or rocks");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.rocks, "share of visible city-ring tiles that are rocks");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 28, c.animalResources, "share/count signal for animal resources near owned cities");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 29, c.stoneResources, "share/count signal for stone or marble resources near owned cities");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 30, c.cropResources, "share/count signal for crop resources near owned cities");
@@ -1412,7 +1412,7 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
     struct Case {
         const char* title;
         float hills;
-        float mountains;
+        float rocks;
         float grass;
         float water;
         float animals;
@@ -1430,7 +1430,7 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
     // zero while visible context remains 1.0, preventing default-to-Mining bias.
     const std::vector<Case> cases = {
         { "bare hills support Mining", 0.72f, 0.08f, 0.20f, 0.00f, 0.00f, 0.00f, 0.00f, 0.10f, 0.02f, 0.00f, 0.00f, 0, "visible hills provide mine jobs even without a revealed resource" },
-        { "mountain basin supports Mining", 0.12f, 0.68f, 0.15f, 0.02f, 0.00f, 0.05f, 0.00f, 0.35f, 0.02f, 0.00f, 0.00f, 0, "mountains and minerals make Mining useful" },
+        { "rock basin supports Mining", 0.12f, 0.68f, 0.15f, 0.02f, 0.00f, 0.05f, 0.00f, 0.35f, 0.02f, 0.00f, 0.00f, 0, "rocks and minerals make Mining useful" },
         { "mineral hills support Mining", 0.42f, 0.18f, 0.25f, 0.02f, 0.00f, 0.05f, 0.00f, 0.85f, 0.05f, 0.00f, 0.00f, 0, "revealed mineral resources reinforce mining terrain" },
         { "small mining region beats dry grass", 0.38f, 0.16f, 0.35f, 0.00f, 0.00f, 0.00f, 0.00f, 0.25f, 0.04f, 0.00f, 0.00f, 0, "substantial high ground is positive Mining evidence" },
 
@@ -1440,17 +1440,17 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
         { "jungle animals reject Mining", 0.00f, 0.00f, 0.90f, 0.00f, 0.72f, 0.00f, 0.00f, 0.00f, 0.88f, 0.00f, 0.00f, 1, "zero hills and minerals are negative Mining evidence" },
 
         { "stone hills after Mining support Masonry", 0.35f, 0.12f, 0.32f, 0.02f, 0.00f, 0.88f, 0.00f, 0.18f, 0.04f, 0.00f, 0.10f, 2, "stone resources and early technology progress justify Masonry" },
-        { "marble mountains after Mining support Masonry", 0.20f, 0.30f, 0.25f, 0.00f, 0.00f, 0.82f, 0.00f, 0.20f, 0.02f, 0.00f, 0.12f, 2, "quarry resources make Masonry the next production technology" },
+        { "marble rocks after Mining support Masonry", 0.20f, 0.30f, 0.25f, 0.00f, 0.00f, 0.82f, 0.00f, 0.20f, 0.02f, 0.00f, 0.12f, 2, "quarry resources make Masonry the next production technology" },
         { "stone city with opened technology path supports Masonry", 0.18f, 0.08f, 0.55f, 0.02f, 0.00f, 0.92f, 0.00f, 0.10f, 0.05f, 0.00f, 0.18f, 2, "strong stone evidence plus progress rejects unrelated technologies" },
         { "quarry resources outweigh sparse crops", 0.28f, 0.10f, 0.42f, 0.03f, 0.00f, 0.75f, 0.08f, 0.12f, 0.05f, 0.01f, 0.12f, 2, "stone is specific evidence for Masonry" },
 
         { "fresh crop plain supports Irrigation", 0.00f, 0.00f, 0.86f, 0.30f, 0.00f, 0.00f, 0.85f, 0.00f, 0.02f, 0.42f, 0.00f, 3, "crops and fresh water require the irrigation path" },
         { "river grass without resources supports Irrigation", 0.00f, 0.00f, 0.88f, 0.38f, 0.00f, 0.00f, 0.00f, 0.00f, 0.02f, 0.46f, 0.00f, 3, "fresh-water grass offers farm jobs and no Mining evidence" },
-        { "flat forest without resources rejects Mining", 0.00f, 0.00f, 0.92f, 0.02f, 0.00f, 0.00f, 0.00f, 0.00f, 0.88f, 0.02f, 0.00f, 3, "visible forest with zero hills, mountains, minerals, and stone must not select Mining" },
+        { "flat forest without resources rejects Mining", 0.00f, 0.00f, 0.92f, 0.02f, 0.00f, 0.00f, 0.00f, 0.00f, 0.88f, 0.02f, 0.00f, 3, "visible forest with zero hills, rocks, minerals, and stone must not select Mining" },
         { "pure jungle without resources rejects Mining", 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 1.00f, 0.00f, 0.00f, 3, "a fully visible jungle start has explicit negative Mining evidence" },
         { "open grass without resources rejects Mining", 0.00f, 0.00f, 0.94f, 0.04f, 0.00f, 0.00f, 0.00f, 0.00f, 0.02f, 0.04f, 0.00f, 3, "flat land with no resources should follow growth technology" },
         { "crop plain with tiny hill noise rejects Mining", 0.04f, 0.00f, 0.86f, 0.18f, 0.00f, 0.00f, 0.70f, 0.00f, 0.03f, 0.24f, 0.00f, 3, "tiny high-ground noise must not outweigh crops and water" },
-        { "forest with tiny mountain noise rejects Mining", 0.00f, 0.03f, 0.90f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.86f, 0.00f, 0.00f, 3, "tiny mountain noise and no minerals are insufficient for Mining" },
+        { "forest with tiny rock noise rejects Mining", 0.00f, 0.03f, 0.90f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.86f, 0.00f, 0.00f, 3, "tiny rock noise and no minerals are insufficient for Mining" },
         { "wet coast without stone rejects Masonry and Mining", 0.00f, 0.00f, 0.62f, 0.55f, 0.00f, 0.00f, 0.18f, 0.00f, 0.02f, 0.38f, 0.00f, 3, "water and workable land favor growth rather than production extraction" },
     };
 
@@ -1465,7 +1465,7 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
         ex.decisionSlots = slotRange(68, 4);
         ex.correctSlot = 68 + c.technology;
         ex.input[AI_PLAYER_SITUATION_BASE + 24] = c.hills;
-        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.mountains;
+        ex.input[AI_PLAYER_SITUATION_BASE + 25] = c.rocks;
         ex.input[AI_PLAYER_SITUATION_BASE + 26] = c.grass;
         ex.input[AI_PLAYER_SITUATION_BASE + 27] = c.water;
         ex.input[AI_PLAYER_SITUATION_BASE + 28] = c.animals;
@@ -1473,7 +1473,7 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 30] = c.crops;
         ex.input[AI_PLAYER_SITUATION_BASE + 31] = c.openedTechRate;
         ex.input[AI_PLAYER_SITUATION_BASE + 32] = 1.0f;
-        ex.input[AI_PLAYER_SITUATION_BASE + 33] = std::max(0.0f, c.grass - c.hills - c.mountains);
+        ex.input[AI_PLAYER_SITUATION_BASE + 33] = std::max(0.0f, c.grass - c.hills - c.rocks);
         ex.input[AI_PLAYER_SITUATION_BASE + 34] = c.freshWater;
         ex.input[AI_PLAYER_SITUATION_BASE + 35] = c.forest;
         ex.input[AI_PLAYER_SITUATION_BASE + 37] = std::max({ c.animals, c.stone, c.crops, c.minerals });
@@ -1482,10 +1482,10 @@ std::vector<TrainingExample> makeStrategyLandscapeExamples()
         ex.input[AI_PLAYER_SITUATION_BASE + 40] = repeat % 2 == 0 ? 0.0f : 1.0f;
         setOneHot(ex.target, 68, 4, c.technology);
         ex.comments.push_back("Purpose: balance positive and negative landscape/resource evidence for Strategy technology selection.");
-        ex.comments.push_back("A visible context value of 1.0 makes zero hills, zero mountains, zero minerals, and zero resources meaningful negative observations rather than missing data.");
+        ex.comments.push_back("A visible context value of 1.0 makes zero hills, zero rocks, zero minerals, and zero resources meaningful negative observations rather than missing data.");
         ex.comments.push_back(std::string("Decision: ") + c.reason + ".");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 24, c.hills, "visible hills share around owned cities or settlers");
-        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.mountains, "visible mountain share around owned cities or settlers");
+        addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 25, c.rocks, "visible rock share around owned cities or settlers");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 28, c.animals, "visible animal-resource share");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 29, c.stone, "visible stone/quarry-resource share");
         addSignalComment(ex.comments, "input", AI_PLAYER_SITUATION_BASE + 30, c.crops, "visible crop-resource share");
@@ -1674,16 +1674,16 @@ std::vector<TrainingExample> makeActionSettlerExamples()
             "build city because field water source gives food and money immediately"
         },
         {
-            "settler sees A-bit mountain water source from adjacent grass",
+            "settler sees A-bit rock water source from adjacent grass",
             2, 0.25f, 0.10f, 0.25f, 1.00f, 0.82f, 0.70f, 56, 0.75f,
-            "local window tile east of center is mountain/rocks with the A bit set",
-            "build city on adjacent grass because mountain spring supports the city"
+            "local window tile east of center is rocks with the A bit set",
+            "build city on adjacent grass because rock spring supports the city"
         },
         {
-            "settler is standing on A-bit mountain water source",
+            "settler is standing on A-bit rock water source",
             0, 0.63f, 0.00f, 0.15f, 1.00f, 0.42f, 0.70f, 55, 0.75f,
-            "local window center tile is mountain/rocks with the A bit set",
-            "goto a nearby field because mountains are not the preferred city tile"
+            "local window center tile is rocks with the A bit set",
+            "goto a nearby field because rocks are not the preferred city tile"
         },
         {
             "settler sees shallow lake north of a good grass tile",
@@ -1770,10 +1770,10 @@ std::vector<TrainingExample> makeActionSettlerExamples()
             "goto because hills should provide nearby production rather than host the city center"
         },
         {
-            "settler on grass beside mountain production and food resource",
+            "settler on grass beside rock production and food resource",
             2, 0.25f, 0.00f, 0.44f, 0.00f, 0.59f, 0.94f, 56, 0.63f,
-            "east local window tile is mountain/rocks and nearby score carries food/resource support",
-            "build city because mountain production plus food nearby is a generic good city mix"
+            "east local window tile is rocks and nearby score carries food/resource support",
+            "build city because rock production plus food nearby is a generic good city mix"
         },
         {
             "settler on generic grass after many turns searching",
@@ -1806,10 +1806,10 @@ std::vector<TrainingExample> makeActionSettlerExamples()
             "goto because settlement spacing is bad even when the local tile is decent"
         },
         {
-            "settler on mountain with resources nearby should move to adjacent land",
+            "settler on rock with resources nearby should move to adjacent land",
             0, 0.63f, 0.60f, 0.30f, 0.00f, 0.39f, 0.88f, 55, 0.70f,
-            "center tile is mountain/rocks with resource value but poor city-center terrain",
-            "goto because mountain resources should support a nearby city rather than host the center"
+            "center tile is rocks with resource value but poor city-center terrain",
+            "goto because rock resources should support a nearby city rather than host the center"
         },
         {
             "settler on grass with no resources but very far from any city",
@@ -2021,7 +2021,7 @@ std::vector<TrainingExample> makeActionSettlerExamples()
         ex.comments.push_back("Purpose: teach Action engine settlement choices from generic terrain, resources, distance, fresh water, lakes, and A-bit land water sources.");
         ex.comments.push_back("Object ids are not encoded. Output command record 0 applies to the first unit id stored by ai.js for object record 0.");
         ex.comments.push_back("Action object fields used here: input[0]=unit type, input[9]=current terrain, input[10]=current resource value, input[11]=nearby resource score, input[12]=fresh-water flag, input[13]=city plot score, input[15]=distance to nearest friendly city.");
-        ex.comments.push_back("A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or mountains; in the local window it raises the tile signal above the base terrain value.");
+        ex.comments.push_back("A terrain byte with bit 7 set is the A-bit source flag. On land it means a water source in fields, hills, or rocks; in the local window it raises the tile signal above the base terrain value.");
         ex.comments.push_back("Local 9x9 window slots are input[16..96], scanned row-major from map offset di=-4,dj=-4 to di=+4,dj=+4. Slot input[" + std::to_string(objectBase + 16 + localCueSlot) + "] is the visible cue in this example; input[56] is the center tile under this settler.");
         ex.comments.push_back(std::string("Cue meaning: ") + c.cueMeaning + ".");
         ex.comments.push_back(std::string("Decision meaning: ") + c.decisionMeaning + ".");
@@ -2179,14 +2179,14 @@ std::vector<TrainingExample> makeActionWorkerExamples()
         { "worker on water fish builds fishing boats", 6, 0.00f, 0.80f, 0.12f, 0.00f, 0.36f, 0.28f, 0.00f, 0.80f, 55, 0.18f, "center tile is coastal water with fish-like resource", "build improvement because water resources use fishing boats when Sailing is known" },
         { "worker on wine builds winery", 6, 0.25f, 0.50f, 0.12f, 0.00f, 0.44f, 0.42f, 0.00f, 0.80f, 55, 0.56f, "center tile is fertile land with wine luxury resource", "build improvement because wine should receive winery instead of a generic road" },
         { "worker on hills production resource builds mine", 6, 0.50f, 0.60f, 0.10f, 0.00f, 0.25f, 0.48f, 0.00f, 0.80f, 55, 0.62f, "center tile is hills with metal/resource signal", "build improvement because hills with metal should receive mine" },
-        { "worker on rocks production resource builds mine", 6, 0.63f, 0.60f, 0.10f, 0.00f, 0.12f, 0.55f, 0.00f, 0.80f, 55, 0.72f, "center tile is rocks/mountains with metal resource signal", "build improvement because rocky production resources need mine support" },
+        { "worker on rocks production resource builds mine", 6, 0.63f, 0.60f, 0.10f, 0.00f, 0.12f, 0.55f, 0.00f, 0.80f, 55, 0.72f, "center tile is rocks with metal resource signal", "build improvement because rocky production resources need mine support" },
         { "worker on stone resource builds quarry", 6, 0.50f, 0.60f, 0.08f, 0.00f, 0.28f, 0.50f, 0.00f, 0.80f, 55, 0.68f, "center tile is hills with stone/marble/gypsum resource", "build improvement because stone-like resources should receive quarry when Masonry is known" },
         { "worker on empty hills builds mine", 6, 0.50f, 0.00f, 0.00f, 0.00f, 0.20f, 0.50f, 0.00f, 0.80f, 55, 0.50f, "center tile is empty hills with Mining available", "build improvement because mine is the useful supported generic hills improvement" },
         { "worker on empty grass builds cottage", 6, 0.25f, 0.00f, 0.00f, 0.00f, 0.34f, 0.25f, 0.00f, 0.80f, 55, 0.25f, "center tile is empty grass near a city with Masonry available", "build improvement because cottage is the useful supported generic grass improvement" },
         { "worker on city-side grass builds cottage", 6, 0.25f, 0.00f, 0.06f, 0.00f, 0.46f, 0.12f, 0.00f, 0.80f, 56, 0.32f, "east local tile represents a city worked-area connection", "build improvement because close grassland should become cottage rather than idle" },
         { "worker on river grass builds cottage when irrigation unavailable", 6, 0.25f, 0.00f, 0.02f, 0.00f, 0.40f, 0.22f, 0.00f, 0.80f, 55, 0.30f, "center tile is grass with a commerce-worked cue and no irrigation action signal", "build improvement because the supported action is cottage, not road or wait" },
         { "worker on copper hills builds mine", 6, 0.50f, 0.60f, 0.16f, 0.00f, 0.24f, 0.46f, 0.00f, 0.80f, 55, 0.66f, "center tile is hills with copper-like metal resource", "build improvement because metal resources should be mined" },
-        { "worker on iron mountain builds mine", 6, 0.63f, 0.60f, 0.14f, 0.00f, 0.10f, 0.60f, 0.00f, 0.80f, 55, 0.74f, "center tile is mountain/rocks with iron-like metal resource", "build improvement because mine is the matching supported worker build" },
+        { "worker on iron rock builds mine", 6, 0.63f, 0.60f, 0.14f, 0.00f, 0.10f, 0.60f, 0.00f, 0.80f, 55, 0.74f, "center tile is rocks with iron-like metal resource", "build improvement because mine is the matching supported worker build" },
         { "worker on marble hills builds quarry", 6, 0.50f, 0.50f, 0.10f, 0.00f, 0.22f, 0.50f, 0.00f, 0.80f, 55, 0.64f, "center tile is hills with marble-like quarry resource", "build improvement because quarry resources should not become generic roads" },
         { "worker on cattle grass builds pasture", 6, 0.25f, 0.80f, 0.12f, 0.00f, 0.52f, 0.36f, 0.00f, 0.80f, 55, 0.54f, "center tile is grass with cattle-like animal resource", "build improvement because pasture is the matched resource improvement" },
         { "worker on deer forest builds camp", 6, 0.75f, 0.80f, 0.16f, 0.00f, 0.36f, 0.38f, 0.00f, 0.80f, 55, 0.82f, "center tile is forest with deer-like animal resource", "build improvement because camp should beat chop when the resource is opened" },
@@ -2445,7 +2445,7 @@ std::vector<TrainingExample> makeActionWarriorExamples()
         { "warrior sees enemy across open field", 0, 0.25f, 57, -0.15f, 0.00f, "farther east local tile is alien unit signal", "goto because warrior should close distance before attack" },
         { "warrior sees hill with no enemy", 0, 0.25f, 46, 0.50f, 0.00f, "north-east local tile is hills", "goto hill because defensive terrain is valuable before contact" },
         { "warrior already on hill with enemy far away", 1, 0.50f, 57, -0.15f, 0.50f, "far enemy is visible while current tile is hills", "wait as fortify/hold because hill defense is better than chasing blindly" },
-        { "warrior on rocks holds pass", 1, 0.63f, 55, 0.63f, 0.50f, "center tile is rocks/mountains defensive terrain", "wait as fortify/hold because current terrain is a strong defensive point" },
+        { "warrior on rocks holds pass", 1, 0.63f, 55, 0.63f, 0.50f, "center tile is rocks defensive terrain", "wait as fortify/hold because current terrain is a strong defensive point" },
         { "warrior sees enemy city signal", 0, 0.25f, 56, -0.15f, 0.00f, "local enemy/city signal is visible at movement distance", "goto because warrior should approach before attacking city defenders" },
     };
     for (const Case& c : cases) {
@@ -2493,7 +2493,7 @@ std::vector<TrainingExample> makeActionArcherExamples()
         { "archer sees hill firing point", 0, 0.25f, 46, 0.50f, 0.00f, "north-east local tile is hills", "goto because archer should occupy hills for range defense" },
         { "archer on hill sees enemy approach", 1, 0.50f, 57, -0.15f, 0.50f, "enemy approaches while archer already holds hills", "wait as fortify/hold because current hill is the right firing position" },
         { "archer holds hill against distant enemy", 1, 0.50f, 58, -0.15f, 0.50f, "distant enemy is visible while archer is already on hills", "wait as hold because defensive hill should be kept when enemy is not adjacent" },
-        { "archer holds mountain pass", 1, 0.63f, 55, 0.63f, 0.50f, "center tile is rocks/mountains defensive terrain", "wait as hold because archer is on a strong defensive pass" },
+        { "archer holds rock pass", 1, 0.63f, 55, 0.63f, 0.50f, "center tile is rocks defensive terrain", "wait as hold because archer is on a strong defensive pass" },
         { "archer stays on hill with no immediate target", 1, 0.50f, 55, 0.50f, 0.50f, "center tile is hills and immediate-action signal says defensive hold", "wait as hold because no adjacent attack signal is encoded" },
         { "archer on hill screens city approach", 1, 0.50f, 54, -0.15f, 0.50f, "enemy pressure is visible but not adjacent to hill archer", "wait as hold because hill position screens the approach better than moving" },
         { "archer sees enemy city ahead", 0, 0.25f, 56, -0.15f, 0.00f, "enemy city/unit signal ahead", "goto because archer should approach siege position before attacking" },
@@ -2689,7 +2689,7 @@ std::vector<TrainingExample> makeEconomicsWorkerExamples()
     };
     const std::array<const char*, 8> opportunityNames = {
         "road-ready land", "choppable forest", "irrigable grass",
-        "opened animal resource", "mineable hills or mountains",
+        "opened animal resource", "mineable hills or rocks",
         "cottage or quarry plot", "plantation or winery resource",
         "workshop or fortification plot"
     };

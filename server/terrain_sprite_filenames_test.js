@@ -21,7 +21,7 @@ for (const match of terrainSprites) {
         const terrainType = parseInt(textureBits.slice(4), 2);
         if (terrainType === 4 || terrainType === 5) {
             assert.match(filename, /_has_water-[01]{8}\.png$/,
-                `${filename} must describe A as has_water on hills or mountains/stone`);
+                `${filename} must describe A as has_water on hills or rocks`);
         } else {
             assert.match(filename, /_alt-[01]{8}\.png$/,
                 `${filename} must describe A as alt on ordinary terrain`);
@@ -32,5 +32,10 @@ for (const match of terrainSprites) {
 }
 assert.equal(filenames.size, terrainSprites.length, 'terrain filenames must be unique');
 assert.equal(textureIds.size, terrainSprites.length, 'terrain texture IDs must be unique');
+for (const bits of ['00000101', '00010101', '00100101', '00110101']) {
+    assert.equal(filenames.has(`rocks_height${parseInt(bits.slice(2, 4), 2)}-${bits}.png`), true,
+        `terrain type 5 texture ${bits} must use the rocks family`);
+}
+assert.equal(html.includes('mountains_height'), false, 'terrain type 5 must not use the mountains filename family');
 
 console.log('PASS 47 terrain sprite filenames match their 8-bit texture IDs');

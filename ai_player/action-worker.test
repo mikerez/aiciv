@@ -369,9 +369,9 @@ expect command build_improvement
 expect effect quarry
 end
 
-scenario worker_builds_mine_on_iron_mountain
+scenario worker_builds_mine_on_iron_rock
 unit worker 3 3
-tile 3 3 mountain resource=iron improvement=mine local=0.74
+tile 3 3 rock resource=iron improvement=mine local=0.74
 features worker=0.80 nearby=0.14 fresh=0.00 city_score=0.10 city_dist=0.60
 expect command build_improvement
 expect effect mine

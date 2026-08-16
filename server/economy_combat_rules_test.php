@@ -41,15 +41,15 @@ check(serverUnitGoldUpkeep(testUnit('longbow')) === 6, 'longbow gold upkeep is t
 check(serverUnitGoldUpkeep(testUnit('frigate')) === 12, 'frigate gold upkeep is tripled');
 
 $summit = ['terrain_tex' => 0x35, 'modifiers_json' => '{}'];
-check(serverIsMaximumMountain($summit), 'height-three rock is a maximum mountain');
+check(serverIsMaximumRock($summit), 'height-three rock is a maximum rock');
 check(serverIsMountedOrWheelUnit(testUnit('knight')), 'Knight is a mounted unit');
 check(serverTerrainMovePenalty(testUnit('warrior'), $summit) === 3, 'summit costs other units three turns');
-$mountainPathDiagnostic = null;
-$mountainTiles = ['1:1' => $plain, '2:1' => $summit];
-check(validatePath(testUnit('knight'), [['i' => 2, 'j' => 1]], $mountainTiles, 4, $mountainPathDiagnostic) === [],
-    'mounted units cannot enter a maximum mountain');
-check(($mountainPathDiagnostic['stopped']['reason'] ?? '') === 'maximum_mountain_forbidden',
-    'maximum mountain rejection is diagnostic');
+$rockPathDiagnostic = null;
+$rockTiles = ['1:1' => $plain, '2:1' => $summit];
+check(validatePath(testUnit('knight'), [['i' => 2, 'j' => 1]], $rockTiles, 4, $rockPathDiagnostic) === [],
+    'mounted units cannot enter a maximum rock');
+check(($rockPathDiagnostic['stopped']['reason'] ?? '') === 'maximum_rock_forbidden',
+    'maximum rock rejection is diagnostic');
 $workshop = testUnit('building_workshop');
 $workshop['can_move'] = 0;
 check(serverUnitGoldUpkeep($workshop) === 0, 'Workshop cost belongs to its parent City, not generic unit upkeep');

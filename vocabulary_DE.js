@@ -45,7 +45,7 @@ registerVocabularyPack('DE', {
     'unit.selected_military':'Ausgewählte Militäreinheiten: {count}', 'unit.id':'Einheiten-ID: {id}',
     'unit.pending':'ausstehend',
     'terrain.water':'Wasser', 'terrain.sand':'Sand', 'terrain.grass':'Grasland', 'terrain.snow':'Schnee',
-    'terrain.hills':'Hügel', 'terrain.mountains':'Gebirge', 'terrain.forest':'Wald',
+    'terrain.hills':'Hügel', 'terrain.rocks':'Felsen', 'terrain.forest':'Wald',
     'terrain.grasswater':'Feuchtes Grasland', 'terrain.unknown':'Unbekannt',
     'tile.defence':'Verteidigung', 'tile.base':'Basis', 'tile.resource':'Ressource', 'tile.current':'Aktuell',
     'tile.suggested':'Empfohlen', 'tile.after':'Danach',
