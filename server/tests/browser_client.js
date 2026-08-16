@@ -10,11 +10,17 @@ let createPipeFetch = function() {
         throw new Error('The PHP test pipe transport is not available in this runtime.');
     };
 };
+const hostFetch = global.fetch;
 try {
     ({createPipeFetch} = require('./test_client'));
 }
 catch (error) {
     if (error.code !== 'MODULE_NOT_FOUND') throw error;
+}
+finally {
+    // test_client installs its named-pipe transport globally. Keep that inside
+    // the VM harness so the headless contributor retains Node's network fetch.
+    global.fetch = hostFetch;
 }
 
 const root = path.resolve(__dirname, '../..');
