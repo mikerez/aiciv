@@ -179,6 +179,7 @@ class ServerApi
         return this.request('submit_ai_batch', {
             lease_token: batch.lease_token,
             turn: batch.turn,
+            leased_unit_ids: batch.unit_ids || [],
             commands: submission.commands || [],
             actions: submission.actions || [],
         });

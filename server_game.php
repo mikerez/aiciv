@@ -8421,7 +8421,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
 }
 
 function submitGlobalAiBatch(
-    PDO $db, array $game, string $clientKey, string $leaseToken, array $commands
+    PDO $db, array $game, string $clientKey, string $leaseToken, array $commands,
+    array $requestedUnitIds = [], ?int $claimedTurn = null
 ): array {
     $gameId = (int) $game['id'];
     $turn = (int) $game['turn_number'];
@@ -8433,6 +8434,24 @@ function submitGlobalAiBatch(
     );
     $statement->execute([$gameId, $turn, $leaseToken, $clientKey]);
     $leasedIds = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+    $rebased = false;
+    if (!$leasedIds && $requestedUnitIds) {
+        $requestedUnitIds = array_values(array_unique(array_filter(
+            array_map('intval', array_slice($requestedUnitIds, 0, globalAiBatchSize($clientKey))),
+            static fn(int $unitId): bool => $unitId > 0
+        )));
+        if ($requestedUnitIds) {
+            $placeholders = implode(',', array_fill(0, count($requestedUnitIds), '?'));
+            $statement = $db->prepare(
+                'SELECT id FROM server_game_units
+                 WHERE game_id = ? AND owner_id = ? AND deleted_at IS NULL AND health > 0
+                   AND id IN (' . $placeholders . ') FOR UPDATE'
+            );
+            $statement->execute(array_merge([$gameId, $globalAiId], $requestedUnitIds));
+            $leasedIds = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+            $rebased = (bool) $leasedIds;
+        }
+    }
     $leased = array_fill_keys($leasedIds, true);
     if (!$leasedIds) return ['accepted' => false, 'reason' => 'lease_expired', 'orders_stored' => 0];
 
@@ -8485,12 +8504,14 @@ function submitGlobalAiBatch(
     if ($submittedIds) {
         $submittedUnitIds = array_map('intval', array_keys($submittedIds));
         $placeholders = implode(',', array_fill(0, count($submittedUnitIds), '?'));
-        $statement = $db->prepare(
-            'UPDATE server_game_ai_leases SET submitted_at = UTC_TIMESTAMP(6)
-             WHERE game_id = ? AND turn_number = ? AND lease_token = ? AND client_key = ?
-               AND unit_id IN (' . $placeholders . ')'
-        );
-        $statement->execute(array_merge([$gameId, $turn, $leaseToken, $clientKey], $submittedUnitIds));
+        if (!$rebased) {
+            $statement = $db->prepare(
+                'UPDATE server_game_ai_leases SET submitted_at = UTC_TIMESTAMP(6)
+                 WHERE game_id = ? AND turn_number = ? AND lease_token = ? AND client_key = ?
+                   AND unit_id IN (' . $placeholders . ')'
+            );
+            $statement->execute(array_merge([$gameId, $turn, $leaseToken, $clientKey], $submittedUnitIds));
+        }
         $statement = $db->prepare(
             "UPDATE server_game_units
              SET properties_json = JSON_SET(
@@ -8505,9 +8526,17 @@ function submitGlobalAiBatch(
     }
     serverTrace('global_ai_batch_submitted', [
         'turn' => $turn, 'ai_player_id' => $globalAiId, 'leased_units' => $submittedUnitIds,
-        'orders_stored' => $stored, 'client_key' => $clientKey,
+        'orders_stored' => $stored, 'client_key' => $clientKey, 'rebased' => $rebased,
+        'claimed_turn' => $claimedTurn,
     ]);
-    return ['accepted' => true, 'reason' => null, 'orders_stored' => $stored, 'unit_ids' => $submittedUnitIds];
+    return [
+        'accepted' => true,
+        'reason' => $rebased ? 'rebased_to_current_turn' : null,
+        'orders_stored' => $stored,
+        'unit_ids' => $submittedUnitIds,
+        'claimed_turn' => $claimedTurn,
+        'applied_turn' => $turn,
+    ];
 }
 
 function normalizeSharedAiTask($value): ?array
@@ -9507,16 +9536,16 @@ try {
         }
         $commands = isset($data['commands']) && is_array($data['commands']) ? $data['commands'] : [];
         $actions = isset($data['actions']) && is_array($data['actions']) ? $data['actions'] : [];
+        $leasedUnitIds = isset($data['leased_unit_ids']) && is_array($data['leased_unit_ids'])
+            ? $data['leased_unit_ids'] : [];
         $db->beginTransaction();
         try {
             $game = loadGame($db, $key, true);
             $clientTurn = isset($data['turn']) ? (int) $data['turn'] : (int) $game['turn_number'];
-            if ($clientTurn !== (int) $game['turn_number']) {
-                $result = ['accepted' => false, 'reason' => 'turn_finished', 'orders_stored' => 0];
-            } else {
-                rejectInvalidAtomicMovements($db, $game, ensureGlobalAiUser($db), $commands);
-                $result = submitGlobalAiBatch($db, $game, $clientKey, $leaseToken, $commands);
-            }
+            rejectInvalidAtomicMovements($db, $game, ensureGlobalAiUser($db), $commands);
+            $result = submitGlobalAiBatch(
+                $db, $game, $clientKey, $leaseToken, $commands, $leasedUnitIds, $clientTurn
+            );
             $db->commit();
         } catch (Throwable $error) {
             if ($db->inTransaction()) $db->rollBack();

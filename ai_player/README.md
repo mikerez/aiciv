@@ -123,6 +123,11 @@ browser contributors retain two-unit leases. Strategy is refreshed every eight
 turns by default (`--strategy-interval N` or `AICIV_STRATEGY_INTERVAL`) while
 Action and Economics continue to run for every leased object.
 
+If the six-second game turn advances during inference, the contributor includes
+the original leased object ids with its result. PHP verifies that they are still
+living global-AI objects and revalidates their commands against current state
+before storing them in the active turn.
+
 ## Browser Adapters
 
 `../ai.js` provides three encoder/decoder pairs:

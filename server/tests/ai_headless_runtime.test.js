@@ -25,10 +25,14 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
             city({
                 client_key: 'headless-city', owner_id: 9000, i: 6, j: 5,
                 properties: {
-                    cityPopulation: 1,
+                    cityPopulation: 2,
                     cityFoodStored: 0,
                     cityProperties: {productionPerTurn: 2, productionStored: 0},
                     production: {unitTypeId: 'warrior', productionPoints: 0},
+                    economy: {citizens: [
+                        {coord: {i: 6, j: 5}, income: {food: 2, production: 1, money: 1}},
+                        {coord: {i: 6, j: 6}, income: {food: 2, production: 1, money: 0}},
+                    ]},
                 },
             }),
         ],
@@ -64,6 +68,14 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
             row.properties.sharedAiTask.target.i += 100;
             row.properties.sharedAiTask.target.j += 100;
         }
+        const citizens = row.properties && row.properties.economy
+            && row.properties.economy.citizens;
+        for (const citizen of citizens || []) {
+            citizen.worldCoord = {
+                i: Number(citizen.coord.i) + 100,
+                j: Number(citizen.coord.j) + 100,
+            };
+        }
     }
     for (const collection of [batch.snapshot.tiles, batch.snapshot.visibility]) {
         for (const row of collection || []) {
@@ -71,6 +83,10 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
             row.world_j = Number(row.j) + 100;
         }
     }
+    const snapshotCity = batch.snapshot.units.find(row => Number(row.id) === cityId);
+    const expectedCitizenCoords = snapshotCity.properties.economy.citizens.map(citizen => [
+        Number(citizen.coord.i), Number(citizen.coord.j),
+    ]);
 
     const native = new NativeInference();
     await native.start();
@@ -82,6 +98,13 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
         assert.ok(runtime.context.aiPlayer.lastStrategyContext.contextTiles > 0,
             'Strategy reads terrain around a City in a nonzero map window');
         runtime.activateSnapshot(batch.ai_player_id, batch.snapshot);
+        const loadedCity = runtime.context._units.find(row => Number(row.serverId) === cityId);
+        assert.ok(loadedCity, 'the headless runtime loads the owned City');
+        assert.deepEqual(
+            Array.from(runtime.context._current_game.cityCitizenCoords(loadedCity), point => [point.i, point.j]),
+            expectedCitizenCoords,
+            'the headless Worker policy sees the City citizen plots in local map coordinates'
+        );
         const submission = await runtime.prepareUnit(
             batch.ai_player_id, batch.snapshot, batch.unit_ids[0], strategy.maxMilitaryFocus, true
         );

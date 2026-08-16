@@ -98,7 +98,7 @@
 - `MAIN-AI-008`: AI model fully connected layer widths reduce from input values to `72` output values through eight tanh layers. Strategy currently starts at `3524` input values; other engines currently start at `1024`.
 - `MAIN-AI-009`: A game has exactly one global AI civilization. Legacy per-human AI accounts are discarded when the development game is reset.
 - `MAIN-AI-012`: Every authenticated browser may contribute work to the global AI during its human turn. PHP leases a random batch of eight unassigned movable AI units, and separate browsers receive disjoint batches.
-- `MAIN-AI-013`: The Action model evaluates each unit in a leased batch independently. The client submits only current-turn atomic commands and immediate actions for the leased ids; PHP merges them by unit without creating an AI turn submission.
+- `MAIN-AI-013`: The Action model evaluates each unit in a leased batch independently. The client submits atomic commands, immediate actions, and the separately retained leased object order; PHP revalidates them against current state and merges valid work into the active turn without creating an AI turn submission.
 - `MAIN-AI-014`: Shared AI inference runs concurrently with the human turn and stops when that turn ends. End Turn never waits for AI inference, an AI lease, or AI command submission.
 - `MAIN-AI-015`: Generated Iron, Copper, Gold, Gems, and Diamonds deposits receive one global-AI force containing five Settlers, five Explorers, ten Archers, and one automated Worker, spread according to the five-unit Tile limit. Automated Workers improve and road-connect guarded resources after an owned City exists nearby.
 
