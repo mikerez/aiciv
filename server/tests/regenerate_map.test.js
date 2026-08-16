@@ -12,6 +12,9 @@ const {assert, serverGame, resetDatabase, bootstrap, unit, value, gameDatabaseId
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId}`)), 400);
     assert.equal(Number(value(`SELECT COUNT(*) FROM server_game_units WHERE game_id=${gameDbId} AND owner_id=${fixture.playerId} AND deleted_at IS NULL`)), 1);
     const globalAiId = Number(value("SELECT id FROM game_users WHERE login='aiciv_global_ai'"));
+    assert.equal(value(
+        `SELECT civilization_key FROM server_game_players WHERE game_id=${gameDbId} AND player_id=${globalAiId}`
+    ), 'barbarian', 'map generation assigns the Barbarian civilization to the global AI');
     const guardedResources = Number(value(
         `SELECT COUNT(*) FROM server_game_map m JOIN server_games g ON g.id=m.game_id
          WHERE m.game_id=${gameDbId} AND resource_type IN (3,15,34,35,36)
@@ -34,5 +37,14 @@ const {assert, serverGame, resetDatabase, bootstrap, unit, value, gameDatabaseId
         'preserved units are repositioned onto land');
     assert.ok(Number(value(`SELECT COUNT(*) FROM server_game_map WHERE game_id=${gameDbId} AND resource_type=33`)) >= 6,
         'generated worlds enforce a playable Horses minimum');
+    const snapshot = await serverGame.request('load_full', {
+        player_id: fixture.playerId, include_map: false,
+    });
+    const barbarian = snapshot.civilizations.find(row => Number(row.player_id) === globalAiId);
+    assert.ok(barbarian, 'the generated Barbarian civilization is included in API state');
+    assert.equal(barbarian.player_name, 'Barbarian');
+    assert.equal(barbarian.civilization_key, 'barbarian');
+    assert.equal(barbarian.civilization_name, 'Barbarian');
+    assert.equal(barbarian.coat.mark, 'B');
     console.log('PASS regenerate_map replaces only terrain and repositions preserved units on the regenerated world');
 })().catch(error => { console.error(error); process.exitCode = 1; });

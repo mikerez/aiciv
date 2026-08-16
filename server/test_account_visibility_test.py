@@ -65,7 +65,9 @@ def main():
     require(user_id not in visible_ids, snapshot["civilizations"])
     require(ai_player_id in visible_ids, snapshot["civilizations"])
     ai_row = next(row for row in snapshot["civilizations"] if row["player_id"] == ai_player_id)
-    require(ai_row["player_name"] == "AI Player " + str(ai_player_id), ai_row)
+    require(ai_row["player_name"] == "Barbarian", ai_row)
+    require(ai_row["civilization_key"] == "barbarian", ai_row)
+    require(ai_row["civilization_name"] == "Barbarian", ai_row)
 
     print("PASS test human is hidden and assigned AI remains in civilization list")
 

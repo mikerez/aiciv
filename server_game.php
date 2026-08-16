@@ -5,7 +5,7 @@ $serverGameRequestStartedNs = hrtime(true);
 require_once __DIR__ . '/game_auth.php';
 require_once __DIR__ . '/php_performance.php';
 
-const SERVER_GAME_SCHEMA_VERSION = 19;
+const SERVER_GAME_SCHEMA_VERSION = 20;
 const SERVER_GAME_TURN_SECONDS = 6;
 const SERVER_GAME_TURN_GRACE_SECONDS = 0;
 const SERVER_GAME_DEADLINE_SECONDS = SERVER_GAME_TURN_SECONDS + SERVER_GAME_TURN_GRACE_SECONDS;
@@ -23,6 +23,7 @@ const SERVER_MAP_ROCK_SEEDS = 32;
 const SERVER_MAP_HILL_SEEDS = 24;
 const SERVER_MAP_FOREST_SEEDS = 56;
 const SERVER_GAME_GLOBAL_AI_LOGIN = 'aiciv_global_ai';
+const SERVER_GAME_GLOBAL_AI_CIVILIZATION = 'barbarian';
 // Browser contributors use two leased objects. The persistent native contributor
 // amortizes one snapshot over four while remaining inside the six-second turn.
 const SERVER_GAME_AI_BATCH_SIZE = 2;
@@ -467,6 +468,11 @@ function ensureGlobalAiUser(PDO $db): int
              online = 1, last_online_at = UTC_TIMESTAMP() WHERE id = ?"
         );
         $statement->execute([$id]);
+        $statement = $db->prepare(
+            'UPDATE server_game_players SET civilization_key = ?
+             WHERE player_id = ? OR account_user_id = ?'
+        );
+        $statement->execute([SERVER_GAME_GLOBAL_AI_CIVILIZATION, $id, $id]);
         return $id;
     }
     $statement = $db->prepare(
@@ -1174,6 +1180,20 @@ function ensureServerSchema(PDO $db): void
         );
         $statement->execute();
         $version = 19;
+    }
+    if ($version < 20) {
+        $globalAiId = ensureGlobalAiUser($db);
+        $statement = $db->prepare(
+            'UPDATE server_game_players SET civilization_key = ?
+             WHERE player_id = ? OR account_user_id = ?'
+        );
+        $statement->execute([SERVER_GAME_GLOBAL_AI_CIVILIZATION, $globalAiId, $globalAiId]);
+        $statement = $db->prepare(
+            "INSERT INTO `version` (component, schema_version) VALUES ('server_game', 20)
+             ON DUPLICATE KEY UPDATE schema_version = VALUES(schema_version), applied_at = CURRENT_TIMESTAMP"
+        );
+        $statement->execute();
+        $version = 20;
     }
     if ($version !== SERVER_GAME_SCHEMA_VERSION) {
         throw new RuntimeException('Unsupported server game schema version.');
@@ -2104,10 +2124,11 @@ function seedGlobalAiResourceGuards(PDO $db, int $gameId, int $mapSize, array $t
         'INSERT INTO server_game_players
          (game_id, player_id, account_user_id, civilization_key, active, state_json)
          VALUES (?, ?, ?, ?, 1, ?)
-         ON DUPLICATE KEY UPDATE account_user_id = VALUES(account_user_id), active = 1'
+         ON DUPLICATE KEY UPDATE account_user_id = VALUES(account_user_id),
+             civilization_key = VALUES(civilization_key), active = 1'
     );
     $statement->execute([
-        $gameId, $globalAiId, $globalAiId, civilizationKeyForPlayer($globalAiId), jsonObject(defaultPlayerState()),
+        $gameId, $globalAiId, $globalAiId, SERVER_GAME_GLOBAL_AI_CIVILIZATION, jsonObject(defaultPlayerState()),
     ]);
     $statement = $db->prepare(
         'SELECT i, j, COUNT(*) AS unit_count FROM server_game_units
@@ -2202,10 +2223,11 @@ function hotfixStrategicResources(PDO $db, array $game): array
             'INSERT INTO server_game_players
              (game_id, player_id, account_user_id, civilization_key, active, state_json)
              VALUES (?, ?, ?, ?, 1, ?)
-             ON DUPLICATE KEY UPDATE account_user_id = VALUES(account_user_id), active = 1'
+             ON DUPLICATE KEY UPDATE account_user_id = VALUES(account_user_id),
+                 civilization_key = VALUES(civilization_key), active = 1'
         );
         $statement->execute([
-            $gameId, $globalAiId, $globalAiId, civilizationKeyForPlayer($globalAiId),
+            $gameId, $globalAiId, $globalAiId, SERVER_GAME_GLOBAL_AI_CIVILIZATION,
             jsonObject(defaultPlayerState()),
         ]);
         $statement = $db->prepare(
@@ -2520,6 +2542,7 @@ function normalizePlayerState(array $state): array
 function civilizationCatalog(): array
 {
     return [
+        'barbarian' => ['name' => 'Barbarian', 'primary' => '#5b2025', 'secondary' => '#282828', 'mark' => 'B'],
         'romans' => ['name' => 'Romans', 'primary' => '#9b1c31', 'secondary' => '#f2c14e', 'mark' => 'R'],
         'greeks' => ['name' => 'Greeks', 'primary' => '#175a9c', 'secondary' => '#f5f7fa', 'mark' => 'G'],
         'ethiopians' => ['name' => 'Ethiopians', 'primary' => '#287a3d', 'secondary' => '#e7bd34', 'mark' => 'E'],
@@ -2533,13 +2556,17 @@ function civilizationCatalog(): array
 
 function civilizationKeyForPlayer(int $playerId): string
 {
-    $keys = array_keys(civilizationCatalog());
+    $keys = array_values(array_filter(
+        array_keys(civilizationCatalog()),
+        static fn(string $key): bool => $key !== SERVER_GAME_GLOBAL_AI_CIVILIZATION
+    ));
     return $keys[$playerId % count($keys)];
 }
 
 function civilizationCityNames(): array
 {
     return [
+        'barbarian' => ['Stronghold', 'Redoubt', 'Iron Camp', 'Black Camp', 'Wolf Gate', 'Stone Ring', 'War Camp', 'Hill Fort'],
         'romans' => ['Roma', 'Ostia', 'Neapolis', 'Ravenna', 'Capua', 'Aquileia', 'Ariminum', 'Bononia'],
         'greeks' => ['Athens', 'Sparta', 'Corinth', 'Thebes', 'Argos', 'Miletus', 'Rhodes', 'Syracuse'],
         'ethiopians' => ['Aksum', 'Adulis', 'Yeha', 'Matara', 'Qohaito', 'Hawulti', 'Damat', 'Meroe'],
@@ -8755,7 +8782,7 @@ function serverCivilizations(PDO $db, array $game, int $viewerId): array
     $statement = $db->prepare(
         "SELECT p.player_id, p.civilization_key, p.active, p.state_json,
                 p.units_killed, p.cities_occupied, p.cities_destroyed,
-                CASE WHEN u.user_type = 'ai' THEN CONCAT('AI Player ', p.player_id)
+                CASE WHEN u.user_type = 'ai' THEN 'Barbarian'
                      ELSE COALESCE(u.login, CONCAT('Player ', p.player_id)) END AS player_name,
                 SUM(CASE WHEN gu.id IS NOT NULL AND gu.deleted_at IS NULL THEN 1 ELSE 0 END) AS current_units,
                 SUM(CASE WHEN gu.id IS NOT NULL AND gu.deleted_at IS NULL AND gu.unit_class = 3 THEN 1 ELSE 0 END) AS current_cities

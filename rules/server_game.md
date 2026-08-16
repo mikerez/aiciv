@@ -220,6 +220,8 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-CIV-003`: Civilization lists omit automated host-test human accounts. Their separately controlled AI civilizations remain visible, as do test-isolation players without registered accounts.
 
+`SERVER-CIV-004`: The generated global AI uses the `barbarian` civilization type and is displayed publicly as `Barbarian`; its internal `aiciv_global_ai` login remains stable for lease ownership.
+
 `SERVER-CIV-004`: The secret-protected `cleanup_orphan_players` administration request reports player/unit owners that have no valid `game_users` account link and automated test-human logins hidden by `SERVER-CIV-003`. With confirmation `REMOVE_ORPHANS`, it transactionally removes only those game players and their units, production, orders, visibility, events, and relations. Accounts with `user_type='ai'` are never candidates, including AI players assigned to test humans.
 
 `SERVER-CIV-002`: Civilization statistics store units killed, cities occupied, and cities destroyed. Capturing a surviving City increments cities occupied; City records do not take combat damage or count as destroyed during capture.
