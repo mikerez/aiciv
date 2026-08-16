@@ -5,7 +5,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const zlib = require('node:zlib');
-const {createPipeFetch} = require('./test_client');
+let createPipeFetch = function() {
+    return async function() {
+        throw new Error('The PHP test pipe transport is not available in this runtime.');
+    };
+};
+try {
+    ({createPipeFetch} = require('./test_client'));
+}
+catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') throw error;
+}
 
 const root = path.resolve(__dirname, '../..');
 

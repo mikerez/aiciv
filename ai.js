@@ -746,12 +746,16 @@ const _ai_player = new class
 
     rotatingBatch(records, kind, ownerTeam, limit = this.batchSize)
     {
+        var key = kind + ':' + ownerTeam;
         if (!records.length || records.length <= limit) {
-            this.batchCursors[kind + ':' + ownerTeam] = 0;
+            this.batchCursors[key] = 0;
             return records.slice(0, limit);
         }
-        var key = kind + ':' + ownerTeam;
-        var start = (this.batchCursors[key] || 0) % records.length;
+        if (this.batchCursors[key] == undefined) {
+            // Start each client at a different point, then rotate fairly from there.
+            this.batchCursors[key] = Math.floor(Math.random() * records.length);
+        }
+        var start = this.batchCursors[key] % records.length;
         var selected = [];
         for (var n = 0; n < limit; n++) {
             selected.push(records[(start + n) % records.length]);

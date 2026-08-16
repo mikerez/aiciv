@@ -448,9 +448,9 @@ const _multiplayer = new class
                 || Number.isFinite(Number(unit.clientImprovementTurnsLeft))));
     }
 
-    async prepareAiUnitOrder(aiId, snapshot, unitId, strategyFocus)
+    async prepareAiUnitOrder(aiId, snapshot, unitId, strategyFocus, snapshotAlreadyActive)
     {
-        var stage = this.withHiddenSnapshot(aiId, snapshot, function() {
+        var buildStage = function() {
             var found = _server_game.findUnit(aiId, Number(unitId), null);
             var unit = found && found.unit;
             if (!unit) return {hasUnit: false};
@@ -464,21 +464,26 @@ const _multiplayer = new class
                     hasUnit: true,
                 };
             }
+            var kind = unit.unitTypeId == 'settlers' ? 'settler'
+                : unit.unitTypeId == 'worker' ? 'worker'
+                    : unit.unitTypeId == 'explorer' ? 'explorer' : 'action';
             return {
-                kind: unit.unitTypeId == 'settlers' ? 'settler'
-                    : unit.unitTypeId == 'worker' ? 'worker'
-                        : unit.unitTypeId == 'explorer' ? 'explorer' : 'action',
+                kind: kind,
                 input: _ai_player.buildActionInputForUnit(aiId, unitId, strategyFocus),
                 adapter: _multiplayer.captureAiAdapterState(),
-                hasUnit: _ai_player.lastActionUnitIndices.length > 0,
+                // Civilian policies are rule-driven and remain valid even when
+                // the Action model has no candidate for the unit's current state.
+                hasUnit: kind != 'action' || _ai_player.lastActionUnitIndices.length > 0,
             };
-        });
+        };
+        var stage = snapshotAlreadyActive ? buildStage()
+            : this.withHiddenSnapshot(aiId, snapshot, buildStage);
         if (!stage.hasUnit) return null;
         var output = null;
         if (stage.kind == 'action' || stage.kind == 'city') {
             output = await _ai_player.inferBackground(stage.kind == 'city' ? 'economics' : 'action', stage.input);
         }
-        return this.withHiddenSnapshot(aiId, snapshot, function() {
+        var finishOrder = function() {
             _multiplayer.restoreAiAdapterState(stage.adapter);
             var found = _server_game.findUnit(aiId, Number(unitId), null);
             if (!found || !found.unit) return null;
@@ -495,7 +500,7 @@ const _multiplayer = new class
                 decision = Object.assign({kind: 'settler'}, settlerPolicy);
             }
             else if (stage.kind == 'worker') {
-                var persistentRoadTo = this.workerHasPersistentRoadTo(unit);
+                var persistentRoadTo = _multiplayer.workerHasPersistentRoadTo(unit);
                 if (persistentRoadTo) {
                     unit.automationMode = 'road_to';
                     unit.state = 'road_to';
@@ -570,7 +575,9 @@ const _multiplayer = new class
                 }
             }
             return submission;
-        });
+        };
+        return snapshotAlreadyActive ? finishOrder()
+            : this.withHiddenSnapshot(aiId, snapshot, finishOrder);
     }
 
     routeExcessMilitaryToStrategicResource(unit)

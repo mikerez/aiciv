@@ -184,6 +184,8 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-AI-003`: AI leases expire and are deleted at turn resolution. Commands accepted before resolution remain ordinary authoritative orders; unfinished inference after resolution is rejected as stale without delaying the human client.
 
+`SERVER-AI-004`: A headless AI contributor may call `claim_ai_batch` and `submit_ai_batch` with the application secret and a unique client key without a human login session. The lease restricts submissions to the global AI's leased object ids, and normal authoritative movement and build validation still applies.
+
 `SERVER-ECONOMY-001`: End-turn resolution calculates worked-Tile food, production, and gold in PHP using tables mirrored by `city.js` and `economics.js`; client-reported balances and city food cannot overwrite these values.
 
 `SERVER-ECONOMY-002`: PHP adds positive city food excess and gross city gold to player storage, deducts per-unit upkeep, and disbands movable units when either resource cannot cover the army.

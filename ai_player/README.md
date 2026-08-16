@@ -98,6 +98,26 @@ Each layer then stores:
 The browser loader in `../ai.js` reads version 2 directly, uses dimension-aware
 WebGPU compute when available, and otherwise uses the CPU inferencer.
 
+## Headless AI Contributor
+
+`ai_player.js` runs the same browser encoders, command decoders, legality checks,
+and server lease protocol without a visible browser. A persistent C++ worker
+loads the three models once and performs FP32 inference; Node owns snapshots and
+game commands. This avoids requiring WebGPU support in Node.
+
+```bash
+make -C ai_player inference_worker
+node ai_player/ai_player_test.js
+node ai_player/ai_player.js --once
+node ai_player/ai_player.js
+```
+
+The process reads the application secret from `AICIV_SECRET`, from the file in
+`AICIV_SECRET_FILE`, or from `api_secret` in the repository root. It claims short
+server leases and can run continuously alongside browser contributors. The
+server scheduler and browser-side rotating batches both start from randomized
+unit positions, so repeated inference is not pinned to the first eight units.
+
 ## Browser Adapters
 
 `../ai.js` provides three encoder/decoder pairs:

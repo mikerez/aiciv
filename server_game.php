@@ -23,7 +23,9 @@ const SERVER_MAP_ROCK_SEEDS = 32;
 const SERVER_MAP_HILL_SEEDS = 24;
 const SERVER_MAP_FOREST_SEEDS = 56;
 const SERVER_GAME_GLOBAL_AI_LOGIN = 'aiciv_global_ai';
-const SERVER_GAME_AI_BATCH_SIZE = 8;
+// Two leased objects keep browser-compatible per-unit inference below the
+// six-second turn boundary while each model still scores eight legal candidates.
+const SERVER_GAME_AI_BATCH_SIZE = 2;
 const SERVER_GAME_AI_LEASE_SECONDS = 12;
 const SERVER_GAME_AI_RESOURCE_BUDGET = 100000000;
 const SERVER_GAME_HOTFIX_DEPOSITS_PER_RESOURCE = 2;
@@ -346,7 +348,8 @@ function serverDatabase(): PDO
 function authenticateRegisteredGamePlayer(PDO $db, string $gameKey, int $playerId, array $data, string $action): ?int
 {
     if (in_array($action, ['map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players',
-        'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics'], true)) {
+        'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics',
+        'claim_ai_batch', 'submit_ai_batch'], true)) {
         return null;
     }
     $statement = $db->prepare(
@@ -8934,6 +8937,7 @@ function fullGameLoad(
         'last_event_id' => 0,
         'controlled_players' => $authenticatedUserId === null ? [] : controlledPlayers($db, $authenticatedUserId),
         'full_map' => $includeFullMap,
+        'map_size' => (int) $game['map_size'],
         'map_origin' => ['i' => $window['i'], 'j' => $window['j']],
         'map_window_size' => $window['size'],
         'respawn_required' => playerNeedsRespawn($db, $game, $playerId),
@@ -9391,7 +9395,7 @@ try {
     }
 
     if ($action === 'claim_ai_batch') {
-        ensureGame($db, $key, $playerId, null);
+        ensureGeneratedGameMap($db, $key, SERVER_GAME_DEFAULT_MAP_SIZE);
         $clientKey = substr(trim((string) ($data['client_key'] ?? '')), 0, 80);
         if ($clientKey === '') serverError(422, 'invalid_client_key', 'client_key is required for an AI work lease.');
         $db->beginTransaction();
@@ -9423,7 +9427,6 @@ try {
     }
 
     if ($action === 'submit_ai_batch') {
-        ensureGame($db, $key, $playerId, null);
         $clientKey = substr(trim((string) ($data['client_key'] ?? '')), 0, 80);
         $leaseToken = strtolower(trim((string) ($data['lease_token'] ?? '')));
         if ($clientKey === '' || !preg_match('/^[a-f0-9]{32}$/', $leaseToken)) {

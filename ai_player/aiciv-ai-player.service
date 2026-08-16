@@ -1,0 +1,19 @@
+[Unit]
+Description=AICiv headless AI contributor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/public
+Environment=AICIV_SERVER_URL=https://13.60.223.71/server_game.php
+Environment=AICIV_SECRET_FILE=/home/ec2-user/public/.game_api_secret
+Environment=NODE_EXTRA_CA_CERTS=/etc/pki/tls/certs/aiciv-ip.crt
+Environment=AICIV_CYCLE_MS=1000
+ExecStart=/usr/bin/node /home/ec2-user/public/ai_player/ai_player.js
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
