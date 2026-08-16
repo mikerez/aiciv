@@ -17,6 +17,28 @@
             margin: 0;
         }
 
+        #gameLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.32);
+            color: #fff;
+            font: bold 56px var(--game-menu-font);
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: auto;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 120ms linear, visibility 0s linear 120ms;
+        }
+        #gameLoadingOverlay.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         #canvas3D {
             display: block;
         }
@@ -305,6 +327,7 @@
         }
         body.phone-ui .economy-counter.counter-wide { font-size: 15px; }
         body.phone-ui .economy-counter.counter-very-wide { font-size: 12px; }
+        body.phone-ui #gameLoadingOverlay { font-size: 38px; }
         body.phone-ui #optionsButton {
             right: calc(env(safe-area-inset-right, 0px) + 106px) !important;
             bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
@@ -433,7 +456,8 @@
         }
     </style>
 </head>
-<body>
+<body aria-busy="true">
+    <div id="gameLoadingOverlay" role="status" aria-live="polite">Loading...</div>
                           <!-- width="400" height="300" style="width:400px;height:300px;" -->
     <canvas id="canvas3D" width="1500" height="1000" style="touch-action: none;"></canvas>
     <canvas id="canvas2D" width="1500" height="1000" style="position: absolute;top: 0px;left: 0px;background-color: rgba(255, 255, 255, 0);z-index: 2;touch-action: none;"></canvas>
@@ -691,15 +715,39 @@
         if (typeof _phone_ui !== 'undefined') {
             _phone_ui.apply();
         }
+        function finishInitialGameLoad()
+        {
+            if (_current_game && _current_game.centerViewOnStartingUnits) {
+                _current_game.centerViewOnStartingUnits();
+            }
+            _fulldraw = 1;
+            if (!_in_drawing) drawScene(1);
+            var reveal = function() {
+                var overlay = document.getElementById('gameLoadingOverlay');
+                if (overlay) overlay.classList.add('is-hidden');
+                document.body.setAttribute('aria-busy', 'false');
+            };
+            var revealAfterFrame = function() {
+                if (window.requestAnimationFrame) window.requestAnimationFrame(reveal);
+                else setTimeout(reveal, 0);
+            };
+            if (document.readyState == 'complete') revealAfterFrame();
+            else window.addEventListener('load', revealAfterFrame, {once: true});
+        }
+
         if (typeof _server_game !== 'undefined') {
             _server_game.initializePlayer(_current_user).then(function() {
                 _server_game.startTurnTimer(_current_user, false);
                 if (typeof _multiplayer !== 'undefined' && _multiplayer.startBackgroundAiTurn) {
                     _multiplayer.startBackgroundAiTurn(_server_game.serverTurn);
                 }
+                finishInitialGameLoad();
             }).catch(function(error) {
                 _server_game.log('Initial server load failed: ' + error.message);
             });
+        }
+        else {
+            finishInitialGameLoad();
         }
 
         function isGameInputTarget(target)
