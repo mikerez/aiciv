@@ -5476,6 +5476,14 @@ function serverImprovementYieldMultipliers(): array
     ];
 }
 
+function serverCottageStageYield(int $age): array
+{
+    // Mirrored by cottageStageYields() in economics.js.
+    if ($age >= 200) return ['food_bonus' => 2, 'money_multiplier' => 4.0, 'minimum_money' => 4.0];
+    if ($age >= 100) return ['food_bonus' => 1, 'money_multiplier' => 3.0, 'minimum_money' => 3.0];
+    return ['food_bonus' => 0, 'money_multiplier' => 2.0, 'minimum_money' => 2.0];
+}
+
 function serverTerrainIncomeTable(): array
 {
     return [
@@ -5508,14 +5516,20 @@ function serverApplyImprovementYieldMultipliers(
         if (empty($modifiers[$improvement])) continue;
         if ($improvement === 'irrigation' && $isCityTile && empty($modifiers['irrigationCityFood'])) continue;
         if ($improvement === 'irrigation' && $terrainType === 1) continue;
+        $cottageYield = null;
         if ($improvement === 'cottage') {
             $age = (int) ($modifiers['cottageAge'] ?? 0);
-            $multipliers = ['money' => $age >= 200 ? 4.0 : ($age >= 100 ? 3.0 : 2.0)];
+            $cottageYield = serverCottageStageYield($age);
+            $multipliers = ['money' => $cottageYield['money_multiplier']];
         }
         foreach ($multipliers as $field => $multiplier) $income[$field] = ceil(($income[$field] ?? 0) * $multiplier);
         if ($improvement === 'farm') {
             $income['food'] = 5;
             $income['money'] = 0;
+        }
+        if ($cottageYield !== null) {
+            $income['food'] += $cottageYield['food_bonus'];
+            $income['money'] = max($income['money'], $cottageYield['minimum_money']);
         }
         if ($improvement === 'workshop') $income['production'] = 4;
     }

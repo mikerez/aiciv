@@ -59,6 +59,14 @@ const _economics = new class
         };
     }
 
+    cottageStageYields(age)
+    {
+        // Mirrored by serverCottageStageYield() in server_game.php.
+        if (age >= 200) return { foodBonus: 2, moneyMultiplier: 4, minimumMoney: 4 };
+        if (age >= 100) return { foodBonus: 1, moneyMultiplier: 3, minimumMoney: 3 };
+        return { foodBonus: 0, moneyMultiplier: 2, minimumMoney: 2 };
+    }
+
     resourceYield(resourceId, modifiers)
     {
         var table = {
@@ -95,9 +103,11 @@ const _economics = new class
             if (improvement == 'irrigation' && isCityTile && !modifiers.irrigationCityFood) continue;
             if (improvement == 'irrigation' && terrainType == 1) continue;
             var multipliers = table[improvement];
+            var cottageYield = null;
             if (improvement == 'cottage') {
                 var age = modifiers.cottageAge || 0;
-                multipliers = { money: age >= 200 ? 4 : (age >= 100 ? 3 : 2) };
+                cottageYield = this.cottageStageYields(age);
+                multipliers = { money: cottageYield.moneyMultiplier };
             }
             for (var field in multipliers) {
                 income[field] = Math.ceil((income[field] || 0) * multipliers[field]);
@@ -105,6 +115,10 @@ const _economics = new class
             if (improvement == 'farm') {
                 income.food = 5;
                 income.money = 0;
+            }
+            if (cottageYield) {
+                income.food += cottageYield.foodBonus;
+                income.money = Math.max(income.money, cottageYield.minimumMoney);
             }
             if (improvement == 'workshop') income.production = 4;
         }

@@ -27,6 +27,17 @@ assert.equal(context.economics.resourceYield('wine', { winery: true }).money, 2)
 assert.equal(context.economics.resourceYield('bananas', { plantation: true }).money, 2);
 assert.equal(context.economics.maintenanceCost({ economicClass: 'terrain_improvement', improvementType: 'workshop' }), 0);
 context._map_terrain_tex[0][0] = 2;
+context._map_resource[0][0] = { type: 0 };
+context._map_terrain_mod[0][0] = { cottage: true, cottageAge: 99 };
+assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
+    { food: 2, production: 0, money: 2 }, 'Cottage gives base food and at least two gold');
+context._map_terrain_mod[0][0].cottageAge = 100;
+assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
+    { food: 3, production: 0, money: 3 }, 'Hamlet gives more food and gold than Cottage');
+context._map_terrain_mod[0][0].cottageAge = 200;
+assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),
+    { food: 4, production: 0, money: 4 }, 'Village gives more food and gold than Hamlet');
+context._map_terrain_tex[0][0] = 2;
 context._map_terrain_mod[0][0] = {farm: true};
 context._map_resource[0][0] = {type: 1};
 assert.deepEqual(JSON.parse(JSON.stringify(context.cityEconomy.tileIncomeAt(0, 0))),

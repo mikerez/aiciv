@@ -108,12 +108,16 @@ check(isset($economicKeys['2:3']), 'an adjacent bare Tile remains directly worka
 $economicTiles['3:2']['modifiers_json'] = '{"farm":true,"road":true}';
 $economicKeys = serverCityEconomicTileKeys($economicCity, $economicTiles);
 check(isset($economicKeys['3:2']), 'an improved Tile contributes after a continuous City road connection');
-$cottageBase = array_replace($plain, ['terrain_tex' => 7]);
+$cottageBase = array_replace($plain, ['terrain_tex' => 2]);
 $cottage99 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":99}']));
 $cottage100 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":100}']));
 $cottage200 = serverTileIncome(array_replace($cottageBase, ['modifiers_json' => '{"cottage":true,"cottageAge":200}']));
-check($cottage99['money'] === 2.0 && $cottage100['money'] === 3.0 && $cottage200['money'] === 4.0,
-    'Cottage stages are 100 and 200 turns');
+check($cottage99['food'] === 2 && $cottage99['money'] === 2.0,
+    'Cottage provides its base food and at least 2 gold');
+check($cottage100['food'] === 3 && $cottage100['money'] === 3.0,
+    'Hamlet provides more food and gold than Cottage');
+check($cottage200['food'] === 4 && $cottage200['money'] === 4.0,
+    'Village provides more food and gold than Hamlet');
 check(serverResourceImprovementRequirements()['horses'] === 'pasture', 'Horses need Pasture');
 check(!serverImprovementMatchesTileResource($plain, 'pasture'), 'Pasture requires an animal resource');
 check(serverImprovementMatchesTileResource(array_replace($plain, ['resource_type' => 33]), 'pasture'), 'Horses accept Pasture');
