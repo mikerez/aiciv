@@ -10,6 +10,9 @@
         }
     </script>
     <style>
+        :root {
+            --game-menu-font: Arial, sans-serif;
+        }
         body {
             margin: 0;
         }
@@ -41,12 +44,22 @@
             background-repeat: no-repeat;
             background-size: 100% 100%;
             color: #111;
-            font: bold 24px Arial;
+            font: bold 24px var(--game-menu-font);
             font-variant-numeric: tabular-nums;
             text-shadow: 0 1px rgba(255,255,255,0.8);
         }
         .economy-counter.counter-wide { font-size: 20px; }
         .economy-counter.counter-very-wide { font-size: 16px; }
+        #foreground,
+        #foreground *,
+        [id$="_menu"],
+        [id$="_menu"] *,
+        [id$="Menu"],
+        [id$="Menu"] *,
+        #main_menu_buttons,
+        #main_menu_buttons * {
+            font-family: var(--game-menu-font) !important;
+        }
         #foodCounter {
             background-image: url('images/food_frame.png?v=20260811c');
         }
