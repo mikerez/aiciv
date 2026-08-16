@@ -115,10 +115,10 @@ node ai_player/ai_player.js
 The process reads the application secret from `AICIV_SECRET`, from the file in
 `AICIV_SECRET_FILE`, or from `api_secret` in the repository root. Run it directly
 in a dedicated console; it claims short server leases until interrupted with
-`Ctrl+C`. The
-server scheduler and browser-side rotating batches both start from randomized
-unit positions, so repeated inference is not pinned to the first eight units.
-The native contributor leases up to four nearby military units per snapshot;
+`Ctrl+C`. The server scheduler uses weighted service debt so active Worker
+projects are revisited much more often than fortified units, while every object
+continues accumulating debt and eventually receives service. The native
+contributor leases up to eight nearby Workers or military units per snapshot;
 browser contributors retain two-unit leases. Strategy is refreshed every eight
 turns by default (`--strategy-interval N` or `AICIV_STRATEGY_INTERVAL`) while
 Action and Economics continue to run for every leased object.

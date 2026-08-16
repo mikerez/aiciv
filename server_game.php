@@ -25,9 +25,9 @@ const SERVER_MAP_FOREST_SEEDS = 56;
 const SERVER_GAME_GLOBAL_AI_LOGIN = 'aiciv_global_ai';
 const SERVER_GAME_GLOBAL_AI_CIVILIZATION = 'barbarian';
 // Browser contributors use two leased objects. The persistent native contributor
-// amortizes one snapshot over four while remaining inside the six-second turn.
+// amortizes one snapshot over the model's complete eight-object input width.
 const SERVER_GAME_AI_BATCH_SIZE = 2;
-const SERVER_GAME_NATIVE_AI_BATCH_SIZE = 4;
+const SERVER_GAME_NATIVE_AI_BATCH_SIZE = 8;
 const SERVER_GAME_AI_LEASE_SECONDS = 12;
 const SERVER_GAME_AI_RESOURCE_BUDGET = 100000000;
 const SERVER_GAME_HOTFIX_DEPOSITS_PER_RESOURCE = 2;
@@ -8349,10 +8349,22 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                   WHEN u.unit_type_id = 'explorer' THEN 2 ELSE 3 END";
     $lastServedSql = "COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiLastServedTurn')) AS UNSIGNED), 0)";
     $neverServedSql = "CASE WHEN JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 1 THEN 0 ELSE 1 END DESC";
-    // Every object accumulates service debt at the same rate. Type-weighted
-    // intervals left military units untouched for hundreds of turns whenever
-    // a large Worker/City backlog existed.
-    $servicePrioritySql = 'GREATEST(0, ' . $turn . ' - ' . $lastServedSql . ') DESC';
+    // Stateful civilian work needs a much shorter service interval than a
+    // fortified military unit. Every object still accumulates debt, so lower
+    // weights delay inactive units without permanently starving them.
+    $serviceWeightSql = "CASE
+        WHEN u.unit_type_id = 'worker' AND (
+            u.state NOT IN ('ready', 'waiting', 'automate')
+            OR JSON_CONTAINS_PATH(u.properties_json, 'one', '$.sharedAiTask') = 1
+        ) THEN 64
+        WHEN u.unit_type_id = 'worker' THEN 16
+        WHEN u.unit_type_id = 'settlers' THEN 12
+        WHEN u.unit_class = 3 THEN 8
+        WHEN u.unit_type_id = 'explorer' THEN 4
+        WHEN u.state = 'ready' THEN 2
+        ELSE 1 END";
+    $servicePrioritySql = '(GREATEST(0, ' . $turn . ' - ' . $lastServedSql
+        . ') * (' . $serviceWeightSql . ')) DESC';
     $batchSize = globalAiBatchSize($clientKey);
     $eligibleSql =
         ' FROM server_game_units u
@@ -8375,27 +8387,43 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $anchor = $anchorStatement->fetch();
     $unitIds = [];
     if ($anchor) {
-        if ((string) $anchor['unit_type_id'] === 'settlers'
-            || (string) $anchor['unit_type_id'] === 'worker'
+        if ((string) $anchor['unit_type_id'] === 'worker') {
+            // Worker policy is deterministic and does not invoke matrix
+            // inference. Process a complete nearby batch from one snapshot so
+            // projects and routes advance frequently even in a large army.
+            $batchStatement = $db->prepare(
+                'SELECT u.id, u.unit_type_id' . $eligibleSql
+                . " AND u.unit_type_id = 'worker' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45"
+                . ' ORDER BY ' . $servicePrioritySql . ', ' . $neverServedSql
+                . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
+            );
+            $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
+            foreach ($batchStatement->fetchAll() as $row) {
+                $unitIds[] = (int) $row['id'];
+            }
+        }
+        elseif ((string) $anchor['unit_type_id'] === 'settlers'
             || (int) $anchor['unit_class'] === 3) {
             // Development decisions are cheap, stateful, and immediately alter
             // later decisions. Lease them atomically so a short browser turn
-            // completes the work instead of abandoning seven sibling leases.
+            // cannot found conflicting Cities or mutate one production queue
+            // from concurrent snapshots.
             $unitIds = [(int) $anchor['id']];
         }
         else {
-        // Fill one complete local batch. The old code selected globally first and
-        // discarded distant records afterwards, frequently returning only one object.
-        $batchStatement = $db->prepare(
-            'SELECT u.id, u.unit_type_id' . $eligibleSql
-            . " AND u.unit_type_id <> 'settlers' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45"
-            . ' ORDER BY ' . $neverServedSql . ', ' . $servicePrioritySql . ', ' . $bootstrapPrioritySql
-            . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
-        );
-        $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
-        foreach ($batchStatement->fetchAll() as $row) {
-            $unitIds[] = (int) $row['id'];
-        }
+            // Fill one complete local military/explorer batch. Keeping object
+            // categories separate preserves weighted scheduling at batch level.
+            $batchStatement = $db->prepare(
+                'SELECT u.id, u.unit_type_id' . $eligibleSql
+                . " AND u.unit_type_id NOT IN ('settlers', 'worker') AND u.unit_class <> 3"
+                . ' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45'
+                . ' ORDER BY ' . $servicePrioritySql . ', ' . $neverServedSql
+                . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
+            );
+            $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
+            foreach ($batchStatement->fetchAll() as $row) {
+                $unitIds[] = (int) $row['id'];
+            }
         }
     }
     if (!$unitIds) {

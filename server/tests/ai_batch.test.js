@@ -34,10 +34,10 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value}
     const second = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'browser-b', include_snapshot: false,
     });
-    assert.equal(first.unit_ids.length, 1,
-        'stateful Worker development is leased atomically');
-    assert.equal(second.unit_ids.length, 1,
-        'another browser receives a different atomic Worker lease');
+    assert.equal(first.unit_ids.length, 2,
+        'a browser receives its complete nearby Worker batch');
+    assert.equal(second.unit_ids.length, 2,
+        'another browser receives a different nearby Worker batch');
     assert.equal(first.ai_player_id, 9000);
     assert.ok(first.snapshot && first.snapshot.units.length >= 16);
     assert.equal(first.unit_ids.filter(id => second.unit_ids.includes(id)).length, 0,
