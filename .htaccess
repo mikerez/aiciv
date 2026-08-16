@@ -1,0 +1,13 @@
+DirectoryIndex index.php
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>
+
+<FilesMatch "^(\.game_(api_secret|db_password|api_requests\.log(\.1)?)|\.server_game_requests\.log(\.1)?)$">
+  Require all denied
+</FilesMatch>
