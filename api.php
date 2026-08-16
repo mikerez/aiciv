@@ -213,6 +213,18 @@ function optionalBoolean(array $data, string $field, string $requestId): bool
     errorResponse(422, 'invalid_' . $field, ucfirst(str_replace('_', ' ', $field)) . ' must be a boolean.', $requestId);
 }
 
+function languageCode(array $data, string $requestId, bool $required = false, string $field = 'language'): ?string
+{
+    $language = isset($data[$field]) && is_string($data[$field])
+        ? strtoupper(trim($data[$field])) : '';
+    if ($language === '' && !$required) return null;
+    if (!in_array($language, ['EN', 'FR', 'DE', 'SP', 'RU', 'IT', 'CH', 'JP'], true)) {
+        errorResponse(422, 'invalid_' . $field, ucfirst(str_replace('_', ' ', $field))
+            . ' must be EN, FR, DE, SP, RU, IT, CH, or JP.', $requestId);
+    }
+    return $language;
+}
+
 function database(string $password): PDO
 {
     return new PDO(
@@ -234,6 +246,7 @@ function ensureSchema(PDO $db): void
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             login VARCHAR(50) NOT NULL,
             email VARCHAR(254) NULL,
+            language_code CHAR(2) CHARACTER SET ascii COLLATE ascii_bin NULL,
             password_hash VARCHAR(255) NOT NULL,
             status VARCHAR(16) NOT NULL DEFAULT 'active',
             failed_login_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
@@ -282,6 +295,9 @@ function ensureSchema(PDO $db): void
     $columns = array_fill_keys($columns, true);
     if (!isset($columns['user_type'])) {
         $db->exec("ALTER TABLE game_users ADD COLUMN user_type VARCHAR(8) NOT NULL DEFAULT 'human' AFTER status");
+    }
+    if (!isset($columns['language_code'])) {
+        $db->exec("ALTER TABLE game_users ADD COLUMN language_code CHAR(2) CHARACTER SET ascii COLLATE ascii_bin NULL AFTER email");
     }
     if (!isset($columns['online'])) {
         $db->exec("ALTER TABLE game_users ADD COLUMN online TINYINT(1) NOT NULL DEFAULT 0 AFTER user_type");
@@ -347,10 +363,13 @@ function loginDeviceIdentity(array $data): array
 
 function publicUser(array $user): array
 {
+    $language = isset($user['language_code']) ? strtoupper((string) $user['language_code']) : '';
     return [
         'id' => (int) $user['id'],
         'login' => $user['login'],
         'email' => $user['email'],
+        'language' => in_array($language, ['EN', 'FR', 'DE', 'SP', 'RU', 'IT', 'CH', 'JP'], true)
+            ? $language : null,
         'user_type' => $user['user_type'] ?? 'human',
         'online' => !empty($user['online']),
     ];
@@ -392,6 +411,7 @@ function registerUser(PDO $db, array $data, string $requestId): void
         errorResponse(422, 'invalid_email', 'Email address is invalid.', $requestId);
     }
     $email = $email === '' ? null : $email;
+    $language = languageCode($data, $requestId);
     $password = requirePassword($data, 8, $requestId);
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     if ($passwordHash === false) {
@@ -402,8 +422,8 @@ function registerUser(PDO $db, array $data, string $requestId): void
     $replacedSessions = 0;
     $db->beginTransaction();
     try {
-        $statement = $db->prepare('INSERT INTO game_users (login, email, password_hash) VALUES (?, ?, ?)');
-        $statement->execute([$login, $email, $passwordHash]);
+        $statement = $db->prepare('INSERT INTO game_users (login, email, language_code, password_hash) VALUES (?, ?, ?, ?)');
+        $statement->execute([$login, $email, $language, $passwordHash]);
         $userId = (int) $db->lastInsertId();
         $player = provisionRegisteredPlayer($db, $userId, SERVER_GAME_DEFAULT_KEY);
         $db->commit();
@@ -429,7 +449,7 @@ function registerUser(PDO $db, array $data, string $requestId): void
     respond(201, [
         'ok' => true,
         'request' => 'register',
-        'user' => ['id' => $userId, 'login' => $login, 'email' => $email],
+        'user' => ['id' => $userId, 'login' => $login, 'email' => $email, 'language' => $language],
         'player' => $player,
         'request_id' => $requestId,
     ]);
@@ -455,6 +475,8 @@ function loginUser(PDO $db, array $data, string $requestId): void
     $login = requireText($data, 'login', 3, 254, $requestId);
     $password = requirePassword($data, 1, $requestId);
     $rememberMe = optionalBoolean($data, 'remember_me', $requestId);
+    $requestedLanguage = languageCode($data, $requestId);
+    $browserLanguage = languageCode($data, $requestId, false, 'browser_language');
 
     $statement = $db->prepare('SELECT * FROM game_users WHERE login = ? OR email = ? LIMIT 1');
     $statement->execute([$login, strtolower($login)]);
@@ -468,6 +490,10 @@ function loginUser(PDO $db, array $data, string $requestId): void
     if (!password_verify($password, $user['password_hash'])) {
         rejectLogin($db, $user, $requestId);
     }
+    $storedLanguage = isset($user['language_code']) ? strtoupper((string) $user['language_code']) : '';
+    $storedLanguage = in_array($storedLanguage, ['EN', 'FR', 'DE', 'SP', 'RU', 'IT', 'CH', 'JP'], true)
+        ? $storedLanguage : null;
+    $language = $requestedLanguage ?? $storedLanguage ?? $browserLanguage;
 
     $token = bin2hex(random_bytes(32));
     $tokenHash = hash('sha256', $token);
@@ -483,12 +509,12 @@ function loginUser(PDO $db, array $data, string $requestId): void
         markTimedOutUsersOffline($db);
         $statement = $db->prepare(
             'UPDATE game_users SET failed_login_count = 0, locked_until = NULL, last_login_at = UTC_TIMESTAMP(),
-             password_hash = ?, online = 1, last_online_at = UTC_TIMESTAMP() WHERE id = ?'
+             password_hash = ?, language_code = ?, online = 1, last_online_at = UTC_TIMESTAMP() WHERE id = ?'
         );
         $newHash = password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)
             ? password_hash($password, PASSWORD_DEFAULT)
             : $user['password_hash'];
-        $statement->execute([$newHash, $user['id']]);
+        $statement->execute([$newHash, $language, $user['id']]);
         // Repeated login from one device must not revoke requests already in flight
         // from that device. A different device still wins and revokes every older
         // device session. The game_users update above serializes concurrent logins.
@@ -518,6 +544,7 @@ function loginUser(PDO $db, array $data, string $requestId): void
 
     $user['user_type'] = 'human';
     $user['online'] = 1;
+    $user['language_code'] = $language;
     $expiresAtIso = gmdate(DATE_ATOM, strtotime($expiresAt . ' UTC'));
     gameAuthIssueCookies((int) $user['id'], $token, strtotime($expiresAt . ' UTC'), $device['id']);
     respond(200, [
@@ -610,6 +637,31 @@ function logoutUser(PDO $db, array $data, string $requestId): void
     ]);
 }
 
+function setUserLanguage(PDO $db, array $data, string $requestId): void
+{
+    $language = languageCode($data, $requestId, true);
+    $token = gameAuthRequestToken($data);
+    if ($token === '') {
+        errorResponse(401, 'authentication_required', 'A current account access token is required.', $requestId);
+    }
+    $result = gameAuthSessionResult($db, $token);
+    if ($result['session'] === null) {
+        gameAuthClearCookies();
+        errorResponse(401, (string) $result['error'], 'The account session is no longer valid.', $requestId);
+    }
+
+    $userId = (int) $result['session']['id'];
+    $statement = $db->prepare('UPDATE game_users SET language_code = ? WHERE id = ?');
+    $statement->execute([$language, $userId]);
+    respond(200, [
+        'ok' => true,
+        'request' => 'set_language',
+        'user_id' => $userId,
+        'language' => $language,
+        'request_id' => $requestId,
+    ]);
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     renderRequestLog();
 }
@@ -652,7 +704,10 @@ try {
     if ($action === 'logout') {
         logoutUser($db, $data, $requestId);
     }
-    errorResponse(400, 'unknown_action', 'Supported actions are register, login, and logout.', $requestId);
+    if ($action === 'set_language') {
+        setUserLanguage($db, $data, $requestId);
+    }
+    errorResponse(400, 'unknown_action', 'Supported actions are register, login, logout, and set_language.', $requestId);
 } catch (Throwable $error) {
     error_log('game API [' . $requestId . ']: ' . $error->getMessage());
     $details = serverExceptionDetails($error);

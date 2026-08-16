@@ -38,7 +38,7 @@ function authDeviceId()
     return deviceId;
 }
 
-async function authenticatePlayer(login, password, rememberMe)
+async function authenticatePlayer(login, password, rememberMe, language)
 {
     var response = await fetch('api.php', {
         method: 'POST',
@@ -51,6 +51,8 @@ async function authenticatePlayer(login, password, rememberMe)
             login: login,
             password: password,
             remember_me: !!rememberMe,
+            language: language || undefined,
+            browser_language: browserVocabularyLanguage(),
             device_id: authDeviceId()
         })
     });
@@ -72,6 +74,13 @@ try {
     }
 } catch (error) {}
 
+var languageSelect = document.getElementById('language');
+languageSelect.value = '';
+languageSelect.addEventListener('change', function() {
+    var language = this.value || storedVocabularyLanguage() || browserVocabularyLanguage();
+    _game_vocabulary.select(language);
+});
+
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
     var button = document.getElementById('submitButton');
@@ -81,11 +90,15 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     try {
         var login = document.getElementById('login').value.trim();
         var rememberMe = document.getElementById('rememberMe').checked;
-        await authenticatePlayer(
+        var session = await authenticatePlayer(
             login,
             document.getElementById('password').value,
-            rememberMe
+            rememberMe,
+            languageSelect.value
         );
+        if (session.user && session.user.language) {
+            _game_vocabulary.select(session.user.language);
+        }
         try {
             if (rememberMe) localStorage.setItem(_remembered_login_key, login);
             else localStorage.removeItem(_remembered_login_key);

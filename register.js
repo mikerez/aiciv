@@ -55,14 +55,19 @@ document.getElementById('registerForm').addEventListener('submit', async functio
             action: 'register',
             login: login,
             email: document.getElementById('email').value.trim(),
+            language: _game_vocabulary.language,
             password: password
         });
         var session = await apiRequest({
             action: 'login',
             login: login,
             password: password,
+            language: _game_vocabulary.language,
             device_id: registerDeviceId()
         });
+        if (session.user && session.user.language) {
+            _game_vocabulary.select(session.user.language);
+        }
         registerCookie('aiciv_player_id', session.user.id, 86400);
         if (!/(?:^|;\s*)aiciv_player_id=\d+/.test(document.cookie)) {
             throw new Error(vocabularyText('auth.cookie_rejected'));

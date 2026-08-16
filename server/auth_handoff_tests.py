@@ -68,11 +68,29 @@ def main():
     status, registered = post({"action": "register", "login": login, "password": password})
     assert status == 201 and registered.get("ok"), registered
 
+    status, initial_login = post({
+        "action": "login", "login": login, "password": password,
+        "device_id": "handoff-test-device", "remember_me": True,
+        "browser_language": "RU",
+    })
+    assert status == 200 and initial_login.get("authenticated"), initial_login
+    assert initial_login["user"]["language"] == "RU", initial_login["user"]
+
+    status, selected_login = post({
+        "action": "login", "login": login, "password": password,
+        "device_id": "handoff-test-device", "remember_me": True,
+        "language": "FR", "browser_language": "EN",
+    })
+    assert status == 200 and selected_login.get("authenticated"), selected_login
+    assert selected_login["user"]["language"] == "FR", selected_login["user"]
+
     status, result = post({
         "action": "login", "login": login, "password": password,
         "device_id": "handoff-test-device", "remember_me": True,
+        "browser_language": "DE",
     })
     assert status == 200 and result.get("authenticated"), result
+    assert result["user"]["language"] == "FR", result["user"]
     assert result.get("remember_me") is True, result
     expiry = datetime.fromisoformat(result["expires_at"])
     assert (expiry - datetime.now(timezone.utc)).days >= 29, result["expires_at"]
@@ -101,7 +119,7 @@ def main():
     assert "AI Civilization" in body, "game HTML was not returned"
     assert cookie_values.get("aiciv_player_id") == str(result["user"]["id"]), cookie_values
 
-    print("PASS login response, URL handoff, cookie handoff, and authenticated game entry")
+    print("PASS language fallback/persistence, login response, URL handoff, cookie handoff, and authenticated game entry")
 
 
 if __name__ == "__main__":
