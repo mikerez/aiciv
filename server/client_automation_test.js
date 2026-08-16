@@ -119,12 +119,14 @@ assert.match(costs, /name == 'workshop'[\s\S]*?cityIsProducing\(workshopCity\)/,
     'the Costs window must charge Workshop food only for actively producing parent Cities');
 assert.match(vocabulary, /'cost\.unit_upkeep': 'Unit upkeep'[\s\S]*?'cost\.improvement_upkeep': 'Improvement upkeep'/,
     'Costs window labels must be defined in the vocabulary');
-assert.match(vocabulary, /'production\.option': '\{name\} \(\{cost\}\) A:\{attack\} D:\{defense\} S:\{speed\} \| Costs F:\{food\} G:\{gold\}'/,
+assert.match(vocabulary, /'production\.option': '\{name\} \(\{cost\}\) \{attack\}\/\{defense\}\/\{speed\} \| Costs F:\{food\} G:\{gold\}'/,
     'City production rows must show A/D/S and food/gold upkeep costs');
 assert.match(layer, /remaining > 0[\s\S]*?perTurn <= 0[\s\S]*?return null/,
     'zero-production Cities must report a paused queue instead of fake remaining turns');
 assert.match(layer, /production\.paused_status/,
     'the City production status must visibly identify a paused queue');
+assert.match(layer, /productionText[\s\S]*?'\\n' \+ economyText[\s\S]*?idleProductionText \+ '\\n' \+ idleEconomyText/,
+    'active and idle City production labels must end before the economy details');
 assert.match(layer, /road: \{food:0, production:1, gold:0\}[\s\S]*?fortification: \{food:0, production:2, gold:0\}[\s\S]*?workshop: \{food:2, production:0, gold:0\}/,
     'client improvement costs must match server economy costs');
 assert.doesNotMatch(layer, /Producing:/,

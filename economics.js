@@ -497,18 +497,28 @@ const _economics = new class
             if (typeof console != 'undefined' && console.debug) console.debug('[economy HUD]', next);
             this.lastHudState = next;
         }
-        this.updateCounterValue(food, next.food);
-        this.updateCounterValue(gold, next.gold);
+        var sharedTextLength = Math.max(
+            this.counterText(next.food).length,
+            this.counterText(next.gold).length
+        );
+        this.updateCounterValue(food, next.food, sharedTextLength);
+        this.updateCounterValue(gold, next.gold, sharedTextLength);
     }
 
-    updateCounterValue(element, value)
+    counterText(value)
+    {
+        return Math.trunc(Number(value) || 0).toLocaleString('en-US');
+    }
+
+    updateCounterValue(element, value, sharedTextLength)
     {
         if (!element) return;
-        var text = Math.trunc(Number(value) || 0).toLocaleString('en-US');
+        var text = this.counterText(value);
         element.textContent = text;
         var counter = element.parentElement;
         if (!counter) return;
-        counter.classList.toggle('counter-wide', text.length >= 7 && text.length < 10);
-        counter.classList.toggle('counter-very-wide', text.length >= 10);
+        var length = sharedTextLength == undefined ? text.length : sharedTextLength;
+        counter.classList.toggle('counter-wide', length >= 7 && length < 10);
+        counter.classList.toggle('counter-very-wide', length >= 10);
     }
 };

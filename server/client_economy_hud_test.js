@@ -2,7 +2,19 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const nodes = { foodCounterValue: { textContent: '' }, goldCounterValue: { textContent: '' } };
+function counterNode() {
+    const classes = new Set();
+    return {
+        textContent: '',
+        parentElement: {
+            classList: {
+                toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); },
+                contains(name) { return classes.has(name); },
+            },
+        },
+    };
+}
+const nodes = { foodCounterValue: counterNode(), goldCounterValue: counterNode() };
 const context = {
     console: { debug() {} },
     document: { getElementById(id) { return nodes[id] || null; } },
@@ -13,6 +25,10 @@ vm.runInContext(fs.readFileSync('economics.js', 'utf8') + ';globalThis.economics
 context.economics.updateCounters({ food: 44, money: 900 }, 7, 'human');
 assert.equal(nodes.foodCounterValue.textContent, '44');
 assert.equal(nodes.goldCounterValue.textContent, '900');
+context.economics.updateCounters({ food: 44, money: 9000000 }, 7, 'responsive-size');
+assert.equal(nodes.foodCounterValue.parentElement.classList.contains('counter-wide'), true);
+assert.equal(nodes.goldCounterValue.parentElement.classList.contains('counter-wide'), true,
+    'food and gold counters must always use the same responsive font size');
 assert.equal(context.economics.hudHistory[0].playerId, 7);
 assert.equal(context.economics.hudHistory[0].source, 'human');
 

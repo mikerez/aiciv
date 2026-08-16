@@ -969,25 +969,29 @@ const _game_prehistory = new class
                     });
                 }
                 var turnsLeft = this.productionTurnsLeft(unit);
-                status.textContent = turnsLeft == null
+                var productionText = turnsLeft == null
                     ? vocabularyText('production.paused_status', {
                         name: vocabularyUnitName(unitType.id, unitType.name)
-                    }) + economyText
+                    })
                     : vocabularyText('production.status', {
                         name: vocabularyUnitName(unitType.id, unitType.name), turns: turnsLeft
-                    }) + economyText;
+                    });
+                status.textContent = productionText
+                    + (economyText ? '\n' + economyText.replace(/^\s+/, '') : '');
             }
             else if (unit.type == 3) {
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(unit);
                     var idleGrossFood = unit.economy.lastGrossIncome
                         ? unit.economy.lastGrossIncome.food : unit.economy.lastIncome.food;
-                    status.textContent = (unit.productionDisabled ? vocabularyText('common.none') : vocabularyText('production.none_selected'))
-                        + vocabularyText('production.city_economy', {
+                    var idleProductionText = unit.productionDisabled
+                        ? vocabularyText('common.none') : vocabularyText('production.none_selected');
+                    var idleEconomyText = vocabularyText('production.city_economy', {
                             population: unit.economy.citizens.length, food: idleGrossFood,
                             production: unit.economy.lastIncome.production, money: unit.economy.lastIncome.money,
                             consumption: unit.economy.foodConsumption, growth: unit.economy.turnsToNewCitizen
                         });
+                    status.textContent = idleProductionText + '\n' + idleEconomyText.replace(/^\s+/, '');
                 }
                 else {
                     status.textContent = vocabularyText('common.none');
@@ -999,6 +1003,7 @@ const _game_prehistory = new class
             if (unit.type == 3) {
                 status.textContent += vocabularyText('production.focus', {focus: unit.cityOptimization || 'balanced'});
             }
+            status.style.whiteSpace = 'pre-line';
             status.style.minHeight = '';
         }
 
