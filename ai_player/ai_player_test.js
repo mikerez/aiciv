@@ -39,7 +39,9 @@ function deterministicInput(width, seed)
                 `${kind} native/browser maximum difference ${maximumDifference}`);
             console.log(`PASS ${kind} native inference matches browser (max delta ${maximumDifference})`);
         }
-        assert.equal(parseArguments(['--once', '--poll-ms', '400']).maxClaims, 1);
+        const options = parseArguments(['--once', '--poll-ms', '400', '--strategy-interval', '6']);
+        assert.equal(options.maxClaims, 1);
+        assert.equal(options.strategyInterval, 6);
         console.log('PASS headless AI command-line options');
     }
     finally {

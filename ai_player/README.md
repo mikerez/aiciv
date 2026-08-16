@@ -118,6 +118,10 @@ in a dedicated console; it claims short server leases until interrupted with
 `Ctrl+C`. The
 server scheduler and browser-side rotating batches both start from randomized
 unit positions, so repeated inference is not pinned to the first eight units.
+The native contributor leases up to four nearby military units per snapshot;
+browser contributors retain two-unit leases. Strategy is refreshed every eight
+turns by default (`--strategy-interval N` or `AICIV_STRATEGY_INTERVAL`) while
+Action and Economics continue to run for every leased object.
 
 ## Browser Adapters
 

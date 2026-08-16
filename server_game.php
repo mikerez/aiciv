@@ -23,9 +23,10 @@ const SERVER_MAP_ROCK_SEEDS = 32;
 const SERVER_MAP_HILL_SEEDS = 24;
 const SERVER_MAP_FOREST_SEEDS = 56;
 const SERVER_GAME_GLOBAL_AI_LOGIN = 'aiciv_global_ai';
-// Two leased objects keep browser-compatible per-unit inference below the
-// six-second turn boundary while each model still scores eight legal candidates.
+// Browser contributors use two leased objects. The persistent native contributor
+// amortizes one snapshot over four while remaining inside the six-second turn.
 const SERVER_GAME_AI_BATCH_SIZE = 2;
+const SERVER_GAME_NATIVE_AI_BATCH_SIZE = 4;
 const SERVER_GAME_AI_LEASE_SECONDS = 12;
 const SERVER_GAME_AI_RESOURCE_BUDGET = 100000000;
 const SERVER_GAME_HOTFIX_DEPOSITS_PER_RESOURCE = 2;
@@ -235,6 +236,7 @@ function appendServerGameLog(int $status, array $response): void
         @rename($path, $path . '.1');
     }
     $loggedRequest = $serverRequestData;
+    $loggedResponse = $response;
     if (($serverRequestData['action'] ?? '') === 'report_cli_error') {
         $loggedRequest = [
             'action' => 'report_cli_error',
@@ -242,6 +244,34 @@ function appendServerGameLog(int $status, array $response): void
             'player_id' => $serverRequestData['player_id'] ?? null,
             'unit_id' => $serverRequestData['unit_id'] ?? null,
             'error_code' => $serverRequestData['error_code'] ?? '',
+        ];
+    }
+    if (($serverRequestData['action'] ?? '') === 'claim_ai_batch'
+        && isset($loggedResponse['snapshot']) && is_array($loggedResponse['snapshot'])) {
+        $snapshot = $loggedResponse['snapshot'];
+        $leased = array_fill_keys(array_map('intval', $loggedResponse['unit_ids'] ?? []), true);
+        $leasedUnits = [];
+        foreach ($snapshot['units'] ?? [] as $unit) {
+            if (!is_array($unit) || !isset($leased[(int) ($unit['id'] ?? 0)])) continue;
+            $leasedUnits[] = [
+                'id' => (int) ($unit['id'] ?? 0),
+                'unit_type_id' => (string) ($unit['unit_type_id'] ?? ''),
+                'state' => (string) ($unit['state'] ?? ''),
+                'i' => (int) ($unit['world_i'] ?? $unit['i'] ?? 0),
+                'j' => (int) ($unit['world_j'] ?? $unit['j'] ?? 0),
+                'revision' => (int) ($unit['revision'] ?? 0),
+            ];
+        }
+        $loggedResponse['snapshot'] = [
+            '_summary' => true,
+            'turn' => (int) ($snapshot['turn'] ?? $loggedResponse['turn'] ?? 0),
+            'map_size' => (int) ($snapshot['map_size'] ?? 0),
+            'map_origin' => $snapshot['map_origin'] ?? null,
+            'unit_count' => count($snapshot['units'] ?? []),
+            'tile_count' => count($snapshot['tiles'] ?? []),
+            'visibility_count' => count($snapshot['visibility'] ?? []),
+            'visible_enemy_count' => count($snapshot['visible_enemy_ids'] ?? []),
+            'leased_units' => $leasedUnits,
         ];
     }
     $entry = [
@@ -254,10 +284,16 @@ function appendServerGameLog(int $status, array $response): void
         'request' => sanitizeServerLog($loggedRequest),
         'trace' => $serverTraceData,
         'trace_dropped_events' => $serverTraceDropped,
-        'response' => sanitizeServerLog($response),
+        'response' => sanitizeServerLog($loggedResponse),
     ];
     $line = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($line !== false) @file_put_contents($path, $line . "\n", FILE_APPEND | LOCK_EX);
+}
+
+function globalAiBatchSize(string $clientKey): int
+{
+    return str_starts_with($clientKey, 'node-')
+        ? SERVER_GAME_NATIVE_AI_BATCH_SIZE : SERVER_GAME_AI_BATCH_SIZE;
 }
 
 function serverError(int $status, string $code, string $message, array $details = []): void
@@ -8286,10 +8322,11 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                   WHEN u.unit_type_id = 'explorer' THEN 2 ELSE 3 END";
     $lastServedSql = "COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiLastServedTurn')) AS UNSIGNED), 0)";
     $neverServedSql = "CASE WHEN JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 1 THEN 0 ELSE 1 END DESC";
-    $serviceIntervalSql = "CASE WHEN u.unit_class = 3 THEN 1 WHEN u.unit_type_id = 'worker' THEN 1
-        WHEN u.unit_type_id = 'settlers' THEN 1 WHEN u.unit_type_id = 'explorer' THEN 3 ELSE 6 END";
-    $servicePrioritySql = '(GREATEST(0, ' . $turn . ' - ' . $lastServedSql . ') / '
-        . $serviceIntervalSql . ') DESC';
+    // Every object accumulates service debt at the same rate. Type-weighted
+    // intervals left military units untouched for hundreds of turns whenever
+    // a large Worker/City backlog existed.
+    $servicePrioritySql = 'GREATEST(0, ' . $turn . ' - ' . $lastServedSql . ') DESC';
+    $batchSize = globalAiBatchSize($clientKey);
     $eligibleSql =
         ' FROM server_game_units u
           LEFT JOIN server_game_ai_leases l
@@ -8326,7 +8363,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
             'SELECT u.id, u.unit_type_id' . $eligibleSql
             . " AND u.unit_type_id <> 'settlers' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45"
             . ' ORDER BY ' . $neverServedSql . ', ' . $servicePrioritySql . ', ' . $bootstrapPrioritySql
-            . ', RAND() LIMIT ' . SERVER_GAME_AI_BATCH_SIZE . ' FOR UPDATE'
+            . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
         );
         $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
         foreach ($batchStatement->fetchAll() as $row) {
@@ -8335,7 +8372,10 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         }
     }
     if (!$unitIds) {
-        return ['ai_player_id' => $globalAiId, 'turn' => $turn, 'lease_token' => null, 'unit_ids' => []];
+        return [
+            'ai_player_id' => $globalAiId, 'turn' => $turn,
+            'lease_token' => null, 'unit_ids' => [], 'focus_i' => null, 'focus_j' => null,
+        ];
     }
     $token = bin2hex(random_bytes(16));
     $insert = $db->prepare(
@@ -8346,7 +8386,11 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     foreach ($unitIds as $unitId) {
         $insert->execute([$gameId, $turn, $unitId, $token, $clientKey, SERVER_GAME_AI_LEASE_SECONDS]);
     }
-    return ['ai_player_id' => $globalAiId, 'turn' => $turn, 'lease_token' => $token, 'unit_ids' => $unitIds];
+    return [
+        'ai_player_id' => $globalAiId, 'turn' => $turn,
+        'lease_token' => $token, 'unit_ids' => $unitIds,
+        'focus_i' => (int) $anchor['i'], 'focus_j' => (int) $anchor['j'],
+    ];
 }
 
 function submitGlobalAiBatch(
@@ -8375,7 +8419,8 @@ function submitGlobalAiBatch(
     );
     $stored = 0;
     $submittedIds = [];
-    foreach (array_slice($commands, 0, SERVER_GAME_AI_BATCH_SIZE) as $command) {
+    $batchSize = globalAiBatchSize($clientKey);
+    foreach (array_slice($commands, 0, $batchSize) as $command) {
         if (!is_array($command)) continue;
         $unitId = (int) ($command['unit_id'] ?? 0);
         if (!isset($leased[$unitId])) continue;
@@ -8405,7 +8450,7 @@ function submitGlobalAiBatch(
         $stored++;
         $submittedIds[$unitId] = true;
     }
-    foreach (array_slice($commands, 0, SERVER_GAME_AI_BATCH_SIZE) as $command) {
+    foreach (array_slice($commands, 0, $batchSize) as $command) {
         if (!is_array($command)) continue;
         $unitId = (int) ($command['unit_id'] ?? 0);
         if (isset($leased[$unitId])) $submittedIds[$unitId] = true;
@@ -9409,9 +9454,10 @@ try {
         }
         $snapshot = null;
         if (!empty($data['include_snapshot']) && $batch['unit_ids']) {
-            $focusStatement = $db->prepare('SELECT i, j FROM server_game_units WHERE id = ?');
-            $focusStatement->execute([(int) $batch['unit_ids'][0]]);
-            $focus = $focusStatement->fetch() ?: ['i' => 50, 'j' => 50];
+            $focus = [
+                'i' => (int) ($batch['focus_i'] ?? 50),
+                'j' => (int) ($batch['focus_j'] ?? 50),
+            ];
             $aiWindow = normalizeServerMapWindow(
                 $db, $game, (int) $batch['ai_player_id'], (int) $focus['i'] - 50, (int) $focus['j'] - 50
             );
@@ -9452,7 +9498,9 @@ try {
         $actionResults = [];
         if (!empty($result['accepted']) && $actions) {
             $leased = array_fill_keys(array_map('intval', $result['unit_ids'] ?? []), true);
-            $actions = array_values(array_filter(array_slice($actions, 0, SERVER_GAME_AI_BATCH_SIZE),
+            $actions = array_values(array_filter(array_slice(
+                $actions, 0, globalAiBatchSize($clientKey)
+            ),
                 static function($queuedAction) use ($leased): bool {
                     if (!is_array($queuedAction)) return false;
                     $type = strtolower((string) ($queuedAction['type'] ?? ''));

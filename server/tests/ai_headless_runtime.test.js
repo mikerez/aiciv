@@ -12,7 +12,16 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
         playerId: 7001,
         players: [7001, 9000],
         units: [
-            unit({client_key: 'headless-worker', owner_id: 9000, i: 5, j: 5}),
+            unit({
+                client_key: 'headless-worker', owner_id: 9000, i: 5, j: 5,
+                state: 'automate', properties: {
+                    automationMode: 'automate',
+                    sharedAiTask: {
+                        kind: 'worker', mode: 'automate', state: 'automate',
+                        action: 'mine', target: {i: 7, j: 5}, turns_left: null,
+                    },
+                },
+            }),
             city({
                 client_key: 'headless-city', owner_id: 9000, i: 6, j: 5,
                 properties: {
@@ -51,6 +60,10 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
     for (const row of batch.snapshot.units) {
         row.world_i = Number(row.i) + 100;
         row.world_j = Number(row.j) + 100;
+        if (row.properties && row.properties.sharedAiTask && row.properties.sharedAiTask.target) {
+            row.properties.sharedAiTask.target.i += 100;
+            row.properties.sharedAiTask.target.j += 100;
+        }
     }
     for (const collection of [batch.snapshot.tiles, batch.snapshot.visibility]) {
         for (const row of collection || []) {
@@ -75,7 +88,10 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
         assert.ok(submission);
         assert.equal(submission.commands.length, 1);
         assert.equal(Number(submission.commands[0].unit_id), Number(batch.unit_ids[0]));
-        assert.ok(['move', 'hold', 'wait', 'fortify', 'set_state'].includes(submission.commands[0].command));
+        assert.equal(submission.commands[0].command, 'move',
+            'a persisted Worker target becomes an atomic movement command');
+        assert.ok(submission.commands[0].path.length > 0,
+            'the Worker movement command retains its generated route');
     }
     finally {
         native.stop();

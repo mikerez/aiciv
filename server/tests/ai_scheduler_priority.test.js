@@ -38,7 +38,19 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     const second = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'scheduler-browser', include_snapshot: false,
     });
-    assert.deepEqual(second.unit_ids, [workerId],
-        'a long-neglected Worker must outrank never-serviced military units');
-    console.log('PASS AI service debt prioritizes Cities and Workers over the military backlog');
+    assert.equal(second.unit_ids.includes(workerId), false,
+        'never-serviced military units must not remain behind a newer Worker');
+    assert.equal(second.unit_ids.length, 2,
+        'browser contributors retain their short two-unit lease');
+    await serverGame.request('submit_ai_batch', {
+        player_id: 7001, client_key: 'scheduler-browser', lease_token: second.lease_token, turn: second.turn,
+        commands: second.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
+        actions: [],
+    });
+    const nativeBatch = await serverGame.request('claim_ai_batch', {
+        player_id: 7001, client_key: 'node-scheduler-test', include_snapshot: false,
+    });
+    assert.equal(nativeBatch.unit_ids.length, 4,
+        'the native contributor amortizes one snapshot over four military objects within the turn deadline');
+    console.log('PASS AI service debt is fair across development and military objects');
 })().catch(error => { console.error(error); process.exitCode = 1; });

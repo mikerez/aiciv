@@ -302,6 +302,7 @@ class AiContributor
         this.runtime = null;
         this.runtimeAiId = null;
         this.strategyTurn = null;
+        this.strategyAiId = null;
         this.strategyFocus = null;
         this.stopped = false;
         this.acceptedBatches = 0;
@@ -330,9 +331,11 @@ class AiContributor
         const runtime = this.ensureRuntime(batch);
         runtime.setWorldSize(batch.snapshot);
         runtime.setServerTurn(batch.turn);
-        if (this.strategyTurn !== Number(batch.turn)) {
+        if (this.strategyTurn === null || this.strategyAiId !== aiId
+            || Number(batch.turn) - this.strategyTurn >= this.options.strategyInterval) {
             const strategy = await runtime.prepareStrategy(aiId, batch.snapshot, this.native);
             this.strategyTurn = Number(batch.turn);
+            this.strategyAiId = aiId;
             this.strategyFocus = strategy && strategy.maxMilitaryFocus;
             this.log(`turn ${batch.turn}: strategy prepared for AI ${aiId}`);
         }
@@ -418,6 +421,7 @@ function parseArguments(argv)
         secret: process.env.AICIV_SECRET || '',
         pollMs: 1000,
         cycleMs: Math.max(0, Number(process.env.AICIV_CYCLE_MS) || 250),
+        strategyInterval: Math.max(1, Number(process.env.AICIV_STRATEGY_INTERVAL) || 8),
         maxClaims: 0,
         maxBatches: 0,
         executable: path.join(__dirname, 'inference_worker'),
@@ -430,6 +434,9 @@ function parseArguments(argv)
         else if (argument === '--game-id') options.gameId = argv[++index];
         else if (argument === '--poll-ms') options.pollMs = Math.max(250, Number(argv[++index]) || 1000);
         else if (argument === '--cycle-ms') options.cycleMs = Math.max(0, Number(argv[++index]) || 0);
+        else if (argument === '--strategy-interval') {
+            options.strategyInterval = Math.max(1, Number(argv[++index]) || 8);
+        }
         else if (argument === '--max-claims') options.maxClaims = Math.max(0, Number(argv[++index]) || 0);
         else if (argument === '--max-batches') options.maxBatches = Math.max(0, Number(argv[++index]) || 0);
         else if (argument === '--once') options.maxClaims = 1;
@@ -451,6 +458,7 @@ function usage()
         '  --game-id ID         game key (default aiciv-default)',
         '  --poll-ms N          idle/error polling interval (default 1000)',
         '  --cycle-ms N         delay after a successful lease (default 250)',
+        '  --strategy-interval N  turns between Strategy refreshes (default 8)',
         '  --once               make one lease claim and exit',
         '  --max-claims N       stop after N lease claims',
         '  --max-batches N      stop after N accepted non-empty batches',
