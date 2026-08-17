@@ -8349,6 +8349,10 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                   WHEN u.unit_type_id = 'explorer' THEN 2 ELSE 3 END";
     $lastServedSql = "COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiLastServedTurn')) AS UNSIGNED), 0)";
     $neverServedSql = "CASE WHEN JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 1 THEN 0 ELSE 1 END DESC";
+    $activeWorkerProjectSql = "CASE WHEN u.unit_type_id = 'worker' AND (
+        u.state NOT IN ('ready', 'waiting', 'automate')
+        OR JSON_CONTAINS_PATH(u.properties_json, 'one', '$.clientImprovementTurnsLeft') = 1
+    ) THEN 0 ELSE 1 END";
     // Stateful civilian work needs a much shorter service interval than a
     // fortified military unit. Every object still accumulates debt, so lower
     // weights delay inactive units without permanently starving them.
@@ -8380,7 +8384,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
-        . ' ORDER BY ' . $servicePrioritySql . ', ' . $bootstrapPrioritySql . ', '
+        . ' ORDER BY ' . $activeWorkerProjectSql . ', ' . $servicePrioritySql . ', ' . $bootstrapPrioritySql . ', '
         . $neverServedSql . ', RAND() LIMIT 1 FOR UPDATE'
     );
     $anchorStatement->execute($parameters);
@@ -8394,7 +8398,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
             $batchStatement = $db->prepare(
                 'SELECT u.id, u.unit_type_id' . $eligibleSql
                 . " AND u.unit_type_id = 'worker' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45"
-                . ' ORDER BY ' . $servicePrioritySql . ', ' . $neverServedSql
+                . ' ORDER BY ' . $activeWorkerProjectSql . ', ' . $servicePrioritySql . ', ' . $neverServedSql
                 . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
             );
             $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
@@ -9582,9 +9586,10 @@ try {
         $actionResults = [];
         if (!empty($result['accepted']) && $actions) {
             $leased = array_fill_keys(array_map('intval', $result['unit_ids'] ?? []), true);
-            $actions = array_values(array_filter(array_slice(
-                $actions, 0, globalAiBatchSize($clientKey)
-            ),
+            // Bound hostile input first, then retain leased actions before the
+            // normal object-count limit. Hidden browser snapshots can queue
+            // unrelated City actions ahead of a valid Worker completion.
+            $actions = array_values(array_filter(array_slice($actions, 0, 256),
                 static function($queuedAction) use ($leased): bool {
                     if (!is_array($queuedAction)) return false;
                     $type = strtolower((string) ($queuedAction['type'] ?? ''));
@@ -9594,6 +9599,7 @@ try {
                         && in_array($type, ['build', 'build_city', 'grow_city', 'select_production'], true);
                 }
             ));
+            $actions = array_slice($actions, 0, globalAiBatchSize($clientKey));
             if ($actions) {
                 $actionResults = executeClientTurnActions(
                     $db, $key, ensureGlobalAiUser($db), $actions

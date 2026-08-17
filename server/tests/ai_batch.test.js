@@ -47,13 +47,26 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value}
     const submittedIds = [];
     while (pending.length) {
         const [clientKey, batch] = pending.shift();
+        const actions = clientKey === 'browser-a' && submittedIds.length === 0
+            ? Array.from({length: 12}, (_unused, index) => ({
+                type: 'select_production', city_unit_id: 990000 + index, unit_type_id: 'warrior',
+            })).concat([{
+                type: 'build', worker_unit_id: batch.unit_ids[0], building_type: 'workshop',
+            }]) : [];
         const submitted = await serverGame.request('submit_ai_batch', {
             player_id: 7001, client_key: clientKey, lease_token: batch.lease_token, turn,
             commands: batch.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
-            actions: [],
+            actions,
         });
         assert.equal(submitted.accepted, true);
         assert.equal(submitted.orders_stored, batch.unit_ids.length);
+        if (actions.length) {
+            assert.equal(submitted.action_results.length, 1,
+                'a leased Worker build survives unrelated actions before it');
+            assert.equal(Number(value(
+                "SELECT COUNT(*) FROM server_game_units WHERE unit_type_id='building_workshop'"
+            )), 1, 'the filtered Worker action creates its authoritative improvement');
+        }
         submittedIds.push(...batch.unit_ids);
         const next = await serverGame.request('claim_ai_batch', {
             player_id: 7001, client_key: clientKey, include_snapshot: false,

@@ -361,6 +361,20 @@ class AiContributor
             combined.commands.push(...(submission.commands || []));
             combined.actions.push(...(submission.actions || []));
         }
+        // captureTurn() drains every queued action in the hidden snapshot, not
+        // only actions for its selected object. Keep one current action per
+        // leased object so unrelated City queues cannot precede and displace a
+        // Worker's completed build in the bounded server batch.
+        const leasedIds = new Set((batch.unit_ids || []).map(Number));
+        const leasedActions = new Map();
+        for (const action of combined.actions) {
+            if (!action || typeof action !== 'object') continue;
+            const objectId = Number(action.worker_unit_id
+                ?? action.settler_unit_id ?? action.city_unit_id ?? 0);
+            if (!leasedIds.has(objectId)) continue;
+            leasedActions.set(`${String(action.type || '')}:${objectId}`, action);
+        }
+        combined.actions = Array.from(leasedActions.values());
         const response = await this.api.submit(batch, combined);
         const commandText = combined.commands.map(command => {
             const destination = command.path && command.path.length
@@ -422,6 +436,7 @@ function parseArguments(argv)
         secret: process.env.AICIV_SECRET || '',
         pollMs: 1000,
         cycleMs: Math.max(0, Number(process.env.AICIV_CYCLE_MS) || 250),
+        timeoutMs: Math.max(5000, Number(process.env.AICIV_REQUEST_TIMEOUT_MS) || 120000),
         strategyInterval: Math.max(1, Number(process.env.AICIV_STRATEGY_INTERVAL) || 8),
         maxClaims: 0,
         maxBatches: 0,
@@ -435,6 +450,7 @@ function parseArguments(argv)
         else if (argument === '--game-id') options.gameId = argv[++index];
         else if (argument === '--poll-ms') options.pollMs = Math.max(250, Number(argv[++index]) || 1000);
         else if (argument === '--cycle-ms') options.cycleMs = Math.max(0, Number(argv[++index]) || 0);
+        else if (argument === '--timeout-ms') options.timeoutMs = Math.max(5000, Number(argv[++index]) || 120000);
         else if (argument === '--strategy-interval') {
             options.strategyInterval = Math.max(1, Number(argv[++index]) || 8);
         }
@@ -459,6 +475,7 @@ function usage()
         '  --game-id ID         game key (default aiciv-default)',
         '  --poll-ms N          idle/error polling interval (default 1000)',
         '  --cycle-ms N         delay after a successful lease (default 250)',
+        '  --timeout-ms N       HTTP request timeout (default 120000)',
         '  --strategy-interval N  turns between Strategy refreshes (default 8)',
         '  --once               make one lease claim and exit',
         '  --max-claims N       stop after N lease claims',

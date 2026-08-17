@@ -14,7 +14,15 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     for (let n = 0; n < 9; n++) {
         units.push(unit({client_key: 'ai-worker-' + n, owner_id: 9000,
             unit_type_id: 'worker', unit_class: 1, name: 'Worker', i: 4 + n % 3,
-            j: 5 + Math.floor(n / 3), properties: {aiLastServedTurn: 1}}));
+            j: 5 + Math.floor(n / 3),
+            state: n === 0 ? 'mine' : 'automate',
+            properties: n === 0 ? {
+                aiLastServedTurn: 1000,
+                automationMode: 'automate',
+                clientImprovementTurnsLeft: 1,
+                clientImprovementState: 'mine',
+                sharedAiTask: {kind: 'worker', mode: 'automate', action: 'mine', turns_left: 1},
+            } : {aiLastServedTurn: 1}}));
     }
     for (let n = 0; n < 24; n++) {
         units.push(unit({client_key: 'never-served-archer-' + n, owner_id: 9000,
@@ -29,6 +37,7 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     const cityId = Number(value("SELECT id FROM server_game_units WHERE client_key='ai-city'"));
     const workerIds = sql("SELECT id FROM server_game_units WHERE unit_type_id='worker' ORDER BY id")
         .trim().split(/\s+/).filter(Boolean).map(Number);
+    const activeWorkerId = Number(value("SELECT id FROM server_game_units WHERE client_key='ai-worker-0'"));
     const first = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'node-scheduler-test', include_snapshot: false,
     });
@@ -36,6 +45,8 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         'the native contributor leases the model full width for nearby Workers');
     assert.ok(first.unit_ids.every(id => workerIds.includes(Number(id))),
         'stateful Workers outrank inactive military and are grouped together');
+    assert.ok(first.unit_ids.includes(activeWorkerId),
+        'a current Worker project outranks a much older City and old idle Workers');
     await serverGame.request('submit_ai_batch', {
         player_id: 7001, client_key: 'node-scheduler-test', lease_token: first.lease_token, turn: first.turn,
         commands: first.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
