@@ -8353,6 +8353,38 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.state NOT IN ('ready', 'waiting', 'automate')
         OR JSON_CONTAINS_PATH(u.properties_json, 'one', '$.clientImprovementTurnsLeft') = 1
     ) THEN 0 ELSE 1 END";
+    $captureOpportunitySql = "CASE WHEN u.unit_class = 2 AND EXISTS (
+        SELECT 1
+        FROM server_game_units capture_city
+        JOIN server_game_visibility capture_visibility
+          ON capture_visibility.game_id = capture_city.game_id
+         AND capture_visibility.player_id = u.owner_id
+         AND capture_visibility.i = capture_city.i
+         AND capture_visibility.j = capture_city.j
+         AND capture_visibility.visibility_level >= 2
+        JOIN server_game_relations capture_relation
+          ON capture_relation.game_id = capture_city.game_id
+         AND capture_relation.relation_status = 'war'
+         AND ((capture_relation.player_a = u.owner_id AND capture_relation.player_b = capture_city.owner_id)
+           OR (capture_relation.player_b = u.owner_id AND capture_relation.player_a = capture_city.owner_id))
+        WHERE capture_city.game_id = u.game_id
+          AND capture_city.unit_class = 3
+          AND capture_city.owner_id <> u.owner_id
+          AND capture_city.deleted_at IS NULL
+          AND capture_city.health > 0
+          AND ABS(capture_city.i - u.i) <= 1
+          AND ABS(capture_city.j - u.j) <= 1
+          AND NOT EXISTS (
+              SELECT 1 FROM server_game_units capture_defender
+              WHERE capture_defender.game_id = capture_city.game_id
+                AND capture_defender.owner_id = capture_city.owner_id
+                AND capture_defender.unit_class = 2
+                AND capture_defender.i = capture_city.i
+                AND capture_defender.j = capture_city.j
+                AND capture_defender.deleted_at IS NULL
+                AND capture_defender.health > 0
+          )
+    ) THEN 0 ELSE 1 END";
     // Stateful civilian work needs a much shorter service interval than a
     // fortified military unit. Every object still accumulates debt, so lower
     // weights delay inactive units without permanently starving them.
@@ -8384,7 +8416,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
-        . ' ORDER BY ' . $activeWorkerProjectSql . ', ' . $servicePrioritySql . ', ' . $bootstrapPrioritySql . ', '
+        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $activeWorkerProjectSql . ', '
+        . $servicePrioritySql . ', ' . $bootstrapPrioritySql . ', '
         . $neverServedSql . ', RAND() LIMIT 1 FOR UPDATE'
     );
     $anchorStatement->execute($parameters);
@@ -8421,7 +8454,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                 'SELECT u.id, u.unit_type_id' . $eligibleSql
                 . " AND u.unit_type_id NOT IN ('settlers', 'worker') AND u.unit_class <> 3"
                 . ' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45'
-                . ' ORDER BY ' . $servicePrioritySql . ', ' . $neverServedSql
+                . ' ORDER BY ' . $captureOpportunitySql . ', ' . $servicePrioritySql . ', ' . $neverServedSql
                 . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
             );
             $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));

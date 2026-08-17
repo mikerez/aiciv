@@ -3508,6 +3508,9 @@ const _ai_player = new class
                     command.failureReason = 'engine-selected attack target is no longer an enemy';
                     return false;
                 }
+                unit.interactionIntent = 'attack';
+                unit.interactionTargetOwnerId = targetUnit.team || 0;
+                unit.attackTargetOwnerId = targetUnit.team || 0;
             }
             command.selectedTarget = target;
             if (target && _current_game.buildPath && _current_game.assignPath) {

@@ -531,7 +531,11 @@ const _multiplayer = new class
             else {
                 decision.model = _ai_player.applyActionOutput(output, aiId);
             }
-            if (unit.type == 2) _multiplayer.routeExcessMilitaryToStrategicResource(unit);
+            // Resource guarding is a fallback for idle military. It must never
+            // replace an attack or movement route just selected by Action.
+            if (unit.type == 2 && !(unit.gotoPath && unit.gotoPath.length)) {
+                _multiplayer.routeExcessMilitaryToStrategicResource(unit);
+            }
             var submission = _server_game.captureTurn(aiId, [unitId]);
             var command = submission.commands && submission.commands[0];
             if (command && (stage.kind == 'settler' || stage.kind == 'city')) {
