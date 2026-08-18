@@ -531,13 +531,39 @@ const _multiplayer = new class
             else {
                 decision.model = _ai_player.applyActionOutput(output, aiId);
             }
-            // Resource guarding is a fallback for idle military. It must never
-            // replace an attack or movement route just selected by Action.
-            if (unit.type == 2 && !(unit.gotoPath && unit.gotoPath.length)) {
-                _multiplayer.routeExcessMilitaryToStrategicResource(unit);
+            var forceMission = null;
+            if (unit.type == 2) {
+                // One strongest unit stays in each City. Other forces retain a
+                // model-selected attack/move, or receive a persistent roaming
+                // mission when Action would otherwise leave them idle.
+                if (_multiplayer.isAssignedCityDefender(unit, aiId)) {
+                    var defenderIndex = _units.indexOf(unit);
+                    if (_current_game.clearUnitPath) _current_game.clearUnitPath(defenderIndex);
+                    else {
+                        unit.gotoPath = [];
+                        unit.gotoCoord = null;
+                    }
+                    unit.automationMode = null;
+                    unit.state = 'fortified';
+                    forceMission = {mode: 'city_defense', destination: unit.coord};
+                }
+                else if (!(unit.gotoPath && unit.gotoPath.length)) {
+                    forceMission = _multiplayer.assignIdleMilitaryMission(unit, aiId);
+                }
             }
             var submission = _server_game.captureTurn(aiId, [unitId]);
             var command = submission.commands && submission.commands[0];
+            if (command && forceMission) {
+                command.payload = command.payload || {};
+                command.payload.automation_mode = forceMission.mode == 'city_defense' ? null : 'patrol';
+                command.payload.ai_force_mission = {
+                    mode: forceMission.mode,
+                    destination: forceMission.destination ? {
+                        i: Number(forceMission.destination.i)+_map_origin_i,
+                        j: Number(forceMission.destination.j)+_map_origin_j,
+                    } : null,
+                };
+            }
             if (command && (stage.kind == 'settler' || stage.kind == 'city')) {
                 command.payload = command.payload || {};
                 command.payload.ai_development_decision = {
@@ -582,6 +608,85 @@ const _multiplayer = new class
         };
         return snapshotAlreadyActive ? finishOrder()
             : this.withHiddenSnapshot(aiId, snapshot, finishOrder);
+    }
+
+    militaryDefenseScore(unit)
+    {
+        if (!unit) return -Infinity;
+        var healthRatio = Math.max(0, Number(unit.health == undefined ? 100 : unit.health))
+            / Math.max(1, Number(unit.maxHealth == undefined ? 100 : unit.maxHealth));
+        return Math.max(0, Number(unit.defense) || 0) * 4
+            + Math.max(0, Number(unit.attack) || 0)
+            + Math.max(0, Number(unit.experience) || 1)
+            + healthRatio * 2;
+    }
+
+    isAssignedCityDefender(unit, ownerTeam)
+    {
+        if (!unit || unit.type != 2 || !unit.coord) return false;
+        var cityFound = false;
+        var best = null;
+        for (var k=0; k<_units.length; k++) {
+            var candidate = _units[k];
+            if (!candidate || !candidate.coord || (candidate.team || 0) != ownerTeam) continue;
+            if (candidate.coord.i != unit.coord.i || candidate.coord.j != unit.coord.j) continue;
+            if (candidate.type == 3) cityFound = true;
+            if (candidate.type != 2 || candidate.health === 0 || candidate.pendingDisband) continue;
+            var score = this.militaryDefenseScore(candidate);
+            var id = Number(candidate.serverId == undefined ? k : candidate.serverId);
+            if (!best || score > best.score || (score == best.score && id < best.id)) {
+                best = {unit: candidate, score: score, id: id};
+            }
+        }
+        return cityFound && best && best.unit === unit;
+    }
+
+    assignIdleMilitaryMission(unit, ownerTeam)
+    {
+        if (!unit || unit.type != 2 || !unit.can_move || !unit.coord
+            || typeof _current_game == 'undefined') return null;
+        var k = _units.indexOf(unit);
+        if (k < 0) return null;
+        var turn = typeof _server_game != 'undefined' ? Number(_server_game.serverTurn) || 0 : 0;
+        var id = Number(unit.serverId == undefined ? k : unit.serverId);
+        var preferExplore = ((id + Math.floor(turn / 8)) & 1) == 0;
+        var mode = null;
+        var route = null;
+
+        if (preferExplore && _current_game.nearestHiddenLandTarget) {
+            route = _current_game.nearestHiddenLandTarget(k);
+            if (route && route.path && route.path.length) {
+                _current_game.assignPath(k, route.path);
+                mode = 'explore';
+            }
+        }
+        if (!(unit.gotoPath && unit.gotoPath.length) && _current_game.autoRoutePatrol) {
+            _current_game.autoRoutePatrol(k);
+            if (unit.gotoPath && unit.gotoPath.length) mode = 'patrol';
+        }
+        if (!(unit.gotoPath && unit.gotoPath.length) && !preferExplore
+            && _current_game.nearestHiddenLandTarget) {
+            route = _current_game.nearestHiddenLandTarget(k);
+            if (route && route.path && route.path.length) {
+                _current_game.assignPath(k, route.path);
+                mode = 'explore';
+            }
+        }
+        if (!(unit.gotoPath && unit.gotoPath.length)
+            && this.routeExcessMilitaryToStrategicResource(unit)) {
+            mode = 'strategic_resource';
+        }
+
+        unit.automationMode = 'patrol';
+        unit.state = 'patrol';
+        unit.aiForceMission = mode || 'patrol_wait';
+        if (unit.gotoCoord && _current_game.configureMovementIntent) {
+            _current_game.configureMovementIntent(k, unit.gotoCoord);
+        }
+        return {
+            mode: unit.aiForceMission,
+            destination: unit.gotoCoord || unit.coord,
+        };
     }
 
     routeExcessMilitaryToStrategicResource(unit)
