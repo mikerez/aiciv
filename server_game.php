@@ -8353,6 +8353,9 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.state NOT IN ('ready', 'waiting', 'automate')
         OR JSON_CONTAINS_PATH(u.properties_json, 'one', '$.clientImprovementTurnsLeft') = 1
     ) THEN 0 ELSE 1 END";
+    $matureSettlerSql = "CASE WHEN u.unit_type_id = 'settlers'
+        AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
+        THEN 0 ELSE 1 END";
     $captureOpportunitySql = "CASE WHEN u.unit_class = 2 AND EXISTS (
         SELECT 1
         FROM server_game_units capture_city
@@ -8416,7 +8419,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
-        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $activeWorkerProjectSql . ', '
+        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $matureSettlerSql . ', '
+        . $activeWorkerProjectSql . ', '
         . $servicePrioritySql . ', ' . $bootstrapPrioritySql . ', '
         . $neverServedSql . ', RAND() LIMIT 1 FOR UPDATE'
     );
