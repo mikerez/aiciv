@@ -2360,7 +2360,44 @@ const _ai_player = new class
                 var plotScore = this.cityPlotScore(i, j, ownerTeam);
                 var score = plotScore - path.length * 0.008;
                 if (!best || score > best.score) {
-                    best = {coord: new Coord(i, j), path: path, plotScore: plotScore, score: score};
+                    best = {
+                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        score: score, settlementSite: true,
+                    };
+                }
+            }
+        }
+        return best;
+    }
+
+    bestSettlementExplorationRoute(k, ownerTeam)
+    {
+        var unit = _units[k];
+        var currentDistance = this.settlementDistanceToOwnCity(
+            unit.coord.i, unit.coord.j, ownerTeam
+        );
+        if (!Number.isFinite(currentDistance)) return null;
+        var best = null;
+        for (var di = -10; di <= 10; di++) {
+            for (var dj = -10; dj <= 10; dj++) {
+                if (di == 0 && dj == 0) continue;
+                var i = unit.coord.i + di;
+                var j = unit.coord.j + dj;
+                if (i < 0 || j < 0 || i >= _map_size || j >= _map_size
+                    || !this.isTileSeenByUser(i, j, ownerTeam)
+                    || this.terrainTypeAt(i, j) == 0) continue;
+                var cityDistance = this.settlementDistanceToOwnCity(i, j, ownerTeam);
+                if (cityDistance <= currentDistance) continue;
+                var path = _current_game.buildPath(k, new Coord(i, j));
+                if (!path.length) continue;
+                var plotScore = this.cityPlotScore(i, j, ownerTeam);
+                var score = cityDistance + (this.isPreferredCityCenter(i, j) ? 0.35 : 0)
+                    + plotScore * 0.15 - path.length * 0.02;
+                if (!best || score > best.score) {
+                    best = {
+                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        score: score, settlementSite: false,
+                    };
                 }
             }
         }
@@ -2433,10 +2470,11 @@ const _ai_player = new class
             }
         }
         var target = this.bestSettlementRoute(k, ownerTeam, minimumSpacing);
+        if (!target) target = this.bestSettlementExplorationRoute(k, ownerTeam);
         if (target && target.path.length) {
             settler.state = 'ready';
             _current_game.assignPath(k, target.path);
-            this.reserveSettlementCoord(target.coord);
+            if (target.settlementSite) this.reserveSettlementCoord(target.coord);
             return {
                 applied: true, command: 'goto', target: target.coord, score: target.plotScore,
                 pathLength: target.path.length, age: age,

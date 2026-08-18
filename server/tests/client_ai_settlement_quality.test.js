@@ -76,4 +76,41 @@ const distanceFromReserved = di * dj >= 0
 assert.ok(reservedDistance >= 7 && distanceFromReserved >= 7,
     'the second batch destination remains seven hex steps from existing and reserved Cities');
 
+const fogTiles = mapTiles(24, 2);
+const fogCapital = localUnit(city({
+    client_key:'fog-capital', owner_id:playerId, i:10, j:10,
+}), 1);
+const fogSettler = localUnit(unit({
+    client_key:'fog-settler', owner_id:playerId, unit_type_id:'settlers', unit_class:0,
+    name:'Settlers', texture:256, i:10, j:10, properties:{aiSettlerTurns:20},
+}), 2);
+const fogClient = createBrowserClient({
+    size:24, playerId, gameId:'client-ai-settlement-fog', tiles:fogTiles,
+    units:[fogCapital, fogSettler],
+});
+loadAiModels(fogClient);
+const fogBits = fogClient._map_terrain_bit_by_user[playerId];
+for (let i=0; i<24; i++) for (let j=0; j<24; j++) fogBits[i][j] &= ~0x4000;
+let fogDecision = null;
+for (let turn=0; turn<10; turn++) {
+    for (let di=-2; di<=2; di++) for (let dj=-2; dj<=2; dj++) {
+        const i = fogSettler.coord.i + di;
+        const j = fogSettler.coord.j + dj;
+        if (i>=0 && j>=0 && i<24 && j<24) fogBits[i][j] |= 0x4000;
+    }
+    fogSettler.gotoPath = [];
+    fogSettler.gotoCoord = null;
+    fogSettler.pendingServerPath = [];
+    fogDecision = fogClient.aiPlayer.applySettlerExpansionPolicy(1, playerId);
+    if (fogDecision.command === 'build_city') break;
+    assert.equal(fogDecision.command, 'goto',
+        'a Settler near its City explores outward when no final site is visible');
+    fogSettler.coord = new fogClient.Coord(fogDecision.target.i, fogDecision.target.j);
+}
+assert.equal(fogDecision.command, 'build_city',
+    'staged visible-land exploration reaches a valid City site within ten decisions');
+assert.ok(fogClient.aiPlayer.settlementDistanceToOwnCity(
+    fogSettler.coord.i, fogSettler.coord.j, playerId
+) >= 7, 'the explored City site satisfies minimum spacing');
+
 console.log('PASS Barbarian Settlers reject poor centers and found adequately spaced grass Cities');
