@@ -211,6 +211,8 @@ class BrowserAiRuntime
         context.document.querySelectorAll = () => [];
         context._turn_in_progress = 0;
         context.appendConsoleLog = message => log(String(message));
+        evaluate(context, 'city.js', '\nglobalThis.realCityEconomy=_city_economy;');
+        context._city_economy = context.realCityEconomy;
         evaluate(context, 'military.js', '\nglobalThis.realMilitary=_military;');
         evaluate(context, 'multiplayer.js', '\nglobalThis.realMultiplayer=_multiplayer;');
         evaluate(context, 'ai.js', '\nglobalThis.aiPlayer=_ai_player;');
