@@ -2306,7 +2306,10 @@ const _ai_player = new class
         for (var k = 0; k < _units.length; k++) {
             var city = _units[k];
             if (!city || city.type != 3 || (city.team || 0) != ownerTeam || !city.coord) continue;
-            best = Math.min(best, Math.max(Math.abs(city.coord.i - i), Math.abs(city.coord.j - j)));
+            var di = city.coord.i - i;
+            var dj = city.coord.j - j;
+            var distance = di * dj >= 0 ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
+            best = Math.min(best, distance);
         }
         return best;
     }
@@ -2320,7 +2323,7 @@ const _ai_player = new class
                 var i = unit.coord.i + di;
                 var j = unit.coord.j + dj;
                 if (i < 0 || j < 0 || i >= _map_size || j >= _map_size
-                    || !this.isTileSeenByUser(i, j, ownerTeam) || this.terrainTypeAt(i, j) == 0
+                    || !this.isTileSeenByUser(i, j, ownerTeam) || !this.isPreferredCityCenter(i, j)
                     || this.settlementDistanceToOwnCity(i, j, ownerTeam) < minimumSpacing) continue;
                 var path = di == 0 && dj == 0 ? [] : _current_game.buildPath(k, new Coord(i, j));
                 if ((di != 0 || dj != 0) && !path.length) continue;
@@ -2332,6 +2335,12 @@ const _ai_player = new class
             }
         }
         return best;
+    }
+
+    isPreferredCityCenter(i, j)
+    {
+        var terrain = this.terrainTypeAt(i, j);
+        return terrain == 2 || terrain == 7;
     }
 
     applySettlerExpansionPolicies(ownerTeam)
@@ -2369,14 +2378,14 @@ const _ai_player = new class
                 return unit && unit.type == 3 && (unit.team || 0) == ownerTeam;
             }).length;
         }
-        var minimumSpacing = cityCount ? 5 : 0;
+        var minimumSpacing = cityCount ? 7 : 0;
         var currentScore = this.cityPlotScore(settler.coord.i, settler.coord.j, ownerTeam);
         var spacing = this.settlementDistanceToOwnCity(settler.coord.i, settler.coord.j, ownerTeam);
         var age = Math.max(0, Number(settler.aiSettlerTurns) || 0);
         var threshold = cityCount ? 0.40 : 0.28;
         var agedThreshold = age >= 10 ? threshold - 0.08 : threshold;
         var mustSettle = age >= this.settlerBuildCityTurnLimit;
-        if (this.terrainTypeAt(settler.coord.i, settler.coord.j) != 0
+        if (this.isPreferredCityCenter(settler.coord.i, settler.coord.j)
             && spacing >= minimumSpacing && (mustSettle || currentScore >= agedThreshold)) {
             var build = {command: 'build_city'};
             if (this.applyUnitCommand(k, build)) {

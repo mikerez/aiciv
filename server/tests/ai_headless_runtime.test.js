@@ -38,7 +38,8 @@ const {NativeInference, BrowserAiRuntime} = require('../../ai_player/ai_player')
         ],
         tiles: mapTiles(8),
     });
-    sql('UPDATE server_game_players SET account_user_id=9000 WHERE player_id=9000');
+    sql("UPDATE server_game_players SET account_user_id=9000, "
+        + "state_json=JSON_OBJECT('aiCityWorkerSupportMigration20260818',true) WHERE player_id=9000");
     sql('UPDATE server_games SET turn_deadline_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 SECOND)');
     await serverGame.request('make_turn', {
         player_id: 7001, turn: 0, commands: [], actions: [], player_state: {}, relations: {},

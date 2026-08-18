@@ -39,38 +39,39 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         .trim().split(/\s+/).filter(Boolean).map(Number);
     const activeWorkerId = Number(value("SELECT id FROM server_game_units WHERE client_key='ai-worker-0'"));
     const first = await serverGame.request('claim_ai_batch', {
-        player_id: 7001, client_key: 'node-scheduler-test', include_snapshot: false,
+        player_id: 7001, client_key: 'growth-scheduler-test', include_snapshot: false,
     });
-    assert.equal(first.unit_ids.length, 8,
-        'the native contributor leases the model full width for nearby Workers');
-    assert.ok(first.unit_ids.every(id => workerIds.includes(Number(id))),
-        'stateful Workers outrank inactive military and are grouped together');
-    assert.ok(first.unit_ids.includes(activeWorkerId),
-        'a current Worker project outranks a much older City and old idle Workers');
+    assert.deepEqual(first.unit_ids, [cityId],
+        'a City with enough stored food to grow outranks routine Worker service');
     await serverGame.request('submit_ai_batch', {
-        player_id: 7001, client_key: 'node-scheduler-test', lease_token: first.lease_token, turn: first.turn,
+        player_id: 7001, client_key: 'growth-scheduler-test', lease_token: first.lease_token, turn: first.turn,
         commands: first.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
         actions: [],
     });
 
     const second = await serverGame.request('claim_ai_batch', {
-        player_id: 7001, client_key: 'scheduler-browser', include_snapshot: false,
+        player_id: 7001, client_key: 'node-scheduler-test', include_snapshot: false,
     });
-    assert.equal(second.unit_ids.length, 1, 'the final overdue Worker receives the next lease');
-    assert.ok(workerIds.includes(Number(second.unit_ids[0])));
+    assert.equal(second.unit_ids.length, 8,
+        'the native contributor then leases the model full width for nearby Workers');
+    assert.ok(second.unit_ids.every(id => workerIds.includes(Number(id))),
+        'stateful Workers outrank inactive military and are grouped together');
+    assert.ok(second.unit_ids.includes(activeWorkerId),
+        'a current Worker project is included in the first Worker batch');
     await serverGame.request('submit_ai_batch', {
-        player_id: 7001, client_key: 'scheduler-browser', lease_token: second.lease_token, turn: second.turn,
+        player_id: 7001, client_key: 'node-scheduler-test', lease_token: second.lease_token, turn: second.turn,
         commands: second.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
         actions: [],
     });
     const third = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'scheduler-browser', include_snapshot: false,
     });
-    assert.deepEqual(third.unit_ids, [cityId],
-        'the overdue City is serviced after the higher-frequency Worker queue');
+    assert.equal(third.unit_ids.length, 1, 'the final overdue Worker receives the next lease');
+    assert.ok(workerIds.includes(Number(third.unit_ids[0])));
     await serverGame.request('submit_ai_batch', {
         player_id: 7001, client_key: 'scheduler-browser', lease_token: third.lease_token, turn: third.turn,
-        commands: [{unit_id: cityId, command: 'hold', path: [], payload: {}}], actions: [],
+        commands: third.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
+        actions: [],
     });
     const military = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'node-military-test', include_snapshot: false,

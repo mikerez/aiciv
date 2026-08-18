@@ -5935,6 +5935,13 @@ function buildCity(PDO $db, array $game, int $playerId, int $settlerId): array
             'UPDATE server_game_units SET health = 0, revision = ?, deleted_at = UTC_TIMESTAMP() WHERE id = ?'
         );
         $statement->execute([$revision, $settlerId]);
+        $supportWorkerIds = [];
+        if ($playerId === ensureGlobalAiUser($db)) {
+            $supportWorkerIds = insertGlobalAiCitySupportWorkers(
+                $db, $gameId, (int) $game['map_size'], $playerId, $cityId, $i, $j,
+                $revision, (int) $game['turn_number'], 2
+            );
+        }
         $statement = $db->prepare('UPDATE server_games SET revision = ? WHERE id = ?');
         $statement->execute([$revision, $gameId]);
         recomputeVisibility($db, $gameId, (int) $game['map_size'], $revision);
@@ -5950,6 +5957,7 @@ function buildCity(PDO $db, array $game, int $playerId, int $settlerId): array
             'revision' => $revision,
             'settler' => $settler,
             'city' => $city,
+            'support_worker_ids' => $supportWorkerIds,
             'tile' => [
                 'i' => $i, 'j' => $j, 'terrain_tex' => (int) $tile['terrain_tex'],
                 'terrain_bits' => (int) $tile['terrain_bits'], 'resource_type' => (int) $tile['resource_type'],
@@ -8332,6 +8340,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $globalAiId = ensureGlobalAiUser($db);
     ensureGlobalAiWorkersAutomated($db, $gameId, $globalAiId, (int) $game['revision']);
     ensureGlobalAiSettlerAges($db, $gameId, $globalAiId, (int) $game['revision']);
+    ensureGlobalAiCityWorkerSupport($db, $game, $globalAiId);
     $db->prepare(
         'DELETE FROM server_game_ai_leases
          WHERE game_id = ? AND (turn_number <> ? OR leased_until <= UTC_TIMESTAMP(6))'
@@ -8388,6 +8397,12 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     // Stateful civilian work needs a much shorter service interval than a
     // fortified military unit. Every object still accumulates debt, so lower
     // weights delay inactive units without permanently starving them.
+    $cityPopulationSql = "GREATEST(1, COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(
+        u.properties_json, '$.cityPopulation')) AS UNSIGNED), 1))";
+    $cityFoodSql = "COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(
+        u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
+    $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
+        . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
     $serviceWeightSql = "CASE
         WHEN u.unit_type_id = 'worker' AND (
             u.state NOT IN ('ready', 'waiting', 'automate')
@@ -8398,11 +8413,12 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
           AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
           THEN 12
         WHEN u.unit_type_id = 'settlers' THEN 4
+        WHEN " . $growthReadyCitySql . " THEN 32
         WHEN u.unit_class = 3 THEN 8
         WHEN u.unit_class = 2
           AND JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.automationMode')) = 'patrol' THEN 20
         WHEN u.unit_class = 2 THEN 12
-        WHEN u.unit_type_id = 'explorer' THEN 4
+        WHEN u.unit_type_id = 'explorer' THEN 12
         WHEN u.state = 'ready' THEN 2
         ELSE 1 END";
     $servicePrioritySql = '(GREATEST(0, ' . $turn . ' - ' . $lastServedSql
@@ -8417,7 +8433,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
           LEFT JOIN productions p ON p.game_id = u.game_id AND p.city_unit_id = u.id
           WHERE u.game_id = ? AND u.owner_id = ?
             AND (u.can_move = 1 OR (u.unit_class = 3
-                 AND (p.city_unit_id IS NULL OR p.production_points + 0.0001 >= p.production_cost)))
+                 AND (' . $growthReadyCitySql . ' OR p.city_unit_id IS NULL
+                      OR p.production_points + 0.0001 >= p.production_cost)))
             AND u.deleted_at IS NULL AND u.health > 0 AND l.unit_id IS NULL AND o.unit_id IS NULL';
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
@@ -8658,6 +8675,128 @@ function ensureGlobalAiWorkersAutomated(PDO $db, int $gameId, int $globalAiId, i
         $changed++;
     }
     return $changed;
+}
+
+function insertGlobalAiCitySupportWorkers(
+    PDO $db, int $gameId, int $mapSize, int $ownerId, int $cityId, int $cityI, int $cityJ,
+    int $revision, int $turn, int $desiredCount = 2
+): array {
+    $desiredCount = max(0, min(2, $desiredCount));
+    if ($desiredCount === 0) return [];
+    $statement = $db->prepare(
+        "SELECT i, j FROM server_game_units
+         WHERE game_id = ? AND owner_id = ? AND unit_type_id = 'worker'
+           AND deleted_at IS NULL AND health > 0"
+    );
+    $statement->execute([$gameId, $ownerId]);
+    $nearbyCount = 0;
+    foreach ($statement->fetchAll() as $worker) {
+        if (serverHexDistance($cityI, $cityJ, (int) $worker['i'], (int) $worker['j']) <= 5) $nearbyCount++;
+    }
+    $missing = max(0, $desiredCount - $nearbyCount);
+    if ($missing === 0) return [];
+
+    $statement = $db->prepare(
+        'SELECT i, j, terrain_tex FROM server_game_map
+         WHERE game_id = ? AND i BETWEEN ? AND ? AND j BETWEEN ? AND ?
+           AND (terrain_tex & 15) <> 0'
+    );
+    $statement->execute([
+        $gameId,
+        max(0, $cityI - 2), min($mapSize - 1, $cityI + 2),
+        max(0, $cityJ - 2), min($mapSize - 1, $cityJ + 2),
+    ]);
+    $candidates = $statement->fetchAll();
+    usort($candidates, static function (array $left, array $right) use ($cityI, $cityJ): int {
+        $leftDistance = serverHexDistance($cityI, $cityJ, (int) $left['i'], (int) $left['j']);
+        $rightDistance = serverHexDistance($cityI, $cityJ, (int) $right['i'], (int) $right['j']);
+        return [$leftDistance, (int) $left['i'], (int) $left['j']]
+            <=> [$rightDistance, (int) $right['i'], (int) $right['j']];
+    });
+    $statement = $db->prepare(
+        'SELECT i, j, COUNT(*) AS unit_count FROM server_game_units
+         WHERE game_id = ? AND can_move = 1 AND deleted_at IS NULL AND health > 0 GROUP BY i, j'
+    );
+    $statement->execute([$gameId]);
+    $occupancy = [];
+    foreach ($statement->fetchAll() as $row) {
+        $occupancy[coordinateKey((int) $row['i'], (int) $row['j'])] = (int) $row['unit_count'];
+    }
+
+    $definition = serverUnitDefinitions()['worker'];
+    $specs = [];
+    for ($slot = $nearbyCount; $slot < $desiredCount && count($specs) < $missing; $slot++) {
+        $selected = null;
+        foreach ($candidates as $candidate) {
+            $key = coordinateKey((int) $candidate['i'], (int) $candidate['j']);
+            if (($occupancy[$key] ?? 0) >= SERVER_GAME_TILE_UNIT_LIMIT) continue;
+            $selected = $candidate;
+            $occupancy[$key] = ($occupancy[$key] ?? 0) + 1;
+            break;
+        }
+        if ($selected === null) break;
+        $properties = serverUnitProperties($definition);
+        $properties['automationMode'] = 'automate';
+        $properties['aiLastServedTurn'] = $turn;
+        $properties['supportCityId'] = $cityId;
+        $specs[] = [
+            'client_key' => 'barbarian-city-support-' . $cityId . '-' . $slot,
+            'owner_id' => $ownerId,
+            'unit_type_id' => 'worker',
+            'unit_class' => (int) $definition['class'],
+            'name' => (string) $definition['name'],
+            'texture' => (int) $definition['texture'],
+            'can_move' => true,
+            'nature' => (string) $definition['nature'],
+            'i' => (int) $selected['i'],
+            'j' => (int) $selected['j'],
+            'attack' => (float) $definition['attack'],
+            'defense' => (float) $definition['defense'],
+            'speed' => (float) $definition['speed'],
+            'view_range' => (int) $definition['view_range'],
+            'state' => 'automate',
+            'health' => 100,
+            'max_health' => 100,
+            'experience' => SERVER_GAME_INITIAL_EXPERIENCE,
+            'properties' => $properties,
+        ];
+    }
+    return array_values(insertBootstrapUnits($db, $gameId, $mapSize, $specs, $revision));
+}
+
+function ensureGlobalAiCityWorkerSupport(PDO $db, array $game, int $globalAiId): int
+{
+    $gameId = (int) $game['id'];
+    $stateStatement = $db->prepare(
+        'SELECT state_json FROM server_game_players WHERE game_id = ? AND player_id = ? FOR UPDATE'
+    );
+    $stateStatement->execute([$gameId, $globalAiId]);
+    $state = json_decode((string) ($stateStatement->fetchColumn() ?: '{}'), true);
+    if (!is_array($state)) $state = [];
+    if (!empty($state['aiCityWorkerSupportMigration20260818'])) return 0;
+
+    $statement = $db->prepare(
+        'SELECT id, i, j FROM server_game_units
+         WHERE game_id = ? AND owner_id = ? AND unit_class = 3
+           AND deleted_at IS NULL AND health > 0 ORDER BY id'
+    );
+    $statement->execute([$gameId, $globalAiId]);
+    $revision = (int) $game['revision'] + 1;
+    $inserted = 0;
+    foreach ($statement->fetchAll() as $city) {
+        $inserted += count(insertGlobalAiCitySupportWorkers(
+            $db, $gameId, (int) $game['map_size'], $globalAiId, (int) $city['id'],
+            (int) $city['i'], (int) $city['j'], $revision, (int) $game['turn_number'], 2
+        ));
+    }
+    $state['aiCityWorkerSupportMigration20260818'] = true;
+    $db->prepare('UPDATE server_game_players SET state_json = ? WHERE game_id = ? AND player_id = ?')
+        ->execute([jsonObject($state), $gameId, $globalAiId]);
+    if ($inserted > 0) {
+        $db->prepare('UPDATE server_games SET revision = ? WHERE id = ?')->execute([$revision, $gameId]);
+        recomputeVisibility($db, $gameId, (int) $game['map_size'], $revision);
+    }
+    return $inserted;
 }
 
 function ensureGlobalAiSettlerAges(PDO $db, int $gameId, int $globalAiId, int $revision): int
@@ -9579,6 +9718,7 @@ try {
             if ($db->inTransaction()) $db->rollBack();
             throw $error;
         }
+        $game = loadGame($db, $key) ?: $game;
         $snapshot = null;
         if (!empty($data['include_snapshot']) && $batch['unit_ids']) {
             $focus = [

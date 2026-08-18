@@ -13,7 +13,7 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, value, expe
             name: 'Settlers', texture: 256, i: terrain + 1, j: 3,
         }));
     }
-    const fixture = await bootstrap({size: 10, tiles, units: settlers});
+    const fixture = await bootstrap({size: 10, tiles, units: settlers, players: [7001, 7002]});
     const names = [];
     for (let terrain = 0; terrain < 8; terrain++) {
         const settlerId = fixture.unitIds[`settler-${terrain}`];

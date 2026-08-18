@@ -42,6 +42,13 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     });
     assert.equal(Number(value('SELECT COUNT(*) FROM server_game_units WHERE owner_id=9000 AND unit_class=3')), 1,
         'leased Settler build action creates an authoritative city');
+    assert.equal(Number(value("SELECT COUNT(*) FROM server_game_units WHERE owner_id=9000 "
+        + "AND unit_type_id='worker' AND deleted_at IS NULL AND health>0")), 2,
+        'a new Barbarian City receives two automated support Workers');
+    assert.equal(Number(value("SELECT COUNT(*) FROM server_game_units WHERE owner_id=9000 "
+        + "AND unit_type_id='worker' AND state='automate' "
+        + "AND JSON_UNQUOTE(JSON_EXTRACT(properties_json,'$.automationMode'))='automate'")), 2,
+        'new support Workers immediately enter persistent automation');
 
     const cityId = Number(value('SELECT id FROM server_game_units WHERE owner_id=9000 AND unit_class=3'));
     const second = await serverGame.request('claim_ai_batch', {
@@ -62,14 +69,25 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         player_id: 7001, client_key: 'settlement-browser', include_snapshot: false,
     });
     const thirdTypes = third.unit_ids.map(id => value(`SELECT unit_type_id FROM server_game_units WHERE id=${id}`));
-    assert.deepEqual(thirdTypes, ['settlers'],
-        'the mature Settler remains eligible after overdue City work');
+    assert.deepEqual(thirdTypes, ['worker', 'worker'],
+        'new support Workers receive their first automation lease');
     await serverGame.request('submit_ai_batch', {
         player_id: 7001, client_key: 'settlement-browser', lease_token: third.lease_token, turn: third.turn,
-        commands: [{unit_id: third.unit_ids[0], command: 'hold', path: [], payload: {}}], actions: [],
+        commands: third.unit_ids.map(unitId => ({unit_id: unitId, command: 'hold', path: [], payload: {}})),
+        actions: [],
+    });
+    const fourth = await serverGame.request('claim_ai_batch', {
+        player_id: 7001, client_key: 'settlement-browser-2', include_snapshot: false,
+    });
+    const fourthTypes = fourth.unit_ids.map(id => value(`SELECT unit_type_id FROM server_game_units WHERE id=${id}`));
+    assert.deepEqual(fourthTypes, ['settlers'],
+        'the mature Settler remains eligible after City and support-Worker work');
+    await serverGame.request('submit_ai_batch', {
+        player_id: 7001, client_key: 'settlement-browser-2', lease_token: fourth.lease_token, turn: fourth.turn,
+        commands: [{unit_id: fourth.unit_ids[0], command: 'hold', path: [], payload: {}}], actions: [],
     });
     assert.equal(Number(value(`SELECT JSON_UNQUOTE(JSON_EXTRACT(properties_json,'$.aiLastServedTurn'))
-        FROM server_game_units WHERE id=${third.unit_ids[0]}`)), third.turn,
+        FROM server_game_units WHERE id=${fourth.unit_ids[0]}`)), fourth.turn,
         'a completed Settler decision records fair-scheduling service state');
     console.log('PASS shared AI prioritizes Settlers, persists age, builds Cities, and leases idle Cities');
 })().catch(error => { console.error(error); process.exitCode = 1; });
