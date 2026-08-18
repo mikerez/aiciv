@@ -10,11 +10,14 @@ const {
     sql("INSERT INTO game_users (id,login,email,password_hash,status,user_type,online,last_online_at,parent_id) "
         + "VALUES (9000,'aiciv_global_ai',NULL,'test','active','ai',1,UTC_TIMESTAMP(),NULL)");
     const units = [
-        city({client_key: 'barbarian-capital', owner_id: 9000, i: 1, j: 1}),
+        city({
+            client_key: 'barbarian-capital', owner_id: 9000, i: 1, j: 1,
+            properties: {aiLastServedTurn: 999},
+        }),
         unit({
             client_key: 'mature-expansion-settler', owner_id: 9000,
             unit_type_id: 'settlers', unit_class: 0, name: 'Settlers', i: 8, j: 8,
-            properties: {aiSettlerTurns: 20, aiLastServedTurn: 999},
+            properties: {aiSettlerTurns: 20, aiLastServedTurn: 980},
         }),
     ];
     for (let n = 0; n < 12; n++) {
@@ -23,7 +26,7 @@ const {
             unit_type_id: 'worker', unit_class: 1, name: 'Worker',
             i: 2 + n % 4, j: 3 + Math.floor(n / 4), state: 'mine',
             properties: {
-                aiLastServedTurn: 1,
+                aiLastServedTurn: 999,
                 automationMode: 'automate',
                 clientImprovementTurnsLeft: 2,
                 clientImprovementState: 'mine',
@@ -48,7 +51,7 @@ const {
         player_id: 7001, client_key: 'node-settler-expansion', include_snapshot: true,
     });
     assert.deepEqual(batch.unit_ids, [settlerId],
-        'a mature Settler must receive an atomic lease before routine Worker projects');
+        'an overdue mature Settler must overtake recently serviced Worker projects');
     const submitted = await serverGame.request('submit_ai_batch', {
         player_id: 7001,
         client_key: 'node-settler-expansion',

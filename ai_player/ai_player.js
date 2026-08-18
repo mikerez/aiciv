@@ -379,8 +379,11 @@ class AiContributor
         const commandText = combined.commands.map(command => {
             const destination = command.path && command.path.length
                 ? command.path[command.path.length - 1] : null;
+            const mission = command.payload && command.payload.ai_force_mission
+                ? command.payload.ai_force_mission.mode : null;
             return `#${command.unit_id}:${command.command}`
-                + (destination ? `->${destination.i},${destination.j}` : '');
+                + (destination ? `->${destination.i},${destination.j}` : '')
+                + (mission ? `[${mission}]` : '');
         }).join(', ') || 'none';
         const actionText = combined.actions.map(action => action.type).join(', ') || 'none';
         this.log(`turn ${batch.turn}: accepted=${response.accepted !== false}`
