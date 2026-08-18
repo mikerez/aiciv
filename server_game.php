@@ -8403,6 +8403,9 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
     $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
         . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
+    $matureSettlerPrioritySql = "CASE WHEN u.unit_type_id = 'settlers'
+        AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
+        THEN 0 ELSE 1 END";
     $serviceWeightSql = "CASE
         WHEN u.unit_type_id = 'worker' AND (
             u.state NOT IN ('ready', 'waiting', 'automate')
@@ -8439,7 +8442,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
-        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $servicePrioritySql . ', '
+        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $matureSettlerPrioritySql . ', '
+        . $servicePrioritySql . ', '
         . $bootstrapPrioritySql . ', '
         . $neverServedSql . ', RAND() LIMIT 1 FOR UPDATE'
     );
@@ -8462,12 +8466,31 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                 $unitIds[] = (int) $row['id'];
             }
         }
-        elseif ((string) $anchor['unit_type_id'] === 'settlers'
-            || (int) $anchor['unit_class'] === 3) {
+        elseif ((string) $anchor['unit_type_id'] === 'settlers') {
             // Development decisions are cheap, stateful, and immediately alter
-            // later decisions. Lease them atomically so a short browser turn
-            // cannot found conflicting Cities or mutate one production queue
-            // from concurrent snapshots.
+            // later decisions. Keep the first City serialized, then process a
+            // nearby mature expansion group together. Without this category,
+            // fast server turns let high-weight Worker debt starve Settlers.
+            if (!$hasCity) {
+                $unitIds = [(int) $anchor['id']];
+            } else {
+                $batchStatement = $db->prepare(
+                    'SELECT u.id, u.unit_type_id' . $eligibleSql
+                    . " AND u.unit_type_id = 'settlers'"
+                    . " AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10"
+                    . ' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45'
+                    . ' ORDER BY ' . $servicePrioritySql . ', ' . $neverServedSql
+                    . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
+                );
+                $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));
+                foreach ($batchStatement->fetchAll() as $row) {
+                    $unitIds[] = (int) $row['id'];
+                }
+            }
+        }
+        elseif ((int) $anchor['unit_class'] === 3) {
+            // A City remains atomic so concurrent snapshots cannot mutate one
+            // production queue or growth state twice.
             $unitIds = [(int) $anchor['id']];
         }
         else {

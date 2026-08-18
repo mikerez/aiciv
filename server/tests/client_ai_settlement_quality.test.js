@@ -45,4 +45,35 @@ const pending = grassCase.client.serverGame.pendingTurnActionsByPlayer[playerId]
 assert.equal(pending.some(action => action.type === 'build_city'), true,
     'the settlement decision queues an authoritative build_city action');
 
+const batchTiles = mapTiles(18, 2);
+const batchClient = createBrowserClient({
+    size: 18, playerId, gameId: 'client-ai-settlement-batch', tiles: batchTiles,
+    units: [
+        localUnit(city({client_key:'batch-capital', owner_id:playerId, i:1, j:1}), 1),
+        localUnit(unit({client_key:'batch-settler-1', owner_id:playerId, unit_type_id:'settlers',
+            unit_class:0, name:'Settlers', texture:256, i:8, j:8,
+            properties:{aiSettlerTurns:20}}), 2),
+        localUnit(unit({client_key:'batch-settler-2', owner_id:playerId, unit_type_id:'settlers',
+            unit_class:0, name:'Settlers', texture:256, i:9, j:8,
+            properties:{aiSettlerTurns:20}}), 3),
+    ],
+});
+loadAiModels(batchClient);
+batchClient.aiPlayer.beginSettlementPlanning();
+const firstBatchDecision = batchClient.aiPlayer.applySettlerExpansionPolicy(1, playerId);
+const secondBatchDecision = batchClient.aiPlayer.applySettlerExpansionPolicy(2, playerId);
+batchClient.aiPlayer.endSettlementPlanning();
+assert.equal(firstBatchDecision.command, 'build_city', 'the first batch Settler reserves its current site');
+assert.equal(secondBatchDecision.command, 'goto',
+    'a later batch Settler does not found beside the reserved City site');
+const reservedDistance = batchClient.aiPlayer.settlementDistanceToOwnCity(
+    secondBatchDecision.target.i, secondBatchDecision.target.j, playerId
+);
+const di = secondBatchDecision.target.i - 8;
+const dj = secondBatchDecision.target.j - 8;
+const distanceFromReserved = di * dj >= 0
+    ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
+assert.ok(reservedDistance >= 7 && distanceFromReserved >= 7,
+    'the second batch destination remains seven hex steps from existing and reserved Cities');
+
 console.log('PASS Barbarian Settlers reject poor centers and found adequately spaced grass Cities');

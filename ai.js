@@ -57,6 +57,8 @@ const _ai_player = new class
         this.batchCursors = {};
         this.actionCandidateCursors = {};
         this.forcedActionUnitServerId = null;
+        this.collectSettlementPlans = false;
+        this.plannedSettlementCoords = [];
         this.forcedEconomicsCityServerId = null;
         this.economicsCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
@@ -2311,7 +2313,35 @@ const _ai_player = new class
             var distance = di * dj >= 0 ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
             best = Math.min(best, distance);
         }
+        if (this.collectSettlementPlans) {
+            for (var n = 0; n < this.plannedSettlementCoords.length; n++) {
+                var planned = this.plannedSettlementCoords[n];
+                var pdi = planned.i - i;
+                var pdj = planned.j - j;
+                var plannedDistance = pdi * pdj >= 0
+                    ? Math.max(Math.abs(pdi), Math.abs(pdj)) : Math.abs(pdi) + Math.abs(pdj);
+                best = Math.min(best, plannedDistance);
+            }
+        }
         return best;
+    }
+
+    beginSettlementPlanning()
+    {
+        this.collectSettlementPlans = true;
+        this.plannedSettlementCoords = [];
+    }
+
+    endSettlementPlanning()
+    {
+        this.collectSettlementPlans = false;
+        this.plannedSettlementCoords = [];
+    }
+
+    reserveSettlementCoord(coord)
+    {
+        if (!this.collectSettlementPlans || !coord) return;
+        this.plannedSettlementCoords.push(new Coord(coord.i, coord.j));
     }
 
     bestSettlementRoute(k, ownerTeam, minimumSpacing)
@@ -2347,18 +2377,22 @@ const _ai_player = new class
     {
         var applied = [];
         if (typeof _units == 'undefined' || typeof _current_game == 'undefined') return applied;
+        this.beginSettlementPlanning();
         var cityCount = this.sortedUnits(function(unit) {
             return unit && unit.type == 3 && (unit.team || 0) == ownerTeam;
         }).length;
-        var planned = [];
-        for (var k = 0; k < _units.length; k++) {
-            var settler = _units[k];
-            if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam
-                || this.civilianPolicyHasActiveTask(settler)) continue;
-            var decision = this.applySettlerExpansionPolicy(k, ownerTeam, cityCount + planned.length);
-            if (!decision.applied) continue;
-            if (decision.command == 'build_city') planned.push(new Coord(settler.coord.i, settler.coord.j));
-            applied.push(decision.description);
+        try {
+            for (var k = 0; k < _units.length; k++) {
+                var settler = _units[k];
+                if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam
+                    || this.civilianPolicyHasActiveTask(settler)) continue;
+                var decision = this.applySettlerExpansionPolicy(k, ownerTeam, cityCount);
+                if (!decision.applied) continue;
+                applied.push(decision.description);
+            }
+        }
+        finally {
+            this.endSettlementPlanning();
         }
         return applied;
     }
@@ -2389,6 +2423,7 @@ const _ai_player = new class
             && spacing >= minimumSpacing && (mustSettle || currentScore >= agedThreshold)) {
             var build = {command: 'build_city'};
             if (this.applyUnitCommand(k, build)) {
+                this.reserveSettlementCoord(settler.coord);
                 return {
                     applied: true, command: 'build_city', score: currentScore, age: age,
                     description: 'Settler #' + (settler.serverId || k) + ' -> Build City at '
@@ -2401,6 +2436,7 @@ const _ai_player = new class
         if (target && target.path.length) {
             settler.state = 'ready';
             _current_game.assignPath(k, target.path);
+            this.reserveSettlementCoord(target.coord);
             return {
                 applied: true, command: 'goto', target: target.coord, score: target.plotScore,
                 pathLength: target.path.length, age: age,

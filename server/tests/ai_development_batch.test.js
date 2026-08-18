@@ -52,12 +52,28 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
 
     const cityId = Number(value('SELECT id FROM server_game_units WHERE owner_id=9000 AND unit_class=3'));
     const second = await serverGame.request('claim_ai_batch', {
+        player_id: 7001, client_key: 'settlement-browser', include_snapshot: false,
+    });
+    const remainingSettlerId = Number(value(
+        "SELECT id FROM server_game_units WHERE owner_id=9000 AND unit_type_id='settlers' AND deleted_at IS NULL"
+    ));
+    assert.deepEqual(second.unit_ids, [remainingSettlerId],
+        'the remaining mature Settler is serviced before routine City and Worker work');
+    await serverGame.request('submit_ai_batch', {
+        player_id: 7001, client_key: 'settlement-browser', lease_token: second.lease_token, turn: second.turn,
+        commands: [{unit_id: remainingSettlerId, command: 'hold', path: [], payload: {}}], actions: [],
+    });
+    assert.equal(Number(value(`SELECT JSON_UNQUOTE(JSON_EXTRACT(properties_json,'$.aiLastServedTurn'))
+        FROM server_game_units WHERE id=${remainingSettlerId}`)), second.turn,
+        'a completed Settler decision records fair-scheduling service state');
+
+    const third = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'economics-browser', include_snapshot: true,
     });
-    assert.deepEqual(second.unit_ids, [cityId],
+    assert.deepEqual(third.unit_ids, [cityId],
         'the overdue idle AI city receives an atomic Economics lease');
     const submitted = await serverGame.request('submit_ai_batch', {
-        player_id: 7001, client_key: 'economics-browser', lease_token: second.lease_token, turn: second.turn,
+        player_id: 7001, client_key: 'economics-browser', lease_token: third.lease_token, turn: third.turn,
         commands: [{unit_id: cityId, command: 'hold', path: [], payload: {}}],
         actions: [{type: 'select_production', city_unit_id: cityId, unit_type_id: 'warrior'}],
     });
@@ -65,29 +81,16 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     assert.equal(value(`SELECT unit_type_id FROM productions WHERE city_unit_id=${cityId}`), 'warrior',
         'leased city Economics action starts server production');
 
-    const third = await serverGame.request('claim_ai_batch', {
-        player_id: 7001, client_key: 'settlement-browser', include_snapshot: false,
-    });
-    const thirdTypes = third.unit_ids.map(id => value(`SELECT unit_type_id FROM server_game_units WHERE id=${id}`));
-    assert.deepEqual(thirdTypes, ['worker', 'worker'],
-        'new support Workers receive their first automation lease');
-    await serverGame.request('submit_ai_batch', {
-        player_id: 7001, client_key: 'settlement-browser', lease_token: third.lease_token, turn: third.turn,
-        commands: third.unit_ids.map(unitId => ({unit_id: unitId, command: 'hold', path: [], payload: {}})),
-        actions: [],
-    });
     const fourth = await serverGame.request('claim_ai_batch', {
-        player_id: 7001, client_key: 'settlement-browser-2', include_snapshot: false,
+        player_id: 7001, client_key: 'worker-browser', include_snapshot: false,
     });
     const fourthTypes = fourth.unit_ids.map(id => value(`SELECT unit_type_id FROM server_game_units WHERE id=${id}`));
-    assert.deepEqual(fourthTypes, ['settlers'],
-        'the mature Settler remains eligible after City and support-Worker work');
+    assert.deepEqual(fourthTypes, ['worker', 'worker'],
+        'new support Workers receive their first automation lease');
     await serverGame.request('submit_ai_batch', {
-        player_id: 7001, client_key: 'settlement-browser-2', lease_token: fourth.lease_token, turn: fourth.turn,
-        commands: [{unit_id: fourth.unit_ids[0], command: 'hold', path: [], payload: {}}], actions: [],
+        player_id: 7001, client_key: 'worker-browser', lease_token: fourth.lease_token, turn: fourth.turn,
+        commands: fourth.unit_ids.map(unitId => ({unit_id: unitId, command: 'hold', path: [], payload: {}})),
+        actions: [],
     });
-    assert.equal(Number(value(`SELECT JSON_UNQUOTE(JSON_EXTRACT(properties_json,'$.aiLastServedTurn'))
-        FROM server_game_units WHERE id=${fourth.unit_ids[0]}`)), fourth.turn,
-        'a completed Settler decision records fair-scheduling service state');
     console.log('PASS shared AI prioritizes Settlers, persists age, builds Cities, and leases idle Cities');
 })().catch(error => { console.error(error); process.exitCode = 1; });

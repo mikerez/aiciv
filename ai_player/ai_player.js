@@ -293,6 +293,16 @@ class BrowserAiRuntime
             };
         });
     }
+
+    beginSettlementPlanning()
+    {
+        this.context.aiPlayer.beginSettlementPlanning();
+    }
+
+    endSettlementPlanning()
+    {
+        this.context.aiPlayer.endSettlementPlanning();
+    }
 }
 
 class AiContributor
@@ -345,23 +355,29 @@ class AiContributor
 
         runtime.activateSnapshot(aiId, batch.snapshot);
         const combined = {commands: [], actions: []};
-        for (const unitId of batch.unit_ids || []) {
-            const snapshotUnit = (batch.snapshot.units || []).find(unit => Number(unit.id) === Number(unitId));
-            if (!snapshotUnit) {
-                this.log(`turn ${batch.turn}: leased unit ${unitId} is absent from the AI snapshot`);
+        runtime.beginSettlementPlanning();
+        try {
+            for (const unitId of batch.unit_ids || []) {
+                const snapshotUnit = (batch.snapshot.units || []).find(unit => Number(unit.id) === Number(unitId));
+                if (!snapshotUnit) {
+                    this.log(`turn ${batch.turn}: leased unit ${unitId} is absent from the AI snapshot`);
+                }
+                const submission = await runtime.prepareUnit(
+                    aiId, batch.snapshot, unitId, this.strategyFocus, true
+                );
+                if (!submission) {
+                    this.log(`turn ${batch.turn}: unit ${unitId}`
+                        + `${snapshotUnit ? ` ${snapshotUnit.unit_type_id}@${snapshotUnit.world_i},${snapshotUnit.world_j}` : ''}`
+                        + ' produced no legal submission; adapter='
+                        + JSON.stringify(runtime.diagnoseUnit(aiId, batch.snapshot, unitId)));
+                    continue;
+                }
+                combined.commands.push(...(submission.commands || []));
+                combined.actions.push(...(submission.actions || []));
             }
-            const submission = await runtime.prepareUnit(
-                aiId, batch.snapshot, unitId, this.strategyFocus, true
-            );
-            if (!submission) {
-                this.log(`turn ${batch.turn}: unit ${unitId}`
-                    + `${snapshotUnit ? ` ${snapshotUnit.unit_type_id}@${snapshotUnit.world_i},${snapshotUnit.world_j}` : ''}`
-                    + ' produced no legal submission; adapter='
-                    + JSON.stringify(runtime.diagnoseUnit(aiId, batch.snapshot, unitId)));
-                continue;
-            }
-            combined.commands.push(...(submission.commands || []));
-            combined.actions.push(...(submission.actions || []));
+        }
+        finally {
+            runtime.endSettlementPlanning();
         }
         // captureTurn() drains every queued action in the hidden snapshot, not
         // only actions for its selected object. Keep one current action per
