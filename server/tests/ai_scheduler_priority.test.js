@@ -25,9 +25,9 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
             } : {aiLastServedTurn: 1}}));
     }
     for (let n = 0; n < 24; n++) {
-        units.push(unit({client_key: 'never-served-archer-' + n, owner_id: 9000,
+        units.push(unit({client_key: 'delayed-archer-' + n, owner_id: 9000,
             unit_type_id: 'archer', unit_class: 2, name: 'Archer', i: 2 + n % 6, j: 1 + Math.floor(n / 6),
-            properties: {}}));
+            properties: {aiLastServedTurn: 400}}));
     }
     await bootstrap({playerId: 7001, players: [7001, 9000], units, tiles: mapTiles(10), size: 10});
     sql('UPDATE server_game_players SET account_user_id=9000 WHERE player_id=9000');

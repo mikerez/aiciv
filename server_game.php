@@ -8400,8 +8400,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         WHEN u.unit_type_id = 'settlers' THEN 4
         WHEN u.unit_class = 3 THEN 8
         WHEN u.unit_class = 2
-          AND JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.automationMode')) = 'patrol' THEN 10
-        WHEN u.unit_class = 2 THEN 6
+          AND JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.automationMode')) = 'patrol' THEN 20
+        WHEN u.unit_class = 2 THEN 12
         WHEN u.unit_type_id = 'explorer' THEN 4
         WHEN u.state = 'ready' THEN 2
         ELSE 1 END";
