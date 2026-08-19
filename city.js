@@ -175,6 +175,14 @@ const _city_economy = new class
         var bestKey = '';
         var bestScore = -Infinity;
         var candidates = this.economicTileCandidates(city);
+        var mode = this.optimizationMode(city);
+        var workedFood = 0;
+        for (var workedIndex=0; workedIndex < city.economy.citizens.length; workedIndex++) {
+            var workedIncome = city.economy.citizens[workedIndex].income || {};
+            workedFood += Math.max(0, Number(workedIncome.food) || 0);
+        }
+        var needsBalancedFood = mode == 'balanced'
+            && workedFood < city.economy.citizens.length + 1;
         for (var k=0; k < candidates.length; k++) {
             var coord = candidates[k];
             if (this.isWorked(city, coord)) {
@@ -182,7 +190,8 @@ const _city_economy = new class
             }
             if (this.enemyOccupiesTile(coord.i, coord.j, city.team)) continue;
             var income = this.tileIncomeAt(coord.i, coord.j, city.team);
-            var score = this.tileOptimizationScore(income, this.optimizationMode(city));
+            var score = this.tileOptimizationScore(income, mode);
+            if (needsBalancedFood && income.food > 0) score += 1000000;
             var key = coord.i + ':' + coord.j;
             if (score > bestScore || (score == bestScore && (best == null || key < bestKey))) {
                 best = coord;

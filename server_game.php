@@ -7232,6 +7232,7 @@ function serverCityWorkedTiles(array $city, array $tiles, array $blockedTileKeys
     $properties = json_decode((string) ($city['properties_json'] ?? '{}'), true);
     $optimization = is_array($properties) ? (string) ($properties['cityOptimization'] ?? 'balanced') : 'balanced';
     if (!in_array($optimization, ['food', 'production', 'gold', 'balanced'], true)) $optimization = 'balanced';
+    $workedFood = 0;
     for ($citizen = 0; $citizen < $population; ++$citizen) {
         $best = null;
         $bestScore = -INF;
@@ -7241,6 +7242,12 @@ function serverCityWorkedTiles(array $city, array $tiles, array $blockedTileKeys
                 $tiles[$key], $key === coordinateKey((int) $city['i'], (int) $city['j'])
             );
             $score = serverCityOptimizationScore($income, $optimization);
+            // Balanced assignment first covers the citizens selected so far.
+            // Without this guard, three production on Rocks scores above two
+            // food on Grass and a population-one City starves while surrounded
+            // by food it could work.
+            if ($optimization === 'balanced' && $workedFood < $citizen + 1
+                && (float) ($income['food'] ?? 0) > 0) $score += 1000000;
             if ($score > $bestScore || ($score === $bestScore && ($best === null || strcmp($key, $best['key']) < 0))) {
                 $best = ['key' => $key, 'income' => $income];
                 $bestScore = $score;
@@ -7249,6 +7256,7 @@ function serverCityWorkedTiles(array $city, array $tiles, array $blockedTileKeys
         if ($best === null) break;
         $used[$best['key']] = true;
         $worked[] = $best;
+        $workedFood += max(0, (float) ($best['income']['food'] ?? 0));
     }
     // A City center is the final economic anchor. It must remain workable even
     // when stale occupancy data or a transient unit stack excludes every
