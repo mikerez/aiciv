@@ -34,6 +34,7 @@ function localUnit(unitClass, unitTypeId, ownerId, serverId, i, j) {
     const client = createBrowserClient({
         size: 12, playerId: 1, gameId: 'empty-city-capture', tiles,
         units: [warrior], unitsByUser: {1: [warrior], 5: [enemyCity]},
+        relations: {1: {5: 'enemy'}, 5: {1: 'enemy'}},
     });
     loadAiModels(client);
     const input = client.aiPlayer.buildActionInputForUnit(1, warrior.serverId, null);
@@ -41,6 +42,8 @@ function localUnit(unitClass, unitTypeId, ownerId, serverId, i, j) {
     const attackSlot = candidates.findIndex(candidate => candidate.command === 'attack'
         && candidate.target.i === enemyCity.coord.i && candidate.target.j === enemyCity.coord.j);
     assert.ok(attackSlot >= 0, 'the empty enemy City must be encoded as a legal attack candidate');
+    assert.equal(candidates.every(candidate => candidate.command === 'attack'), true,
+        'adjacent wartime contact removes non-combat candidates from this Action decision');
 
     const output = await client.aiPlayer.infer('action', input);
     const selected = client.aiPlayer.decodeActionOutput(output)[0];

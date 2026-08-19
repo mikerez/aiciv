@@ -1153,7 +1153,10 @@ const _ai_player = new class
                     if (!path.length) continue;
                     var targetUnit = this.visibleUnitAtForViewer(i, j, ownerTeam);
                     var enemy = targetUnit && (targetUnit.team || 0) != ownerTeam;
-                    var adjacentEnemy = enemy && Math.max(Math.abs(di), Math.abs(dj)) <= 1;
+                    var atWar = enemy && typeof _military != 'undefined'
+                        && _military.isAtWar
+                        && _military.isAtWar(ownerTeam, targetUnit.team || 0);
+                    var adjacentEnemy = atWar && path.length == 1;
                     pool.push({
                         command: adjacentEnemy && unit.type == 2 ? 'attack' : 'goto',
                         target: target,
@@ -1172,6 +1175,11 @@ const _ai_player = new class
         var choices = pool.slice(1);
         var urgent = choices.filter(function(candidate) { return candidate.command == 'attack'; });
         choices = choices.filter(function(candidate) { return candidate.command != 'attack'; });
+        // An adjacent wartime contact is already a fully specified tactical
+        // situation. Restrict the model to legal enemy targets so it chooses
+        // which defender to attack instead of accidentally plotting a patrol
+        // route through the occupied Tile without interaction intent.
+        if (urgent.length) return urgent.slice(0, 8);
         var preferred = [];
         if (unit.unitTypeId == 'worker') {
             preferred = choices.filter(function(candidate) {
