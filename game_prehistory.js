@@ -299,6 +299,7 @@ const _game_prehistory = new class
                 this.removeDestroyedCityAt(_units[_selection].coord);
                 _game.make_unit(_city, _units[_selection].coord);
                 _units[_units.length - 1].team = _units[_selection].team;
+                _units[_units.length - 1].cityFoodStored = 1;
                 // PREHISTORY-BUILD-009, rules/prehostory.md: a built city starts with road and irrigation on its tile.
                 _map.addRoad(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
                 _map.addIrrigation(
@@ -308,6 +309,7 @@ const _game_prehistory = new class
                 );
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(_units[_units.length - 1]);
+                    _units[_units.length - 1].economy.foodStored = 1;
                 }
 
                 // PREHISTORY-BUILD-002, rules/prehostory.md: building a city consumes the settler.

@@ -5914,7 +5914,10 @@ function buildCity(PDO $db, array $game, int $playerId, int $settlerId): array
             'production' => null,
             'productionDisabled' => false,
             'cityPopulation' => 1,
-            'cityFoodStored' => 0,
+            // The City is processed later in the same make_turn request. One
+            // food prevents an empty worked-tile set from destroying it before
+            // the client can even observe the successful founding action.
+            'cityFoodStored' => 1,
             'capitalOwnerId' => $isFirstCityAfterRespawn ? $playerId : null,
         ];
         $clientKey = 'city-' . $playerId . '-' . $settlerId;

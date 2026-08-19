@@ -5,7 +5,7 @@ City economy is implemented by `city.js`.
 ## City State
 
 - `CITY-STATE-001`: Each city has an economy state with citizens, worked tile coordinates, stored food, stored money, last income, and turns to the next citizen.
-- `CITY-STATE-002`: A new city starts with one citizen assigned to the best available nearby land or water Tile.
+- `CITY-STATE-002`: A new city starts with one citizen assigned to the best available nearby land or water Tile and one food in storage. This founding reserve prevents the City from starving during the same turn in which the Settler is consumed.
 - `CITY-STATE-003`: When food storage reaches `80 + population * 40`, a server game sends `grow_city`; PHP checks the threshold and available worked-Tile capacity, adds one citizen, and subtracts the growth cost. Offline games apply the same threshold locally.
 - `CITY-STATE-004`: Server population is limited to the number of eligible worked Tiles. Existing excess population is corrected during authoritative turn processing.
 - `CITY-STATE-004A`: Each citizen consumes one food per turn.
