@@ -112,7 +112,10 @@ const _control = new class
             && _map_terrain_mod[i][j] && _map_terrain_mod[i][j].road;
         var toRoad = typeof _map_terrain_mod != 'undefined' && _map_terrain_mod[ni]
             && _map_terrain_mod[ni][nj] && _map_terrain_mod[ni][nj].road;
-        if (fromRoad && toRoad) return 0.45;
+        // Roads remove movement penalties during turn processing, but Goto must
+        // not draw a longer route that starts away from the clicked Tile merely
+        // to remain on a road.
+        if (fromRoad && toRoad) return 1;
         var terrain = typeof _map_terrain_tex != 'undefined' && _map_terrain_tex[ni]
             ? Number(_map_terrain_tex[ni][nj])&0x0f : 2;
         if (terrain == 5) return 3;
@@ -135,7 +138,7 @@ const _control = new class
         var records = {};
         var open = [];
         var start = {i:i1, j:j1, key:startKey, g:0, steps:0,
-            f:this.pathDistance(i1,j1,i2,j2)*0.45, parent:null};
+            f:this.pathDistance(i1,j1,i2,j2), parent:null};
         records[startKey] = start;
         this.pathHeapPush(open, start);
         var best = start;
@@ -173,7 +176,7 @@ const _control = new class
                 var existing = records[nextKey];
                 if (existing && existing.g <= nextG && existing.steps <= current.steps+1) continue;
                 var next = {i:ni, j:nj, key:nextKey, g:nextG, steps:current.steps+1,
-                    f:nextG + this.pathDistance(ni,nj,i2,j2)*0.45, parent:current};
+                    f:nextG + this.pathDistance(ni,nj,i2,j2), parent:current};
                 records[nextKey] = next;
                 this.pathHeapPush(open, next);
             }
