@@ -190,6 +190,11 @@ const _city_economy = new class
                 bestScore = score;
             }
         }
+        if (best == null && city && city.coord && !this.isWorked(city, city.coord)
+            && city.coord.i >= 0 && city.coord.i < _map_size
+            && city.coord.j >= 0 && city.coord.j < _map_size) {
+            best = new Coord(city.coord.i, city.coord.j);
+        }
         return best;
     }
 

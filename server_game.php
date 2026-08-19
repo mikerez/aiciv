@@ -7250,6 +7250,25 @@ function serverCityWorkedTiles(array $city, array $tiles, array $blockedTileKeys
         $used[$best['key']] = true;
         $worked[] = $best;
     }
+    // A City center is the final economic anchor. It must remain workable even
+    // when stale occupancy data or a transient unit stack excludes every
+    // ordinary candidate; otherwise a valid newly founded City reports zero
+    // food and collapses before the player can act.
+    if (!$worked && $population > 0) {
+        $centerKey = coordinateKey((int) $city['i'], (int) $city['j']);
+        if (isset($tiles[$centerKey])) {
+            $worked[] = [
+                'key' => $centerKey,
+                'income' => serverTileIncome($tiles[$centerKey], true),
+            ];
+            serverTrace('city_center_income_fallback', [
+                'city_id' => (int) ($city['id'] ?? 0),
+                'owner_id' => (int) ($city['owner_id'] ?? 0),
+                'i' => (int) $city['i'], 'j' => (int) $city['j'],
+                'blocked' => isset($blockedTileKeys[$centerKey]),
+            ]);
+        }
+    }
     return $worked;
 }
 
