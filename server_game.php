@@ -8365,6 +8365,34 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.state NOT IN ('ready', 'waiting', 'automate')
         OR JSON_CONTAINS_PATH(u.properties_json, 'one', '$.clientImprovementTurnsLeft') = 1
     ) THEN 0 ELSE 1 END";
+    $adjacentEnemyOpportunitySql = "CASE WHEN u.unit_class = 2 AND EXISTS (
+        SELECT 1
+        FROM server_game_units adjacent_enemy
+        JOIN server_game_visibility adjacent_visibility
+          ON adjacent_visibility.game_id = adjacent_enemy.game_id
+         AND adjacent_visibility.player_id = u.owner_id
+         AND adjacent_visibility.i = adjacent_enemy.i
+         AND adjacent_visibility.j = adjacent_enemy.j
+         AND adjacent_visibility.visibility_level >= 2
+        JOIN server_game_relations adjacent_relation
+          ON adjacent_relation.game_id = adjacent_enemy.game_id
+         AND adjacent_relation.relation_status = 'war'
+         AND ((adjacent_relation.player_a = u.owner_id AND adjacent_relation.player_b = adjacent_enemy.owner_id)
+           OR (adjacent_relation.player_b = u.owner_id AND adjacent_relation.player_a = adjacent_enemy.owner_id))
+        WHERE adjacent_enemy.game_id = u.game_id
+          AND adjacent_enemy.owner_id <> u.owner_id
+          AND adjacent_enemy.deleted_at IS NULL
+          AND adjacent_enemy.health > 0
+          AND CASE
+              WHEN (CAST(adjacent_enemy.i AS SIGNED) - CAST(u.i AS SIGNED))
+                 * (CAST(adjacent_enemy.j AS SIGNED) - CAST(u.j AS SIGNED)) >= 0
+              THEN GREATEST(
+                  ABS(CAST(adjacent_enemy.i AS SIGNED) - CAST(u.i AS SIGNED)),
+                  ABS(CAST(adjacent_enemy.j AS SIGNED) - CAST(u.j AS SIGNED)))
+              ELSE ABS(CAST(adjacent_enemy.i AS SIGNED) - CAST(u.i AS SIGNED))
+                 + ABS(CAST(adjacent_enemy.j AS SIGNED) - CAST(u.j AS SIGNED))
+              END <= 1
+    ) THEN 0 ELSE 1 END";
     $captureOpportunitySql = "CASE WHEN u.unit_class = 2 AND EXISTS (
         SELECT 1
         FROM server_game_units capture_city
@@ -8406,8 +8434,13 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
     $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
         . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
+    // Mature Settlers remain urgent, but only after their own service interval.
+    // An unconditional category priority let a few blocked Settlers monopolize
+    // every new turn and starve all Workers and military units indefinitely.
     $matureSettlerPrioritySql = "CASE WHEN u.unit_type_id = 'settlers'
         AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
+        AND (JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 0
+          OR GREATEST(0, " . $turn . ' - ' . $lastServedSql . ") >= 8)
         THEN 0 ELSE 1 END";
     $serviceWeightSql = "CASE
         WHEN u.unit_type_id = 'worker' AND (
@@ -8445,7 +8478,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $parameters = [$turn, $turn, $globalAiId, $gameId, $globalAiId];
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
-        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $matureSettlerPrioritySql . ', '
+        . ' ORDER BY ' . $captureOpportunitySql . ', ' . $adjacentEnemyOpportunitySql . ', '
+        . $matureSettlerPrioritySql . ', '
         . $servicePrioritySql . ', '
         . $bootstrapPrioritySql . ', '
         . $neverServedSql . ', RAND() LIMIT 1 FOR UPDATE'
@@ -8503,7 +8537,8 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
                 'SELECT u.id, u.unit_type_id' . $eligibleSql
                 . " AND u.unit_type_id NOT IN ('settlers', 'worker') AND u.unit_class <> 3"
                 . ' AND ABS(u.i - ?) < 45 AND ABS(u.j - ?) < 45'
-                . ' ORDER BY ' . $captureOpportunitySql . ', ' . $servicePrioritySql . ', ' . $neverServedSql
+                . ' ORDER BY ' . $captureOpportunitySql . ', ' . $adjacentEnemyOpportunitySql . ', '
+                . $servicePrioritySql . ', ' . $neverServedSql
                 . ', RAND() LIMIT ' . $batchSize . ' FOR UPDATE'
             );
             $batchStatement->execute(array_merge($parameters, [(int) $anchor['i'], (int) $anchor['j']]));

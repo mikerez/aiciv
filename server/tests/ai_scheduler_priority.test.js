@@ -10,6 +10,9 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
     const units = [
         city({client_key: 'ai-city', owner_id: 9000, i: 4, j: 4,
             properties: {cityPopulation: 1, cityFoodStored: 1000, aiLastServedTurn: 0}}),
+        unit({client_key: 'recent-mature-settler', owner_id: 9000,
+            unit_type_id: 'settlers', unit_class: 0, name: 'Settlers', i: 8, j: 8,
+            properties: {aiSettlerTurns: 40, aiLastServedTurn: 999}}),
     ];
     for (let n = 0; n < 9; n++) {
         units.push(unit({client_key: 'ai-worker-' + n, owner_id: 9000,
@@ -42,7 +45,7 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         player_id: 7001, client_key: 'growth-scheduler-test', include_snapshot: false,
     });
     assert.deepEqual(first.unit_ids, [cityId],
-        'a City with enough stored food to grow outranks routine Worker service');
+        'a recently serviced mature Settler cannot monopolize a City growth turn');
     await serverGame.request('submit_ai_batch', {
         player_id: 7001, client_key: 'growth-scheduler-test', lease_token: first.lease_token, turn: first.turn,
         commands: first.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
@@ -58,6 +61,10 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         'stateful Workers outrank inactive military and are grouped together');
     assert.ok(second.unit_ids.includes(activeWorkerId),
         'a current Worker project is included in the first Worker batch');
+    assert.equal(second.unit_ids.some(id => value(
+        `SELECT unit_type_id FROM server_game_units WHERE id=${id}`
+    ) === 'settlers'), false,
+    'a recently serviced mature Settler cannot starve overdue Workers');
     await serverGame.request('submit_ai_batch', {
         player_id: 7001, client_key: 'node-scheduler-test', lease_token: second.lease_token, turn: second.turn,
         commands: second.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),

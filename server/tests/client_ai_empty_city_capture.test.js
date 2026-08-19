@@ -48,6 +48,23 @@ function localUnit(unitClass, unitTypeId, ownerId, serverId, i, j) {
         'the Action model must choose capture instead of keeping the adjacent Warrior fortified');
     assert.equal(selected.command, 'attack');
 
+    enemyCity.type = 2;
+    enemyCity.unitTypeId = 'warrior';
+    enemyCity.can_move = true;
+    enemyCity.attack = 2;
+    enemyCity.defense = 2;
+    const combatInput = client.aiPlayer.buildActionInputForUnit(1, warrior.serverId, null);
+    const combatCandidates = client.aiPlayer.lastActionCandidates;
+    const combatAttackSlot = combatCandidates.findIndex(candidate => candidate.command === 'attack'
+        && candidate.target.i === enemyCity.coord.i && candidate.target.j === enemyCity.coord.j);
+    assert.ok(combatAttackSlot >= 0,
+        'an adjacent visible enemy military unit must be encoded as a legal attack candidate');
+    const combatOutput = await client.aiPlayer.infer('action', combatInput);
+    const combatSelected = client.aiPlayer.decodeActionOutput(combatOutput)[0];
+    assert.equal(combatSelected.record, combatAttackSlot,
+        'the Action model must attack an adjacent enemy military unit instead of waiting');
+    assert.equal(combatSelected.command, 'attack');
+
     client.document.cookie = 'aiciv_player_id=1';
     vm.runInContext(fs.readFileSync(path.join(root, 'multiplayer.js'), 'utf8')
         + '\nglobalThis.realMultiplayer = _multiplayer;', client, {filename: 'multiplayer.js'});
@@ -69,5 +86,5 @@ function localUnit(unitClass, unitTypeId, ownerId, serverId, i, j) {
         'the final server submission must retain the City attack movement');
     assert.equal(submission.commands[0].payload.interaction_intent, 'attack');
     assert.equal(submission.commands[0].payload.target_owner_id, enemyCity.team);
-    console.log('PASS Action model sends an adjacent Barbarian Warrior into an empty enemy City');
+    console.log('PASS Action model attacks adjacent enemy Cities and military units');
 })().catch(error => { console.error(error); process.exitCode = 1; });

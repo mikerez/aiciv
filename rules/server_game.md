@@ -178,7 +178,7 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for shared AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
 
-`SERVER-AI-001`: `claim_ai_batch` leases living global-AI objects using weighted service debt. A Worker with an active build state or authoritative build countdown is always in the first scheduling tier for that turn; after it receives one order it is excluded normally. Remaining priority follows idle Workers, Settlers, Cities, Explorers, ready military units, and inactive military units. Nearby Workers are grouped up to the contributor batch width; Settler and City decisions remain atomic.
+`SERVER-AI-001`: `claim_ai_batch` leases living global-AI objects using weighted service debt. Visible adjacent wartime combat and empty-City capture are urgent. A mature Settler receives expansion priority only when at least eight turns have elapsed since its previous AI service, preventing blocked Settlers from starving Workers and military forces. Nearby objects of one category are grouped up to the contributor batch width; Cities remain atomic.
 
 `SERVER-AI-002`: `submit_ai_batch` accepts commands and build/found-city actions only for the object ids returned by the caller's lease. It filters actions by verified leased object before applying the contributor batch limit, verifies that those ids still belong to living global-AI objects, upserts their orders, and never creates `server_game_submissions`; the AI cannot delay turn resolution.
 
