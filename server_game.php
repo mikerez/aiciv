@@ -182,42 +182,6 @@ function writeClientErrorReport(array $data): array
     }
 }
 
-function writeAiWorkerDecisionReport(array $decision): array
-{
-    $unitId = isset($decision['unit_id']) && is_numeric($decision['unit_id'])
-        ? (int) $decision['unit_id'] : null;
-    $choice = substr((string) ($decision['decision']['choice'] ?? $decision['command'] ?? 'unknown'), 0, 120);
-    return writeClientErrorReport([
-        'source_request_type' => 'ai_worker_automation',
-        'request_parameters' => $decision,
-        'error_message' => 'Automated AI Worker decision: ' . $choice,
-        'error_code' => 'AI_WORKER_DECISION',
-        'player_id' => $decision['player_id'] ?? null,
-        'unit_id' => $unitId,
-        'unsuccessful_action' => '',
-        'destination_point' => $decision['decision']['target'] ?? null,
-        'client' => ['client_key' => $decision['client_key'] ?? null],
-    ]);
-}
-
-function writeAiDevelopmentDecisionReport(array $decision): array
-{
-    $unitId = isset($decision['unit_id']) && is_numeric($decision['unit_id'])
-        ? (int) $decision['unit_id'] : null;
-    $choice = substr((string) ($decision['decision']['command'] ?? $decision['command'] ?? 'unknown'), 0, 120);
-    return writeClientErrorReport([
-        'source_request_type' => 'ai_development_decision',
-        'request_parameters' => $decision,
-        'error_message' => 'AI development decision: ' . $choice,
-        'error_code' => 'AI_DEVELOPMENT_DECISION',
-        'player_id' => $decision['player_id'] ?? null,
-        'unit_id' => $unitId,
-        'unsuccessful_action' => '',
-        'destination_point' => $decision['decision']['target'] ?? null,
-        'client' => ['client_key' => $decision['client_key'] ?? null],
-    ]);
-}
-
 function serverTrace(string $event, array $details = []): void
 {
     global $serverTraceData, $serverTraceDropped;
@@ -8338,16 +8302,9 @@ function storePlayerOrders(
         if (!in_array($name, $allowed, true)) $name = 'hold';
         $path = isset($command['path']) && is_array($command['path']) ? $command['path'] : [];
         $payload = isset($command['payload']) && is_array($command['payload']) ? $command['payload'] : [];
-        $workerDecision = isset($payload['worker_automation_decision'])
-            && is_array($payload['worker_automation_decision'])
-            ? $payload['worker_automation_decision'] : null;
         unset($payload['worker_automation_decision']);
-        if ($workerDecision !== null) {
-            $workerDecision['player_id'] = $playerId;
-            $workerDecision['unit_id'] = $unitId;
-            $workerDecision['client_key'] = 'player-turn';
-            writeAiWorkerDecisionReport($workerDecision);
-        }
+        // Routine automation decisions are not client errors. Keep them out of
+        // reports/, which is reserved for actionable failure reports.
         $insert->execute([$gameId, $turn, $playerId, $unitId, $name, jsonObject($path), jsonObject($payload)]);
         $acceptedOrders[] = ['unit_id' => $unitId, 'command' => $name, 'path' => $path, 'payload' => $payload];
     }
@@ -8650,24 +8607,11 @@ function submitGlobalAiBatch(
         if (!in_array($name, $allowed, true)) $name = 'hold';
         $path = isset($command['path']) && is_array($command['path']) ? $command['path'] : [];
         $payload = isset($command['payload']) && is_array($command['payload']) ? $command['payload'] : [];
-        $workerDecision = isset($payload['ai_worker_decision']) && is_array($payload['ai_worker_decision'])
-            ? $payload['ai_worker_decision'] : null;
-        $developmentDecision = isset($payload['ai_development_decision'])
-            && is_array($payload['ai_development_decision']) ? $payload['ai_development_decision'] : null;
         unset($payload['ai_worker_decision']);
         unset($payload['ai_development_decision']);
-        if ($workerDecision !== null) {
-            $workerDecision['player_id'] = $globalAiId;
-            $workerDecision['unit_id'] = $unitId;
-            $workerDecision['client_key'] = $clientKey;
-            writeAiWorkerDecisionReport($workerDecision);
-        }
-        if ($developmentDecision !== null) {
-            $developmentDecision['player_id'] = $globalAiId;
-            $developmentDecision['unit_id'] = $unitId;
-            $developmentDecision['client_key'] = $clientKey;
-            writeAiDevelopmentDecisionReport($developmentDecision);
-        }
+        // Successful AI reasoning is high-volume telemetry, not an error.
+        // The contributor console retains its summaries without creating one
+        // filesystem report per unit decision.
         $insert->execute([$gameId, $turn, $globalAiId, $unitId, $name, jsonObject($path), jsonObject($payload)]);
         $stored++;
         $submittedIds[$unitId] = true;
@@ -8720,13 +8664,23 @@ function normalizeSharedAiTask($value): ?array
     if (!is_array($value)) return null;
     $kind = strtolower((string) ($value['kind'] ?? ''));
     $mode = strtolower((string) ($value['mode'] ?? ''));
+    $target = $value['target'] ?? null;
+    if ($kind === 'settler') {
+        if ($mode !== 'settle' || !is_array($target)
+            || !isset($target['i'], $target['j'])
+            || !is_numeric($target['i']) || !is_numeric($target['j'])) return null;
+        return [
+            'kind' => 'settler',
+            'mode' => 'settle',
+            'target' => ['i' => (int) $target['i'], 'j' => (int) $target['j']],
+        ];
+    }
     if ($kind !== 'worker' || !in_array($mode, ['automate', 'road_to'], true)) return null;
     $task = ['kind' => 'worker', 'mode' => $mode];
     $action = strtolower((string) ($value['action'] ?? ''));
     if (preg_match('/^[a-z_]{1,32}$/', $action)) $task['action'] = $action;
     $state = strtolower((string) ($value['state'] ?? ''));
     if (preg_match('/^[a-z_]{1,32}$/', $state)) $task['state'] = $state;
-    $target = $value['target'] ?? null;
     if (is_array($target) && isset($target['i'], $target['j'])
         && is_numeric($target['i']) && is_numeric($target['j'])) {
         $task['target'] = ['i' => (int) $target['i'], 'j' => (int) $target['j']];

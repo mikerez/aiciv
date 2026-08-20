@@ -2482,7 +2482,9 @@ const _ai_player = new class
         if (target && target.path.length) {
             settler.state = 'ready';
             _current_game.assignPath(k, target.path);
-            if (target.settlementSite) this.reserveSettlementCoord(target.coord);
+            // Exploration destinations are reservations too. Otherwise several
+            // Settlers in one batch repeatedly choose and follow the same point.
+            this.reserveSettlementCoord(target.coord);
             return {
                 applied: true, command: 'goto', target: target.coord, score: target.plotScore,
                 pathLength: target.path.length, age: age,

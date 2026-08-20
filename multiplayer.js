@@ -346,6 +346,54 @@ const _multiplayer = new class
         return new Coord(Number(task.target.i)-_map_origin_i, Number(task.target.j)-_map_origin_j);
     }
 
+    sharedAiSettlerTarget(task)
+    {
+        if (!task || task.kind != 'settler' || task.mode != 'settle'
+            || !task.target || task.target.i == undefined || task.target.j == undefined) return null;
+        return new Coord(Number(task.target.i)-_map_origin_i, Number(task.target.j)-_map_origin_j);
+    }
+
+    resumeSharedAiSettlerTask(k)
+    {
+        var settler = _units[k];
+        var target = settler && this.sharedAiSettlerTarget(settler.sharedAiTask);
+        if (!settler || settler.unitTypeId != 'settlers' || !target) return null;
+        if (settler.coord.i == target.i && settler.coord.j == target.j) {
+            delete settler.sharedAiTask;
+            return null;
+        }
+        if (target.i < 0 || target.j < 0 || target.i >= _map_size || target.j >= _map_size) {
+            delete settler.sharedAiTask;
+            return null;
+        }
+        var path = _current_game.buildPath(k, target);
+        if (!path || !path.length) {
+            delete settler.sharedAiTask;
+            return null;
+        }
+        settler.state = 'ready';
+        _current_game.assignPath(k, path);
+        return {target: target, pathLength: path.length};
+    }
+
+    sharedAiSettlerTask(unit, decision, submission)
+    {
+        if (!unit || unit.unitTypeId != 'settlers') return null;
+        var founded = (submission.actions || []).some(function(action) {
+            return action && action.type == 'build_city'
+                && Number(action.settler_unit_id) == Number(unit.serverId);
+        });
+        if (founded || !decision || decision.command != 'goto' || !decision.target) return null;
+        return {
+            kind: 'settler',
+            mode: 'settle',
+            target: {
+                i: Number(decision.target.i)+_map_origin_i,
+                j: Number(decision.target.j)+_map_origin_j,
+            },
+        };
+    }
+
     resumeSharedAiWorkerTask(k)
     {
         var worker = _units[k];
@@ -496,8 +544,22 @@ const _multiplayer = new class
                 decision.model = economics;
             }
             else if (stage.kind == 'settler') {
-                var settlerPolicy = _ai_player.applySettlerExpansionPolicy(found.index, aiId);
-                decision = Object.assign({kind: 'settler'}, settlerPolicy);
+                var resumedSettlement = _multiplayer.resumeSharedAiSettlerTask(found.index);
+                if (resumedSettlement) {
+                    decision = {
+                        kind: 'settler', applied: true, command: 'goto',
+                        target: resumedSettlement.target,
+                        pathLength: resumedSettlement.pathLength,
+                        persistentMission: true,
+                        description: 'Settler #' + (unit.serverId || unitId)
+                            + ' resumes City destination '
+                            + _ai_player.coordText(resumedSettlement.target),
+                    };
+                }
+                else {
+                    var settlerPolicy = _ai_player.applySettlerExpansionPolicy(found.index, aiId);
+                    decision = Object.assign({kind: 'settler'}, settlerPolicy);
+                }
             }
             else if (stage.kind == 'worker') {
                 var persistentRoadTo = _multiplayer.workerHasPersistentRoadTo(unit);
@@ -566,6 +628,11 @@ const _multiplayer = new class
             }
             if (command && (stage.kind == 'settler' || stage.kind == 'city')) {
                 command.payload = command.payload || {};
+                if (stage.kind == 'settler') {
+                    command.payload.shared_ai_task = _multiplayer.sharedAiSettlerTask(
+                        unit, decision, submission
+                    );
+                }
                 command.payload.ai_development_decision = {
                     player_id: aiId,
                     unit_id: unit.serverId || Number(unitId),
