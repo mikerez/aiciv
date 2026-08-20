@@ -142,7 +142,10 @@ class ServerApi
         try {
             const response = await fetch(this.endpoint, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                // Apache closes idle TLS connections before Undici's pool does.
+                // A fresh connection avoids losing an already-processed AI
+                // submission to a stale keep-alive socket.
+                headers: {'Content-Type': 'application/json', 'Connection': 'close'},
                 body: JSON.stringify(Object.assign({
                     action,
                     secret: this.secret,
@@ -163,6 +166,10 @@ class ServerApi
                 throw error;
             }
             return result;
+        }
+        catch (error) {
+            error.apiAction = action;
+            throw error;
         }
         finally {
             clearTimeout(timeout);
@@ -434,7 +441,12 @@ class AiContributor
             }
             catch (error) {
                 failures++;
-                this.log(`contribution error${error.code ? ` ${error.code}` : ''}: ${error.message}`);
+                const cause = error.cause || null;
+                const errorCode = error.code || (cause && cause.code) || '';
+                const causeText = cause && cause.message && cause.message !== error.message
+                    ? `; cause=${cause.message}` : '';
+                this.log(`contribution error${error.apiAction ? ` ${error.apiAction}` : ''}`
+                    + `${errorCode ? ` ${errorCode}` : ''}: ${error.message}${causeText}`);
                 await sleep(Math.min(10000, this.options.pollMs * Math.pow(2, Math.min(failures, 4))));
             }
         }

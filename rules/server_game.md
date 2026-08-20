@@ -280,6 +280,10 @@ City and production examples:
 ```
 
 Send `unit_type_id: null` to clear City production. Send `remove_production` with `city_unit_id` and zero-based `queue_index` to remove one backlog item; send `complete_production` with `city_unit_id` when the active item has enough points.
+# Server Process Limits
+
+`SERVER-OPS-001`: The 1 GiB EC2 game host runs PHP-FPM as an on-demand pool with at most six children. Idle PHP workers expire after ten seconds and each worker is recycled after 200 requests. The deployable override is `server/php-fpm-aiciv.conf`; the default 50-child dynamic pool is not valid for this host because it forces swapping and causes AI lease requests to fail.
+
 # Map Supertile Debug Update
 
 The standalone CLI tool `server/update_map_supertiles.php` converts existing repeated 2x2 water and forest terrain into non-overlapping supertiles without regenerating the map.
