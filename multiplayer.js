@@ -367,7 +367,7 @@ const _multiplayer = new class
             return null;
         }
         var path = _current_game.buildPath(k, target);
-        if (!path || !path.length) {
+        if (!_ai_player.pathReachesCoord(path, target)) {
             delete settler.sharedAiTask;
             return null;
         }
