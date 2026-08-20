@@ -144,4 +144,18 @@ assert.ok(reachable && blockedClient.aiPlayer.pathReachesCoord(reachable.path, r
 assert.notDeepEqual([reachable.coord.i, reachable.coord.j], [8, 8],
     'a full destination Tile is not retained as a settlement mission');
 
+const blockedFog = blockedClient._map_terrain_bit_by_user[playerId];
+for (let i=0; i<14; i++) for (let j=0; j<14; j++) blockedFog[i][j] &= ~0x4000;
+blockedFog[8][8] |= 0x4000;
+const exploration = blockedClient.aiPlayer.bestSettlementExplorationRoute(1, playerId);
+assert.ok(exploration && blockedClient.aiPlayer.pathReachesCoord(
+    exploration.path, exploration.coord
+), 'partial exploration persists its reachable endpoint as the next mission waypoint');
+assert.notDeepEqual([exploration.coord.i, exploration.coord.j], [8, 8],
+    'partial exploration never persists the inaccessible requested coordinate');
+assert.ok(blockedClient.aiPlayer.settlementDistanceToOwnCity(
+    exploration.coord.i, exploration.coord.j, playerId
+) > blockedClient.aiPlayer.settlementDistanceToOwnCity(3, 3, playerId),
+'the reachable exploration waypoint advances away from existing Cities');
+
 console.log('PASS Barbarian Settlers reject poor centers and found adequately spaced grass Cities');

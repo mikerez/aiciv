@@ -2404,13 +2404,22 @@ const _ai_player = new class
                 var cityDistance = this.settlementDistanceToOwnCity(i, j, ownerTeam);
                 if (cityDistance <= currentDistance) continue;
                 var path = _current_game.buildPath(k, new Coord(i, j));
-                if (!this.pathReachesCoord(path, new Coord(i, j))) continue;
-                var plotScore = this.cityPlotScore(i, j, ownerTeam);
-                var score = cityDistance + (this.isPreferredCityCenter(i, j) ? 0.35 : 0)
+                if (!path.length) continue;
+                // Exploration may deliberately aim beyond the currently
+                // traversable snapshot. Persist only the reached waypoint;
+                // never save the inaccessible requested coordinate as a task.
+                var endpoint = path[path.length - 1];
+                var endpointDistance = this.settlementDistanceToOwnCity(
+                    endpoint.i, endpoint.j, ownerTeam
+                );
+                if (endpointDistance <= currentDistance) continue;
+                var plotScore = this.cityPlotScore(endpoint.i, endpoint.j, ownerTeam);
+                var score = endpointDistance
+                    + (this.isPreferredCityCenter(endpoint.i, endpoint.j) ? 0.35 : 0)
                     + plotScore * 0.15 - path.length * 0.02;
                 if (!best || score > best.score) {
                     best = {
-                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        coord: new Coord(endpoint.i, endpoint.j), path: path, plotScore: plotScore,
                         score: score, settlementSite: false,
                     };
                 }
