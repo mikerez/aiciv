@@ -8418,13 +8418,15 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
     $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
         . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
-    // Mature Settlers remain urgent, but only after their own service interval.
-    // An unconditional category priority let a few blocked Settlers monopolize
-    // every new turn and starve all Workers and military units indefinitely.
+    // A validated settlement mission needs one new atomic move every turn.
+    // Settlers without a mission retain the longer interval so an idle or
+    // blocked unit cannot monopolize Workers and military units indefinitely.
     $matureSettlerPrioritySql = "CASE WHEN u.unit_type_id = 'settlers'
         AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
         AND (JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 0
-          OR GREATEST(0, " . $turn . ' - ' . $lastServedSql . ") >= 8)
+          OR GREATEST(0, " . $turn . ' - ' . $lastServedSql . ") >= CASE
+              WHEN JSON_CONTAINS_PATH(u.properties_json, 'one', '$.sharedAiTask') = 1 THEN 1
+              ELSE 8 END)
         THEN 0 ELSE 1 END";
     $serviceWeightSql = "CASE
         WHEN u.unit_type_id = 'worker' AND (

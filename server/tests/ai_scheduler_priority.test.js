@@ -38,6 +38,9 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         + "turn_deadline_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 60 SECOND)");
 
     const cityId = Number(value("SELECT id FROM server_game_units WHERE client_key='ai-city'"));
+    const settlerId = Number(value(
+        "SELECT id FROM server_game_units WHERE client_key='recent-mature-settler'"
+    ));
     const workerIds = sql("SELECT id FROM server_game_units WHERE unit_type_id='worker' ORDER BY id")
         .trim().split(/\s+/).filter(Boolean).map(Number);
     const activeWorkerId = Number(value("SELECT id FROM server_game_units WHERE client_key='ai-worker-0'"));
@@ -80,10 +83,26 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, sql, 
         commands: third.unit_ids.map(id => ({unit_id: id, command: 'hold', path: [], payload: {}})),
         actions: [],
     });
+    sql(`UPDATE server_game_units SET properties_json=JSON_SET(properties_json,
+        '$.aiLastServedTurn',999,
+        '$.sharedAiTask',JSON_OBJECT('kind','settler','mode','settle',
+            'target',JSON_OBJECT('i',8,'j',9))) WHERE id=${settlerId}`);
+    const mission = await serverGame.request('claim_ai_batch', {
+        player_id: 7001, client_key: 'node-settler-scheduler-test', include_snapshot: false,
+    });
+    assert.deepEqual(mission.unit_ids, [settlerId],
+        'an active settlement mission receives its next atomic move after one turn');
+    await serverGame.request('submit_ai_batch', {
+        player_id: 7001, client_key: 'node-settler-scheduler-test',
+        lease_token: mission.lease_token, turn: mission.turn,
+        commands: [{unit_id: settlerId, command: 'hold', path: [], payload: {}}],
+        actions: [],
+    });
+
     const military = await serverGame.request('claim_ai_batch', {
         player_id: 7001, client_key: 'node-military-test', include_snapshot: false,
     });
     assert.equal(military.unit_ids.length, 8,
         'inactive military still accumulates enough debt and uses a full native batch');
-    console.log('PASS weighted AI service debt advances Workers without starving other objects');
+    console.log('PASS weighted AI service debt advances active missions without starving other objects');
 })().catch(error => { console.error(error); process.exitCode = 1; });
