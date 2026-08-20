@@ -115,13 +115,27 @@ node ai_player/ai_player.js
 The process reads the application secret from `AICIV_SECRET`, from the file in
 `AICIV_SECRET_FILE`, or from `api_secret` in the repository root. Run it directly
 in a dedicated console; it claims short server leases until interrupted with
-`Ctrl+C`. The
-server scheduler and browser-side rotating batches both start from randomized
-unit positions, so repeated inference is not pinned to the first eight units.
-The native contributor leases up to four nearby military units per snapshot;
+`Ctrl+C`. The server scheduler uses weighted service debt so active Worker
+projects are revisited much more often than fortified units, while every object
+continues accumulating debt and eventually receives service. The native
+contributor leases up to eight nearby Workers or military units per snapshot;
 browser contributors retain two-unit leases. Strategy is refreshed every eight
 turns by default (`--strategy-interval N` or `AICIV_STRATEGY_INTERVAL`) while
 Action and Economics continue to run for every leased object.
+
+Headless HTTP requests allow 120 seconds by default because an authoritative
+map-window snapshot can be slow on a loaded database. Override this with
+`--timeout-ms N` or `AICIV_REQUEST_TIMEOUT_MS`; turn rebasing keeps a result
+valid when its request spans several six-second turns.
+
+If the six-second game turn advances during inference, the contributor includes
+the original leased object ids with its result. PHP verifies that they are still
+living global-AI objects and revalidates their commands against current state
+before storing them in the active turn.
+
+Before submission, queued immediate actions are reduced to the leased objects.
+PHP independently performs the same ownership filter before its batch limit, so
+an unrelated hidden City action cannot displace a Worker's completed build.
 
 ## Browser Adapters
 

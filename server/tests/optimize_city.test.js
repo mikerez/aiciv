@@ -89,6 +89,37 @@ async function optimizePastureEndpoint() {
         'food optimization should assign a citizen to the Pasture beside the connected road');
 }
 
+async function optimizeBalancedSurvival() {
+    resetDatabase();
+    const tiles = mapTiles(9, 1);
+    setTile(tiles, 4, 4, 2, {}); // Grass: two food, balanced score eight.
+    setTile(tiles, 5, 4, 5, {}); // Rocks: three production, balanced score nine.
+    const fixture = await bootstrap({
+        size: 9,
+        tiles,
+        units: [city({client_key: 'survival-city', i: 4, j: 4})],
+    });
+    const response = await serverGame.request('make_turn', {
+        player_id: fixture.playerId,
+        turn: fixture.result.turn,
+        commands: [],
+        actions: [{
+            client_action_id: 'optimize-survival',
+            type: 'optimize_city',
+            city_unit_id: fixture.unitIds['survival-city'],
+            optimization: 'balanced',
+        }],
+        player_state: {}, relations: {}, include_updates: true,
+    });
+    const action = response.action_results.find(
+        result => result.client_action_id === 'optimize-survival'
+    );
+    assert.equal(action.ok, true);
+    const citizen = action.result.city.properties.economy.citizens[0];
+    assert.deepEqual([Number(citizen.coord.i), Number(citizen.coord.j)], [4, 4],
+        'balanced assignment feeds population one instead of choosing zero-food Rocks');
+}
+
 (async () => {
     const expected = {
         food: [4, 5],
@@ -103,6 +134,7 @@ async function optimizePastureEndpoint() {
         assert.equal(result.mode, mode, mode + ' should persist its optimization mode');
     }
     await optimizePastureEndpoint();
+    await optimizeBalancedSurvival();
     console.log('PASS optimize_city reallocates, returns, and persists authoritative citizen plots for every focus');
 })().catch(error => {
     console.error(error);

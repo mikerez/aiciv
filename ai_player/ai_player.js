@@ -179,6 +179,7 @@ class ServerApi
         return this.request('submit_ai_batch', {
             lease_token: batch.lease_token,
             turn: batch.turn,
+            leased_unit_ids: batch.unit_ids || [],
             commands: submission.commands || [],
             actions: submission.actions || [],
         });
@@ -210,6 +211,8 @@ class BrowserAiRuntime
         context.document.querySelectorAll = () => [];
         context._turn_in_progress = 0;
         context.appendConsoleLog = message => log(String(message));
+        evaluate(context, 'city.js', '\nglobalThis.realCityEconomy=_city_economy;');
+        context._city_economy = context.realCityEconomy;
         evaluate(context, 'military.js', '\nglobalThis.realMilitary=_military;');
         evaluate(context, 'multiplayer.js', '\nglobalThis.realMultiplayer=_multiplayer;');
         evaluate(context, 'ai.js', '\nglobalThis.aiPlayer=_ai_player;');
@@ -290,6 +293,16 @@ class BrowserAiRuntime
             };
         });
     }
+
+    beginSettlementPlanning()
+    {
+        this.context.aiPlayer.beginSettlementPlanning();
+    }
+
+    endSettlementPlanning()
+    {
+        this.context.aiPlayer.endSettlementPlanning();
+    }
 }
 
 class AiContributor
@@ -342,30 +355,53 @@ class AiContributor
 
         runtime.activateSnapshot(aiId, batch.snapshot);
         const combined = {commands: [], actions: []};
-        for (const unitId of batch.unit_ids || []) {
-            const snapshotUnit = (batch.snapshot.units || []).find(unit => Number(unit.id) === Number(unitId));
-            if (!snapshotUnit) {
-                this.log(`turn ${batch.turn}: leased unit ${unitId} is absent from the AI snapshot`);
+        runtime.beginSettlementPlanning();
+        try {
+            for (const unitId of batch.unit_ids || []) {
+                const snapshotUnit = (batch.snapshot.units || []).find(unit => Number(unit.id) === Number(unitId));
+                if (!snapshotUnit) {
+                    this.log(`turn ${batch.turn}: leased unit ${unitId} is absent from the AI snapshot`);
+                }
+                const submission = await runtime.prepareUnit(
+                    aiId, batch.snapshot, unitId, this.strategyFocus, true
+                );
+                if (!submission) {
+                    this.log(`turn ${batch.turn}: unit ${unitId}`
+                        + `${snapshotUnit ? ` ${snapshotUnit.unit_type_id}@${snapshotUnit.world_i},${snapshotUnit.world_j}` : ''}`
+                        + ' produced no legal submission; adapter='
+                        + JSON.stringify(runtime.diagnoseUnit(aiId, batch.snapshot, unitId)));
+                    continue;
+                }
+                combined.commands.push(...(submission.commands || []));
+                combined.actions.push(...(submission.actions || []));
             }
-            const submission = await runtime.prepareUnit(
-                aiId, batch.snapshot, unitId, this.strategyFocus, true
-            );
-            if (!submission) {
-                this.log(`turn ${batch.turn}: unit ${unitId}`
-                    + `${snapshotUnit ? ` ${snapshotUnit.unit_type_id}@${snapshotUnit.world_i},${snapshotUnit.world_j}` : ''}`
-                    + ' produced no legal submission; adapter='
-                    + JSON.stringify(runtime.diagnoseUnit(aiId, batch.snapshot, unitId)));
-                continue;
-            }
-            combined.commands.push(...(submission.commands || []));
-            combined.actions.push(...(submission.actions || []));
         }
+        finally {
+            runtime.endSettlementPlanning();
+        }
+        // captureTurn() drains every queued action in the hidden snapshot, not
+        // only actions for its selected object. Keep one current action per
+        // leased object so unrelated City queues cannot precede and displace a
+        // Worker's completed build in the bounded server batch.
+        const leasedIds = new Set((batch.unit_ids || []).map(Number));
+        const leasedActions = new Map();
+        for (const action of combined.actions) {
+            if (!action || typeof action !== 'object') continue;
+            const objectId = Number(action.worker_unit_id
+                ?? action.settler_unit_id ?? action.city_unit_id ?? 0);
+            if (!leasedIds.has(objectId)) continue;
+            leasedActions.set(`${String(action.type || '')}:${objectId}`, action);
+        }
+        combined.actions = Array.from(leasedActions.values());
         const response = await this.api.submit(batch, combined);
         const commandText = combined.commands.map(command => {
             const destination = command.path && command.path.length
                 ? command.path[command.path.length - 1] : null;
+            const mission = command.payload && command.payload.ai_force_mission
+                ? command.payload.ai_force_mission.mode : null;
             return `#${command.unit_id}:${command.command}`
-                + (destination ? `->${destination.i},${destination.j}` : '');
+                + (destination ? `->${destination.i},${destination.j}` : '')
+                + (mission ? `[${mission}]` : '');
         }).join(', ') || 'none';
         const actionText = combined.actions.map(action => action.type).join(', ') || 'none';
         this.log(`turn ${batch.turn}: accepted=${response.accepted !== false}`
@@ -421,6 +457,7 @@ function parseArguments(argv)
         secret: process.env.AICIV_SECRET || '',
         pollMs: 1000,
         cycleMs: Math.max(0, Number(process.env.AICIV_CYCLE_MS) || 250),
+        timeoutMs: Math.max(5000, Number(process.env.AICIV_REQUEST_TIMEOUT_MS) || 120000),
         strategyInterval: Math.max(1, Number(process.env.AICIV_STRATEGY_INTERVAL) || 8),
         maxClaims: 0,
         maxBatches: 0,
@@ -434,6 +471,7 @@ function parseArguments(argv)
         else if (argument === '--game-id') options.gameId = argv[++index];
         else if (argument === '--poll-ms') options.pollMs = Math.max(250, Number(argv[++index]) || 1000);
         else if (argument === '--cycle-ms') options.cycleMs = Math.max(0, Number(argv[++index]) || 0);
+        else if (argument === '--timeout-ms') options.timeoutMs = Math.max(5000, Number(argv[++index]) || 120000);
         else if (argument === '--strategy-interval') {
             options.strategyInterval = Math.max(1, Number(argv[++index]) || 8);
         }
@@ -458,6 +496,7 @@ function usage()
         '  --game-id ID         game key (default aiciv-default)',
         '  --poll-ms N          idle/error polling interval (default 1000)',
         '  --cycle-ms N         delay after a successful lease (default 250)',
+        '  --timeout-ms N       HTTP request timeout (default 120000)',
         '  --strategy-interval N  turns between Strategy refreshes (default 8)',
         '  --once               make one lease claim and exit',
         '  --max-claims N       stop after N lease claims',

@@ -676,6 +676,7 @@ const _server_game = new class
             name: true, texture: true, can_move: true, nature: true, attack: true, defense: true, speed: true,
             viewRange: true, state: true, health: true, maxHealth: true, experience: true, move_penalty: true,
             gotoPath: true, gotoCoord: true, pendingServerPath: true, pendingImmediateBuild: true,
+            serverActionPending: true,
             clientImprovementTurnsLeft: true, clientImprovementState: true, pendingDisband: true,
             interactionIntent: true, interactionTargetOwnerId: true, attackTargetOwnerId: true,
             resumeAutomationAfterRoadTo: true, worldCoord: true, arrivalEffect: true,
@@ -2392,6 +2393,13 @@ const _server_game = new class
                     || key == 'clientImprovementTurnsLeft' || key == 'clientImprovementState'
                     || key == 'pendingImmediateBuild') continue;
                 unit[key] = properties[key];
+            }
+            if (ownUnit && !reconcileClientRoutes) {
+                // A headless lease is a new browser-compatible execution context.
+                // These flags describe requests owned by the previous context,
+                // not authoritative server state.
+                unit.serverActionPending = false;
+                delete unit.pendingImmediateBuild;
             }
             this.updateUnitMapWindowState(unit);
             if (ownUnit && localAutomationMode == 'road_to') {

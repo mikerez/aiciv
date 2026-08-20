@@ -2,7 +2,6 @@
 'use strict';
 
 const fs = require('node:fs');
-const path = require('node:path');
 const {
     assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, sql, value,
 } = require('./test_client');
@@ -42,13 +41,8 @@ const {
     });
     assert.equal(result.accepted, true);
     const files = fs.readdirSync(process.env.AICIV_TEST_REPORT_DIR).filter(name => name.endsWith('.rtp'));
-    assert.equal(files.length, 1);
-    const report = JSON.parse(fs.readFileSync(path.join(process.env.AICIV_TEST_REPORT_DIR, files[0]), 'utf8'));
-    assert.equal(report.source_request_type, 'ai_worker_automation');
-    assert.equal(report.error_code, 'AI_WORKER_DECISION');
-    assert.equal(report.unit_id, fixture.unitIds['reported-ai-worker']);
-    assert.equal(report.request_parameters.decision.action, 'mine');
-    assert.deepEqual(report.destination_point, {i: 4, j: 3});
+    assert.equal(files.length, 0,
+        'successful AI decisions do not flood the client-error report directory');
     const storedPayload = JSON.parse(value(
         `SELECT payload_json FROM server_game_orders WHERE unit_id=${fixture.unitIds['reported-ai-worker']}`
     ));
@@ -71,5 +65,5 @@ const {
         kind: 'worker', mode: 'automate', action: 'mine', state: 'mine',
         target: {i: 4, j: 3}, turns_left: 5,
     }, 'another browser can load and resume the AI Worker task after turn resolution');
-    console.log('PASS automated AI Worker reasoning is written to one structured RTP report');
+    console.log('PASS AI Worker continuation persists without creating a false error report');
 })().catch(error => { console.error(error); process.exitCode = 1; });

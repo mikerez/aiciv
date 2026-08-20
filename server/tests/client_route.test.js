@@ -24,6 +24,12 @@ for (let n=2; n<=8; n++) _map_terrain_mod[n][n].road = true;
 let points = route({i: 1, j: 1}, {i: 8, j: 8});
 assert.deepEqual(points.slice(0, 3), [[2,2], [3,3], [4,4]], 'Goto sticks to a road that advances toward the destination');
 
+const backwardDetour = [[6,6], [5,6], [5,7], [6,8], [7,9], [8,10], [9,10], [10,10]];
+for (const [i, j] of backwardDetour) _map_terrain_mod[i][j].road = true;
+points = route({i: 6, j: 6}, {i: 10, j: 10});
+assert.deepEqual(points, [[7,7], [8,8], [9,9], [10,10]],
+    'Goto does not follow a longer road backward and around before returning to the clicked Tile');
+
 for (let i=0; i<_map_size; i++) for (let j=0; j<_map_size; j++) _map_terrain_mod[i][j] = {};
 _map_terrain_tex[2][2] = 5;
 points = route({i: 1, j: 1}, {i: 5, j: 5});

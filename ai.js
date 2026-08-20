@@ -57,6 +57,8 @@ const _ai_player = new class
         this.batchCursors = {};
         this.actionCandidateCursors = {};
         this.forcedActionUnitServerId = null;
+        this.collectSettlementPlans = false;
+        this.plannedSettlementCoords = [];
         this.forcedEconomicsCityServerId = null;
         this.economicsCandidateCursors = {};
         this.strategyTechnologyLabels = ['Mining', 'Animal Husbandry', 'Masonry', 'Irrigation'];
@@ -1151,7 +1153,10 @@ const _ai_player = new class
                     if (!path.length) continue;
                     var targetUnit = this.visibleUnitAtForViewer(i, j, ownerTeam);
                     var enemy = targetUnit && (targetUnit.team || 0) != ownerTeam;
-                    var adjacentEnemy = enemy && Math.max(Math.abs(di), Math.abs(dj)) <= 1;
+                    var atWar = enemy && typeof _military != 'undefined'
+                        && _military.isAtWar
+                        && _military.isAtWar(ownerTeam, targetUnit.team || 0);
+                    var adjacentEnemy = atWar && path.length == 1;
                     pool.push({
                         command: adjacentEnemy && unit.type == 2 ? 'attack' : 'goto',
                         target: target,
@@ -1170,6 +1175,11 @@ const _ai_player = new class
         var choices = pool.slice(1);
         var urgent = choices.filter(function(candidate) { return candidate.command == 'attack'; });
         choices = choices.filter(function(candidate) { return candidate.command != 'attack'; });
+        // An adjacent wartime contact is already a fully specified tactical
+        // situation. Restrict the model to legal enemy targets so it chooses
+        // which defender to attack instead of accidentally plotting a patrol
+        // route through the occupied Tile without interaction intent.
+        if (urgent.length) return urgent.slice(0, 8);
         var preferred = [];
         if (unit.unitTypeId == 'worker') {
             preferred = choices.filter(function(candidate) {
@@ -2306,9 +2316,40 @@ const _ai_player = new class
         for (var k = 0; k < _units.length; k++) {
             var city = _units[k];
             if (!city || city.type != 3 || (city.team || 0) != ownerTeam || !city.coord) continue;
-            best = Math.min(best, Math.max(Math.abs(city.coord.i - i), Math.abs(city.coord.j - j)));
+            var di = city.coord.i - i;
+            var dj = city.coord.j - j;
+            var distance = di * dj >= 0 ? Math.max(Math.abs(di), Math.abs(dj)) : Math.abs(di) + Math.abs(dj);
+            best = Math.min(best, distance);
+        }
+        if (this.collectSettlementPlans) {
+            for (var n = 0; n < this.plannedSettlementCoords.length; n++) {
+                var planned = this.plannedSettlementCoords[n];
+                var pdi = planned.i - i;
+                var pdj = planned.j - j;
+                var plannedDistance = pdi * pdj >= 0
+                    ? Math.max(Math.abs(pdi), Math.abs(pdj)) : Math.abs(pdi) + Math.abs(pdj);
+                best = Math.min(best, plannedDistance);
+            }
         }
         return best;
+    }
+
+    beginSettlementPlanning()
+    {
+        this.collectSettlementPlans = true;
+        this.plannedSettlementCoords = [];
+    }
+
+    endSettlementPlanning()
+    {
+        this.collectSettlementPlans = false;
+        this.plannedSettlementCoords = [];
+    }
+
+    reserveSettlementCoord(coord)
+    {
+        if (!this.collectSettlementPlans || !coord) return;
+        this.plannedSettlementCoords.push(new Coord(coord.i, coord.j));
     }
 
     bestSettlementRoute(k, ownerTeam, minimumSpacing)
@@ -2320,36 +2361,83 @@ const _ai_player = new class
                 var i = unit.coord.i + di;
                 var j = unit.coord.j + dj;
                 if (i < 0 || j < 0 || i >= _map_size || j >= _map_size
-                    || !this.isTileSeenByUser(i, j, ownerTeam) || this.terrainTypeAt(i, j) == 0
+                    || !this.isTileSeenByUser(i, j, ownerTeam) || !this.isPreferredCityCenter(i, j)
                     || this.settlementDistanceToOwnCity(i, j, ownerTeam) < minimumSpacing) continue;
                 var path = di == 0 && dj == 0 ? [] : _current_game.buildPath(k, new Coord(i, j));
                 if ((di != 0 || dj != 0) && !path.length) continue;
                 var plotScore = this.cityPlotScore(i, j, ownerTeam);
                 var score = plotScore - path.length * 0.008;
                 if (!best || score > best.score) {
-                    best = {coord: new Coord(i, j), path: path, plotScore: plotScore, score: score};
+                    best = {
+                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        score: score, settlementSite: true,
+                    };
                 }
             }
         }
         return best;
     }
 
+    bestSettlementExplorationRoute(k, ownerTeam)
+    {
+        var unit = _units[k];
+        var currentDistance = this.settlementDistanceToOwnCity(
+            unit.coord.i, unit.coord.j, ownerTeam
+        );
+        if (!Number.isFinite(currentDistance)) return null;
+        var best = null;
+        for (var di = -10; di <= 10; di++) {
+            for (var dj = -10; dj <= 10; dj++) {
+                if (di == 0 && dj == 0) continue;
+                var i = unit.coord.i + di;
+                var j = unit.coord.j + dj;
+                if (i < 0 || j < 0 || i >= _map_size || j >= _map_size
+                    || !this.isTileSeenByUser(i, j, ownerTeam)
+                    || this.terrainTypeAt(i, j) == 0) continue;
+                var cityDistance = this.settlementDistanceToOwnCity(i, j, ownerTeam);
+                if (cityDistance <= currentDistance) continue;
+                var path = _current_game.buildPath(k, new Coord(i, j));
+                if (!path.length) continue;
+                var plotScore = this.cityPlotScore(i, j, ownerTeam);
+                var score = cityDistance + (this.isPreferredCityCenter(i, j) ? 0.35 : 0)
+                    + plotScore * 0.15 - path.length * 0.02;
+                if (!best || score > best.score) {
+                    best = {
+                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        score: score, settlementSite: false,
+                    };
+                }
+            }
+        }
+        return best;
+    }
+
+    isPreferredCityCenter(i, j)
+    {
+        var terrain = this.terrainTypeAt(i, j);
+        return terrain == 2 || terrain == 7;
+    }
+
     applySettlerExpansionPolicies(ownerTeam)
     {
         var applied = [];
         if (typeof _units == 'undefined' || typeof _current_game == 'undefined') return applied;
+        this.beginSettlementPlanning();
         var cityCount = this.sortedUnits(function(unit) {
             return unit && unit.type == 3 && (unit.team || 0) == ownerTeam;
         }).length;
-        var planned = [];
-        for (var k = 0; k < _units.length; k++) {
-            var settler = _units[k];
-            if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam
-                || this.civilianPolicyHasActiveTask(settler)) continue;
-            var decision = this.applySettlerExpansionPolicy(k, ownerTeam, cityCount + planned.length);
-            if (!decision.applied) continue;
-            if (decision.command == 'build_city') planned.push(new Coord(settler.coord.i, settler.coord.j));
-            applied.push(decision.description);
+        try {
+            for (var k = 0; k < _units.length; k++) {
+                var settler = _units[k];
+                if (!settler || settler.unitTypeId != 'settlers' || (settler.team || 0) != ownerTeam
+                    || this.civilianPolicyHasActiveTask(settler)) continue;
+                var decision = this.applySettlerExpansionPolicy(k, ownerTeam, cityCount);
+                if (!decision.applied) continue;
+                applied.push(decision.description);
+            }
+        }
+        finally {
+            this.endSettlementPlanning();
         }
         return applied;
     }
@@ -2369,17 +2457,18 @@ const _ai_player = new class
                 return unit && unit.type == 3 && (unit.team || 0) == ownerTeam;
             }).length;
         }
-        var minimumSpacing = cityCount ? 5 : 0;
+        var minimumSpacing = cityCount ? 7 : 0;
         var currentScore = this.cityPlotScore(settler.coord.i, settler.coord.j, ownerTeam);
         var spacing = this.settlementDistanceToOwnCity(settler.coord.i, settler.coord.j, ownerTeam);
         var age = Math.max(0, Number(settler.aiSettlerTurns) || 0);
         var threshold = cityCount ? 0.40 : 0.28;
         var agedThreshold = age >= 10 ? threshold - 0.08 : threshold;
         var mustSettle = age >= this.settlerBuildCityTurnLimit;
-        if (this.terrainTypeAt(settler.coord.i, settler.coord.j) != 0
+        if (this.isPreferredCityCenter(settler.coord.i, settler.coord.j)
             && spacing >= minimumSpacing && (mustSettle || currentScore >= agedThreshold)) {
             var build = {command: 'build_city'};
             if (this.applyUnitCommand(k, build)) {
+                this.reserveSettlementCoord(settler.coord);
                 return {
                     applied: true, command: 'build_city', score: currentScore, age: age,
                     description: 'Settler #' + (settler.serverId || k) + ' -> Build City at '
@@ -2389,9 +2478,13 @@ const _ai_player = new class
             }
         }
         var target = this.bestSettlementRoute(k, ownerTeam, minimumSpacing);
+        if (!target) target = this.bestSettlementExplorationRoute(k, ownerTeam);
         if (target && target.path.length) {
             settler.state = 'ready';
             _current_game.assignPath(k, target.path);
+            // Exploration destinations are reservations too. Otherwise several
+            // Settlers in one batch repeatedly choose and follow the same point.
+            this.reserveSettlementCoord(target.coord);
             return {
                 applied: true, command: 'goto', target: target.coord, score: target.plotScore,
                 pathLength: target.path.length, age: age,
@@ -3508,6 +3601,9 @@ const _ai_player = new class
                     command.failureReason = 'engine-selected attack target is no longer an enemy';
                     return false;
                 }
+                unit.interactionIntent = 'attack';
+                unit.interactionTargetOwnerId = targetUnit.team || 0;
+                unit.attackTargetOwnerId = targetUnit.team || 0;
             }
             command.selectedTarget = target;
             if (target && _current_game.buildPath && _current_game.assignPath) {

@@ -178,11 +178,11 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for shared AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
 
-`SERVER-AI-001`: `claim_ai_batch` leases up to eight random, living, movable units of the one global AI for the current turn. Active leases and units that already have an order are excluded, so browsers normally work on different units.
+`SERVER-AI-001`: `claim_ai_batch` leases living global-AI objects using weighted service debt. Visible adjacent wartime combat and empty-City capture are urgent. A mature Settler receives expansion priority only when at least eight turns have elapsed since its previous AI service, preventing blocked Settlers from starving Workers and military forces. Nearby objects of one category are grouped up to the contributor batch width; Cities remain atomic.
 
-`SERVER-AI-002`: `submit_ai_batch` accepts commands and build/found-city actions only for ids in the caller's live lease. It upserts those unit orders and never creates `server_game_submissions`; the AI cannot delay turn resolution.
+`SERVER-AI-002`: `submit_ai_batch` accepts commands and build/found-city actions only for the object ids returned by the caller's lease. It filters actions by verified leased object before applying the contributor batch limit, verifies that those ids still belong to living global-AI objects, upserts their orders, and never creates `server_game_submissions`; the AI cannot delay turn resolution.
 
-`SERVER-AI-003`: AI leases expire and are deleted at turn resolution. Commands accepted before resolution remain ordinary authoritative orders; unfinished inference after resolution is rejected as stale without delaying the human client.
+`SERVER-AI-003`: AI leases expire and are deleted at turn resolution. If inference finishes afterward, the contributor resends the leased object ids separately; PHP verifies current ownership, revalidates atomic commands against current authoritative state, and stores valid commands in the current turn. Slow AI work never delays turn resolution and is not silently discarded solely because its claim used the previous turn number.
 
 `SERVER-AI-004`: A headless AI contributor may call `claim_ai_batch` and `submit_ai_batch` with the application secret and a unique client key without a human login session. The lease restricts submissions to the global AI's leased object ids, and normal authoritative movement and build validation still applies.
 

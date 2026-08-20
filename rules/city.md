@@ -5,7 +5,7 @@ City economy is implemented by `city.js`.
 ## City State
 
 - `CITY-STATE-001`: Each city has an economy state with citizens, worked tile coordinates, stored food, stored money, last income, and turns to the next citizen.
-- `CITY-STATE-002`: A new city starts with one citizen assigned to the best available nearby land or water Tile.
+- `CITY-STATE-002`: A new city starts with one citizen assigned to the best available nearby land or water Tile and one food in storage. This founding reserve prevents the City from starving during the same turn in which the Settler is consumed.
 - `CITY-STATE-003`: When food storage reaches `80 + population * 40`, a server game sends `grow_city`; PHP checks the threshold and available worked-Tile capacity, adds one citizen, and subtracts the growth cost. Offline games apply the same threshold locally.
 - `CITY-STATE-004`: Server population is limited to the number of eligible worked Tiles. Existing excess population is corrected during authoritative turn processing.
 - `CITY-STATE-004A`: Each citizen consumes one food per turn.
@@ -50,6 +50,8 @@ City economy is implemented by `city.js`.
 - `CITY-TURN-008C`: Each Fortification assigned to its nearest owned parent City consumes two production from that City per turn. Each non-center Road continues to consume one production.
 - `CITY-TURN-009`: PHP applies negative net City food authoritatively: one population is removed and food storage resets to zero. The starvation event is shown in the top-left turn-message line.
 - `CITY-TURN-010`: A worked Tile occupied by a living movable civilization at war with the City owner contributes no food, production, or gold.
+- `CITY-TURN-010A`: If occupancy synchronization excludes every normal worked-Tile candidate while the City center still exists, the City center is retained as one fallback worked Tile. A valid newly founded City therefore cannot receive an empty economy and collapse solely because its candidate list was transiently empty.
+- `CITY-TURN-010B`: Balanced citizen assignment first selects positive-food Tiles until the citizens assigned so far can feed themselves. Production or gold optimization may be selected explicitly, but default balanced assignment cannot choose zero-food Rocks over available Grass and immediately starve a new City.
 - `CITY-TURN-011`: For Cities below population five, positive food and gold transferred to civilization storage lose `0.9 * distance / 100`, capped at 90%. Distance is measured from the first City built after the latest respawn; local growth and production use full yield.
 - `CITY-TURN-012`: A City above population 10 loses 5% of its positive food excess and stored gold per additional citizen, capped at 50% from population 20. This loss compounds with the small distant-City storage loss.
 

@@ -299,6 +299,7 @@ const _game_prehistory = new class
                 this.removeDestroyedCityAt(_units[_selection].coord);
                 _game.make_unit(_city, _units[_selection].coord);
                 _units[_units.length - 1].team = _units[_selection].team;
+                _units[_units.length - 1].cityFoodStored = 1;
                 // PREHISTORY-BUILD-009, rules/prehostory.md: a built city starts with road and irrigation on its tile.
                 _map.addRoad(_units[_units.length - 1].coord.i, _units[_units.length - 1].coord.j);
                 _map.addIrrigation(
@@ -308,6 +309,7 @@ const _game_prehistory = new class
                 );
                 if (typeof _city_economy !== 'undefined') {
                     _city_economy.ensureCity(_units[_units.length - 1]);
+                    _units[_units.length - 1].economy.foodStored = 1;
                 }
 
                 // PREHISTORY-BUILD-002, rules/prehostory.md: building a city consumes the settler.
@@ -1973,6 +1975,52 @@ const _game_prehistory = new class
         return nearest;
     }
 
+    workerSupportCount(city)
+    {
+        if (!city || !city.coord) return 0;
+        var count = 0;
+        for (var k=0; k<_units.length; k++) {
+            var worker = _units[k];
+            if (!worker || worker.unitTypeId != 'worker' || !worker.coord
+                || Number(worker.team) != Number(city.team)) continue;
+            var supportCoord = worker.gotoCoord && worker.gotoPath && worker.gotoPath.length
+                ? worker.gotoCoord : worker.coord;
+            if (this.hexDistance(supportCoord.i-city.coord.i, supportCoord.j-city.coord.j) <= 5) count++;
+        }
+        return count;
+    }
+
+    underservedCityForWorker(worker, nearestCity)
+    {
+        if (!worker || !nearestCity) return nearestCity;
+        var nearestSupport = this.workerSupportCount(nearestCity);
+        // A City keeps its first two local Workers. Additional idle Workers may
+        // support a visible City with a smaller local workforce.
+        if (nearestSupport <= 2) return nearestCity;
+        var cities = this.ownedCitiesForWorker(worker);
+        var best = nearestCity;
+        var bestSupport = nearestSupport;
+        var bestPopulation = Math.max(1, Number(nearestCity.cityPopulation) || 1);
+        var bestDistance = this.hexDistance(
+            worker.coord.i-nearestCity.coord.i, worker.coord.j-nearestCity.coord.j
+        );
+        for (var n=0; n<cities.length; n++) {
+            var city = cities[n];
+            var support = this.workerSupportCount(city);
+            var population = Math.max(1, Number(city.cityPopulation) || 1);
+            var distance = this.hexDistance(worker.coord.i-city.coord.i, worker.coord.j-city.coord.j);
+            if (support < bestSupport
+                || (support == bestSupport && population < bestPopulation)
+                || (support == bestSupport && population == bestPopulation && distance < bestDistance)) {
+                best = city;
+                bestSupport = support;
+                bestPopulation = population;
+                bestDistance = distance;
+            }
+        }
+        return bestSupport < nearestSupport ? best : nearestCity;
+    }
+
     cityCitizenCoords(city)
     {
         if (!city) return [];
@@ -2155,6 +2203,25 @@ const _game_prehistory = new class
         if (!nearestCity) {
             this.recordWorkerAutomationDecision(k, 'idle_no_owned_city');
             return false;
+        }
+        var supportCity = this.underservedCityForWorker(worker, nearestCity);
+        if (supportCity && supportCity !== nearestCity) {
+            var supportPath = this.buildPath(k, supportCity.coord, {
+                pathMaximumExpanded: 768,
+                pathMaximumMilliseconds: 6,
+            });
+            if (supportPath.length) {
+                worker.automationPriority = 0;
+                delete worker.automateBuild;
+                delete worker.automateTarget;
+                this.assignPath(k, supportPath);
+                this.recordWorkerAutomationDecision(k, 'rebalance_to_underserved_city', {
+                    priority: 0, target: supportCity.coord, pathLength: supportPath.length,
+                    cityId: supportCity.serverId,
+                    localWorkers: this.workerSupportCount(supportCity),
+                });
+                return true;
+            }
         }
         // PREHISTORY-AUTO-016: authoritative movement synchronization can finish
         // a route without calling afterUnitRouteUpdated(). Consume the saved

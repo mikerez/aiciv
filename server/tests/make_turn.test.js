@@ -20,6 +20,12 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
         specs.push(unit({client_key: `chop-${terrain}`, i: terrain, j: 9}));
         specs.push(city({client_key: `produce-${terrain}`, i: terrain, j: 11}));
     }
+    for (const j of [1, 5, 6, 7, 8, 9]) {
+        specs.push(unit({
+            client_key: `water-transport-${j}`, unit_type_id: 'galley', unit_class: 2,
+            name: 'Galley', nature: 'water', i: 0, j, speed: 2,
+        }));
+    }
     specs.push(unit({client_key: 'stack-filler', unit_type_id: 'warrior', unit_class: 2,
         name: 'Warrior', i: 9, j: 3, speed: 1}));
     specs.push(unit({client_key: 'stack-mover', unit_type_id: 'elephant', unit_class: 2,
@@ -31,8 +37,10 @@ const {assert, serverGame, resetDatabase, bootstrap, mapTiles, unit, city, rows,
             unit_class: 2, name: 'Warrior', i: 10, j: 3}));
     }
     specs.push(city({client_key: 'capital', i: 14, j: 14}));
-    const fixture = await bootstrap({size, tiles, units: specs});
+    const fixture = await bootstrap({size, tiles, units: specs, players: [7001, 7002]});
     const gameDbId = gameDatabaseId(fixture.gameId);
+    sql(`UPDATE server_game_players SET active=0 WHERE game_id=${gameDbId} AND player_id=7002`);
+    sql(`DELETE FROM server_game_submissions WHERE game_id=${gameDbId}`);
     sql(`UPDATE server_game_players SET state_json=JSON_SET(state_json,'$.food',100000,'$.money',100000)
          WHERE game_id=${gameDbId} AND player_id=${fixture.playerId}`);
     const commands = [];
