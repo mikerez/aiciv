@@ -350,7 +350,7 @@ function authenticateRegisteredGamePlayer(PDO $db, string $gameKey, int $playerI
 {
     if (in_array($action, ['map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players',
         'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics',
-        'claim_ai_batch', 'submit_ai_batch'], true)) {
+        'claim_ai_batch', 'submit_ai_batch', 'advance_ai_turn'], true)) {
         return null;
     }
     $statement = $db->prepare(
@@ -9594,7 +9594,7 @@ try {
         serverError(403, 'application_not_allowed', 'Application secret is invalid.');
     }
     $action = isset($data['action']) ? strtolower((string) $data['action']) : '';
-    if (!in_array($action, ['make_turn', 'load_full', 'load_update', 'update_units', 'update_landscape', 'update_events', 'build', 'build_city', 'grow_city', 'heal_units', 'disband_unit', 'set_unit_automation', 'select_production', 'remove_production', 'complete_production', 'claim_ai_batch', 'submit_ai_batch', 'map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players', 'report_cli_error', 'respawn_player', 'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics'], true)) {
+    if (!in_array($action, ['make_turn', 'load_full', 'load_update', 'update_units', 'update_landscape', 'update_events', 'build', 'build_city', 'grow_city', 'heal_units', 'disband_unit', 'set_unit_automation', 'select_production', 'remove_production', 'complete_production', 'claim_ai_batch', 'submit_ai_batch', 'advance_ai_turn', 'map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players', 'report_cli_error', 'respawn_player', 'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics'], true)) {
         serverError(400, 'unknown_action', 'Unsupported server-game action.');
     }
     if ($action === 'report_cli_error') {
@@ -9746,6 +9746,28 @@ try {
         serverRespond(200, [
             'ok' => true, 'request' => 'ai_diagnostics', 'game_id' => $key,
             'player_id' => $playerId, 'diagnostics' => aiDiagnostics($db, $game),
+        ]);
+    }
+
+    if ($action === 'advance_ai_turn') {
+        ensureGeneratedGameMap($db, $key, SERVER_GAME_DEFAULT_MAP_SIZE);
+        $db->beginTransaction();
+        try {
+            $game = loadGame($db, $key, true);
+            if (!$game) serverError(404, 'game_not_found', 'Game does not exist.');
+            $resolution = maybeResolveTurn($db, $game);
+            $game = loadGame($db, $key, true);
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) $db->rollBack();
+            throw $error;
+        }
+        serverRespond(200, [
+            'ok' => true, 'request' => 'advance_ai_turn', 'game_id' => $key,
+            'player_id' => ensureGlobalAiUser($db),
+            'resolved_turn' => $resolution['resolved_turn'],
+            'turn' => (int) $game['turn_number'], 'revision' => (int) $game['revision'],
+            'deadline_at' => gmdate(DATE_ATOM, strtotime($game['turn_deadline_at'] . ' UTC')),
         ]);
     }
 

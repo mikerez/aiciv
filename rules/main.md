@@ -104,6 +104,7 @@
 - `MAIN-AI-015`: Generated Iron, Copper, Gold, Gems, and Diamonds deposits receive one global-AI force containing five Settlers, five Explorers, ten Archers, and one automated Worker, spread according to the five-unit Tile limit. Automated Workers improve and road-connect guarded resources after an owned City exists nearby.
 - `MAIN-AI-016`: A native contributor processes up to eight nearby Workers from one authoritative snapshot. Worker policy is deterministic, and decisions earlier in the batch reserve their targets for decisions later in the same batch.
 - `MAIN-AI-017`: A shared AI Settler persists only its intended world destination in authoritative unit properties. Final City sites require a route that reaches the selected site. Exploration may use a partial path toward fog, but persists only that path's actually reached endpoint as the next waypoint. Every contributor lease rebuilds the local route from the current server position; reaching or invalidating the destination clears the mission. PHP never persists the route itself.
+- `MAIN-AI-018`: The standalone AI contributor advances an expired authoritative turn through `advance_ai_turn`. The endpoint uses the same locked simultaneous-turn resolver as player submissions, allowing civilization development to continue when no browser is open.
 
 ## Server Game Rules
 

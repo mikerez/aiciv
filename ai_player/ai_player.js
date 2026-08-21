@@ -191,6 +191,11 @@ class ServerApi
             actions: submission.actions || [],
         });
     }
+
+    advanceTurn()
+    {
+        return this.request('advance_ai_turn');
+    }
 }
 
 function evaluate(context, filename, exportExpression)
@@ -430,6 +435,14 @@ class AiContributor
                 claims++;
                 const batch = await this.api.claim();
                 failures = 0;
+                const deadline = Date.parse(batch.deadline_at || '');
+                if (Number.isFinite(deadline) && Date.now() >= deadline) {
+                    const advance = await this.api.advanceTurn();
+                    if (advance.resolved_turn !== null && advance.resolved_turn !== undefined) {
+                        this.log(`resolved turn ${advance.resolved_turn}; next turn ${advance.turn}`);
+                        continue;
+                    }
+                }
                 if (batch.unit_ids && batch.unit_ids.length && batch.snapshot) {
                     await this.processBatch(batch);
                     if (this.options.cycleMs) await sleep(this.options.cycleMs);
