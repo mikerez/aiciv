@@ -8418,6 +8418,9 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
     $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
         . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
+    $productionReadyCityPrioritySql = "CASE WHEN u.unit_class = 3
+        AND p.city_unit_id IS NOT NULL
+        AND p.production_points + 0.0001 >= p.production_cost THEN 0 ELSE 1 END";
     // A validated settlement mission needs one new atomic move every turn.
     // Settlers without a mission retain the longer interval so an idle or
     // blocked unit cannot monopolize Workers and military units indefinitely.
@@ -8465,6 +8468,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
         . ' ORDER BY ' . $captureOpportunitySql . ', ' . $adjacentEnemyOpportunitySql . ', '
+        . $productionReadyCityPrioritySql . ', '
         . $matureSettlerPrioritySql . ', '
         . $servicePrioritySql . ', '
         . $bootstrapPrioritySql . ', '

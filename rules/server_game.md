@@ -178,7 +178,7 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-UPDATE-004`: Human atomic commands are submitted without waiting for shared AI inference. PHP assigns them to the locked authoritative turn without comparing the browser's turn number. Every movement remains subject to server path validation.
 
-`SERVER-AI-001`: `claim_ai_batch` leases living global-AI objects using weighted service debt. Visible adjacent wartime combat and empty-City capture are urgent. A mature Settler with a validated settlement mission receives one atomic movement opportunity each turn. A mature Settler without a mission receives expansion priority only after eight turns, preventing idle or blocked Settlers from starving Workers and military forces. Nearby objects of one category are grouped up to the contributor batch width; Cities remain atomic.
+`SERVER-AI-001`: `claim_ai_batch` leases living global-AI objects using weighted service debt. Visible adjacent wartime combat, empty-City capture, and completion of fully funded City production are urgent. A mature Settler with a validated settlement mission receives one atomic movement opportunity each turn. A mature Settler without a mission receives expansion priority only after eight turns, preventing idle or blocked Settlers from starving Workers and military forces. Nearby objects of one category are grouped up to the contributor batch width; Cities remain atomic.
 
 `SERVER-AI-002`: `submit_ai_batch` accepts commands and build/found-city actions only for the object ids returned by the caller's lease. It filters actions by verified leased object before applying the contributor batch limit, verifies that those ids still belong to living global-AI objects, upserts their orders, and never creates `server_game_submissions`; the AI cannot delay turn resolution.
 
@@ -186,7 +186,7 @@ The authoritative unit table is `server_game_units`. It stores owner, type, clas
 
 `SERVER-AI-004`: A headless AI contributor may call `claim_ai_batch` and `submit_ai_batch` with the application secret and a unique client key without a human login session. The lease restricts submissions to the global AI's leased object ids, and normal authoritative movement and build validation still applies.
 
-`SERVER-AI-005`: A headless AI contributor calls `advance_ai_turn` when the authoritative turn deadline expires. PHP locks the game and invokes the normal simultaneous-turn resolver; it does not impersonate a human player or create a second resolution path. This keeps turns advancing when no browser is open.
+`SERVER-AI-005`: A headless AI contributor schedules `advance_ai_turn` independently from model inference when the authoritative turn deadline expires. PHP locks the game and invokes the normal simultaneous-turn resolver; it does not impersonate a human player or create a second resolution path. Inference finishing after resolution uses the normal authoritative turn-rebase path. This keeps six-second turns advancing when no browser is open.
 
 `SERVER-ECONOMY-001`: End-turn resolution calculates worked-Tile food, production, and gold in PHP using tables mirrored by `city.js` and `economics.js`; client-reported balances and city food cannot overwrite these values.
 
