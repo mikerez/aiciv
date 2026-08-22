@@ -113,4 +113,49 @@ assert.ok(fogClient.aiPlayer.settlementDistanceToOwnCity(
     fogSettler.coord.i, fogSettler.coord.j, playerId
 ) >= 7, 'the explored City site satisfies minimum spacing');
 
+const blockedTiles = mapTiles(14, 2);
+const blockedSettler = localUnit(unit({
+    client_key:'blocked-settler', owner_id:playerId, unit_type_id:'settlers', unit_class:0,
+    name:'Settlers', texture:256, i:3, j:3, properties:{aiSettlerTurns:20},
+}), 2);
+const blockedUnits = [
+    localUnit(city({client_key:'blocked-capital', owner_id:playerId, i:1, j:1}), 1),
+    blockedSettler,
+];
+for (let n=0; n<5; n++) {
+    blockedUnits.push(localUnit(unit({
+        client_key:'blocked-occupant-'+n, owner_id:playerId, unit_type_id:'warrior',
+        unit_class:2, name:'Warrior', i:8, j:8,
+    }), 10+n));
+}
+const blockedClient = createBrowserClient({
+    size:14, playerId, gameId:'client-ai-settlement-blocked',
+    tiles:blockedTiles, units:blockedUnits,
+});
+loadAiModels(blockedClient);
+const partialPath = blockedClient.currentGame.buildPath(1, new blockedClient.Coord(8, 8));
+assert.ok(partialPath.length > 0,
+    'the generic pathfinder exposes a partial route toward a full destination Tile');
+assert.equal(blockedClient.aiPlayer.pathReachesCoord(partialPath, new blockedClient.Coord(8, 8)), false,
+    'the settlement adapter distinguishes a partial route from a completed route');
+const reachable = blockedClient.aiPlayer.bestSettlementRoute(1, playerId, 7);
+assert.ok(reachable && blockedClient.aiPlayer.pathReachesCoord(reachable.path, reachable.coord),
+    'settlement planning selects only a destination its route can reach');
+assert.notDeepEqual([reachable.coord.i, reachable.coord.j], [8, 8],
+    'a full destination Tile is not retained as a settlement mission');
+
+const blockedFog = blockedClient._map_terrain_bit_by_user[playerId];
+for (let i=0; i<14; i++) for (let j=0; j<14; j++) blockedFog[i][j] &= ~0x4000;
+blockedFog[8][8] |= 0x4000;
+const exploration = blockedClient.aiPlayer.bestSettlementExplorationRoute(1, playerId);
+assert.ok(exploration && blockedClient.aiPlayer.pathReachesCoord(
+    exploration.path, exploration.coord
+), 'partial exploration persists its reachable endpoint as the next mission waypoint');
+assert.notDeepEqual([exploration.coord.i, exploration.coord.j], [8, 8],
+    'partial exploration never persists the inaccessible requested coordinate');
+assert.ok(blockedClient.aiPlayer.settlementDistanceToOwnCity(
+    exploration.coord.i, exploration.coord.j, playerId
+) > blockedClient.aiPlayer.settlementDistanceToOwnCity(3, 3, playerId),
+'the reachable exploration waypoint advances away from existing Cities');
+
 console.log('PASS Barbarian Settlers reject poor centers and found adequately spaced grass Cities');

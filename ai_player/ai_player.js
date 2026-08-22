@@ -142,7 +142,10 @@ class ServerApi
         try {
             const response = await fetch(this.endpoint, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                // Apache closes idle TLS connections before Undici's pool does.
+                // A fresh connection avoids losing an already-processed AI
+                // submission to a stale keep-alive socket.
+                headers: {'Content-Type': 'application/json', 'Connection': 'close'},
                 body: JSON.stringify(Object.assign({
                     action,
                     secret: this.secret,
@@ -164,6 +167,10 @@ class ServerApi
             }
             return result;
         }
+        catch (error) {
+            error.apiAction = action;
+            throw error;
+        }
         finally {
             clearTimeout(timeout);
         }
@@ -183,6 +190,11 @@ class ServerApi
             commands: submission.commands || [],
             actions: submission.actions || [],
         });
+    }
+
+    advanceTurn()
+    {
+        return this.request('advance_ai_turn');
     }
 }
 
@@ -319,6 +331,9 @@ class AiContributor
         this.strategyFocus = null;
         this.stopped = false;
         this.acceptedBatches = 0;
+        this.advanceTimer = null;
+        this.advanceDeadline = null;
+        this.advancePromise = null;
     }
 
     log(message)
@@ -336,6 +351,35 @@ class AiContributor
             message => this.log(message)
         );
         return this.runtime;
+    }
+
+    async advanceExpiredTurn()
+    {
+        if (this.advancePromise) return await this.advancePromise;
+        this.advancePromise = this.api.advanceTurn().then(advance => {
+            if (advance.resolved_turn !== null && advance.resolved_turn !== undefined) {
+                this.log(`resolved turn ${advance.resolved_turn}; next turn ${advance.turn}`);
+            }
+            this.scheduleTurnAdvance(advance.deadline_at);
+            return advance;
+        }).finally(() => {
+            this.advancePromise = null;
+        });
+        return await this.advancePromise;
+    }
+
+    scheduleTurnAdvance(deadlineAt)
+    {
+        const deadline = Date.parse(deadlineAt || '');
+        if (!Number.isFinite(deadline) || this.advanceDeadline === deadline) return;
+        if (this.advanceTimer) clearTimeout(this.advanceTimer);
+        this.advanceDeadline = deadline;
+        this.advanceTimer = setTimeout(() => {
+            this.advanceTimer = null;
+            this.advanceExpiredTurn().catch(error => {
+                this.log(`contribution error advance_ai_turn: ${error.message}`);
+            });
+        }, Math.max(0, deadline - Date.now()) + 25);
     }
 
     async processBatch(batch)
@@ -423,6 +467,14 @@ class AiContributor
                 claims++;
                 const batch = await this.api.claim();
                 failures = 0;
+                const deadline = Date.parse(batch.deadline_at || '');
+                this.scheduleTurnAdvance(batch.deadline_at);
+                if (Number.isFinite(deadline) && Date.now() >= deadline) {
+                    const advance = await this.advanceExpiredTurn();
+                    if (advance.resolved_turn !== null && advance.resolved_turn !== undefined) {
+                        continue;
+                    }
+                }
                 if (batch.unit_ids && batch.unit_ids.length && batch.snapshot) {
                     await this.processBatch(batch);
                     if (this.options.cycleMs) await sleep(this.options.cycleMs);
@@ -434,7 +486,12 @@ class AiContributor
             }
             catch (error) {
                 failures++;
-                this.log(`contribution error${error.code ? ` ${error.code}` : ''}: ${error.message}`);
+                const cause = error.cause || null;
+                const errorCode = error.code || (cause && cause.code) || '';
+                const causeText = cause && cause.message && cause.message !== error.message
+                    ? `; cause=${cause.message}` : '';
+                this.log(`contribution error${error.apiAction ? ` ${error.apiAction}` : ''}`
+                    + `${errorCode ? ` ${errorCode}` : ''}: ${error.message}${causeText}`);
                 await sleep(Math.min(10000, this.options.pollMs * Math.pow(2, Math.min(failures, 4))));
             }
         }
@@ -445,6 +502,8 @@ class AiContributor
     stop()
     {
         this.stopped = true;
+        if (this.advanceTimer) clearTimeout(this.advanceTimer);
+        this.advanceTimer = null;
     }
 }
 

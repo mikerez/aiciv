@@ -27,7 +27,7 @@ const {BrowserAiRuntime} = require('../../ai_player/ai_player');
                     aiSettlerTurns: 20,
                     aiLastServedTurn: 0,
                     sharedAiTask: {
-                        kind: 'settler', mode: 'settle', target: {i: 10, j: 10},
+                        kind: 'settler', mode: 'settle', target: {i: 5, j: 8},
                     },
                 },
             }),
@@ -75,7 +75,7 @@ const {BrowserAiRuntime} = require('../../ai_player/ai_player');
         if (!buildCity) {
             assert.equal(command.command, 'move');
             assert.deepEqual(JSON.parse(JSON.stringify(command.payload.shared_ai_task)), {
-                kind: 'settler', mode: 'settle', target: {i: 10, j: 10},
+                kind: 'settler', mode: 'settle', target: {i: 5, j: 8},
             }, 'every stateless lease returns the same world destination');
         }
 
@@ -101,7 +101,7 @@ const {BrowserAiRuntime} = require('../../ai_player/ai_player');
             `SELECT JSON_EXTRACT(properties_json,'$.sharedAiTask')
              FROM server_game_units WHERE id=${settlerId}`
         )), {
-            kind: 'settler', mode: 'settle', target: {i: 10, j: 10},
+            kind: 'settler', mode: 'settle', target: {i: 5, j: 8},
         }, 'PHP persists the destination but no route');
     }
 

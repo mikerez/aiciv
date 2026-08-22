@@ -350,7 +350,7 @@ function authenticateRegisteredGamePlayer(PDO $db, string $gameKey, int $playerI
 {
     if (in_array($action, ['map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players',
         'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics',
-        'claim_ai_batch', 'submit_ai_batch'], true)) {
+        'claim_ai_batch', 'submit_ai_batch', 'advance_ai_turn'], true)) {
         return null;
     }
     $statement = $db->prepare(
@@ -8418,13 +8418,18 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
         u.properties_json, '$.cityFoodStored')) AS DECIMAL(18,2)), 0)";
     $growthReadyCitySql = '(u.unit_class = 3 AND ' . $cityFoodSql
         . ' >= (80 + ' . $cityPopulationSql . ' * 40))';
-    // Mature Settlers remain urgent, but only after their own service interval.
-    // An unconditional category priority let a few blocked Settlers monopolize
-    // every new turn and starve all Workers and military units indefinitely.
+    $productionReadyCityPrioritySql = "CASE WHEN u.unit_class = 3
+        AND p.city_unit_id IS NOT NULL
+        AND p.production_points + 0.0001 >= p.production_cost THEN 0 ELSE 1 END";
+    // A validated settlement mission needs one new atomic move every turn.
+    // Settlers without a mission retain the longer interval so an idle or
+    // blocked unit cannot monopolize Workers and military units indefinitely.
     $matureSettlerPrioritySql = "CASE WHEN u.unit_type_id = 'settlers'
         AND COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.properties_json, '$.aiSettlerTurns')) AS UNSIGNED), 0) >= 10
         AND (JSON_CONTAINS_PATH(u.properties_json, 'one', '$.aiLastServedTurn') = 0
-          OR GREATEST(0, " . $turn . ' - ' . $lastServedSql . ") >= 8)
+          OR GREATEST(0, " . $turn . ' - ' . $lastServedSql . ") >= CASE
+              WHEN JSON_CONTAINS_PATH(u.properties_json, 'one', '$.sharedAiTask') = 1 THEN 1
+              ELSE 8 END)
         THEN 0 ELSE 1 END";
     $serviceWeightSql = "CASE
         WHEN u.unit_type_id = 'worker' AND (
@@ -8463,6 +8468,7 @@ function claimGlobalAiBatch(PDO $db, array $game, string $clientKey): array
     $anchorStatement = $db->prepare(
         'SELECT u.id, u.i, u.j, u.unit_type_id, u.unit_class' . $eligibleSql
         . ' ORDER BY ' . $captureOpportunitySql . ', ' . $adjacentEnemyOpportunitySql . ', '
+        . $productionReadyCityPrioritySql . ', '
         . $matureSettlerPrioritySql . ', '
         . $servicePrioritySql . ', '
         . $bootstrapPrioritySql . ', '
@@ -9592,7 +9598,7 @@ try {
         serverError(403, 'application_not_allowed', 'Application secret is invalid.');
     }
     $action = isset($data['action']) ? strtolower((string) $data['action']) : '';
-    if (!in_array($action, ['make_turn', 'load_full', 'load_update', 'update_units', 'update_landscape', 'update_events', 'build', 'build_city', 'grow_city', 'heal_units', 'disband_unit', 'set_unit_automation', 'select_production', 'remove_production', 'complete_production', 'claim_ai_batch', 'submit_ai_batch', 'map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players', 'report_cli_error', 'respawn_player', 'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics'], true)) {
+    if (!in_array($action, ['make_turn', 'load_full', 'load_update', 'update_units', 'update_landscape', 'update_events', 'build', 'build_city', 'grow_city', 'heal_units', 'disband_unit', 'set_unit_automation', 'select_production', 'remove_production', 'complete_production', 'claim_ai_batch', 'submit_ai_batch', 'advance_ai_turn', 'map_diagnostics', 'regenerate_map', 'reset_game', 'cleanup_orphan_players', 'report_cli_error', 'respawn_player', 'hotfix_strategic_resources', 'repair_worker_automation', 'worker_diagnostics', 'ai_diagnostics'], true)) {
         serverError(400, 'unknown_action', 'Unsupported server-game action.');
     }
     if ($action === 'report_cli_error') {
@@ -9744,6 +9750,28 @@ try {
         serverRespond(200, [
             'ok' => true, 'request' => 'ai_diagnostics', 'game_id' => $key,
             'player_id' => $playerId, 'diagnostics' => aiDiagnostics($db, $game),
+        ]);
+    }
+
+    if ($action === 'advance_ai_turn') {
+        ensureGeneratedGameMap($db, $key, SERVER_GAME_DEFAULT_MAP_SIZE);
+        $db->beginTransaction();
+        try {
+            $game = loadGame($db, $key, true);
+            if (!$game) serverError(404, 'game_not_found', 'Game does not exist.');
+            $resolution = maybeResolveTurn($db, $game);
+            $game = loadGame($db, $key, true);
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) $db->rollBack();
+            throw $error;
+        }
+        serverRespond(200, [
+            'ok' => true, 'request' => 'advance_ai_turn', 'game_id' => $key,
+            'player_id' => ensureGlobalAiUser($db),
+            'resolved_turn' => $resolution['resolved_turn'],
+            'turn' => (int) $game['turn_number'], 'revision' => (int) $game['revision'],
+            'deadline_at' => gmdate(DATE_ATOM, strtotime($game['turn_deadline_at'] . ' UTC')),
         ]);
     }
 

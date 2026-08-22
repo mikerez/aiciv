@@ -2352,6 +2352,13 @@ const _ai_player = new class
         this.plannedSettlementCoords.push(new Coord(coord.i, coord.j));
     }
 
+    pathReachesCoord(path, coord)
+    {
+        if (!path || !path.length || !coord) return false;
+        var last = path[path.length - 1];
+        return last.i == coord.i && last.j == coord.j;
+    }
+
     bestSettlementRoute(k, ownerTeam, minimumSpacing)
     {
         var unit = _units[k];
@@ -2364,7 +2371,7 @@ const _ai_player = new class
                     || !this.isTileSeenByUser(i, j, ownerTeam) || !this.isPreferredCityCenter(i, j)
                     || this.settlementDistanceToOwnCity(i, j, ownerTeam) < minimumSpacing) continue;
                 var path = di == 0 && dj == 0 ? [] : _current_game.buildPath(k, new Coord(i, j));
-                if ((di != 0 || dj != 0) && !path.length) continue;
+                if ((di != 0 || dj != 0) && !this.pathReachesCoord(path, new Coord(i, j))) continue;
                 var plotScore = this.cityPlotScore(i, j, ownerTeam);
                 var score = plotScore - path.length * 0.008;
                 if (!best || score > best.score) {
@@ -2398,12 +2405,21 @@ const _ai_player = new class
                 if (cityDistance <= currentDistance) continue;
                 var path = _current_game.buildPath(k, new Coord(i, j));
                 if (!path.length) continue;
-                var plotScore = this.cityPlotScore(i, j, ownerTeam);
-                var score = cityDistance + (this.isPreferredCityCenter(i, j) ? 0.35 : 0)
+                // Exploration may deliberately aim beyond the currently
+                // traversable snapshot. Persist only the reached waypoint;
+                // never save the inaccessible requested coordinate as a task.
+                var endpoint = path[path.length - 1];
+                var endpointDistance = this.settlementDistanceToOwnCity(
+                    endpoint.i, endpoint.j, ownerTeam
+                );
+                if (endpointDistance <= currentDistance) continue;
+                var plotScore = this.cityPlotScore(endpoint.i, endpoint.j, ownerTeam);
+                var score = endpointDistance
+                    + (this.isPreferredCityCenter(endpoint.i, endpoint.j) ? 0.35 : 0)
                     + plotScore * 0.15 - path.length * 0.02;
                 if (!best || score > best.score) {
                     best = {
-                        coord: new Coord(i, j), path: path, plotScore: plotScore,
+                        coord: new Coord(endpoint.i, endpoint.j), path: path, plotScore: plotScore,
                         score: score, settlementSite: false,
                     };
                 }
